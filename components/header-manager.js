@@ -29,6 +29,13 @@ class HeaderManager {
   }
   
   async init() {
+    // Dans l'app mobile native, le menu complet du site (Oracle, Accompagnements,
+    // Blog, Partenariats...) n'a pas sa place : ce ne sont pas des écrans de l'app.
+    // On affiche à la place une simple barre de retour vers app-home.html.
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      this.injectAppHeader();
+      return;
+    }
     try {
       await this.loadTemplate();
       this.injectHeader();
@@ -47,6 +54,18 @@ class HeaderManager {
     const response = await fetch(this.templateUrl);
     if (!response.ok) throw new Error('Template loading failed');
     this.template = await response.text();
+  }
+
+  injectAppHeader() {
+    const placeholder = document.getElementById('header-placeholder');
+    if (!placeholder) return;
+    placeholder.innerHTML = `
+      <header style="width:100%;display:flex;align-items:center;padding:12px 16px;padding-top:max(12px, env(safe-area-inset-top));background:rgba(5,15,30,0.92);border-bottom:1px solid rgba(212,175,55,0.18);">
+        <a href="/app-home.html" style="display:inline-flex;align-items:center;gap:6px;color:#d4af37;text-decoration:none;font-family:'Poppins',sans-serif;font-size:14px;font-weight:600;">
+          <i class="fas fa-chevron-left" style="font-size:12px;"></i> Accueil
+        </a>
+      </header>
+    `;
   }
   
   injectHeader() {
