@@ -115,7 +115,26 @@ module.exports = async (req, res) => {
             const plan    = 'complet';
             const priceId = process.env.STRIPE_PRICE_COMPLET;
             if (!priceId) return res.status(500).json({ error: 'STRIPE_PRICE_COMPLET non configuré' });
-            const promoCode = (req.body.promoCode || '').trim();
+            let promoCode = (req.body.promoCode || '').trim();
+            // Le code promo "5€ le 1er mois" est réservé aux nouveaux abonnés : jamais
+            // fait confiance au client sur ce point, on vérifie ici si cet email a déjà eu
+            // un abonnement Stripe (stripe_customer_id posé par le webhook au premier
+            // paiement réussi). Sans ce contrôle, un abonné dont le paiement a échoué (ou
+            // qui a résilié) pouvait resouscrire via le lien promo et réobtenir la remise
+            // indéfiniment — Stripe n'empêche pas nativement la réutilisation d'un code
+            // promo par le même client sur une nouvelle session de checkout.
+            if (promoCode && email) {
+                const { data: priorSub } = await supabase
+                    .from('tore_subscriptions')
+                    .select('stripe_customer_id')
+                    .ilike('email', email)
+                    .not('stripe_customer_id', 'is', null)
+                    .limit(1)
+                    .maybeSingle();
+                if (priorSub?.stripe_customer_id) {
+                    promoCode = '';
+                }
+            }
             const sessionParams = {
                 payment_method_types: ['card'],
                 mode: 'subscription',
