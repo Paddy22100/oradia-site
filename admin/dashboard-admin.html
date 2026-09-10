@@ -10807,30 +10807,6 @@
                 incarnee: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
                 lucide:   'bg-blue-500/20 text-blue-300 border-blue-500/30'
             };
-            // Date d'envoi pour les étapes en file : le cron du parcours individuel tourne
-            // uniquement le mercredi à 19h (heure de Paris) — jamais un autre jour — donc le jour
-            // et l'heure sont fixes, pas une estimation. Ce qui reste incertain, c'est SI une
-            // étape sera bien celle envoyée ce mercredi-là : ça suppose qu'elle soit validée à
-            // temps. La toute prochaine étape (déjà validée, en tête de file) a donc une date
-            // ferme ; toutes celles d'après — et toute étape encore "à valider" — dépendent de la
-            // validation de ce qui les précède, cascadée +7 jours à partir du dernier envoi réel.
-            const nextWednesday = (from) => {
-                const d = new Date(from);
-                d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7 || 7));
-                return d;
-            };
-            const sentDates = nlParcours.filter(d => d.statut === 'envoyé' && d.sent_at).map(d => new Date(d.sent_at));
-            const lastSent = sentDates.length ? new Date(Math.max(...sentDates)) : null;
-            const estimatedDates = new Map();
-            let firmDateId = null;
-            let cursor = lastSent ? nextWednesday(lastSent) : nextWednesday(new Date());
-            const queuedSteps = nlParcours.filter(d => d.statut !== 'envoyé' && (d.extra || {}).canal === 'parcours')
-                .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
-            queuedSteps.forEach((d, i) => {
-                estimatedDates.set(d.id, new Date(cursor));
-                if (i === 0 && d.extra?.parcours_valide === true) firmDateId = d.id;
-                cursor = new Date(cursor.getTime() + 7 * 86400000);
-            });
             tbody.innerHTML = nlParcours.map((d) => {
                 const extra = d.extra || {};
                 const isStep = extra.canal === 'parcours';
@@ -10861,14 +10837,13 @@
                 } else {
                     statutBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>`;
                 }
-                // Envoyée : vraie date. En tête de file et déjà validée : date FERME (le cron ne
-                // tourne que le mercredi 19h, donc le jour/heure sont fixes une fois la validation
-                // faite). Toute autre étape en file dépend de la validation de ce qui précède —
-                // pas de date affichée, juste "en attente de validation" (voir rendu ci-dessous).
-                const estDate = estimatedDates.get(d.id);
-                const dateVal = d.sent_at || estDate;
-                const isFirm = d.id === firmDateId;
-                const dateLabel = !isQueued ? 'Envoyée le' : (isFirm ? 'Envoi prévu le' : '');
+                // Envoyée (ancien modèle, diffusion groupée figée) : vraie date. Étape validée
+                // en file : PAS de date unique à afficher — depuis le passage à l'envoi
+                // individualisé (cron-send-parcours-individual), chaque contact reçoit cette
+                // étape à son propre rythme (7 jours après son dernier envoi ou son inscription),
+                // jamais tous le même mercredi. Une "date ferme" ici serait fausse dès qu'un
+                // premier contact a déjà reçu l'étape alors que d'autres l'attendent encore.
+                const dateVal = d.sent_at;
                 const validateBtn = (isQueued && isStep && extra.parcours_valide !== true)
                     ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-3 py-1.5 hover:bg-orange-500/25 transition mr-1"><i class="fas fa-check mr-1"></i>Valider</button>`
                     : '';
@@ -10876,7 +10851,7 @@
                     <td class="px-6 py-4">${ordreCell}</td>
                     <td class="px-6 py-4">${statutBadge}</td>
                     <td class="px-6 py-4 text-light-gold text-sm">${escapeHtmlFront(d.subject || '—')}</td>
-                    <td class="px-6 py-4 text-light-gold/60 text-xs">${!isQueued ? `${dateLabel} ${new Date(dateVal).toLocaleDateString('fr-FR')}` : (isFirm ? `${dateLabel} ${new Date(dateVal).toLocaleDateString('fr-FR')} 19h` : (isStep ? 'En attente de validation' : '—'))}</td>
+                    <td class="px-6 py-4 text-light-gold/60 text-xs">${!isQueued ? `Envoyée le ${new Date(dateVal).toLocaleDateString('fr-FR')}` : (isStep ? (extra.parcours_valide === true ? 'Envoi individualisé (selon avancement de chaque contact)' : 'En attente de validation') : '—')}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-eye mr-1"></i>Prévisualiser</button><button onclick="nlPreviewSocialFromParcours('${d.id}')" title="Générer et voir l'aperçu Facebook/Instagram/LinkedIn qui serait publié pour cette étape, sans rien publier" class="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/30 rounded-lg px-3 py-1.5 hover:bg-purple-500/20 transition"><i class="fas fa-share-nodes mr-1"></i>Réseaux</button>
