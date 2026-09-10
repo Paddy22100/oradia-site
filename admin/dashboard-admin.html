@@ -3666,6 +3666,21 @@
 
             <!-- ══ SOUS-ONGLET : TRAFIC ══ -->
             <div id="analytics-subtab-traffic" class="analytics-subtab">
+
+            <!-- Sous-sous-onglets Site / App : tout était empilé dans une seule page très
+                 longue (KPIs site + usage app mobile + comportement), difficile à lire. -->
+            <div class="flex gap-1 mb-6 border-b border-gold/20 pb-0">
+                <button onclick="showTrafficSubTab('site')" id="traffic-subtab-btn-site"
+                    class="traffic-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                    <i class="fas fa-globe mr-1.5"></i>Site
+                </button>
+                <button onclick="showTrafficSubTab('app')" id="traffic-subtab-btn-app"
+                    class="traffic-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-mobile-alt mr-1.5"></i>App
+                </button>
+            </div>
+
+            <div id="traffic-subtab-site">
             <!-- KPIs trafic -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6" id="analytics-kpis">
                 <div class="stat-card rounded-xl p-4 text-center">
@@ -3722,6 +3737,26 @@
                 </div>
             </div>
 
+            <!-- Comportement des visiteurs -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-mobile-screen text-gold/60"></i> Appareils</h4>
+                    <div id="analytics-devices" class="space-y-3 text-sm"></div>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-door-open text-gold/60"></i> Pages d'entrée</h4>
+                    <p class="text-light-gold/35 text-xs mb-3 -mt-2">Par où les visiteurs arrivent sur le site.</p>
+                    <div id="analytics-landing" class="space-y-2 text-sm"></div>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Affluence</h4>
+                    <p class="text-light-gold/35 text-xs mb-2 -mt-2">Quand publier / envoyer la newsletter.</p>
+                    <div id="analytics-timing"></div>
+                </div>
+            </div>
+            </div><!-- /traffic-subtab-site -->
+
+            <div id="traffic-subtab-app" class="hidden">
             <!-- Usage de l'app mobile native -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
@@ -3745,24 +3780,8 @@
                     <div id="ana-app-by-hour" class="space-y-2 text-sm"></div>
                 </div>
             </div>
+            </div><!-- /traffic-subtab-app -->
 
-            <!-- Comportement des visiteurs -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-mobile-screen text-gold/60"></i> Appareils</h4>
-                    <div id="analytics-devices" class="space-y-3 text-sm"></div>
-                </div>
-                <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-door-open text-gold/60"></i> Pages d'entrée</h4>
-                    <p class="text-light-gold/35 text-xs mb-3 -mt-2">Par où les visiteurs arrivent sur le site.</p>
-                    <div id="analytics-landing" class="space-y-2 text-sm"></div>
-                </div>
-                <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Affluence</h4>
-                    <p class="text-light-gold/35 text-xs mb-2 -mt-2">Quand publier / envoyer la newsletter.</p>
-                    <div id="analytics-timing"></div>
-                </div>
-            </div>
             </div><!-- /analytics-subtab-traffic -->
 
             <!-- ══ SOUS-ONGLET : NEWSLETTER ══ -->
@@ -5376,6 +5395,23 @@
             document.querySelectorAll('.analytics-subtab').forEach(el => {
                 el.classList.toggle('hidden', el.id !== 'analytics-subtab-' + name);
             });
+        }
+
+        // Sous-sous-onglets du sous-onglet Trafic : Site (KPIs, comportement des
+        // visiteurs) vs App (usage de l'app mobile native) — auparavant tout empilé
+        // dans une seule longue page.
+        function showTrafficSubTab(name) {
+            document.querySelectorAll('.traffic-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('traffic-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.getElementById('traffic-subtab-site')?.classList.toggle('hidden', name !== 'site');
+            document.getElementById('traffic-subtab-app')?.classList.toggle('hidden', name !== 'app');
         }
 
         // Depuis le Plan de fabrication : bascule sur "Devis & comparateur" et centre la carte du fournisseur
