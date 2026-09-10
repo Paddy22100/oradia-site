@@ -5703,6 +5703,10 @@ async function runParcoursIndividualCron(supabase) {
   // enabled:false} dans feature_flags pour revenir temporairement à la diffusion
   // groupée manuelle si besoin (absent de la table = activé par défaut).
   if (!(await isFeatureEnabled(supabase, 'newsletter_parcours_individuel'))) {
+    await logSystemEvent(supabase, {
+      level: 'warn', source: 'cron-send-parcours-individual',
+      message: "Parcours individualisé : passage ignoré, feature flag newsletter_parcours_individuel désactivé"
+    }).catch(() => {});
     return { success: true, sent: 0, skipped_reason: 'feature_disabled' };
   }
   try {
@@ -5833,12 +5837,33 @@ async function runParcoursIndividualCron(supabase) {
 
     // Publication Facebook + Instagram + LinkedIn pour l'étape la plus avancée
     // effectivement envoyée ce passage-ci — jamais si aucune étape n'avait de destinataire dû.
+    let social = null;
     if (latestSentStep) {
-      await scheduleAutoSocialPost(supabase, { subject: latestSentStep.subject, textContent: latestSentStep.text });
+      social = await scheduleAutoSocialPost(supabase, { subject: latestSentStep.subject, textContent: latestSentStep.text });
     }
 
-    return { success: true, sent: totalSent, details };
+    // Journalisé pour de bon (contrairement à avant : ce cron ne laissait aucune trace
+    // en base, seul le retour JSON de l'appel HTTP existait — invisible dès que ni le
+    // cron externe ni personne n'affichait la réponse au moment même de l'exécution).
+    // Signale explicitement la dégradation "post social parti avec le logo générique
+    // au lieu d'un visuel généré" : ce n'est pas un échec (le post part quand même),
+    // mais sans ce signal ici, la seule trace était le log Vercel éphémère de
+    // generateSocialImage — impossible à corréler après coup avec "pourquoi ce post-là".
+    const socialNote = !latestSentStep
+      ? ' — aucun post social (aucune étape envoyée ce passage)'
+      : social?.success
+        ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
+        : ` — ÉCHEC de la programmation du post social : ${social?.error}`;
+    await logSystemEvent(supabase, {
+      level: social && !social.success ? 'warn' : (social?.usedFallbackImage ? 'warn' : 'info'),
+      source: 'cron-send-parcours-individual',
+      message: `Parcours individualisé : ${totalSent} email(s) envoyé(s)${socialNote}`,
+      details: { sent: totalSent, steps: details, social }
+    }).catch(() => {});
+
+    return { success: true, sent: totalSent, details, social };
   } catch (e) {
+    await logSystemEvent(supabase, { level: 'error', source: 'cron-send-parcours-individual', message: e.message }).catch(() => {});
     return { success: false, error: e.message };
   }
 }
@@ -7342,16 +7367,26 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
 // newsletters promotionnelles envoyées via action=send (jamais les envois de test).
 // Erreur avalée : ne doit jamais faire échouer un envoi d'email déjà réussi.
 async function scheduleAutoSocialPost(supabase, { subject, textContent, imageUrl }) {
+  const LOGO_FALLBACK = 'https://oradia.fr/images/logo-hd-v2.webp';
   try {
     const { facebook_text, instagram_text, linkedin_text } = await generateSocialTexts({ subject, textContent });
-    const resolvedImage = imageUrl || await generateSocialImage({ subject, textContent }) || 'https://oradia.fr/images/logo-hd-v2.webp';
+    const generatedImage = imageUrl ? null : await generateSocialImage({ subject, textContent });
+    const resolvedImage = imageUrl || generatedImage || LOGO_FALLBACK;
     const image_url = await ensureSafeSocialImageUrl(resolvedImage);
-    await supabase.from('social_posts').insert({
+    const { error } = await supabase.from('social_posts').insert({
       subject, facebook_text, instagram_text, linkedin_text, image_url,
       scheduled_at: new Date().toISOString()
     });
+    if (error) throw error;
+    // usedFallbackImage signale un post programmé "en silence" avec le logo générique
+    // au lieu d'un visuel généré — jamais une erreur en soi (le post part quand même),
+    // mais un signal à ne pas perdre : sans lui, ce genre de dégradation (clé OpenAI
+    // manquante/invalide, quota...) ne laisse aucune trace ailleurs que dans les logs
+    // Vercel éphémères de generateSocialImage.
+    return { success: true, usedFallbackImage: !imageUrl && !generatedImage, linkedinScheduled: !!linkedin_text };
   } catch (e) {
     console.error('[scheduleAutoSocialPost]', e.message);
+    return { success: false, error: e.message };
   }
 }
 
