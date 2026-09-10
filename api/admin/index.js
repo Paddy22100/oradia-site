@@ -9456,6 +9456,53 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
       });
     }
 
+    // ── Stats réseaux sociaux (Instagram, via l'API Graph Meta) ──
+    // Utilise un token de Page longue durée (META_PAGE_ACCESS_TOKEN) — jamais exposé
+    // au client, uniquement utilisé côté serveur ici. Les métriques "reach/impressions"
+    // (instagram_manage_insights) ne sont pas encore accessibles (permission avancée en
+    // attente de validation Meta) : on expose ce qui est disponible sans elle — abonnés,
+    // nombre de publications, likes et commentaires par publication.
+    if (path === '/social-stats' || path === '/social-stats/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'GET') return res.status(405).end();
+      const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
+      const igId = process.env.META_IG_BUSINESS_ID;
+      if (!pageToken || !igId) {
+        return res.status(200).json({ success: false, error: 'Intégration Instagram non configurée (variables META_PAGE_ACCESS_TOKEN / META_IG_BUSINESS_ID manquantes).' });
+      }
+      try {
+        const accountRes = await fetch(`https://graph.facebook.com/v21.0/${igId}?fields=username,followers_count,follows_count,media_count&access_token=${pageToken}`);
+        const account = await accountRes.json();
+        if (account.error) throw new Error(account.error.message);
+
+        const mediaRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media?fields=id,caption,permalink,timestamp,media_type,media_url,thumbnail_url,like_count,comments_count&limit=12&access_token=${pageToken}`);
+        const mediaData = await mediaRes.json();
+        if (mediaData.error) throw new Error(mediaData.error.message);
+        const media = (mediaData.data || []).map(m => ({
+          id: m.id,
+          caption: (m.caption || '').slice(0, 140),
+          permalink: m.permalink,
+          timestamp: m.timestamp,
+          media_type: m.media_type,
+          thumbnail: m.media_type === 'VIDEO' ? m.thumbnail_url : m.media_url,
+          likes: m.like_count ?? 0,
+          comments: m.comments_count ?? 0
+        }));
+        const totals = media.reduce((acc, m) => ({ likes: acc.likes + m.likes, comments: acc.comments + m.comments }), { likes: 0, comments: 0 });
+
+        return res.status(200).json({
+          success: true,
+          account: { username: account.username, followers: account.followers_count, follows: account.follows_count, media_count: account.media_count },
+          media,
+          totals,
+          insights_available: false
+        });
+      } catch (err) {
+        console.error('[social-stats] Erreur API Instagram:', err.message);
+        return res.status(200).json({ success: false, error: err.message });
+      }
+    }
+
     // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──
     if (path === '/intentions' || path === '/intentions/') {
       if (req.method !== 'POST') return res.status(405).end();
