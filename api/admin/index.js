@@ -5422,7 +5422,9 @@ function buildCommunicationEmailHtml(draft) {
   <tr><td style="padding:0 24px 32px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.3); border-radius:14px; overflow:hidden;">
       <tr><td style="padding:0; line-height:0;">
-        <img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;">
+        ${hasCta
+          ? `<a href="${nlAbsUrl(b.cta_url).replace(/"/g,'')}" style="display:block; line-height:0;"><img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;"></a>`
+          : `<img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;">`}
       </td></tr>
       ${hasCta ? `<tr><td style="padding:18px 32px; text-align:center; background:linear-gradient(135deg,#0c1e3a,#07152b);">
         <a href="${nlAbsUrl(b.cta_url).replace(/"/g,'')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:13px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.05em;">${nlEscHtml(b.cta_text || 'En savoir plus')}</a>

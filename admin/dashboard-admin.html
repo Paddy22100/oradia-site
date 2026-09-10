@@ -2736,6 +2736,7 @@
                                         <select id="nl-banner-preset" onchange="nlApplyBannerPreset()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                                             <option value="custom">Personnalisé</option>
                                             <option value="precommande">Précommande — Oracle Oradia</option>
+                                            <option value="app_mobile">Application mobile — Google Play (bêta)</option>
                                         </select>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -14441,6 +14442,13 @@
                 cta_text: 'Je pré-commande',
                 cta_url: 'https://oradia.fr/precommande-oracle',
                 image: 'https://oradia.fr/images/medias/banniere-facebook.png'
+            },
+            app_mobile: {
+                title: 'Découvrez l\'application Oradia en avant-première',
+                desc: 'Tirages guidés, synchronicités et exploration intérieure — testez la bêta sur Google Play.',
+                cta_text: 'Tester la bêta sur Google Play',
+                cta_url: 'https://play.google.com/store/apps/details?id=fr.oradia.app',
+                image: 'https://oradia.fr/images/medias/banniere_pub_app_mobile.png'
             }
         };
         function nlToggleBanner() {
