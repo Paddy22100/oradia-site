@@ -3889,52 +3889,83 @@
 
             <!-- ══ SOUS-ONGLET : RÉSEAUX SOCIAUX ══ -->
             <div id="analytics-subtab-social" class="analytics-subtab hidden">
-                <p class="text-light-gold/35 text-xs mb-4">Les vues/reach ne sont pas encore disponibles (validation Meta en attente) — abonnés, likes et commentaires seulement pour l'instant.</p>
-
-                <!-- Instagram -->
-                <div class="mb-2 flex items-center gap-2"><i class="fab fa-instagram text-gold/60"></i><h3 class="text-gold font-semibold">Instagram</h3></div>
-                <div id="social-ig-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
-                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold/70 text-xs uppercase mb-2">Abonnés</h4>
-                        <div id="social-ig-followers" class="text-3xl font-bold text-gold">—</div>
-                        <p class="text-light-gold/35 text-xs mt-1" id="social-ig-username">@—</p>
-                    </div>
-                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold/70 text-xs uppercase mb-2">Likes (12 derniers posts)</h4>
-                        <div id="social-ig-likes" class="text-3xl font-bold text-gold">—</div>
-                    </div>
-                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
-                        <div id="social-ig-comments" class="text-3xl font-bold text-gold">—</div>
-                    </div>
-                </div>
-                <div class="stat-card rounded-2xl p-6 mb-8">
-                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
-                    <div id="social-ig-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                <!-- Sous-sous-onglets Facebook / Instagram -->
+                <div class="flex gap-2 mb-6 border-b border-gold/10">
+                    <button onclick="showSocialSubTab('facebook')" id="social-subtab-btn-facebook"
+                        class="social-subtab-btn px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                        <i class="fab fa-facebook mr-1.5"></i>Facebook
+                    </button>
+                    <button onclick="showSocialSubTab('instagram')" id="social-subtab-btn-instagram"
+                        class="social-subtab-btn px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                        <i class="fab fa-instagram mr-1.5"></i>Instagram
+                    </button>
                 </div>
 
                 <!-- Facebook -->
-                <div class="mb-2 flex items-center gap-2"><i class="fab fa-facebook text-gold/60"></i><h3 class="text-gold font-semibold">Facebook</h3></div>
-                <div id="social-fb-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
-                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold/70 text-xs uppercase mb-2">Fans</h4>
-                        <div id="social-fb-fans" class="text-3xl font-bold text-gold">—</div>
-                        <p class="text-light-gold/35 text-xs mt-1" id="social-fb-name">—</p>
+                <div id="social-subtab-facebook" class="social-subtab">
+                    <div id="social-fb-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Fans</h4>
+                            <div id="social-fb-fans" class="text-3xl font-bold text-gold">—</div>
+                            <p class="text-light-gold/35 text-xs mt-1" id="social-fb-name">—</p>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Réactions (12 derniers posts)</h4>
+                            <div id="social-fb-likes" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
+                            <div id="social-fb-comments" class="text-3xl font-bold text-gold">—</div>
+                        </div>
                     </div>
-                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold/70 text-xs uppercase mb-2">Réactions (12 derniers posts)</h4>
-                        <div id="social-fb-likes" class="text-3xl font-bold text-gold">—</div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Nouveaux fans (7j)</h4>
+                            <div id="social-fb-new-followers" class="text-3xl font-bold text-green-400">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Interactions (7j)</h4>
+                            <div id="social-fb-engagements" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Vues de la page (7j)</h4>
+                            <div id="social-fb-page-views" class="text-3xl font-bold text-gold">—</div>
+                        </div>
                     </div>
-                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
-                        <div id="social-fb-comments" class="text-3xl font-bold text-gold">—</div>
+                    <div class="stat-card rounded-2xl p-6 mb-6">
+                        <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-line text-gold/60"></i> Nouveaux fans par jour (7j)</h4>
+                        <div id="social-fb-followers-chart" class="space-y-2 text-sm"></div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
+                        <div id="social-fb-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                     </div>
                 </div>
-                <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
-                    <div id="social-fb-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+
+                <!-- Instagram -->
+                <div id="social-subtab-instagram" class="social-subtab hidden">
+                    <p class="text-light-gold/35 text-xs mb-4">Abonnés, likes et commentaires seulement — les vues/reach et la croissance dans le temps nécessitent une permission Meta (<code>instagram_manage_insights</code>) en attente de validation.</p>
+                    <div id="social-ig-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Abonnés</h4>
+                            <div id="social-ig-followers" class="text-3xl font-bold text-gold">—</div>
+                            <p class="text-light-gold/35 text-xs mt-1" id="social-ig-username">@—</p>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Likes (12 derniers posts)</h4>
+                            <div id="social-ig-likes" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
+                            <div id="social-ig-comments" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
+                        <div id="social-ig-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
                 </div>
             </div><!-- /analytics-subtab-social -->
         </section>
@@ -5459,6 +5490,21 @@
             }
         }
 
+        function showSocialSubTab(name) {
+            document.querySelectorAll('.social-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('social-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.querySelectorAll('.social-subtab').forEach(el => {
+                el.classList.toggle('hidden', el.id !== 'social-subtab-' + name);
+            });
+        }
+
         function renderSocialPosts(containerId, posts, captionKey) {
             const el = document.getElementById(containerId);
             if (!el) return;
@@ -5510,6 +5556,27 @@
                     setEl('social-fb-likes', fb.totals.likes ?? 0);
                     setEl('social-fb-comments', fb.totals.comments ?? 0);
                     renderSocialPosts('social-fb-posts', fb.posts, 'message');
+
+                    if (fb.insights) {
+                        setEl('social-fb-new-followers', fb.insights.new_followers_7d ?? '—');
+                        setEl('social-fb-engagements', fb.insights.engagements_7d ?? '—');
+                        setEl('social-fb-page-views', fb.insights.page_views_7d ?? '—');
+                        const chartEl = document.getElementById('social-fb-followers-chart');
+                        if (chartEl) {
+                            const days = fb.insights.daily_new_followers || [];
+                            const max = Math.max(...days.map(d => d.value), 1);
+                            chartEl.innerHTML = days.length === 0
+                                ? '<p class="text-gold/30 italic text-xs">Aucune donnée.</p>'
+                                : days.map(d => `
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gold/50 text-xs w-20 flex-shrink-0">${new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}</span>
+                                        <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                                            <div class="h-full bg-green-400/60 rounded-full" style="width:${(d.value/max*100).toFixed(0)}%"></div>
+                                        </div>
+                                        <span class="text-gold/40 text-xs w-6 text-right">${d.value}</span>
+                                    </div>`).join('');
+                        }
+                    }
                 } else if (fbErrEl) {
                     fbErrEl.textContent = fb?.error || 'Données Facebook indisponibles.';
                     fbErrEl.classList.remove('hidden');

@@ -9528,10 +9528,38 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
           }));
           const fbTotals = posts.reduce((acc, p) => ({ likes: acc.likes + p.likes, comments: acc.comments + p.comments }), { likes: 0, comments: 0 });
 
+          // Insights de Page (read_insights) : noms de métriques valides en v21 — beaucoup
+          // d'anciens noms (page_impressions, page_fans, page_fan_adds...) sont retirés de
+          // l'API et renvoient une erreur générique "must be a valid insights metric", sans
+          // lister d'alternative ; ceux-ci ont été trouvés par tâtonnement.
+          let insights = null;
+          try {
+            const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+            const until = new Date().toISOString().slice(0, 10);
+            const metrics = 'page_daily_follows_unique,page_post_engagements,page_views_total';
+            const insightsRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/insights?metric=${metrics}&period=day&since=${since}&until=${until}&access_token=${pageToken}`);
+            const insightsData = await insightsRes.json();
+            if (insightsData.error) throw new Error(insightsData.error.message);
+            const byMetric = {};
+            (insightsData.data || []).forEach(m => { byMetric[m.name] = (m.values || []).map(v => ({ date: v.end_time.slice(0, 10), value: v.value })); });
+            const sum = (arr) => (arr || []).reduce((a, v) => a + (v.value || 0), 0);
+            insights = {
+              new_followers_7d: sum(byMetric.page_daily_follows_unique),
+              engagements_7d: sum(byMetric.page_post_engagements),
+              page_views_7d: sum(byMetric.page_views_total),
+              daily_new_followers: byMetric.page_daily_follows_unique || [],
+              daily_engagements: byMetric.page_post_engagements || [],
+              daily_page_views: byMetric.page_views_total || []
+            };
+          } catch (err) {
+            console.error('[social-stats] Erreur insights Facebook:', err.message);
+          }
+
           result.facebook = {
             page: { name: page.name, fans: page.fan_count, followers: page.followers_count },
             posts,
-            totals: fbTotals
+            totals: fbTotals,
+            insights
           };
         } catch (err) {
           console.error('[social-stats] Erreur API Facebook:', err.message);
