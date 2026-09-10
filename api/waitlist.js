@@ -318,13 +318,13 @@ async function sendWaitlistConfirmationEmail(email) {
             </td>
           </tr>
 
-          <!-- Mention app mobile bêta — volontairement discrète (simple ligne de texte,
-               pas un encart) pour ne pas concurrencer la précommande ci-dessus. -->
+          <!-- Bannière app mobile bêta — plus petite que l'encart précommande ci-dessus
+               (500px vs ~636px de large) pour rester secondaire sans être trop discrète. -->
           <tr>
-            <td align="center" style="padding:0 40px 20px;">
-              <p style="margin:0; color:#8a8365; font-family:Georgia,serif; font-size:12px; font-style:italic;">
-                📱 L'app mobile ORADIA est aussi disponible en bêta — <a href="https://play.google.com/store/apps/details?id=fr.oradia.app" style="color:#d4af37; text-decoration:underline;">la découvrir sur Google Play</a>
-              </p>
+            <td align="center" style="padding:0 40px 26px;">
+              <a href="https://play.google.com/store/apps/details?id=fr.oradia.app" target="_blank">
+                <img src="https://oradia.fr/images/medias/banniere_pub_app_mobile.png" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play" width="500" style="display:block; width:100%; height:auto; max-width:500px; border:0; border-radius:12px; margin:0 auto;">
+              </a>
             </td>
           </tr>
 
