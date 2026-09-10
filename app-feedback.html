@@ -48,6 +48,8 @@
     font-size: 14.5px; outline: none;
   }
   input::placeholder, textarea::placeholder { color: rgba(232,228,212,0.35); }
+  .rgpd-note { margin: 8px 0 0; font-size: 11px; line-height: 1.5; color: rgba(232,228,212,0.45); }
+  .rgpd-note a { color: rgba(212,175,55,0.7); }
   input:focus, select:focus, textarea:focus { border-color: rgba(212,175,55,0.7); }
   textarea { resize: none; }
 
@@ -98,6 +100,7 @@
         <div class="field">
           <label>Votre email <span style="opacity:0.5;font-weight:400;">(pour vous répondre)</span></label>
           <input type="email" name="email" required placeholder="votre@email.fr">
+          <p class="rgpd-note">En renseignant votre email, vous serez ajouté(e) à la newsletter Oradia si vous n'y êtes pas déjà — désinscription possible à tout moment. <a href="politique-confidentialite.html">En savoir plus</a>.</p>
         </div>
         <button type="submit">Envoyer</button>
       </form>
@@ -123,6 +126,7 @@
         <div class="field">
           <label>Votre email <span style="opacity:0.5;font-weight:400;">(optionnel, pour vous répondre)</span></label>
           <input type="email" name="email" placeholder="votre@email.fr">
+          <p class="rgpd-note">Si vous laissez votre email, vous serez ajouté(e) à la newsletter Oradia si vous n'y êtes pas déjà — désinscription possible à tout moment. <a href="politique-confidentialite.html">En savoir plus</a>.</p>
         </div>
         <button type="submit">Envoyer</button>
       </form>
@@ -151,6 +155,7 @@
 
       var data = { type: type };
       new FormData(form).forEach(function (v, k) { data[k] = v; });
+      var enteredEmail = (data.email || '').trim();
       if (!data.email) data.email = 'sans-email@oradia.fr';
 
       try {
@@ -166,6 +171,16 @@
           : 'Merci pour votre idée, elle nourrit l\'évolution d\'Oradia !';
         msg.style.display = 'block';
         form.reset();
+
+        // Ajoute l'email à la newsletter (upsert — sans effet s'il y est déjà).
+        // Non-bloquant : un échec ici ne doit pas remettre en cause l'envoi du message.
+        if (enteredEmail) {
+          fetch('/api/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: enteredEmail, source: 'app-feedback' })
+          }).catch(function () {});
+        }
       } catch (err) {
         msg.className = 'feedback-msg error';
         msg.textContent = 'Erreur d\'envoi. Réessayez, ou écrivez à contact@oradia.fr.';
