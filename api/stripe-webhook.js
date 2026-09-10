@@ -212,7 +212,7 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
 </td></tr>
 </table></td></tr></table></body></html>`;
 
-    await fetch('https://api.brevo.com/v3/smtp/email', {
+    const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -224,6 +224,14 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
             textContent: `${bodyText.replace(/<[^>]+>/g, '')} — Renouveler : https://oradia.fr/tore.html`
         })
     });
+    if (!brevoRes.ok) {
+        const errText = await brevoRes.text().catch(() => '');
+        // Le fetch Brevo ne lève jamais d'exception sur une erreur HTTP (400/401/etc.) —
+        // sans ce throw explicite, un echec d'envoi (cle invalide, domaine non verifie,
+        // destinataire blackliste...) passait totalement inapercu, y compris dans les
+        // logs, puisque l'appelant se contente d'un .catch() sur les erreurs reseau.
+        throw new Error(`Brevo ${brevoRes.status}: ${errText}`);
+    }
 }
 
 // Extrait l'ID d'abonnement d'une facture ou d'un objet abonnement, en gérant
@@ -549,10 +557,16 @@ async function processEvent(event) {
             const stripe = getStripeClient();
             const supabase = getSupabaseClient();
             const invoice = event.data.object;
-            if (!getSubscriptionIdFromObject(invoice)) break;
+            if (!getSubscriptionIdFromObject(invoice)) {
+                console.error('[webhook] invoice.payment_failed: aucun subscription id resolu, evenement ignore', invoice.id);
+                break;
+            }
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
-            if (!row || !row.email) break;
+            if (!row || !row.email) {
+                console.error('[webhook] invoice.payment_failed: aucune ligne tore_subscriptions trouvee pour', invoice.id, invoice.customer);
+                break;
+            }
 
             const isFirstPayment = invoice.billing_reason === 'subscription_create';
 

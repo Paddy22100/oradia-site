@@ -1,6 +1,15 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+  <script>
+    // Dans l'app mobile native, tous les liens "retour à l'accueil" du site (logo,
+    // déconnexion, etc.) pointent vers index.html — il n'y a pas de "site" à
+    // proprement parler dans l'app, donc on redirige immédiatement vers l'écran
+    // d'accueil dédié à l'app. Fix centralisé ici plutôt que sur chaque page.
+    if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform()) {
+      window.location.replace('app-home.html');
+    }
+  </script>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />

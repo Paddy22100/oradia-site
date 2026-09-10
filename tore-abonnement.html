@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5">
-    <title>Choisissez votre offre Tore — ORADIA</title>
-    <meta name="description" content="Abonnement Tore Oradia — 8€/mois, tirages illimités, historique complet, espace membres. Sans engagement, résiliable à tout moment.">
+    <title>5€ le premier mois — Abonnement Tore — ORADIA</title>
+    <meta name="description" content="Offre de lancement : 5€ le premier mois, puis 8€/mois. Tirages illimités à 7 cartes, historique complet, espace membres. Sans engagement, résiliable à tout moment.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://oradia.fr/tore-abonnement.html">
     <!-- Open Graph -->
     <meta property="og:type" content="website">
-    <meta property="og:title" content="Choisissez votre offre Tore — ORADIA">
-    <meta property="og:description" content="Accès complet au Tore Oradia — 8€/mois, tirages illimités, historique complet, espace membres. Sans engagement.">
+    <meta property="og:title" content="5€ le premier mois — Abonnement Tore — ORADIA">
+    <meta property="og:description" content="Offre de lancement : 5€ le premier mois, puis 8€/mois. Tirages illimités à 7 cartes, historique complet, espace membres. Sans engagement.">
     <meta property="og:url" content="https://oradia.fr/tore-abonnement.html">
     <meta property="og:image" content="https://oradia.fr/images/oradia-hero-4k.webp">
     <meta property="og:locale" content="fr_FR">
     <meta property="og:site_name" content="ORADIA">
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Choisissez votre offre Tore — ORADIA">
-    <meta name="twitter:description" content="Accès complet au Tore Oradia — 8€/mois, tirages illimités, espace membres. Sans engagement.">
+    <meta name="twitter:title" content="5€ le premier mois — Abonnement Tore — ORADIA">
+    <meta name="twitter:description" content="Offre de lancement : 5€ le premier mois, puis 8€/mois. Tirages illimités, espace membres. Sans engagement.">
     <meta name="twitter:image" content="https://oradia.fr/images/oradia-hero-4k.webp">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -151,6 +151,27 @@
             padding:28px 32px;
         }
 
+        /* FAQ (accordéon natif <details>) */
+        .faq-item {
+            border-bottom:1px solid rgba(212,175,55,0.12);
+            padding:16px 4px;
+        }
+        .faq-item summary {
+            font-family:'Poppins',sans-serif; font-size:15px; font-weight:500;
+            color:#e9e7df; cursor:pointer; list-style:none;
+            display:flex; align-items:center; justify-content:space-between; gap:12px;
+        }
+        .faq-item summary::-webkit-details-marker { display:none; }
+        .faq-item summary::after {
+            content:'+'; color:#d4af37; font-size:20px; font-weight:300; flex-shrink:0;
+            transition:transform 0.25s ease;
+        }
+        .faq-item[open] summary::after { transform:rotate(45deg); }
+        .faq-item p {
+            font-family:'Poppins',sans-serif; font-size:13.5px; line-height:1.75;
+            color:rgba(229,231,235,0.6); margin:12px 0 0;
+        }
+
         /* Séparateur doré */
         .gold-divider {
             height:1px;
@@ -227,7 +248,7 @@
         <span class="cormorant text-2xl font-bold gold-gradient tracking-widest">ORADIA</span>
     </a>
     <a href="index.html" style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(212,175,55,0.55);text-decoration:none;display:flex;align-items:center;gap:7px;transition:color .2s;" onmouseover="this.style.color='rgba(212,175,55,0.95)'" onmouseout="this.style.color='rgba(212,175,55,0.55)'">
-        <i class="fas fa-chevron-left" style="font-size:11px;"></i> Retour au site
+        <i class="fas fa-chevron-left" style="font-size:11px;"></i> Retour à l'accueil
     </a>
 </nav>
 
@@ -242,9 +263,12 @@
             Votre accès au Tore
         </h1>
         <div class="gold-divider" style="width:80px;margin:0 auto 24px;"></div>
-        <p style="font-family:'Poppins',sans-serif;font-size:16px;color:rgba(229,231,235,0.75);line-height:1.85;max-width:520px;margin:0 auto;">
-            Accès complet, sans engagement, résiliable à tout moment.
+        <p style="font-family:'Poppins',sans-serif;font-size:16px;color:rgba(229,231,235,0.75);line-height:1.85;max-width:540px;margin:0 auto 20px;">
+            Un tirage à 7 cartes pour une guidance complète, généré par de l'aléatoire quantique plutôt qu'un algorithme classique — sans engagement, résiliable à tout moment.
         </p>
+        <span style="display:inline-flex;align-items:center;gap:8px;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.4);border-radius:50px;padding:8px 20px;font-family:'Poppins',sans-serif;font-size:13px;font-weight:600;color:#f0c75e;letter-spacing:0.03em;">
+            <i class="fas fa-tag" style="font-size:12px;"></i> Offre de lancement — 5€ le premier mois
+        </span>
     </div>
 </section>
 
@@ -257,6 +281,12 @@
             ✦ Compte créé — choisissez votre formule pour commencer
         </p>
     </div>
+
+    <!-- Preuve sociale -->
+    <p class="fade-up" style="text-align:center;font-family:'Poppins',sans-serif;font-size:13px;color:rgba(212,175,55,0.5);letter-spacing:0.03em;margin:0 0 40px;">
+        <i class="fas fa-circle" style="font-size:5px;color:#4ade80;margin-right:8px;vertical-align:middle;"></i>
+        Plus de 200 tirages réalisés ces trois dernières semaines — l'oracle vit déjà au quotidien
+    </p>
 
     <!-- Offre unique -->
     <div style="max-width:480px;margin:0 auto 40px;">
@@ -275,13 +305,13 @@
                 </span>
             </div>
             <p style="font-family:'Poppins',sans-serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.65);margin-bottom:16px;margin-top:14px;">Complète</p>
-            <div id="price-normal">
+            <div id="price-normal" style="display:none;">
                 <div class="cormorant" style="font-size:68px;font-weight:700;color:#f0c75e;line-height:1;">
                     8<span style="font-size:32px;color:rgba(212,175,55,0.6);">€</span>
                 </div>
                 <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.55);margin-bottom:28px;letter-spacing:0.05em;">par mois · sans engagement</p>
             </div>
-            <div id="price-promo" style="display:none;margin-bottom:28px;">
+            <div id="price-promo" style="margin-bottom:28px;">
                 <div style="display:flex;align-items:baseline;justify-content:center;gap:14px;">
                     <div class="cormorant" style="font-size:44px;font-weight:700;color:rgba(212,175,55,0.35);line-height:1;text-decoration:line-through;">
                         8<span style="font-size:22px;">€</span>
@@ -291,7 +321,6 @@
                     </div>
                 </div>
                 <p style="font-family:'Poppins',sans-serif;font-size:13px;color:#f0c75e;letter-spacing:0.03em;margin-top:6px;">le 1er mois · puis 8€/mois · sans engagement</p>
-                <p style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(212,175,55,0.5);letter-spacing:0.05em;margin-top:2px;">Code TORE5 appliqué automatiquement</p>
             </div>
 
             <div style="margin-bottom:28px;text-align:left;">
@@ -316,11 +345,41 @@
                         <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(229,231,235,0.5);margin:0;line-height:1.6;">Gérez votre abonnement, votre profil.</p>
                     </div>
                 </div>
+                <div class="feature-row">
+                    <div class="feature-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div>
+                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:#e9e7df;font-weight:600;margin:0 0 4px;display:flex;align-items:center;gap:6px;">
+                            Tirage programmé
+                            <span class="info-tooltip" tabindex="0" role="button" aria-label="Qu'est-ce que le tirage programmé ?" style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:10px;cursor:help;">
+                                <i class="fas fa-info" style="font-size:9px;"></i>
+                                <span class="info-tooltip-bubble" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:230px;background:#0f2540;border:1px solid rgba(212,175,55,0.4);border-radius:10px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:400;line-height:1.5;color:rgba(229,231,235,0.85);text-align:left;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:20;">
+                                    Choisissez votre intention et la date à laquelle vous souhaitez recevoir votre tirage : l'oracle vous répond automatiquement le moment venu.
+                                </span>
+                            </span>
+                        </p>
+                        <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(229,231,235,0.5);margin:0;line-height:1.6;">Choisissez votre intention, recevez le résultat à la date de votre choix.</p>
+                    </div>
+                </div>
             </div>
+            <script>
+                document.querySelectorAll('.info-tooltip').forEach(function (el) {
+                    var bubble = el.querySelector('.info-tooltip-bubble');
+                    var show = function () { bubble.style.display = 'block'; };
+                    var hide = function () { bubble.style.display = 'none'; };
+                    el.addEventListener('mouseenter', show);
+                    el.addEventListener('mouseleave', hide);
+                    el.addEventListener('focus', show);
+                    el.addEventListener('blur', hide);
+                    el.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        bubble.style.display = bubble.style.display === 'block' ? 'none' : 'block';
+                    });
+                });
+                document.addEventListener('click', function () {
+                    document.querySelectorAll('.info-tooltip-bubble').forEach(function (b) { b.style.display = 'none'; });
+                });
+            </script>
 
-            <div id="discount-badge" style="display:none;margin-bottom:12px;padding:10px 16px;background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.4);border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;color:#f0c75e;text-align:center;">
-                <i class="fas fa-tag" style="margin-right:6px;"></i>Code promo appliqué : <strong>3€ offerts sur le premier mois</strong>
-            </div>
             <button id="btn-complet" class="btn-gold" style="width:100%;font-size:0.95rem;"
                     aria-label="Choisir l'offre Complète — 8€/mois">
                 Choisir l'offre Complète
@@ -330,10 +389,37 @@
     </div>
 
     <p style="text-align:center;font-family:'Poppins',sans-serif;font-size:13px;
-              color:rgba(212,175,55,0.38);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:48px;">
+              color:rgba(212,175,55,0.38);display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:56px;">
         <i class="fas fa-lock" style="font-size:12px;"></i>
         Paiement sécurisé par Stripe · Résiliable à tout moment
     </p>
+
+    <!-- FAQ -->
+    <div class="fade-up delay-2" style="max-width:640px;margin:0 auto 56px;">
+        <p class="cormorant" style="text-align:center;font-size:24px;font-weight:700;color:rgba(212,175,55,0.85);margin:0 0 20px;">Questions fréquentes</p>
+        <div style="display:flex;flex-direction:column;gap:2px;">
+            <details class="faq-item">
+                <summary>Que se passe-t-il après le premier mois à 5€ ?</summary>
+                <p>L'abonnement continue automatiquement à 8€/mois, sans aucune démarche de votre part. Vous pouvez annuler à tout moment avant le renouvellement depuis votre espace membre.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Puis-je résilier à tout moment ?</summary>
+                <p>Oui, sans frais, en désactivant le renouvellement automatique depuis votre espace membre. Vous conservez l'accès jusqu'à la fin de la période déjà payée.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Suis-je remboursé si j'annule en cours de mois ?</summary>
+                <p>Aucun remboursement au prorata n'est effectué, mais vous gardez un accès complet jusqu'à la fin de la période en cours.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Comment fonctionne le tirage à 7 cartes ?</summary>
+                <p>Vous posez une intention, puis l'oracle tire 7 cartes couvrant vos besoins, votre transmutation, votre archétype, vos émotions, votre révélation, vos actions et votre mémoire du cosmos — à partir d'un générateur de nombres quantique, pas d'un algorithme classique.</p>
+            </details>
+            <details class="faq-item">
+                <summary>Le paiement est-il sécurisé ?</summary>
+                <p>Oui, entièrement géré par Stripe (cartes Visa, MasterCard). Vos coordonnées bancaires ne transitent jamais par nos serveurs.</p>
+            </details>
+        </div>
+    </div>
 
     <!-- Citation -->
     <div class="fade-up delay-3" style="text-align:center;">
@@ -376,6 +462,33 @@
         window.history.replaceState({}, '', '/tore-abonnement.html');
     }
 
+    // Modale email stylée (remplace prompt(), qui affiche un popup natif moche et
+    // ignore complètement l'identité visuelle du site).
+    function askEmailModal() {
+        return new Promise((resolve) => {
+            const overlay = document.createElement('div');
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(2,8,18,0.85);backdrop-filter:blur(4px);z-index:9999;display:flex;align-items:center;justify-content:center;padding:20px;';
+            overlay.innerHTML = `
+                <div style="background:linear-gradient(145deg,#0f2540,#051428);border:1px solid rgba(212,175,55,0.35);border-radius:16px;padding:28px 24px;max-width:360px;width:100%;font-family:'Poppins',sans-serif;box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+                    <p style="color:#f5e7a1;font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;margin:0 0 8px;">Votre adresse email</p>
+                    <p style="color:rgba(232,228,212,0.6);font-size:13px;margin:0 0 16px;">Nécessaire pour créer votre abonnement.</p>
+                    <input id="email-modal-input" type="email" placeholder="vous@exemple.fr" style="width:100%;padding:12px 14px;border-radius:10px;border:1px solid rgba(212,175,55,0.3);background:rgba(5,20,40,0.6);color:#e8e4d4;font-size:15px;box-sizing:border-box;margin-bottom:16px;" autofocus>
+                    <div style="display:flex;gap:10px;">
+                        <button id="email-modal-cancel" style="flex:1;padding:11px;border-radius:10px;border:1px solid rgba(232,228,212,0.2);background:transparent;color:rgba(232,228,212,0.7);font-size:14px;cursor:pointer;">Annuler</button>
+                        <button id="email-modal-ok" style="flex:1;padding:11px;border-radius:10px;border:none;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#051428;font-weight:600;font-size:14px;cursor:pointer;">Continuer</button>
+                    </div>
+                </div>`;
+            document.body.appendChild(overlay);
+            const input = overlay.querySelector('#email-modal-input');
+            input.focus();
+            const close = (value) => { overlay.remove(); resolve(value); };
+            overlay.querySelector('#email-modal-cancel').onclick = () => close('');
+            overlay.querySelector('#email-modal-ok').onclick = () => close((input.value || '').trim());
+            input.addEventListener('keydown', (e) => { if (e.key === 'Enter') close((input.value || '').trim()); });
+            overlay.addEventListener('click', (e) => { if (e.target === overlay) close(''); });
+        });
+    }
+
     async function handleCheckout(type) {
         const btnC = document.getElementById('btn-complet');
 
@@ -384,13 +497,34 @@
             const { data: { session } } = await window.supabaseClient.auth.getSession();
             email = session?.user?.email || '';
         }
+        // Session membre "maison" du site (login.html), distincte de la session Supabase
+        // native ci-dessus — c'est celle-ci qui est réellement utilisée après connexion.
         if (!email) {
-            email = (prompt('Votre adresse email :') || '').trim();
+            email = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || '';
+        }
+        if (!email) {
+            email = await askEmailModal();
         }
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
 
         const origC = btnC.innerHTML;
         btnC.disabled = true;
+        btnC.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Vérification…';
+
+        try {
+            // Évite d'ouvrir un second abonnement Stripe si un abonnement actif existe déjà
+            const checkRes = await fetch(`/api/auth/check-subscription?email=${encodeURIComponent(email)}`);
+            const checkData = await checkRes.json();
+            if (checkData.subscribed) {
+                btnC.disabled = false;
+                btnC.innerHTML = origC;
+                alert(`Un abonnement actif existe déjà pour ${email}. Connectez-vous à votre espace membre pour le gérer.`);
+                return;
+            }
+        } catch (_) {
+            // Si la vérification échoue, on laisse le checkout se faire normalement
+        }
+
         btnC.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement…';
 
         try {

@@ -189,7 +189,7 @@
                     <i class="fas fa-user-circle text-gold/50"></i>
                     <span class="text-sm font-medium" id="memberName">Cher Membre</span>
                 </div>
-                <a href="../index.html" class="lg:hidden flex items-center gap-1.5 text-gold/70 hover:text-gold transition-all text-sm px-3 py-2 rounded-full border border-gold/20 hover:border-gold/40" title="Retour au site"><i class="fas fa-arrow-left"></i><span class="text-xs">Site</span></a>
+                <a href="../index.html" class="lg:hidden flex items-center gap-1.5 text-gold/70 hover:text-gold transition-all text-sm px-3 py-2 rounded-full border border-gold/20 hover:border-gold/40" title="Retour à l'accueil"><i class="fas fa-arrow-left"></i><span class="text-xs">Accueil</span></a>
                 <button id="logoutBtn" class="flex items-center gap-2 text-gold/70 hover:text-red-400 transition-all text-sm px-4 py-2 rounded-full border border-gold/20 hover:border-red-400/30 hover:bg-red-400/5">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="hidden sm:inline">Déconnexion</span>
@@ -237,10 +237,26 @@
 
         <!-- Main Content -->
         <main class="flex-1 p-6 pb-24 lg:pb-6">
+          <!-- Une seule colonne de contenu, largeur unique (max-w-3xl) du bandeau à la
+               FAQ : la carte tarif flottait auparavant dans une colonne plus étroite et
+               centrée que les cartes "abonnement actuel"/"renouvellement" au-dessus,
+               ce qui cassait l'alignement de toute la page. -->
+          <div class="max-w-3xl mx-auto">
+            <!-- Bannière abonnement expiré / paiement échoué (redirigé depuis tore.html
+                 quand check-subscription ne confirme plus un abonnement que le navigateur
+                 croyait actif) -->
+            <div id="expiredBanner" class="hidden mb-6 bg-[rgba(212,120,55,0.1)] border border-orange-400/40 rounded-2xl p-5 flex items-start gap-3">
+                <i class="fas fa-triangle-exclamation text-orange-400 mt-1"></i>
+                <div>
+                    <p class="text-orange-300 font-semibold mb-1" id="expiredBannerTitle">Votre abonnement a expiré ou le paiement n'a pas abouti</p>
+                    <p class="text-light-gold/70 text-sm" id="expiredBannerText">Mettez à jour votre moyen de paiement ou réabonnez-vous ci-dessous pour retrouver l'accès complet aux tirages.</p>
+                </div>
+            </div>
+
             <!-- Header Section -->
             <section class="mb-8 text-center">
                 <h2 class="cormorant text-4xl text-gold mb-4">L'Abonnement Tore</h2>
-                <p class="text-light-gold/80 text-lg max-w-2xl mx-auto">
+                <p class="text-light-gold/80 text-lg">
                     Accédez à l'expérience complète du Tore — accès complet aux tirages et analyses approfondies.
                 </p>
             </section>
@@ -263,7 +279,7 @@
             </section>
 
             <!-- Gestion renouvellement automatique -->
-            <section class="mb-8" id="autoRenewSection" style="display:none;">
+            <section class="mb-6" id="autoRenewSection" style="display:none;">
                 <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -282,10 +298,12 @@
                 </div>
             </section>
 
-            <!-- Pricing Cards — visible uniquement si non abonné ou ancien abonné -->
-            <section id="pricingSection" class="flex justify-center mb-12">
+            <!-- Pricing Cards — visible uniquement si non abonné ou ancien abonné.
+                 w-full (au lieu d'une carte étroite centrée dans un flex justify-center) :
+                 aligne ses bords sur les cartes "abonnement actuel"/"renouvellement" au-dessus. -->
+            <section id="pricingSection" class="mb-6">
                 <!-- Tore Plan -->
-                <div class="pricing-card featured rounded-2xl p-10 fade-in relative" style="max-width:420px;width:100%;">
+                <div class="pricing-card featured rounded-2xl p-10 fade-in relative w-full">
 
                     <div class="text-center mb-6">
                         <div class="text-4xl mb-3">∞</div>
@@ -297,8 +315,8 @@
                             <span class="text-gold/80 text-xs"><strong>Renouvellement automatique</strong> par défaut — vous pouvez le désactiver à tout moment depuis votre espace membre</span>
                         </div>
                     </div>
-                    
-                    <ul class="space-y-3 mb-8">
+
+                    <ul class="space-y-3 mb-8 max-w-sm mx-auto">
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-infinity text-gold w-5"></i>
                             <span>Accès complet à l'expérience chaque mois</span>
@@ -320,18 +338,17 @@
                             <span>Résiliable à tout moment</span>
                         </li>
                     </ul>
-                    
-                    <button id="btn-subscribe-tore" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-4 rounded-xl font-bold text-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
+
+                    <button id="btn-subscribe-tore" class="w-full max-w-sm mx-auto flex items-center justify-center bg-gradient-to-r from-gold to-light-gold text-night-blue py-4 rounded-xl font-bold text-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
                         <i class="fas fa-infinity mr-2"></i> S'abonner — 8€/mois
                     </button>
                 </div>
             </section>
 
-
             <!-- FAQ Section -->
             <section class="mb-8">
                 <h3 class="cormorant text-2xl text-gold text-center mb-6">Questions fréquentes</h3>
-                <div class="max-w-3xl mx-auto space-y-4">
+                <div class="space-y-4">
                     <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
                         <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
                             <span class="text-gold font-semibold">Quelles méthodes de paiement sont acceptées ?</span>
@@ -370,6 +387,7 @@
                     </div>
                 </div>
             </section>
+          </div><!-- /max-w-3xl content wrapper -->
         </main>
     </div>
 
@@ -516,12 +534,19 @@
                     }
                     if (typeof updateToggleUI === 'function') updateToggleUI(autoRenew);
                 } else {
-                    // Pas d'abonnement
-                    if (statusEl) statusEl.textContent = 'Abonnement: Gratuit';
-                    if (planLabel) planLabel.innerHTML = 'Formule <span class="text-gold font-medium">Gratuite</span>';
-                    if (planDesc) planDesc.textContent = 'Accès limité aux fonctionnalités de base';
+                    // Pas d'abonnement actif — mémoriser le statut réel (payment_failed,
+                    // cancelled...) pour qu'initSubscriptionUI() propose le bon bouton, y
+                    // compris pour un visiteur arrivé ici sans passer par tore.html.
+                    if (data.status) localStorage.setItem('oradia_last_sub_status', data.status);
+                    const isPaymentIssue = data.status === 'payment_failed';
+                    if (statusEl) statusEl.textContent = isPaymentIssue ? 'Abonnement : paiement non abouti' : 'Abonnement: Gratuit';
+                    if (planLabel) planLabel.innerHTML = isPaymentIssue
+                        ? 'Formule <span class="text-orange-400 font-medium">Paiement à corriger</span>'
+                        : 'Formule <span class="text-gold font-medium">Gratuite</span>';
+                    if (planDesc) planDesc.textContent = isPaymentIssue ? 'Votre dernier prélèvement a échoué' : 'Accès limité aux fonctionnalités de base';
                     if (pricingSection) pricingSection.style.display = 'flex'; // Afficher la pub
                     if (autoRenewSection) autoRenewSection.style.display = 'none'; // Cacher gestion renouvellement
+                    if (typeof initSubscriptionUI === 'function') initSubscriptionUI();
                 }
             } catch (err) {
                 console.error('Erreur vérification abonnement:', err);
@@ -681,26 +706,32 @@
 
         // ── Abonnement Stripe ──────────────────────────────────────────────────
         async function startSubscription(btn) {
-            // Vérifier si l'utilisateur est connecté avec Supabase Auth
-            const { data: { session } } = await supabase.auth.getSession();
-            const user = session?.user;
-            
-            if (!user) {
+            // Le site n'utilise PAS la session native Supabase Auth pour l'identité membre
+            // (voir member/login.html) : chaque page lit sa propre session dans
+            // oradia_member_session. supabase.auth.getSession() renvoie donc null pour un
+            // membre normalement connecté, ce qui renvoyait ce bouton vers l'inscription
+            // au lieu de lancer le paiement — corrigé en lisant la même clé que le reste du site.
+            let sess = null;
+            try {
+                sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || 'null');
+            } catch (_) {}
+
+            if (!sess?.email) {
                 // Pas connecté → redirect vers register pour créer compte puis abonnement
                 window.location.href = 'register.html?subscribe=tore';
                 return;
             }
-            
+
             // Utilisateur connecté → redirection Stripe
-            const email = user.email;
-            const fullName = user.user_metadata?.full_name || email.split('@')[0];
+            const email = sess.email;
+            const fullName = sess.name || email.split('@')[0];
             const original = btn.textContent;
             btn.disabled = true; btn.textContent = 'Redirection…';
             try {
                 const res  = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'tore-subscription', email, fullName })
+                    body: JSON.stringify({ type: 'tore-complet', email, fullName })
                 });
                 const data = await res.json();
                 if (data.url) { window.location.href = data.url; }
@@ -712,12 +743,20 @@
         }
 
         // ── Gestion renouvellement automatique ───────────────────────────────
-        (function initSubscriptionUI() {
+        // Fonction nommée (plutôt qu'IIFE anonyme) : rappelée depuis showMainContent()
+        // une fois le statut réel connu côté serveur, pour ne pas rester bloqué sur l'état
+        // lu au chargement de la page si l'utilisateur arrive ici sans passer par la
+        // redirection de tore.html (oradia_last_sub_status pas encore à jour).
+        function initSubscriptionUI() {
             const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session') || '{}');
             const subscribed = sess.subscribed || false;
             const wasSubscribed = sess.wasSubscribed || localStorage.getItem('oradia_was_subscribed') === 'true';
             const autoRenew = localStorage.getItem('oradia_auto_renew') !== 'false';
             const pricingSection = document.getElementById('pricingSection');
+            // Distingue "carte refusée" (même abonnement Stripe, à corriger via le portail)
+            // de "résilié" (nouveau checkout nécessaire) — voir handleCheckSubscription.
+            const lastStatus = localStorage.getItem('oradia_last_sub_status') || '';
+            const isPaymentIssue = lastStatus === 'payment_failed';
 
             if (subscribed) {
                 // Abonné actif : masquer la carte d'abonnement, afficher gestion renouvellement
@@ -748,8 +787,24 @@
                 }
                 document.getElementById('nextBillingDate').textContent = nextBilling;
                 updateToggleUI(autoRenew);
+            } else if (wasSubscribed && isPaymentIssue) {
+                // Abonnement toujours actif chez Stripe mais dernier prélèvement refusé :
+                // corriger le moyen de paiement sur CE MÊME abonnement (portail Stripe),
+                // pas un nouveau checkout qui créerait un second abonnement.
+                if (pricingSection) {
+                    pricingSection.innerHTML = `
+                        <div class="rounded-2xl p-8 border border-orange-400/40 text-center fade-in" style="max-width:480px;width:100%;background:linear-gradient(145deg,rgba(26,54,93,0.7),rgba(5,20,40,0.9));">
+                            <div class="text-5xl mb-4 text-orange-400"><i class="fas fa-triangle-exclamation"></i></div>
+                            <h3 class="cormorant text-2xl text-gold mb-3">Paiement non abouti</h3>
+                            <p class="text-light-gold/80 text-sm mb-6">Votre dernier prélèvement pour l'abonnement Tore n'a pas pu être effectué. Mettez à jour votre moyen de paiement pour reprendre l'accès — votre abonnement reste le même.</p>
+                            <button id="btn-fix-payment" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-xl font-bold text-base hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg mb-3">
+                                <i class="fas fa-credit-card mr-2"></i>Corriger mon moyen de paiement
+                            </button>
+                            <p class="text-light-gold/50 text-xs">Vous serez redirigé vers une page sécurisée Stripe</p>
+                        </div>`;
+                }
             } else if (wasSubscribed) {
-                // Ancien abonné : afficher une pub de réabonnement à la place de la carte standard
+                // Ancien abonné (résilié ou expiré) : afficher une pub de réabonnement
                 if (pricingSection) {
                     pricingSection.innerHTML = `
                         <div class="rounded-2xl p-8 border border-gold/40 text-center fade-in" style="max-width:480px;width:100%;background:linear-gradient(145deg,rgba(26,54,93,0.7),rgba(5,20,40,0.9));">
@@ -769,7 +824,35 @@
             // Brancher le listener sur le bouton (qu'il soit statique ou injecté)
             const btnTore = document.getElementById('btn-subscribe-tore');
             if (btnTore) btnTore.addEventListener('click', function() { startSubscription(this); });
-        })();
+
+            const btnFixPayment = document.getElementById('btn-fix-payment');
+            if (btnFixPayment) btnFixPayment.addEventListener('click', function() { openBillingPortal(this); });
+        }
+        initSubscriptionUI();
+
+        // Ouvre le portail de facturation Stripe pour l'abonnement existant (mise à jour
+        // du moyen de paiement) — voir le nouveau type 'billing-portal' dans
+        // api/create-checkout-session.js.
+        async function openBillingPortal(btn) {
+            const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
+            const email = sess.email;
+            if (!email) { window.location.href = 'login.html'; return; }
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Redirection…';
+            try {
+                const res = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'billing-portal', email })
+                });
+                const data = await res.json();
+                if (data.url) { window.location.href = data.url; }
+                else { btn.disabled = false; btn.innerHTML = original; alert('Erreur : ' + (data.error || 'Réessayez.')); }
+            } catch (e) {
+                btn.disabled = false; btn.innerHTML = original;
+                alert('Erreur réseau. Veuillez réessayer.');
+            }
+        }
 
         function updateToggleUI(active) {
             const toggle = document.getElementById('autoRenewToggle');
@@ -811,6 +894,28 @@
             document.body.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
+
+        // Redirigé depuis tore.html : l'abonnement que ce navigateur croyait actif n'est
+        // plus confirmé par le serveur (paiement échoué, abonnement expiré/annulé).
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('expired') === '1') {
+                const el = document.getElementById('expiredBanner');
+                if (el) {
+                    // oradia_last_sub_status posé juste avant la redirection par tore.html
+                    // (ou par showMainContent() ci-dessus) — distingue paiement refusé
+                    // (abonnement toujours actif chez Stripe) de résiliation/expiration.
+                    if (localStorage.getItem('oradia_last_sub_status') === 'payment_failed') {
+                        document.getElementById('expiredBannerTitle').textContent = 'Votre dernier paiement n\'a pas abouti';
+                        document.getElementById('expiredBannerText').textContent = 'Mettez à jour votre moyen de paiement ci-dessous pour reprendre l\'accès complet aux tirages — votre abonnement reste le même.';
+                    } else {
+                        document.getElementById('expiredBannerTitle').textContent = 'Votre abonnement a expiré ou a été résilié';
+                        document.getElementById('expiredBannerText').textContent = 'Réabonnez-vous ci-dessous pour retrouver l\'accès complet aux tirages.';
+                    }
+                    el.classList.remove('hidden');
+                }
+            }
+        })();
 
         // Retour après paiement réussi
         (function() {

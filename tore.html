@@ -6848,11 +6848,17 @@ function maybePromptToreReconnect() {
     setTimeout(() => form?.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true})), 500);
     return;
   }
-  if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
   let isSubscribed = window.freemiumTracker.isSubscribed();
+  if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
 
-  if (!isSubscribed) {
-    // Vérifier via API si l'utilisateur est connecté (email en session ou localStorage)
+  // Revérifie TOUJOURS le statut en direct auprès du serveur dès qu'une session avec
+  // email existe — y compris quand le cache local dit déjà "abonné". Sans ce
+  // revalidation, un abonnement dont le paiement échoue APRÈS la connexion (statut
+  // Supabase passé à 'payment_failed' par le webhook Stripe) restait "abonné"
+  // indéfiniment dans ce navigateur : rien ne repassait jamais par check-subscription
+  // pour le contredire, jusqu'à une reconnexion manuelle qui pouvait ne jamais arriver.
+  let subscriptionLapsed = false;
+  {
     const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
     if (sessStr) {
       try {
@@ -6863,16 +6869,38 @@ function maybePromptToreReconnect() {
             const data = await resp.json();
             if (data.subscribed) {
               isSubscribed = true;
-              // Mettre à jour la session locale pour les prochains appels
               sess.subscribed = true;
-              const updated = JSON.stringify(sess);
-              sessionStorage.setItem('oradia_member_session', updated);
-              localStorage.setItem('oradia_member_session', updated);
+              localStorage.setItem('oradia_was_subscribed', 'true');
+            } else {
+              // Le serveur ne confirme plus l'abonnement. Si le cache local le croyait
+              // encore actif, c'est une résiliation/échec de paiement détecté juste ici —
+              // pas un simple visiteur qui n'a jamais été abonné.
+              if (isSubscribed) subscriptionLapsed = true;
+              isSubscribed = false;
+              sess.subscribed = false;
+              // Mémorisé pour que member/abonnements.html sache proposer "corriger le
+              // paiement" (portail Stripe, même abonnement) plutôt que "se réabonner"
+              // (nouveau checkout) quand la cause est un paiement refusé.
+              if (data.status) localStorage.setItem('oradia_last_sub_status', data.status);
             }
+            const updated = JSON.stringify(sess);
+            sessionStorage.setItem('oradia_member_session', updated);
+            localStorage.setItem('oradia_member_session', updated);
           }
         }
       } catch(err) {}
     }
+  }
+
+  if (subscriptionLapsed) {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.dataset.submitting = '0';
+      const _slr = submitBtn.querySelector('.font-cinzel');
+      if (_slr) _slr.textContent = 'Commencer le Tirage';
+    }
+    window.location.href = '/member/abonnements.html?expired=1';
+    return;
   }
 
   if (!isSubscribed) {

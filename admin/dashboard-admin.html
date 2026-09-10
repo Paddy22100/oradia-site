@@ -3765,6 +3765,22 @@
                     <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
                 </div>
             </div>
+
+            <!-- Impact du parcours individualisé — même logique que le bloc campagnes
+                 ci-dessus, mais construit depuis newsletter_sends (chaque étape part à un
+                 moment différent par contact, pas d'agrégat de campagne côté Brevo). -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mt-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <div>
+                        <h4 class="cormorant text-xl text-gold">Impact du parcours individualisé</h4>
+                        <p class="text-light-gold/40 text-xs mt-0.5">Livraison, ouvertures et clics par étape (envois transactionnels, un par abonné).</p>
+                    </div>
+                    <button onclick="nlLoadParcoursStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                </div>
+                <div id="parcoursStatsCard">
+                    <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
+                </div>
+            </div>
             </div><!-- /analytics-subtab-newsletter -->
 
             <!-- ══ SOUS-ONGLET : CONVERSION ══ -->
@@ -7597,10 +7613,13 @@
             const statusLabel = item.status === 'unsubscribed' ? 'Désabonné'
                 : item.brevo_synced ? 'Inscrit newsletter' : 'Hors newsletter';
             if (_parcoursOrdreBySubject.size === 0) await loadParcoursStepsForProgress();
+            const nlStatusBadge = item.last_newsletter_status === 'blocked' ? ' <span class="text-orange-300">(bloqué)</span>'
+                : item.last_newsletter_status === 'bounced' ? ' <span class="text-orange-300">(rejeté)</span>'
+                : '';
             const lastNlRow = item.last_newsletter_sent_at
                 ? `<div class="flex justify-between gap-3 py-1.5 border-b border-white/5">
                        <span class="text-light-gold/40 shrink-0">Dernière newsletter</span>
-                       <span class="text-light-gold text-right text-sm">${escapeHtmlFront(item.last_newsletter_subject || '—')}<span class="block text-light-gold/40 text-xs">${formatDate(item.last_newsletter_sent_at)}</span></span>
+                       <span class="text-light-gold text-right text-sm">${escapeHtmlFront(item.last_newsletter_subject || '—')}<span class="block text-light-gold/40 text-xs">${formatDate(item.last_newsletter_sent_at)}${nlStatusBadge}</span></span>
                    </div>`
                 : '';
             body.innerHTML = [
@@ -10552,6 +10571,63 @@
             }
         }
 
+        // Stats de livraison par étape du parcours (action=parcours-stats) — construites
+        // depuis newsletter_sends, seule source qui garde un envoi par contact plutôt
+        // qu'un instantané écrasé à chaque fois. Les taux délivré/ouvert/cliqué dépendent
+        // du webhook Brevo (delivered/opened/click/blocked/bounced) : si aucune étape
+        // n'a de delivered_at (trackingConfigured=false), on prévient que ces événements
+        // ne sont probablement pas encore activés côté Brevo plutôt que de laisser croire
+        // à 0% de livraison partout.
+        async function nlLoadParcoursStats() {
+            const card = document.getElementById('parcoursStatsCard');
+            if (!card) return;
+            card.innerHTML = `<div class="bg-[rgba(5,20,40,0.6)] rounded-xl border border-gold/20 p-4 text-light-gold/40 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement des statistiques…</div>`;
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=parcours-stats');
+                const s = await res.json();
+                if (!res.ok || !s.success) throw new Error(s.error || 'Erreur');
+                if (!s.steps.length) {
+                    card.innerHTML = `<div class="bg-[rgba(5,20,40,0.6)] rounded-xl border border-gold/20 p-4 text-light-gold/40 text-sm italic">Aucun envoi du parcours enregistré pour le moment.</div>`;
+                    return;
+                }
+                const warning = !s.trackingConfigured
+                    ? `<p class="text-orange-300/80 text-xs mb-3"><i class="fas fa-triangle-exclamation mr-1.5"></i>Aucune livraison confirmée pour l'instant — vérifie que les événements "Delivered", "Opened", "Click", "Blocked" et "Soft bounce" sont bien cochés dans Brevo &gt; Paramètres &gt; Webhooks pour /api/admin/brevo-webhook (Hard bounce et Unsubscribed le sont déjà).</p>`
+                    : '';
+                const rows = s.steps.map(st => `
+                    <tr class="hover:bg-gold/5 transition">
+                        <td class="px-4 py-2.5 text-light-gold text-sm">N°${st.ordre}</td>
+                        <td class="px-4 py-2.5 text-light-gold/70 text-sm truncate max-w-[220px]" title="${escapeHtmlFront(st.subject || '')}">${escapeHtmlFront(st.subject || '—')}</td>
+                        <td class="px-4 py-2.5 text-light-gold/70 text-sm text-right">${st.sent}</td>
+                        <td class="px-4 py-2.5 text-sm text-right"><span class="${st.deliveredPct >= 90 ? 'text-green-300' : st.deliveredPct >= 60 ? 'text-gold/80' : 'text-orange-300'}">${st.delivered} (${st.deliveredPct}%)</span></td>
+                        <td class="px-4 py-2.5 text-light-gold/70 text-sm text-right">${st.opened} (${st.openedPct}%)</td>
+                        <td class="px-4 py-2.5 text-light-gold/70 text-sm text-right">${st.clicked} (${st.clickedPct}%)</td>
+                        <td class="px-4 py-2.5 text-sm text-right">${(st.blocked + st.bounced) > 0 ? `<span class="text-red-300">${st.blocked + st.bounced} (${st.failedPct}%)</span>` : '<span class="text-light-gold/30">0</span>'}</td>
+                    </tr>`).join('');
+                card.innerHTML = `
+                    ${warning}
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-xl border border-gold/20 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-[rgba(5,20,40,0.8)]">
+                                    <tr>
+                                        <th class="px-4 py-3 text-left text-gold/70 text-xs font-semibold">Étape</th>
+                                        <th class="px-4 py-3 text-left text-gold/70 text-xs font-semibold">Sujet</th>
+                                        <th class="px-4 py-3 text-right text-gold/70 text-xs font-semibold">Envoyés</th>
+                                        <th class="px-4 py-3 text-right text-gold/70 text-xs font-semibold">Délivrés</th>
+                                        <th class="px-4 py-3 text-right text-gold/70 text-xs font-semibold" title="Rapporté aux délivrés">Ouverts</th>
+                                        <th class="px-4 py-3 text-right text-gold/70 text-xs font-semibold" title="Rapporté aux délivrés">Cliqués</th>
+                                        <th class="px-4 py-3 text-right text-gold/70 text-xs font-semibold">Bloqués/bounced</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${rows}</tbody>
+                            </table>
+                        </div>
+                    </div>`;
+            } catch (e) {
+                card.innerHTML = `<div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">Erreur : ${escapeHtmlFront(e.message)}</div>`;
+            }
+        }
+
         // Convertit le HTML d'un brouillon (contenu de l'éditeur : p/br/strong/em/ul/li)
         // en texte lisible pour jsPDF, qui ne rend que du texte brut positionné — pas de
         // balises. Les paragraphes deviennent des lignes vides, les <li> des puces.
@@ -11455,7 +11531,16 @@
                     const subj = c.last_newsletter_subject
                         ? `<span class="block text-light-gold/40 text-xs truncate max-w-[180px]" title="${escapeHtmlFront(c.last_newsletter_subject)}">${escapeHtmlFront(c.last_newsletter_subject)}</span>`
                         : '';
-                    lastNl = `<span class="text-green-300 text-xs"><i class="fas fa-check mr-1"></i>${d}</span>${subj}`;
+                    // last_newsletter_status vient du webhook Brevo (delivered/blocked/bounced,
+                    // voir /brevo-webhook) — coche verte "envoyé" tant qu'aucune confirmation
+                    // n'est encore arrivée (comportement d'avant, préservé), icône distincte dès
+                    // qu'un blocage/bounce est confirmé, pour repérer un contact qui ne reçoit
+                    // plus rien sans avoir à croiser avec Brevo à la main.
+                    const statusIcon = c.last_newsletter_status === 'blocked' || c.last_newsletter_status === 'bounced'
+                        ? `<i class="fas fa-triangle-exclamation mr-1" title="${c.last_newsletter_status === 'blocked' ? 'Bloqué chez le destinataire' : 'Rejeté (bounce)'}"></i>`
+                        : '<i class="fas fa-check mr-1"></i>';
+                    const statusClass = c.last_newsletter_status === 'blocked' || c.last_newsletter_status === 'bounced' ? 'text-orange-300' : 'text-green-300';
+                    lastNl = `<span class="${statusClass} text-xs">${statusIcon}${d}</span>${subj}`;
                 }
                 return `
                 <tr class="hover:bg-gold/5 transition">

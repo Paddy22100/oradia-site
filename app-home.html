@@ -66,6 +66,13 @@
     background: linear-gradient(135deg, var(--gold), var(--light-gold));
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   }
+  .beta-badge {
+    display: inline-block; vertical-align: middle; margin-left: 8px;
+    padding: 2px 9px; border-radius: 20px;
+    background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.45);
+    font-family: 'Lora', Georgia, serif; font-size: 10px; font-weight: 600; letter-spacing: 0.12em;
+    color: var(--light-gold); -webkit-text-fill-color: var(--light-gold);
+  }
   .brand p { position: relative; margin: 0; font-size: 13px; letter-spacing: 0.08em; color: rgba(232,228,212,0.55); font-style: italic; }
 
   .cards { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
@@ -86,13 +93,64 @@
     display: flex; align-items: center; justify-content: center;
   }
   .card .icon svg { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; }
+  .icon-thumb { overflow: hidden; padding: 0; background: none !important; border: none !important; }
+  .icon-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .card-precommande { border-color: rgba(212,175,55,0.4); }
   .card .text { flex: 1; min-width: 0; }
   .card .text .title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 19px; color: var(--light-gold); margin: 0 0 2px; }
   .card .text .sub { font-size: 12.5px; color: rgba(232,228,212,0.72); margin: 0; line-height: 1.4; }
   .card .chevron { flex-shrink: 0; opacity: 0.4; }
-  .card.primary { border-color: rgba(212,175,55,0.6); background: linear-gradient(145deg, rgba(80,66,24,0.96), rgba(38,72,120,0.97)); }
-  .card.primary .icon { background: linear-gradient(135deg, var(--gold), var(--light-gold)); border-color: transparent; }
-  .card.primary .icon svg { stroke: var(--night-deep); }
+  .card.primary {
+    position: relative; overflow: hidden; padding: 24px 20px;
+    border-color: rgba(212,175,55,0.7);
+    background: linear-gradient(150deg, #2a2410 0%, rgba(90,74,26,0.97) 30%, rgba(26,54,93,0.97) 75%);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.15);
+    animation: primaryGlow 3.2s ease-in-out infinite;
+  }
+  @keyframes primaryGlow {
+    0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.18), 0 0 22px rgba(212,175,55,0.08); }
+    50% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.4), 0 0 32px rgba(212,175,55,0.25); }
+  }
+  /* Halo rayonnant derrière l'icône, comme une aura */
+  .card.primary::before {
+    content: ''; position: absolute; left: -30px; top: 50%; transform: translateY(-50%);
+    width: 160px; height: 160px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(245,231,161,0.35), transparent 70%);
+    pointer-events: none;
+  }
+  /* Balayage de lumière traversant la carte, en boucle lente */
+  .card.primary::after {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.14) 45%, transparent 60%);
+    background-size: 250% 100%; background-position: 150% 0;
+    animation: primaryShimmer 5s ease-in-out infinite;
+  }
+  @keyframes primaryShimmer {
+    0%, 40% { background-position: 150% 0; }
+    100% { background-position: -50% 0; }
+  }
+  .card.primary .icon {
+    position: relative; width: 58px; height: 58px;
+    background: radial-gradient(circle at 35% 30%, var(--light-gold), var(--gold) 70%);
+    border-color: transparent;
+    box-shadow: 0 0 20px rgba(212,175,55,0.5), inset 0 0 8px rgba(255,255,255,0.3);
+  }
+  .card.primary .icon svg { width: 27px; height: 27px; stroke: var(--night-deep); stroke-width: 1.1; }
+  .card.primary .icon svg rect:nth-child(2) { fill: var(--night-deep); }
+  .free-badge {
+    display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 20px;
+    background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+    font-family: 'Lora', Georgia, serif; font-size: 10px; font-weight: 400; letter-spacing: 0.03em;
+    color: #fff8e0; vertical-align: middle;
+  }
+  .card.primary .text { position: relative; }
+  .card.primary .text .title {
+    font-size: 22px;
+    background: linear-gradient(135deg, var(--light-gold), #fff8e0);
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .card.primary .text .sub { color: rgba(245,235,210,0.85); }
+  .card.primary .chevron { position: relative; opacity: 0.7; }
 
   footer { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; }
   footer a { color: rgba(212,175,55,0.5); font-size: 11.5px; text-decoration: none; letter-spacing: 0.08em; }
@@ -124,7 +182,7 @@
   <div class="wrap">
     <div class="brand">
       <div class="logo-wrap"><img src="images/logo-hd-v2.webp" alt="Oradia"></div>
-      <h1>ORADIA</h1>
+      <h1>ORADIA<span class="beta-badge">BÊTA</span></h1>
       <p>La Boussole Intérieure</p>
     </div>
 
@@ -136,43 +194,79 @@
 
     <div class="cards">
       <a class="card primary" href="tore.html">
-        <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <span class="icon">
+          <svg viewBox="0 0 24 24" fill="none">
+            <rect x="4" y="6.5" width="7.5" height="11" rx="1.3" transform="rotate(-18 7.75 12)" fill="#0f2540"/>
+            <rect x="8.25" y="6.5" width="7.5" height="11" rx="1.3"/>
+            <rect x="12.5" y="6.5" width="7.5" height="11" rx="1.3" transform="rotate(18 16.25 12)" fill="#0f2540"/>
+          </svg>
+        </span>
         <span class="text">
-          <p class="title">Faire un tirage</p>
+          <p class="title">Faire un tirage <span id="freeDrawsBadge" class="free-badge">2 gratuits</span></p>
           <p class="sub">Consultez l'oracle et laissez le hasard quantique vous guider</p>
         </span>
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="card" href="member/dashboard.html">
-        <span class="icon"><svg viewBox="0 0 24 24"><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/><circle cx="12" cy="7" r="4"/></svg></span>
+      <a class="card" href="contact.html">
+        <span class="icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></span>
         <span class="text">
-          <p class="title">Mon espace</p>
-          <p class="sub">Historique de tirages, tirage programmé, profil</p>
+          <p class="title">Un problème ? Une idée <span class="free-badge">bêta</span></p>
+          <p class="sub">Aidez-moi à améliorer Oradia pendant la phase de test</p>
         </span>
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="card" href="precommande-oracle.html">
-        <span class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/></svg></span>
+      <a id="spaceCard" class="card" href="member/dashboard.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/><circle cx="12" cy="7" r="4"/></svg></span>
         <span class="text">
-          <p class="title">Précommander</p>
+          <p id="spaceCardTitle" class="title">Mon espace</p>
+          <p id="spaceCardSub" class="sub">Historique de tirages, tirage programmé, profil</p>
+        </span>
+        <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <a class="card card-precommande" href="precommande-oracle.html">
+        <span class="icon icon-thumb"><img src="images/precommande-thumb.webp" alt=""></span>
+        <span class="text">
+          <p class="title">Précommander <span class="free-badge">édition limitée</span></p>
           <p class="sub">Réservez votre exemplaire physique de l'Oracle</p>
         </span>
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="card" href="abonnements.html">
+      <a id="subscribeCard" class="card" href="tore-abonnement.html?discount=email24h">
         <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.6 6.9L22 10.6l-5.5 4.4 1.8 7-6.3-3.9-6.3 3.9 1.8-7L2 10.6l7.4-1.2z"/></svg></span>
         <span class="text">
           <p class="title">Devenir abonné</p>
-          <p class="sub">Tirages illimités en ligne, sans limite</p>
+          <p class="sub">Tirages illimités · 5€ le premier mois</p>
         </span>
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
     </div>
 
-    <footer><a href="index.html">Voir le site complet →</a></footer>
+    <a id="referralBanner" href="member/dashboard.html#parrainage-section" style="display:none;width:100%;max-width:420px;margin-top:16px;text-decoration:none;">
+      <div style="display:flex;align-items:center;gap:14px;background:linear-gradient(145deg,rgba(212,175,55,0.16),rgba(26,54,93,0.7));border:1px solid rgba(212,175,55,0.35);border-radius:16px;padding:14px 18px;">
+        <span style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);display:flex;align-items:center;justify-content:center;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.6"><path d="M12 2.5l2.6 6.9L22 10.6l-5.5 4.4 1.8 7-6.3-3.9-6.3 3.9 1.8-7L2 10.6l7.4-1.2z"/></svg>
+        </span>
+        <span style="flex:1;min-width:0;">
+          <p style="margin:0 0 2px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:16px;color:var(--light-gold);">Offrez un tirage à un proche</p>
+          <p style="margin:0;font-size:12px;color:rgba(232,228,212,0.6);">Partagez Oradia et faites-lui découvrir l'oracle</p>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:0.5;color:#e8e4d4;"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </a>
+
+    <div id="newsletterBanner" style="display:none;width:100%;max-width:420px;margin-top:16px;background:linear-gradient(145deg,rgba(26,54,93,0.6),rgba(5,20,40,0.8));border:1px solid rgba(212,175,55,0.3);border-radius:16px;padding:16px 18px;">
+      <p style="margin:0 0 2px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:16px;color:var(--light-gold);">Recevez la lettre d'Oradia</p>
+      <p style="margin:0 0 12px;font-size:12px;color:rgba(232,228,212,0.6);">Guidance, actualités et offres.</p>
+      <form id="newsletterForm" style="display:flex;gap:8px;">
+        <input id="newsletterEmail" type="email" required placeholder="votre@email.fr" style="flex:1;min-width:0;padding:11px 14px;border-radius:10px;border:1px solid rgba(212,175,55,0.3);background:rgba(5,20,40,0.6);color:#e8e4d4;font-size:14px;">
+        <button type="submit" style="flex-shrink:0;padding:0 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#051428;font-weight:600;font-size:13px;cursor:pointer;">OK</button>
+      </form>
+      <p id="newsletterMsg" style="display:none;margin:8px 0 0;font-size:12px;color:var(--light-gold);"></p>
+    </div>
   </div>
 
   <script>
@@ -192,6 +286,69 @@
       if (isIos && isSafari && !isStandalone && !isCapacitorApp && !alreadyDismissed) {
         document.getElementById('iosInstallBanner').style.display = 'flex';
       }
+    })();
+
+    // Adapte la carte "Mon espace" selon l'état de connexion.
+    (function () {
+      var isLoggedIn = false;
+      try { isLoggedIn = localStorage.getItem('isLoggedIn') === 'true' || sessionStorage.getItem('isLoggedIn') === 'true'; } catch (e) {}
+      if (!isLoggedIn) {
+        var spaceCardTitle = document.getElementById('spaceCardTitle');
+        var spaceCardSub = document.getElementById('spaceCardSub');
+        var spaceCard = document.getElementById('spaceCard');
+        if (spaceCardTitle) spaceCardTitle.textContent = 'Se connecter';
+        if (spaceCardSub) spaceCardSub.textContent = 'Accédez à votre historique et votre profil';
+        if (spaceCard) spaceCard.setAttribute('href', 'member/login.html');
+
+        // Bandeau newsletter, réservé aux visiteurs non connectés (les membres ont déjà
+        // leurs infos), masqué définitivement après inscription ou fermeture.
+        var newsletterDone = false;
+        try { newsletterDone = localStorage.getItem('oradia_app_newsletter_done') === '1'; } catch (e) {}
+        var newsletterBanner = document.getElementById('newsletterBanner');
+        if (newsletterBanner && !newsletterDone) {
+          newsletterBanner.style.display = 'block';
+        }
+      }
+    })();
+
+    var newsletterForm = document.getElementById('newsletterForm');
+    if (newsletterForm) {
+      newsletterForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var email = document.getElementById('newsletterEmail').value.trim();
+        var msg = document.getElementById('newsletterMsg');
+        if (!email) return;
+        try {
+          await fetch('/api/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: email, source: 'app-home' })
+          });
+        } catch (e) {}
+        newsletterForm.style.display = 'none';
+        if (msg) { msg.textContent = 'Merci, à très vite dans votre boîte mail !'; msg.style.display = 'block'; }
+        try { localStorage.setItem('oradia_app_newsletter_done', '1'); } catch (e) {}
+      });
+    }
+
+    // Si l'utilisateur connecté est déjà abonné : masque la carte "Devenir abonné"
+    // (inutile pour lui) et affiche à la place le bandeau de parrainage.
+    (async function () {
+      var email = '';
+      try { email = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || ''; } catch (e) {}
+      if (!email) return;
+      try {
+        var res = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+        var data = await res.json();
+        if (data.subscribed) {
+          var subscribeCard = document.getElementById('subscribeCard');
+          if (subscribeCard) subscribeCard.style.display = 'none';
+          var referralBanner = document.getElementById('referralBanner');
+          if (referralBanner) referralBanner.style.display = 'block';
+          var freeDrawsBadge = document.getElementById('freeDrawsBadge');
+          if (freeDrawsBadge) freeDrawsBadge.style.display = 'none';
+        }
+      } catch (e) {}
     })();
   </script>
 </body>
