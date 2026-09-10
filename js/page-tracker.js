@@ -33,12 +33,15 @@
     var isNew = !localStorage.getItem(VISITOR_KEY);
     if (isNew) localStorage.setItem(VISITOR_KEY, '1');
 
+    var isApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+
     var payload = JSON.stringify({
       path: location.pathname,
       referrer: document.referrer || '',
       session_id: sessionId,
       user_agent: navigator.userAgent || '',
-      is_new_visitor: isNew
+      is_new_visitor: isNew,
+      is_app: isApp
     });
     var url = '/api/admin/track';
     if (navigator.sendBeacon) {

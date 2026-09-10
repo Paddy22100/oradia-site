@@ -8696,6 +8696,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         const sessionId = String(body.session_id || '').slice(0, 100);
         const userAgent = String(body.user_agent || '').slice(0, 500);
         const isNewVisitor = body.is_new_visitor === true;
+        const isApp = body.is_app === true;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
         const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
@@ -8742,7 +8743,7 @@ Réponds en français, sans tiret long, format markdown compact.`
           return res.status(204).end();
         }
         if (pagePath) {
-          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });
+          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor, is_app: isApp });
         }
         if (event) {
           await sb.from('funnel_events').insert({ session_id: sessionId, event_name: event, path: pagePath || null }).select().single()
@@ -9245,7 +9246,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       // avec .range() jusqu'à épuisement des lignes, quel que soit le plafond réel.
       const [views, prevViews] = await Promise.all([
         sbFetchAllRows(() => sb.from('page_views')
-          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent')
+          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent,is_app')
           .gte('created_at', since).not('path', 'like', '/admin%')
           .order('created_at', { ascending: false })),
         sbFetchAllRows(() => sb.from('page_views')
@@ -9258,6 +9259,29 @@ Réponds en français, sans tiret long, format markdown compact.`
       const pctChange = (curr, prev) => (prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0));
       traffic.views_change_pct = pctChange(traffic.total_views, prevTraffic.total_views);
       traffic.visitors_change_pct = pctChange(traffic.unique_visitors, prevTraffic.unique_visitors);
+
+      // ── Usage de l'app mobile native (is_app, posé par js/page-tracker.js via
+      // window.Capacitor.isNativePlatform()) — permet de voir si l'app est
+      // effectivement utilisée, par qui (sessions) et à quel moment (heure/jour).
+      {
+        const appViews = views.filter(v => v.is_app);
+        const appSessions = new Set(appViews.map(v => v.session_id));
+        const appPageCounts = {};
+        appViews.forEach(v => { appPageCounts[v.path] = (appPageCounts[v.path] || 0) + 1; });
+        const appTopPages = Object.entries(appPageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({ path, count }));
+        const appByHour = Array(24).fill(0);
+        appViews.forEach(v => { const h = new Date(v.created_at).getHours(); appByHour[h]++; });
+        const appByDay = {};
+        appViews.forEach(v => { const d = v.created_at.slice(0,10); appByDay[d] = (appByDay[d] || 0) + 1; });
+        traffic.app_usage = {
+          total_views: appViews.length,
+          unique_sessions: appSessions.size,
+          top_pages: appTopPages,
+          by_hour: appByHour,
+          by_day: Object.entries(appByDay).sort((a,b) => a[0] < b[0] ? -1 : 1).map(([date,count]) => ({ date, count })),
+          last_seen: appViews.length ? appViews[0].created_at : null
+        };
+      }
 
       // ── Santé technique (erreurs, depuis system_logs) ──
       // On distingue les erreurs serveur (API) des erreurs JS côté client

@@ -3722,6 +3722,30 @@
                 </div>
             </div>
 
+            <!-- Usage de l'app mobile native -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fas fa-mobile-alt text-gold/60"></i> Sessions app</h4>
+                    <div id="ana-app-sessions" class="text-3xl font-bold text-gold">—</div>
+                    <p class="text-light-gold/35 text-xs mt-1">appareils ayant ouvert l'app</p>
+                </div>
+                <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fas fa-eye text-gold/60"></i> Vues via l'app</h4>
+                    <div id="ana-app-views" class="text-3xl font-bold text-gold">—</div>
+                    <p class="text-light-gold/35 text-xs mt-1" id="ana-app-last-seen">dernière activité : —</p>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-gold/60"></i> Pages consultées (app)</h4>
+                    <div id="ana-app-top-pages" class="space-y-2 text-sm"><p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Quand l'app est utilisée (heure de la journée)</h4>
+                    <div id="ana-app-by-hour" class="space-y-2 text-sm"></div>
+                </div>
+            </div>
+
             <!-- Comportement des visiteurs -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6">
@@ -15061,6 +15085,47 @@
                                     <div class="h-full bg-teal-400/60 rounded-full" style="width:${(p.count/max*100).toFixed(0)}%"></div>
                                 </div>
                             </div>`).join('');
+                }
+
+                // Usage de l'app mobile native
+                {
+                    const app = t.app_usage || {};
+                    setEl('ana-app-sessions', app.unique_sessions ?? 0);
+                    setEl('ana-app-views', app.total_views ?? 0);
+                    const lastSeenEl = document.getElementById('ana-app-last-seen');
+                    if (lastSeenEl) {
+                        lastSeenEl.textContent = app.last_seen
+                            ? 'dernière activité : ' + new Date(app.last_seen).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
+                            : 'dernière activité : —';
+                    }
+                    const appPagesEl = document.getElementById('ana-app-top-pages');
+                    if (appPagesEl) {
+                        const pages = app.top_pages || [];
+                        const max = Math.max(...pages.map(p => p.count), 1);
+                        appPagesEl.innerHTML = pages.length === 0
+                            ? '<p class="text-gold/30 italic text-xs">Aucune visite via l\'app pour cette période.</p>'
+                            : pages.map(p => `
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gold/60 font-mono text-xs truncate flex-1" title="${p.path}">${p.path}</span>
+                                    <span class="text-gold/40 text-xs w-8 text-right">${p.count}</span>
+                                    <div class="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0">
+                                        <div class="h-full bg-gold/60 rounded-full" style="width:${(p.count/max*100).toFixed(0)}%"></div>
+                                    </div>
+                                </div>`).join('');
+                    }
+                    const byHourEl = document.getElementById('ana-app-by-hour');
+                    if (byHourEl) {
+                        const byHour = app.by_hour || Array(24).fill(0);
+                        const maxH = Math.max(...byHour, 1);
+                        const totalH = byHour.reduce((a,b) => a+b, 0);
+                        byHourEl.innerHTML = totalH === 0
+                            ? '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'
+                            : `<div class="flex items-end gap-0.5 h-24">${byHour.map((c,h) => `
+                                <div class="flex-1 flex flex-col items-center justify-end h-full" title="${h}h : ${c} vue(s)">
+                                    <div class="w-full bg-gold/50 rounded-t" style="height:${c > 0 ? Math.max(4,(c/maxH*100)) : 0}%"></div>
+                                </div>`).join('')}</div>
+                                <div class="flex gap-0.5 mt-1">${byHour.map((_,h) => `<span class="flex-1 text-center text-[9px] text-gold/25">${h % 3 === 0 ? h : ''}</span>`).join('')}</div>`;
+                    }
                 }
 
                 // Provenance
