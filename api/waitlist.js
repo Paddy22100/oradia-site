@@ -650,6 +650,17 @@ module.exports = async (req, res) => {
     validateEnvironment();
     const supabase = getSupabaseClient();
 
+    // Un abonné déjà actif ne doit pas recevoir une seconde fois l'email "vous êtes
+    // inscrit" — confusion remontée par un testeur déjà abonné qui l'a reçu à
+    // nouveau simplement en laissant son email sur un formulaire (ex. page de
+    // feedback bêta) sans intention de se réinscrire.
+    const { data: existingContact } = await supabase
+      .from('newsletter_contacts')
+      .select('status')
+      .ilike('email', email)
+      .maybeSingle();
+    const isNewOrReactivated = !existingContact || existingContact.status !== 'active';
+
     const { error } = await supabase
       .from('newsletter_contacts')
       .upsert(
@@ -675,7 +686,7 @@ module.exports = async (req, res) => {
     }
 
     const [emailSent, contactAdded] = await Promise.all([
-      sendWaitlistConfirmationEmail(email),
+      isNewOrReactivated ? sendWaitlistConfirmationEmail(email) : Promise.resolve(false),
       addContactToBrevoList(email)
     ]);
 
