@@ -3097,7 +3097,6 @@
                     </div>
                     <p id="sendParcoursIndividualStatus" class="hidden text-sm mb-4 px-1"></p>
                     <div id="parcoursStatusCard" class="mb-6"></div>
-                    <div id="parcoursStatsCard" class="mb-6"></div>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
@@ -3764,6 +3763,22 @@
                 <div id="nl-stats-analysis" class="hidden mt-5 border-t border-gold/15 pt-5">
                     <p class="text-gold/60 text-xs uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i>Pistes d'amélioration (IA)</p>
                     <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
+                </div>
+            </div>
+
+            <!-- Impact du parcours individualisé — même logique que le bloc campagnes
+                 ci-dessus, mais construit depuis newsletter_sends (chaque étape part à un
+                 moment différent par contact, pas d'agrégat de campagne côté Brevo). -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mt-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <div>
+                        <h4 class="cormorant text-xl text-gold">Impact du parcours individualisé</h4>
+                        <p class="text-light-gold/40 text-xs mt-0.5">Livraison, ouvertures et clics par étape (envois transactionnels, un par abonné).</p>
+                    </div>
+                    <button onclick="nlLoadParcoursStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                </div>
+                <div id="parcoursStatsCard">
+                    <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
                 </div>
             </div>
             </div><!-- /analytics-subtab-newsletter -->
@@ -8554,7 +8569,7 @@
             if (name === 'scheduled') nlRenderScheduled();
             if (name === 'sent') nlRenderSent();
             if (name === 'testers') nlLoadTesters();
-            if (name === 'parcours') { nlLoadParcours(); nlLoadParcoursStatus(); nlLoadParcoursStats(); }
+            if (name === 'parcours') { nlLoadParcours(); nlLoadParcoursStatus(); }
             if (name === 'social') nlLoadSocialPosts();
             if (name === 'tirage') nlRenderTirageStatus();
         }
