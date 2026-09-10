@@ -5663,16 +5663,23 @@ async function nlSendTargetedCampaign({ BREVO_API_KEY, emails, subject, html, ty
 // et permet de situer précisément un contact dans le parcours via l'ordre réel du brouillon
 // plutôt que de le déduire par rapprochement de sujet. Colonne/table optionnelle tant que la
 // migration n'est pas passée — échoue silencieusement plutôt que de casser l'envoi réel.
-async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, canal, sentAt }) {
+async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, canal, sentAt, messageIds }) {
   const list = (emails || []).filter(Boolean);
   if (list.length === 0) return;
+  // messageIds : { email -> message_id Brevo }, optionnel — seul l'envoi transactionnel
+  // individuel (parcours) le connaît au moment de l'envoi (retourné par /v3/smtp/email),
+  // pas les campagnes (un seul appel pour toute la liste, pas d'id par destinataire).
+  // Sans lui, le webhook Brevo (delivered/opened/click/blocked/bounced) ne peut pas
+  // rattacher ses événements à cette ligne — le statut de livraison restera inconnu,
+  // sans que ça ne bloque rien (sent_at reste la seule preuve, comme avant).
   const rows = list.map(email => ({
     contact_email: email,
     draft_id: draftId || null,
     subject: subject || null,
     ordre: ordre != null ? ordre : null,
     canal: canal || null,
-    sent_at: sentAt || new Date().toISOString()
+    sent_at: sentAt || new Date().toISOString(),
+    message_id: messageIds?.[email] || null
   }));
   try {
     const { error } = await supabase.from('newsletter_sends').insert(rows);
@@ -5814,15 +5821,31 @@ async function runParcoursIndividualCron(supabase) {
           })
         })));
         const sentEmails = [];
-        results.forEach((r, idx) => { if (r.ok) sentEmails.push(batch[idx]); });
+        const messageIds = {};
+        // Brevo répond { messageId: "<...>" } par envoi individuel (contrairement aux
+        // campagnes, ici un seul destinataire par appel) — capturé pour que le webhook
+        // Brevo (delivered/opened/click/blocked/bounced, voir /brevo-webhook) puisse
+        // rattacher ses événements à la bonne ligne newsletter_sends. Le corps n'est lu
+        // que sur les réponses réussies : celles en erreur n'ont pas de messageId utile.
+        await Promise.all(results.map(async (r, idx) => {
+          if (!r.ok) return;
+          sentEmails.push(batch[idx]);
+          try {
+            const data = await r.json();
+            if (data?.messageId) messageIds[batch[idx]] = data.messageId;
+          } catch (_) {}
+        }));
         sentCount += sentEmails.length;
         if (sentEmails.length > 0) {
           await supabase.from('newsletter_contacts')
-            .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+            // last_newsletter_status repart à null : le statut du précédent envoi ne
+            // s'applique plus une fois qu'un nouveau vient d'être fait — reste vide
+            // jusqu'à ce que le webhook confirme la livraison de celui-ci.
+            .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject, last_newsletter_status: null })
             .in('email', sentEmails);
           await logNewsletterSends(supabase, {
             emails: sentEmails, subject: finalSubject, draftId: step.id,
-            ordre: Number(step.extra?.ordre) || null, canal: 'parcours'
+            ordre: Number(step.extra?.ordre) || null, canal: 'parcours', messageIds
           });
         }
       }
@@ -5947,6 +5970,52 @@ async function handleNewsletter(req, res) {
         const { count: total } = await supabase.from('newsletter_contacts').select('*', { count: 'exact', head: true }).eq('status', 'active');
         const { count: unsent } = await supabase.from('newsletter_contacts').select('*', { count: 'exact', head: true }).eq('status', 'active').is('precommande_launch_sent_at', null);
         return res.status(200).json({ success: true, total: total || 0, unsent: unsent || 0, already_sent: (total || 0) - (unsent || 0) });
+      }
+
+      // ── Stats agrégées par étape du parcours ("étape X envoyée à Y abonnés,
+      // Z % délivrés, W % ouverts...") — construites depuis newsletter_sends, seule
+      // source qui journalise chaque envoi individuellement plutôt qu'un instantané
+      // écrasé à chaque fois (contrairement à newsletter_contacts). Les taux de
+      // livraison/ouverture/clic dépendent du webhook Brevo (voir /brevo-webhook et
+      // migration newsletter-sends-delivery-status) : sans lui configuré côté Brevo,
+      // "sent" reste correct mais delivered/opened/clicked resteront à 0 partout —
+      // pas une erreur de cette requête, juste une donnée qui n'arrive jamais.
+      if (action === 'parcours-stats') {
+        const { data: sends, error } = await supabase
+          .from('newsletter_sends')
+          .select('ordre, subject, sent_at, delivered_at, opened_at, clicked_at, blocked_at, bounced_at')
+          .eq('canal', 'parcours');
+        if (error) return res.status(500).json({ error: error.message });
+
+        const byOrdre = new Map();
+        for (const s of sends || []) {
+          const ordre = s.ordre ?? 0;
+          if (!byOrdre.has(ordre)) {
+            byOrdre.set(ordre, { ordre, subject: s.subject || null, sent: 0, delivered: 0, opened: 0, clicked: 0, blocked: 0, bounced: 0, lastSentAt: null });
+          }
+          const agg = byOrdre.get(ordre);
+          agg.sent++;
+          if (s.delivered_at) agg.delivered++;
+          if (s.opened_at) agg.opened++;
+          if (s.clicked_at) agg.clicked++;
+          if (s.blocked_at) agg.blocked++;
+          if (s.bounced_at) agg.bounced++;
+          if (!agg.subject) agg.subject = s.subject || null;
+          if (!agg.lastSentAt || (s.sent_at && s.sent_at > agg.lastSentAt)) agg.lastSentAt = s.sent_at;
+        }
+        const pct = (num, den) => den ? Math.round((num / den) * 100) : 0;
+        const steps = [...byOrdre.values()]
+          .sort((a, b) => a.ordre - b.ordre)
+          .map(a => ({
+            ...a,
+            deliveredPct: pct(a.delivered, a.sent),
+            // Ouverture/clic rapportés aux délivrés (pas aux envoyés) : un email jamais
+            // délivré ne peut par définition pas être ouvert — convention email standard.
+            openedPct: pct(a.opened, a.delivered),
+            clickedPct: pct(a.clicked, a.delivered),
+            failedPct: pct(a.blocked + a.bounced, a.sent)
+          }));
+        return res.status(200).json({ success: true, steps, trackingConfigured: steps.some(s => s.delivered > 0) });
       }
 
       // ── Vue séparée « Parcours » : combine les newsletters déjà envoyées (statut
@@ -9372,6 +9441,9 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
       // Brevo envoie : { event: 'unsubscribed'|'hardBounced'|'softBounced'|..., email: '...' }
       const event = body.event || '';
       const email = (body.email || '').trim().toLowerCase();
+      // Nom de champ non garanti identique partout selon la doc/version Brevo — on
+      // essaie les variantes connues plutôt que de dépendre d'une seule.
+      const messageId = body['message-id'] || body.messageId || body.message_id || null;
 
       if (!email) return res.status(400).json({ error: 'email manquant' });
 
@@ -9379,6 +9451,63 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
+
+      // Statut de livraison réel d'un envoi individuel journalisé (voir
+      // logNewsletterSends/message_id, migration newsletter-sends-delivery-status) —
+      // indépendant de la gestion d'abonnement ci-dessous, les deux peuvent s'appliquer
+      // au même événement (ex: hardBounced marque le contact désabonné ET l'envoi
+      // bounced). Sans message_id (campagnes, événements antérieurs à cette fonction-
+      // nalité) il n'y a simplement rien à rattacher — pas une erreur.
+      const DELIVERY_EVENTS = {
+        delivered:   { field: 'delivered_at' },
+        opened:      { field: 'opened_at' },
+        uniqueOpened:{ field: 'opened_at' },
+        click:       { field: 'clicked_at' },
+        blocked:     { field: 'blocked_at', contactStatus: 'blocked' },
+        softBounced: { field: 'bounced_at', bounceType: 'soft', contactStatus: 'bounced' },
+        hardBounced: { field: 'bounced_at', bounceType: 'hard', contactStatus: 'bounced' }
+      };
+      const deliveryEvent = DELIVERY_EVENTS[event];
+      if (deliveryEvent && messageId) {
+        try {
+          const { data: sendRow } = await sb.from('newsletter_sends')
+            .select('id, contact_email, subject')
+            .eq('message_id', messageId)
+            .maybeSingle();
+          if (sendRow) {
+            // "Ne pas écraser" : delivered_at/opened_at/clicked_at ne se posent qu'une
+            // fois (première occurrence) — une 2e ouverture ne doit pas repousser la
+            // date de "1ère ouverture". bounced_at/blocked_at n'arrivent qu'une fois de
+            // toute façon (l'envoi s'arrête là).
+            const sendUpdates = { [deliveryEvent.field]: new Date().toISOString() };
+            if (deliveryEvent.bounceType) sendUpdates.bounce_type = deliveryEvent.bounceType;
+            await sb.from('newsletter_sends')
+              .update(sendUpdates)
+              .eq('id', sendRow.id)
+              .is(deliveryEvent.field, null);
+
+            // Miroir sur newsletter_contacts.last_newsletter_status, mais seulement si cet
+            // envoi est bien le DERNIER connu pour ce contact (sujet identique au sujet
+            // courant) — un événement tardif sur un envoi plus ancien, dépassé depuis par
+            // un envoi plus récent, ne doit pas écraser le statut de ce dernier.
+            if (deliveryEvent.contactStatus) {
+              const emailPattern = email.replace(/[\\%_]/g, (c) => '\\' + c);
+              await sb.from('newsletter_contacts')
+                .update({ last_newsletter_status: deliveryEvent.contactStatus })
+                .ilike('email', emailPattern)
+                .eq('last_newsletter_subject', sendRow.subject);
+            } else if (deliveryEvent.field === 'delivered_at') {
+              const emailPattern = email.replace(/[\\%_]/g, (c) => '\\' + c);
+              await sb.from('newsletter_contacts')
+                .update({ last_newsletter_status: 'delivered' })
+                .ilike('email', emailPattern)
+                .eq('last_newsletter_subject', sendRow.subject);
+            }
+          }
+        } catch (e) {
+          console.error('[brevo-webhook] delivery tracking error:', e.message);
+        }
+      }
 
       if (event === 'unsubscribed' || event === 'hardBounced') {
         const updates = {
@@ -9398,6 +9527,8 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         console.log(`[brevo-webhook] ${event} pour ${email}`);
         return res.status(200).json({ success: true, event, email });
       }
+
+      if (deliveryEvent) return res.status(200).json({ success: true, event, email, tracked: !!messageId });
 
       // Événement non géré — on répond 200 pour que Brevo ne retry pas
       return res.status(200).json({ success: true, ignored: event });
