@@ -9420,10 +9420,18 @@
             const makeSlot = (slotVal) => {
                 const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
                 if (img) {
+                    const w = img.width || 600;
                     return `<div class="border border-gold/30 bg-gold/5 rounded-lg px-3 py-1.5 flex items-center gap-2 my-1">
                         <img src="${img.path}" class="w-10 h-7 object-cover rounded flex-shrink-0">
                         <span class="text-xs text-gold/70 flex-1 truncate">${img.name}</span>
-                        <button onclick="nlClearImageSlot(${slotVal})" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕ retirer</button>
+                        <label class="flex items-center gap-1 text-xs text-gold/50 flex-shrink-0" title="Largeur de l'image dans l'email" onclick="event.stopPropagation()">
+                            <i class="fas fa-arrows-left-right text-[10px]"></i>
+                            <input type="number" min="80" max="700" step="10" value="${w}"
+                                oninput="nlSetImageWidth(${slotVal}, this.value)"
+                                class="w-14 bg-black/20 border border-gold/20 rounded px-1 py-0.5 text-gold text-xs text-center">
+                            <span class="text-gold/30">px</span>
+                        </label>
+                        <button onclick="event.stopPropagation();nlClearImageSlot(${slotVal})" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕ retirer</button>
                     </div>`;
                 }
                 return `<div onclick="${hasActive ? 'nlPlaceImageAtSlot(' + slotVal + ')' : ''}"
@@ -9490,6 +9498,17 @@
             const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
             if (img) img.position = -1;
             nlUpdateSelectedPreviews();
+        }
+
+        // Largeur d'affichage d'une image placée dans le corps de l'email (px, 80-700).
+        // Ne redessine pas tout le panneau de placement (nlUpdateSelectedPreviews) pour
+        // ne pas perdre le focus du champ pendant la saisie — seule la génération de
+        // l'aperçu/l'enregistrement lit `img.width` au moment voulu.
+        function nlSetImageWidth(slotVal, value) {
+            const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
+            if (!img) return;
+            const w = parseInt(value, 10);
+            img.width = (w > 0) ? Math.min(700, Math.max(80, w)) : undefined;
         }
 
         function nlClearAllImageSlots() {
