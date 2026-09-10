@@ -6872,10 +6872,19 @@ function maybePromptToreReconnect() {
               sess.subscribed = true;
               localStorage.setItem('oradia_was_subscribed', 'true');
             } else {
-              // Le serveur ne confirme plus l'abonnement. Si le cache local le croyait
-              // encore actif, c'est une résiliation/échec de paiement détecté juste ici —
-              // pas un simple visiteur qui n'a jamais été abonné.
-              if (isSubscribed) subscriptionLapsed = true;
+              // Le serveur ne confirme plus l'abonnement. Deux façons de détecter que ce
+              // n'est PAS un simple visiteur qui n'a jamais été abonné, plutôt qu'un abonné
+              // dont l'accès vient de se couper :
+              // 1. le cache local le croyait encore actif juste avant cet appel (transition
+              //    détectée en direct) ;
+              // 2. le statut réel renvoyé par le serveur est 'payment_failed' — même si le
+              //    cache local disait déjà "non abonné" (ex: revisite après un précédent
+              //    passage sur cette page qui avait déjà mis subscribed=false en cache),
+              //    un paiement en échec doit TOUJOURS renvoyer vers la page d'abonnement
+              //    plutôt que de laisser cet email retomber silencieusement dans le quota
+              //    freemium générique (2 tirages gratuits), qui ne veut rien dire pour un
+              //    compte qui a déjà payé.
+              if (isSubscribed || data.status === 'payment_failed') subscriptionLapsed = true;
               isSubscribed = false;
               sess.subscribed = false;
               // Mémorisé pour que member/abonnements.html sache proposer "corriger le
