@@ -237,6 +237,11 @@
 
         <!-- Main Content -->
         <main class="flex-1 p-6 pb-24 lg:pb-6">
+          <!-- Une seule colonne de contenu, largeur unique (max-w-3xl) du bandeau à la
+               FAQ : la carte tarif flottait auparavant dans une colonne plus étroite et
+               centrée que les cartes "abonnement actuel"/"renouvellement" au-dessus,
+               ce qui cassait l'alignement de toute la page. -->
+          <div class="max-w-3xl mx-auto">
             <!-- Bannière abonnement expiré / paiement échoué (redirigé depuis tore.html
                  quand check-subscription ne confirme plus un abonnement que le navigateur
                  croyait actif) -->
@@ -251,7 +256,7 @@
             <!-- Header Section -->
             <section class="mb-8 text-center">
                 <h2 class="cormorant text-4xl text-gold mb-4">L'Abonnement Tore</h2>
-                <p class="text-light-gold/80 text-lg max-w-2xl mx-auto">
+                <p class="text-light-gold/80 text-lg">
                     Accédez à l'expérience complète du Tore — accès complet aux tirages et analyses approfondies.
                 </p>
             </section>
@@ -274,7 +279,7 @@
             </section>
 
             <!-- Gestion renouvellement automatique -->
-            <section class="mb-8" id="autoRenewSection" style="display:none;">
+            <section class="mb-6" id="autoRenewSection" style="display:none;">
                 <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                         <div>
@@ -293,10 +298,12 @@
                 </div>
             </section>
 
-            <!-- Pricing Cards — visible uniquement si non abonné ou ancien abonné -->
-            <section id="pricingSection" class="flex justify-center mb-12">
+            <!-- Pricing Cards — visible uniquement si non abonné ou ancien abonné.
+                 w-full (au lieu d'une carte étroite centrée dans un flex justify-center) :
+                 aligne ses bords sur les cartes "abonnement actuel"/"renouvellement" au-dessus. -->
+            <section id="pricingSection" class="mb-6">
                 <!-- Tore Plan -->
-                <div class="pricing-card featured rounded-2xl p-10 fade-in relative" style="max-width:420px;width:100%;">
+                <div class="pricing-card featured rounded-2xl p-10 fade-in relative w-full">
 
                     <div class="text-center mb-6">
                         <div class="text-4xl mb-3">∞</div>
@@ -308,8 +315,8 @@
                             <span class="text-gold/80 text-xs"><strong>Renouvellement automatique</strong> par défaut — vous pouvez le désactiver à tout moment depuis votre espace membre</span>
                         </div>
                     </div>
-                    
-                    <ul class="space-y-3 mb-8">
+
+                    <ul class="space-y-3 mb-8 max-w-sm mx-auto">
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-infinity text-gold w-5"></i>
                             <span>Accès complet à l'expérience chaque mois</span>
@@ -331,18 +338,17 @@
                             <span>Résiliable à tout moment</span>
                         </li>
                     </ul>
-                    
-                    <button id="btn-subscribe-tore" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-4 rounded-xl font-bold text-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
+
+                    <button id="btn-subscribe-tore" class="w-full max-w-sm mx-auto flex items-center justify-center bg-gradient-to-r from-gold to-light-gold text-night-blue py-4 rounded-xl font-bold text-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
                         <i class="fas fa-infinity mr-2"></i> S'abonner — 8€/mois
                     </button>
                 </div>
             </section>
 
-
             <!-- FAQ Section -->
             <section class="mb-8">
                 <h3 class="cormorant text-2xl text-gold text-center mb-6">Questions fréquentes</h3>
-                <div class="max-w-3xl mx-auto space-y-4">
+                <div class="space-y-4">
                     <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
                         <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
                             <span class="text-gold font-semibold">Quelles méthodes de paiement sont acceptées ?</span>
@@ -381,6 +387,7 @@
                     </div>
                 </div>
             </section>
+          </div><!-- /max-w-3xl content wrapper -->
         </main>
     </div>
 
