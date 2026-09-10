@@ -26,6 +26,11 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - Les variables d'environnement sensibles ne doivent jamais apparaître côté client
 - La logique freemium repose sur **localStorage** (2 tirages gratuits à vie)
 - Le tirage payant passe par Stripe, déclenche un webhook Supabase, puis envoie un email Brevo
+- **Toujours merger sur `main` et pousser (déploiement Vercel) après chaque modification de code**,
+  plutôt que de laisser un correctif sur une branche de travail non déployée. Avant de merger :
+  fetch `origin/main`, merger `main` dans la branche de travail pour repérer d'éventuels conflits
+  tôt, vérifier l'absence de marqueurs de conflit et la validité syntaxique des fichiers touchés,
+  puis merger la branche de travail dans `main` et pousser.
 
 ---
 
