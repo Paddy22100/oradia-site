@@ -3962,6 +3962,13 @@
                             <div id="social-ig-comments" class="text-3xl font-bold text-gold">—</div>
                         </div>
                     </div>
+                    <div class="grid grid-cols-1 gap-6 mb-6">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Nouveaux abonnés (7j)</h4>
+                            <div id="social-ig-new-followers" class="text-3xl font-bold text-green-400">—</div>
+                            <p class="text-light-gold/30 text-xs mt-1" id="social-ig-growth-note"></p>
+                        </div>
+                    </div>
                     <div class="stat-card rounded-2xl p-6">
                         <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
                         <div id="social-ig-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
@@ -5543,6 +5550,9 @@
                     setEl('social-ig-username', '@' + (ig.account.username || '—'));
                     setEl('social-ig-likes', ig.totals.likes ?? 0);
                     setEl('social-ig-comments', ig.totals.comments ?? 0);
+                    const igGrowth = ig.new_followers_7d;
+                    setEl('social-ig-new-followers', igGrowth == null ? '—' : (igGrowth > 0 ? '+' : '') + igGrowth);
+                    setEl('social-ig-growth-note', igGrowth == null ? "Pas encore assez d'historique (revient dans quelques jours)" : 'vs. il y a 7 jours');
                     renderSocialPosts('social-ig-posts', ig.media, 'caption');
                 } else if (igErrEl) {
                     igErrEl.textContent = ig?.error || 'Données Instagram indisponibles.';

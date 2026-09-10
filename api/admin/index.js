@@ -9476,6 +9476,33 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
       }
 
       const result = { success: true, instagram: null, facebook: null };
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      // Enregistre l'instantané du jour (idempotent, une ligne par plateforme/jour) et
+      // renvoie la croissance vs. le snapshot le plus proche d'il y a 7 jours. Sert de
+      // filet pour Instagram (pas d'historique fourni par l'API sans
+      // instagram_manage_insights) — dégrade proprement (null) tant que la migration
+      // supabase-migration-social-stats-history.sql n'est pas encore passée.
+      async function snapshotAndGetGrowth(platform, followers) {
+        if (followers == null) return null;
+        const today = new Date().toISOString().slice(0, 10);
+        try {
+          await sb.from('social_stats_history').upsert({ platform, snapshot_date: today, followers }, { onConflict: 'platform,snapshot_date' });
+          const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+          const { data: past } = await sb.from('social_stats_history')
+            .select('followers, snapshot_date')
+            .eq('platform', platform)
+            .lte('snapshot_date', weekAgo)
+            .order('snapshot_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (!past) return null;
+          return followers - past.followers;
+        } catch (e) {
+          console.error(`[social-stats] snapshot ${platform}:`, e.message);
+          return null;
+        }
+      }
 
       try {
         const accountRes = await fetch(`https://graph.facebook.com/v21.0/${igId}?fields=username,followers_count,follows_count,media_count&access_token=${pageToken}`);
@@ -9496,11 +9523,13 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
           comments: m.comments_count ?? 0
         }));
         const totals = media.reduce((acc, m) => ({ likes: acc.likes + m.likes, comments: acc.comments + m.comments }), { likes: 0, comments: 0 });
+        const igGrowth7d = await snapshotAndGetGrowth('instagram', account.followers_count);
 
         result.instagram = {
           account: { username: account.username, followers: account.followers_count, follows: account.follows_count, media_count: account.media_count },
           media,
           totals,
+          new_followers_7d: igGrowth7d,
           insights_available: false
         };
       } catch (err) {
