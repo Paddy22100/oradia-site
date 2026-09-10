@@ -3888,28 +3888,52 @@
 
             <!-- ══ SOUS-ONGLET : RÉSEAUX SOCIAUX ══ -->
             <div id="analytics-subtab-social" class="analytics-subtab hidden">
-                <div id="social-stats-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                <p class="text-light-gold/35 text-xs mb-4">Les vues/reach ne sont pas encore disponibles (validation Meta en attente) — abonnés, likes et commentaires seulement pour l'instant.</p>
 
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                <!-- Instagram -->
+                <div class="mb-2 flex items-center gap-2"><i class="fab fa-instagram text-gold/60"></i><h3 class="text-gold font-semibold">Instagram</h3></div>
+                <div id="social-ig-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
                     <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fab fa-instagram text-gold/60"></i> Abonnés</h4>
-                        <div id="social-followers" class="text-3xl font-bold text-gold">—</div>
-                        <p class="text-light-gold/35 text-xs mt-1" id="social-username">@—</p>
+                        <h4 class="text-gold/70 text-xs uppercase mb-2">Abonnés</h4>
+                        <div id="social-ig-followers" class="text-3xl font-bold text-gold">—</div>
+                        <p class="text-light-gold/35 text-xs mt-1" id="social-ig-username">@—</p>
                     </div>
                     <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fas fa-heart text-gold/60"></i> Likes (12 derniers posts)</h4>
-                        <div id="social-likes" class="text-3xl font-bold text-gold">—</div>
+                        <h4 class="text-gold/70 text-xs uppercase mb-2">Likes (12 derniers posts)</h4>
+                        <div id="social-ig-likes" class="text-3xl font-bold text-gold">—</div>
                     </div>
                     <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fas fa-comment text-gold/60"></i> Commentaires (12 derniers posts)</h4>
-                        <div id="social-comments" class="text-3xl font-bold text-gold">—</div>
+                        <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
+                        <div id="social-ig-comments" class="text-3xl font-bold text-gold">—</div>
                     </div>
                 </div>
+                <div class="stat-card rounded-2xl p-6 mb-8">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
+                    <div id="social-ig-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                </div>
 
+                <!-- Facebook -->
+                <div class="mb-2 flex items-center gap-2"><i class="fab fa-facebook text-gold/60"></i><h3 class="text-gold font-semibold">Facebook</h3></div>
+                <div id="social-fb-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                        <h4 class="text-gold/70 text-xs uppercase mb-2">Fans</h4>
+                        <div id="social-fb-fans" class="text-3xl font-bold text-gold">—</div>
+                        <p class="text-light-gold/35 text-xs mt-1" id="social-fb-name">—</p>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                        <h4 class="text-gold/70 text-xs uppercase mb-2">Réactions (12 derniers posts)</h4>
+                        <div id="social-fb-likes" class="text-3xl font-bold text-gold">—</div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                        <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
+                        <div id="social-fb-comments" class="text-3xl font-bold text-gold">—</div>
+                    </div>
+                </div>
                 <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
-                    <p class="text-light-gold/35 text-xs mb-4" id="social-insights-note">Les vues/reach ne sont pas encore disponibles (validation Meta en attente) — likes et commentaires seulement pour l'instant.</p>
-                    <div id="social-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
+                    <div id="social-fb-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
                 </div>
             </div><!-- /analytics-subtab-social -->
         </section>
@@ -5434,41 +5458,63 @@
             }
         }
 
+        function renderSocialPosts(containerId, posts, captionKey) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = (posts || []).length === 0
+                ? '<p class="text-gold/30 italic text-xs">Aucune publication trouvée.</p>'
+                : posts.map(p => `
+                    <a href="${p.permalink}" target="_blank" rel="noopener" class="block bg-white/3 border border-white/8 rounded-xl overflow-hidden hover:border-gold/40 transition">
+                        ${p.thumbnail ? `<img src="${p.thumbnail}" class="w-full h-36 object-cover" loading="lazy">` : '<div class="w-full h-36 bg-white/5 flex items-center justify-center"><i class="fas fa-image text-gold/20 text-2xl"></i></div>'}
+                        <div class="p-3">
+                            <p class="text-light-gold/70 text-xs line-clamp-2 mb-2">${(p[captionKey] || '').replace(/</g,'&lt;')}</p>
+                            <div class="flex items-center justify-between text-xs text-gold/50">
+                                <span><i class="fas fa-heart mr-1"></i>${p.likes}</span>
+                                <span><i class="fas fa-comment mr-1"></i>${p.comments}</span>
+                                <span>${new Date(p.timestamp).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                        </div>
+                    </a>`).join('');
+        }
+
         async function loadSocialStats() {
-            const errEl = document.getElementById('social-stats-error');
-            if (errEl) errEl.classList.add('hidden');
+            const igErrEl = document.getElementById('social-ig-error');
+            const fbErrEl = document.getElementById('social-fb-error');
+            if (igErrEl) igErrEl.classList.add('hidden');
+            if (fbErrEl) fbErrEl.classList.add('hidden');
             try {
                 const res = await adminFetch('/api/admin/social-stats');
                 const data = await res.json();
                 if (!data.success) {
-                    if (errEl) { errEl.textContent = data.error || 'Erreur inconnue.'; errEl.classList.remove('hidden'); }
+                    if (igErrEl) { igErrEl.textContent = data.error || 'Erreur inconnue.'; igErrEl.classList.remove('hidden'); }
                     return;
                 }
-                setEl('social-followers', data.account.followers ?? '—');
-                setEl('social-username', '@' + (data.account.username || '—'));
-                setEl('social-likes', data.totals.likes ?? 0);
-                setEl('social-comments', data.totals.comments ?? 0);
 
-                const postsEl = document.getElementById('social-posts');
-                if (postsEl) {
-                    const posts = data.media || [];
-                    postsEl.innerHTML = posts.length === 0
-                        ? '<p class="text-gold/30 italic text-xs">Aucune publication trouvée.</p>'
-                        : posts.map(p => `
-                            <a href="${p.permalink}" target="_blank" rel="noopener" class="block bg-white/3 border border-white/8 rounded-xl overflow-hidden hover:border-gold/40 transition">
-                                ${p.thumbnail ? `<img src="${p.thumbnail}" class="w-full h-36 object-cover" loading="lazy">` : '<div class="w-full h-36 bg-white/5 flex items-center justify-center"><i class="fas fa-image text-gold/20 text-2xl"></i></div>'}
-                                <div class="p-3">
-                                    <p class="text-light-gold/70 text-xs line-clamp-2 mb-2">${(p.caption || '').replace(/</g,'&lt;')}</p>
-                                    <div class="flex items-center justify-between text-xs text-gold/50">
-                                        <span><i class="fas fa-heart mr-1"></i>${p.likes}</span>
-                                        <span><i class="fas fa-comment mr-1"></i>${p.comments}</span>
-                                        <span>${new Date(p.timestamp).toLocaleDateString('fr-FR')}</span>
-                                    </div>
-                                </div>
-                            </a>`).join('');
+                const ig = data.instagram;
+                if (ig && !ig.error) {
+                    setEl('social-ig-followers', ig.account.followers ?? '—');
+                    setEl('social-ig-username', '@' + (ig.account.username || '—'));
+                    setEl('social-ig-likes', ig.totals.likes ?? 0);
+                    setEl('social-ig-comments', ig.totals.comments ?? 0);
+                    renderSocialPosts('social-ig-posts', ig.media, 'caption');
+                } else if (igErrEl) {
+                    igErrEl.textContent = ig?.error || 'Données Instagram indisponibles.';
+                    igErrEl.classList.remove('hidden');
+                }
+
+                const fb = data.facebook;
+                if (fb && !fb.error) {
+                    setEl('social-fb-fans', fb.page.fans ?? '—');
+                    setEl('social-fb-name', fb.page.name || '—');
+                    setEl('social-fb-likes', fb.totals.likes ?? 0);
+                    setEl('social-fb-comments', fb.totals.comments ?? 0);
+                    renderSocialPosts('social-fb-posts', fb.posts, 'message');
+                } else if (fbErrEl) {
+                    fbErrEl.textContent = fb?.error || 'Données Facebook indisponibles.';
+                    fbErrEl.classList.remove('hidden');
                 }
             } catch (err) {
-                if (errEl) { errEl.textContent = 'Erreur de chargement : ' + err.message; errEl.classList.remove('hidden'); }
+                if (igErrEl) { igErrEl.textContent = 'Erreur de chargement : ' + err.message; igErrEl.classList.remove('hidden'); }
             }
         }
 

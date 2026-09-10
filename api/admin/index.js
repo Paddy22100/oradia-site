@@ -9456,20 +9456,25 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
       });
     }
 
-    // ── Stats réseaux sociaux (Instagram, via l'API Graph Meta) ──
+    // ── Stats réseaux sociaux (Instagram + Facebook, via l'API Graph Meta) ──
     // Utilise un token de Page longue durée (META_PAGE_ACCESS_TOKEN) — jamais exposé
     // au client, uniquement utilisé côté serveur ici. Les métriques "reach/impressions"
     // (instagram_manage_insights) ne sont pas encore accessibles (permission avancée en
     // attente de validation Meta) : on expose ce qui est disponible sans elle — abonnés,
-    // nombre de publications, likes et commentaires par publication.
+    // nombre de publications, likes et commentaires par publication, pour les deux
+    // plateformes (elles partagent le même token de Page).
     if (path === '/social-stats' || path === '/social-stats/') {
       verifyAdminAuth(req);
       if (req.method !== 'GET') return res.status(405).end();
       const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
       const igId = process.env.META_IG_BUSINESS_ID;
+      const pageId = process.env.META_PAGE_ID;
       if (!pageToken || !igId) {
         return res.status(200).json({ success: false, error: 'Intégration Instagram non configurée (variables META_PAGE_ACCESS_TOKEN / META_IG_BUSINESS_ID manquantes).' });
       }
+
+      const result = { success: true, instagram: null, facebook: null };
+
       try {
         const accountRes = await fetch(`https://graph.facebook.com/v21.0/${igId}?fields=username,followers_count,follows_count,media_count&access_token=${pageToken}`);
         const account = await accountRes.json();
@@ -9490,17 +9495,49 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         }));
         const totals = media.reduce((acc, m) => ({ likes: acc.likes + m.likes, comments: acc.comments + m.comments }), { likes: 0, comments: 0 });
 
-        return res.status(200).json({
-          success: true,
+        result.instagram = {
           account: { username: account.username, followers: account.followers_count, follows: account.follows_count, media_count: account.media_count },
           media,
           totals,
           insights_available: false
-        });
+        };
       } catch (err) {
         console.error('[social-stats] Erreur API Instagram:', err.message);
-        return res.status(200).json({ success: false, error: err.message });
+        result.instagram = { error: err.message };
       }
+
+      if (pageId) {
+        try {
+          const pageRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}?fields=name,fan_count,followers_count&access_token=${pageToken}`);
+          const page = await pageRes.json();
+          if (page.error) throw new Error(page.error.message);
+
+          const postsRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/posts?fields=message,created_time,permalink_url,full_picture,reactions.summary(total_count),comments.summary(total_count)&limit=12&access_token=${pageToken}`);
+          const postsData = await postsRes.json();
+          if (postsData.error) throw new Error(postsData.error.message);
+          const posts = (postsData.data || []).map(p => ({
+            id: p.id,
+            message: (p.message || '').slice(0, 140),
+            permalink: p.permalink_url,
+            timestamp: p.created_time,
+            thumbnail: p.full_picture || null,
+            likes: p.reactions?.summary?.total_count ?? 0,
+            comments: p.comments?.summary?.total_count ?? 0
+          }));
+          const fbTotals = posts.reduce((acc, p) => ({ likes: acc.likes + p.likes, comments: acc.comments + p.comments }), { likes: 0, comments: 0 });
+
+          result.facebook = {
+            page: { name: page.name, fans: page.fan_count, followers: page.followers_count },
+            posts,
+            totals: fbTotals
+          };
+        } catch (err) {
+          console.error('[social-stats] Erreur API Facebook:', err.message);
+          result.facebook = { error: err.message };
+        }
+      }
+
+      return res.status(200).json(result);
     }
 
     // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──
