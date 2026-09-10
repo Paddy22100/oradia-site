@@ -1998,6 +1998,10 @@ La production est lancée grâce aux premières commandes.</p>
                 quantity: cart[offerId]?.quantity || 1,
                 unit_price: offer.priceEuros
             });
+            // Étape du funnel de conversion admin (Analytiques > Conversion) — voir
+            // FUNNEL_EVENTS dans api/admin/index.js. Distinct de trackEvent() ci-dessus,
+            // qui n'alimente que Google Analytics (dataLayer/gtag), pas les stats internes.
+            if (typeof window.oradiaTrackEvent === 'function') window.oradiaTrackEvent('precommande_offre_ajoutee');
             showCartSection();
             
             // Scroll doux vers le panier
@@ -2264,6 +2268,7 @@ La production est lancée grâce aux premières commandes.</p>
                 items_count: cartItems.length,
                 total_eur: Number(cartTotal.toFixed(2))
             });
+            if (typeof window.oradiaTrackEvent === 'function') window.oradiaTrackEvent('precommande_checkout_lance');
             
             // Sauvegarder le panier dans localStorage
             localStorage.setItem('oradia-cart', JSON.stringify(cart));

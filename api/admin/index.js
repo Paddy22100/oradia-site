@@ -8697,7 +8697,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         const userAgent = String(body.user_agent || '').slice(0, 500);
         const isNewVisitor = body.is_new_visitor === true;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
-        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse'];
+        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
         // Rejette les requêtes qui ne proviennent pas réellement d'une page oradia.fr. Cet
@@ -9274,16 +9274,20 @@ Réponds en français, sans tiret long, format markdown compact.`
       // conversion (sinon l'IA parle de conversion à l'aveugle). Dégrade proprement
       // si une table/migration manque.
       let funnel = null;
+      let funnelPrecommande = null;
       try {
         // Même plafond de pagination que plus haut — non chaîné à la première requête
         // uniquement par coïncidence de volumes actuels, mais silencieusement exposé au
         // même risque de troncature dès que le trafic sur la page Tore grandira.
-        const [toreViews, events, { count: newSubs }] = await Promise.all([
+        const [toreViews, events, { count: newSubs }, precommandeViews, { count: preordersPayees }] = await Promise.all([
           sbFetchAllRows(() => sb.from('page_views').select('session_id')
             .gte('created_at', since).ilike('path', '%tore.html%').order('created_at', { ascending: false })),
           sbFetchAllRows(() => sb.from('funnel_events').select('session_id, event_name')
             .gte('created_at', since).order('created_at', { ascending: false })),
-          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
+          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active'),
+          sbFetchAllRows(() => sb.from('page_views').select('session_id')
+            .gte('created_at', since).ilike('path', '%precommande-oracle.html%').order('created_at', { ascending: false })),
+          sb.from('preorders').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('paid_status', 'completed')
         ]);
         // Funnel CHAÎNÉ : chaque étape ne compte que les sessions ayant franchi
         // cette étape ET toutes les précédentes. Sans chaînage, les compteurs
@@ -9291,9 +9295,9 @@ Réponds en français, sans tiret long, format markdown compact.`
         // « % de l'étape préc. » incohérents (voire > 100 %). On garantit ici une
         // décroissance monotone et de vrais taux de conversion.
         const sessionsFor = (name) => new Set((events || []).filter(e => e.event_name === name).map(e => e.session_id));
-        const visitSessions = new Set((toreViews || []).map(r => r.session_id));
-        // Intersection cumulative : on ne garde que les sessions déjà présentes à l'étape précédente.
         const chain = (prevSet, curSet) => { const r = new Set(); for (const s of curSet) if (prevSet.has(s)) r.add(s); return r; };
+
+        const visitSessions = new Set((toreViews || []).map(r => r.session_id));
         const sIntention = chain(visitSessions, sessionsFor('intention_saisie'));
         const sTirage    = chain(sIntention,    sessionsFor('tirage_lance'));
         const sAnalyse   = chain(sTirage,       sessionsFor('analyse_affichee'));
@@ -9309,6 +9313,22 @@ Réponds en français, sans tiret long, format markdown compact.`
           // donc cette étape n'est PAS chaînable par session — on la présente comme
           // une conversion de la période, pas comme un sous-ensemble des emails.
           abonnements:        newSubs || 0
+        };
+
+        // Funnel précommande de l'oracle physique — mêmes principes que ci-dessus.
+        // Le clic "Procéder au paiement" redirige vers livraison.html (formulaire de
+        // livraison) avant la session Stripe : precommande_checkout_lance capture donc
+        // l'intention de payer, pas encore la création de la session Stripe elle-même.
+        const precoVisitSessions = new Set((precommandeViews || []).map(r => r.session_id));
+        const sOffreAjoutee = chain(precoVisitSessions, sessionsFor('precommande_offre_ajoutee'));
+        const sCheckoutLance = chain(sOffreAjoutee,      sessionsFor('precommande_checkout_lance'));
+        funnelPrecommande = {
+          visites:              precoVisitSessions.size,
+          offres_ajoutees:      sOffreAjoutee.size,
+          checkouts_lances:     sCheckoutLance.size,
+          // Comme "abonnements" ci-dessus : la session Stripe finale n'est pas chaînable
+          // par session_id (redirection Stripe), présenté comme conversion de la période.
+          precommandes_payees:  preordersPayees || 0
         };
       } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
 
@@ -9349,6 +9369,12 @@ ${funnel ? `- Visites de la page de tirage (tore.html) : ${funnel.visites}
 - Analyse affichée : ${funnel.analyses_affichees}
 - Email laissé : ${funnel.emails_laisses}
 - Nouveaux abonnements Tore sur la période : ${funnel.abonnements}` : '- Données de tunnel indisponibles sur la période.'}
+
+Tunnel de conversion de la précommande oracle physique (visiteurs distincts à chaque étape) :
+${funnelPrecommande ? `- Visites de la page précommande (precommande-oracle.html) : ${funnelPrecommande.visites}
+- Offre ajoutée au panier : ${funnelPrecommande.offres_ajoutees}
+- Paiement lancé (passage au formulaire de livraison) : ${funnelPrecommande.checkouts_lances}
+- Précommandes payées sur la période : ${funnelPrecommande.precommandes_payees}` : '- Données de tunnel indisponibles sur la période.'}
 
 Conversions réelles de la période :
 - Précommandes de l'oracle physique : ${conversions.precommandes == null ? 'N/A' : conversions.precommandes}
@@ -9400,6 +9426,7 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         range,
         traffic,
         funnel,
+        funnel_precommande: funnelPrecommande,
         conversions,
         logs_stats: { errors, server_errors: serverErrors, client_errors: clientErrors, warnings, total: (logs||[]).length }
       });

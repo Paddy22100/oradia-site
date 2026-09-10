@@ -3793,6 +3793,15 @@
                     <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
                 </div>
             </div>
+
+            <!-- Funnel de conversion — Précommande oracle physique -->
+            <div class="stat-card rounded-2xl p-6 mt-6">
+                <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-box text-gold/60"></i> Funnel de conversion — Précommande</h4>
+                <p class="text-gold/40 text-xs mb-4">Étapes du parcours sur la période sélectionnée. Mesuré en interne (pas de cookie tiers) — les précommandes payées ne sont pas strictement chaînées aux visites (redirection Stripe).</p>
+                <div id="analytics-funnel-precommande" class="space-y-3">
+                    <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
+                </div>
+            </div>
             </div><!-- /analytics-subtab-conversion -->
 
             <!-- ══ SOUS-ONGLET : QUANTIQUE ══ -->
@@ -12719,6 +12728,28 @@
 
         // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
         // Entonnoir + donut du taux de réponse pour l'onglet Retour fenêtre
+
+        // Rendu partagé par tous les funnels de conversion (Tore, précommande...) :
+        // barres empilées avec % du total et % de l'étape précédente (sauf étapes
+        // marquées unchained, dont la conversion finale n'est pas chaînable par
+        // session — redirection Stripe qui perd le session_id).
+        function buildFunnelStepsHtml(steps) {
+            const max = Math.max(steps[0].value, 1);
+            return steps.map((s, i) => {
+                const pct = Math.round((s.value / max) * 100);
+                const prevPct = i > 0 && !s.unchained && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                return `<div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                        <span class="font-semibold" style="color:${s.color}">${s.value}<span class="text-light-gold/30 font-normal ml-1">(${pct}% du total${prevPct != null ? ` · ${prevPct}% de l'étape préc.` : ''})</span></span>
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         function renderFunnel(funnel) {
             const el = document.getElementById('analytics-funnel');
             if (!el) return;
@@ -12736,24 +12767,32 @@
                 // Stripe qui perd le session_id) — on n'affiche donc pas de « % de l'étape préc. »
                 { label: 'Nouveaux abonnements',       value: funnel.abonnements,        color: '#4ade80', icon: 'fa-crown', unchained: true }
             ];
-            const max = Math.max(steps[0].value, 1);
             if (steps[0].value === 0) {
                 el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune visite sur tore.html pour cette période.</p>';
                 return;
             }
-            el.innerHTML = steps.map((s, i) => {
-                const pct = Math.round((s.value / max) * 100);
-                const prevPct = i > 0 && !s.unchained && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
-                return `<div>
-                    <div class="flex items-center justify-between text-xs mb-1">
-                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
-                        <span class="font-semibold" style="color:${s.color}">${s.value}<span class="text-light-gold/30 font-normal ml-1">(${pct}% du total${prevPct != null ? ` · ${prevPct}% de l'étape préc.` : ''})</span></span>
-                    </div>
-                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
-                    </div>
-                </div>`;
-            }).join('');
+            el.innerHTML = buildFunnelStepsHtml(steps);
+        }
+
+        function renderPrecommandeFunnel(funnel) {
+            const el = document.getElementById('analytics-funnel-precommande');
+            if (!el) return;
+            if (!funnel) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Migration en attente (supabase-migration-funnel-events.sql) — le funnel apparaîtra une fois exécutée dans Supabase.</p>';
+                return;
+            }
+            const steps = [
+                { label: 'Visites precommande-oracle.html', value: funnel.visites,          color: '#d4af37', icon: 'fa-eye' },
+                { label: 'Offre ajoutée au panier',          value: funnel.offres_ajoutees,  color: '#f0c75e', icon: 'fa-cart-plus' },
+                { label: 'Paiement lancé',                   value: funnel.checkouts_lances, color: '#a78bfa', icon: 'fa-credit-card' },
+                // Non chaînée par session (redirection Stripe) — conversion réelle de la période.
+                { label: 'Précommandes payées',              value: funnel.precommandes_payees, color: '#4ade80', icon: 'fa-circle-check', unchained: true }
+            ];
+            if (steps[0].value === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune visite sur precommande-oracle.html pour cette période.</p>';
+                return;
+            }
+            el.innerHTML = buildFunnelStepsHtml(steps);
         }
 
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
@@ -15002,6 +15041,7 @@
                 renderDailyViewsChart(t.daily_views || []);
 
                 renderFunnel(data.funnel);
+                renderPrecommandeFunnel(data.funnel_precommande);
 
                 // Graphique donut nouveaux vs anciens visiteurs
                 renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);
