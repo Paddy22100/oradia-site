@@ -318,6 +318,16 @@ async function sendWaitlistConfirmationEmail(email) {
             </td>
           </tr>
 
+          <!-- Mention app mobile bêta — volontairement discrète (simple ligne de texte,
+               pas un encart) pour ne pas concurrencer la précommande ci-dessus. -->
+          <tr>
+            <td align="center" style="padding:0 40px 20px;">
+              <p style="margin:0; color:#8a8365; font-family:Georgia,serif; font-size:12px; font-style:italic;">
+                📱 L'app mobile ORADIA est aussi disponible en bêta — <a href="https://play.google.com/store/apps/details?id=fr.oradia.app" style="color:#d4af37; text-decoration:underline;">la découvrir sur Google Play</a>
+              </p>
+            </td>
+          </tr>
+
           <!-- Séparateur -->
           <tr>
             <td style="padding:4px 40px; text-align:center;">
@@ -360,7 +370,7 @@ async function sendWaitlistConfirmationEmail(email) {
 </body>
 </html>
         `,
-        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — Avec gratitude, Rudy Boucheron'
+        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — L\'app mobile ORADIA est aussi disponible en bêta : play.google.com/store/apps/details?id=fr.oradia.app — Avec gratitude, Rudy Boucheron'
       })
     });
 
