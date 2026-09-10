@@ -286,8 +286,8 @@ async function sendWaitlistConfirmationEmail(email) {
             <td class="pad-box" style="padding:0 32px 26px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;" bgcolor="#0f1d35">
                 <tr>
-                  <td style="padding:0; line-height:0; font-size:0;">
-                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="ORADIA — La Boussole Intérieure, coffret et cartes" width="536" style="display:block; width:100%; height:auto; border:0;">
+                  <td align="center" style="padding:20px 28px 4px; line-height:0; font-size:0;">
+                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="ORADIA — La Boussole Intérieure, coffret et cartes" width="220" style="display:block; width:220px; max-width:55%; height:auto; border:0; border-radius:8px;">
                   </td>
                 </tr>
                 <tr>
@@ -328,7 +328,7 @@ async function sendWaitlistConfirmationEmail(email) {
           <tr>
             <td align="center" style="padding:0 40px 26px;">
               <a href="https://play.google.com/store/apps/details?id=fr.oradia.app" target="_blank">
-                <img src="https://oradia.fr/images/medias/banniere_pub_app_mobile.webp" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play" width="500" style="display:block; width:100%; height:auto; max-width:500px; border:0; border-radius:12px; margin:0 auto;">
+                <img src="https://oradia.fr/images/medias/banniere_pub_app_mobile.webp" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play" width="580" style="display:block; width:100%; height:auto; max-width:580px; border:0; border-radius:12px; margin:0 auto;">
               </a>
             </td>
           </tr>
