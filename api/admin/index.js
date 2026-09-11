@@ -1100,43 +1100,123 @@ async function handleData(req, res) {
             try {
               const finalSubject = draft.subject || 'Oradia';
               const html = buildCommunicationEmailHtml({ ...draft, subject: finalSubject });
-              const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
-                body: JSON.stringify({
-                  name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
-                  subject: finalSubject,
-                  sender: { name: 'Oradia', email: 'contact@oradia.fr' },
-                  // Campagne (un seul HTML pour toute la liste) : on ne peut pas injecter
-                  // un token par destinataire, donc on utilise la variable native Brevo
-                  // {{ unsubscribe }} — le désabonnement remonte ensuite via le webhook Brevo.
-                  htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
-                  recipients: { listIds: [5] }
-                })
-              });
-              if (!campRes.ok) { results.push({ id: draft.id, ok: false }); continue; }
-              const camp = await campRes.json();
-              await fetch(`https://api.brevo.com/v3/emailCampaigns/${camp.id}/sendNow`, {
-                method: 'POST', headers: { 'api-key': BREVO_API_KEY }
-              });
+              // Catégorie de préférence newsletter (member/parametres.html) concernée par ce
+              // brouillon : le tirage du dimanche a sa propre case, tout le reste (newsletters
+              // manuelles du Carnet + promos) partage "Actualités, nouveautés, promotions et
+              // offres ponctuelles".
+              const prefColumn = draft.extra?.canal === 'tirage_hebdo' ? 'pref_tirage_dimanche' : 'pref_actualites_offres';
+
+              let sentVia = null;
+              let sentCount = 0;
+              let notifiedEmails = [];
+              let hardFailure = null;
+
+              if (await isFeatureEnabled(supabase, 'newsletter_campagne_ciblee')) {
+                const { data: targetContacts } = await supabase
+                  .from('newsletter_contacts')
+                  .select('email')
+                  .eq('status', 'active')
+                  .eq('brevo_synced', true)
+                  .eq(prefColumn, true);
+                const targets = [...new Set((targetContacts || []).map(c => c.email).filter(Boolean))];
+
+                if (targets.length === 0) {
+                  // Personne n'a cette catégorie active pour l'instant : rien à envoyer, mais le
+                  // brouillon est bien marqué envoyé (sinon il resterait "dû" indéfiniment, relu à
+                  // chaque passage du cron toutes les 15 min).
+                  sentVia = 'aucun destinataire (préférence désactivée par tous)';
+                } else {
+                  const campaign = await nlSendTargetedCampaign({
+                    BREVO_API_KEY, emails: targets, subject: finalSubject, html,
+                    type: draft.type, deadline: Date.now() + 15000
+                  });
+                  if (campaign.ok) {
+                    sentVia = 'campagne';
+                    sentCount = campaign.subscribers;
+                    notifiedEmails = targets;
+                  } else if (campaign.sentNothing) {
+                    // Repli transactionnel — mêmes contacts ciblés, envoi individuel (comme le
+                    // canal de secours déjà utilisé par resend-last / send par tags).
+                    const text = nlEmailPlainText(html);
+                    const BATCH = 10;
+                    const sentEmails = [];
+                    for (let i = 0; i < targets.length; i += BATCH) {
+                      const batch = targets.slice(i, i + BATCH);
+                      const batchResults = await Promise.all(batch.map(email => fetch('https://api.brevo.com/v3/smtp/email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+                        body: JSON.stringify({
+                          sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+                          to: [{ email }],
+                          replyTo: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+                          subject: finalSubject,
+                          htmlContent: html.replace('{unsubscribe}', buildUnsubUrl(email)),
+                          textContent: text.replace('{unsubscribe}', buildUnsubUrl(email)),
+                          headers: nlBulkHeaders(email)
+                        })
+                      })));
+                      batchResults.forEach((r, idx) => { if (r.ok) sentEmails.push(batch[idx]); });
+                    }
+                    sentVia = 'transactionnel';
+                    sentCount = sentEmails.length;
+                    notifiedEmails = sentEmails;
+                  } else {
+                    // Campagne créée dans Brevo mais envoi non démarré : ambigu, pas de repli
+                    // automatique pour ne pas risquer un double envoi (même logique que
+                    // resend-last / send par tags) — le brouillon reste dû, à vérifier à la main.
+                    hardFailure = `Campagne créée mais envoi non démarré : ${campaign.error}`;
+                  }
+                }
+              } else {
+                // Ancien canal (flag newsletter_campagne_ciblee désactivé) : une seule campagne
+                // non filtrée à toute la liste 5, sans distinction de préférence.
+                const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+                  body: JSON.stringify({
+                    name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
+                    subject: finalSubject,
+                    sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+                    htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
+                    recipients: { listIds: [5] }
+                  })
+                });
+                if (!campRes.ok) {
+                  hardFailure = `Création de la campagne échouée (${campRes.status})`;
+                } else {
+                  const camp = await campRes.json();
+                  await fetch(`https://api.brevo.com/v3/emailCampaigns/${camp.id}/sendNow`, {
+                    method: 'POST', headers: { 'api-key': BREVO_API_KEY }
+                  });
+                  sentVia = 'campagne (liste complète, non filtrée)';
+                  const { data: notified } = await supabase.from('newsletter_contacts')
+                    .select('email')
+                    .eq('status', 'active')
+                    .eq('brevo_synced', true);
+                  notifiedEmails = (notified || []).map(c => c.email);
+                  sentCount = notifiedEmails.length;
+                }
+              }
+
+              if (hardFailure) { results.push({ id: draft.id, ok: false, error: hardFailure }); continue; }
+
               await supabase.from('newsletter_drafts')
                 .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
                 .eq('id', draft.id);
-              // Tracer la dernière newsletter par contact (colonne optionnelle) — .select('email')
-              // récupère les destinataires réellement mis à jour, pour le journal détaillé ci-dessous.
-              const { data: notified } = await supabase.from('newsletter_contacts')
-                .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
-                .eq('status', 'active')
-                .eq('brevo_synced', true)
-                .select('email');
+              // Tracer la dernière newsletter par contact (colonne optionnelle).
+              if (notifiedEmails.length > 0) {
+                await supabase.from('newsletter_contacts')
+                  .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+                  .in('email', notifiedEmails);
+              }
               await logNewsletterSends(supabase, {
-                emails: (notified || []).map(c => c.email),
+                emails: notifiedEmails,
                 subject: finalSubject,
                 draftId: draft.id,
                 ordre: Number(draft.extra?.ordre) || null,
                 canal: draft.extra?.canal || null
               });
-              results.push({ id: draft.id, ok: true });
+              results.push({ id: draft.id, ok: true, sent: sentCount, channel: sentVia });
             } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
           }
           // ── Publications sociales programmées (Facebook + Instagram, envoyées
@@ -5865,7 +5945,8 @@ async function runParcoursIndividualCron(supabase) {
       .from('newsletter_contacts')
       .select('email, created_at')
       .eq('status', 'active')
-      .eq('brevo_synced', true);
+      .eq('brevo_synced', true)
+      .eq('pref_newsletter_mercredi', true);
     if (contactsErr) throw contactsErr;
 
     // Dernier envoi de parcours par contact (le plus récent en premier) — sert à la
