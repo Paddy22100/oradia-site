@@ -906,7 +906,7 @@ async function handleCronCheckin(req, res) {
   // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
   const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
   const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-  const { data: targets, error } = await supabase
+  const { data: rawTargets, error } = await supabase
     .from('tore_emails')
     .select('email')
     .is('checkin_sent_at', null)
@@ -917,6 +917,22 @@ async function handleCronCheckin(req, res) {
   if (error) {
     console.error('[cron-checkin] Supabase error:', error.message);
     return res.status(500).json({ error: error.message });
+  }
+
+  // Qui a activé une fenêtre d'observation pour ce même tirage (créée dans la même
+  // fenêtre J+3/J+4, donc juste après le tirage) reçoit déjà, à la clôture, un email
+  // posant essentiellement la même question ("qu'avez-vous perçu ?") — plus, depuis
+  // peu, un rappel natif sur l'app. Le check-in générique deviendrait un troisième
+  // message redondant pour ces personnes-là ; on les exclut ici.
+  let targets = rawTargets || [];
+  if (targets.length > 0) {
+    const { data: activeWindows } = await supabase
+      .from('observation_windows')
+      .select('email')
+      .gte('created_at', from)
+      .lt('created_at', to);
+    const emailsWithWindow = new Set((activeWindows || []).map(w => w.email));
+    targets = targets.filter(t => !emailsWithWindow.has(t.email));
   }
 
   // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
