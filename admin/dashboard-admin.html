@@ -3665,6 +3665,25 @@
                 </button>
             </div>
 
+            <!-- Analyse IA : couvre trafic + tunnels de conversion (Tore et précommande) en un
+                 seul appel, donc placée au-dessus des sous-onglets plutôt que dans un seul
+                 d'entre eux — visible et utilisable depuis Trafic comme depuis Conversion. -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA — trafic & tunnels de conversion</h4>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="copyAnalysis()" id="btn-copy-analysis" class="hidden items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/80 px-4 py-2 rounded-xl text-sm font-medium transition">
+                            <i class="fas fa-copy"></i> Copier
+                        </button>
+                        <button onclick="analyzeTrafficWithAI()" id="btn-ai-traffic" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition">
+                            <i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations
+                        </button>
+                    </div>
+                </div>
+                <p class="text-gold/40 text-xs mb-3 italic">Analyse le trafic et les tunnels de conversion (tirage Tore, précommande) de la période sélectionnée, et cible la plus grosse fuite entre deux étapes avec des actions concrètes.</p>
+                <div id="analytics-ai-result" class="text-gold/80 text-sm leading-relaxed whitespace-pre-line hidden bg-white/5 border border-gold/10 rounded-xl p-4"></div>
+            </div>
+
             <!-- ══ SOUS-ONGLET : TRAFIC ══ -->
             <div id="analytics-subtab-traffic" class="analytics-subtab">
 
@@ -3697,23 +3716,6 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-blue-300" id="ana-pages-per-visit">—</div><p class="text-gold/50 text-xs mt-1">Pages / visite</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-bounce">—</div><p class="text-gold/50 text-xs mt-1">Taux de rebond</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
-            </div>
-
-            <!-- Analyse IA -->
-            <div class="stat-card rounded-2xl p-6 mb-6">
-                <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA du trafic</h4>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="copyAnalysis()" id="btn-copy-analysis" class="hidden items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/80 px-4 py-2 rounded-xl text-sm font-medium transition">
-                            <i class="fas fa-copy"></i> Copier
-                        </button>
-                        <button onclick="analyzeTrafficWithAI()" id="btn-ai-traffic" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition">
-                            <i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations
-                        </button>
-                    </div>
-                </div>
-                <p class="text-gold/40 text-xs mb-3 italic">Analyse les statistiques de la période sélectionnée et propose des actions concrètes pour améliorer le trafic et la conversion.</p>
-                <div id="analytics-ai-result" class="text-gold/80 text-sm leading-relaxed whitespace-pre-line hidden bg-white/5 border border-gold/10 rounded-xl p-4"></div>
             </div>
 
             <!-- Pages vues par jour -->
