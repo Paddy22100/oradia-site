@@ -10567,39 +10567,56 @@
         let composeContactsLoaded = false;
         let composeContactsCache = [];
         let composeContactsCategoryFilter = 'all';
+        // Chaque source est chargée indépendamment (au lieu d'un seul Promise.all + try/catch
+        // partagé) : avant, une seule source en échec (erreur réseau, réponse non-JSON, erreur
+        // serveur) faisait avorter le bloc entier et laissait composeContactsCache vide — y
+        // compris les contacts, qui eux fonctionnaient très bien seuls avant l'ajout de
+        // fournisseurs/partenaires. Symptôme observé : "Tous (0)" alors que les contacts
+        // newsletter existent bel et bien. Ici, si fournisseurs ou partenaires échoue, les
+        // contacts restent chargés normalement — et l'erreur précise de la source fautive est
+        // loguée (au lieu d'un unique catch générique qui ne dit pas laquelle des 3 a échoué).
+        async function loadComposeContactsSource(url, mapFn, label) {
+            try {
+                const res = await adminFetch(url);
+                const json = await res.json();
+                if (!res.ok || json.error) {
+                    console.error(`loadComposeContacts (${label}): réponse en erreur`, res.status, json.error);
+                    return [];
+                }
+                return (json.data || []).map(mapFn).filter(Boolean);
+            } catch (e) {
+                console.error(`loadComposeContacts (${label}):`, e);
+                return [];
+            }
+        }
         async function loadComposeContacts() {
             if (composeContactsLoaded) return;
             composeContactsLoaded = true;
-            try {
-                const [contactsRes, suppliersRes, partnersRes] = await Promise.all([
-                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000'),
-                    adminFetch('/api/admin/data?section=suppliers'),
-                    adminFetch('/api/admin/data?section=partners')
-                ]);
-                const contacts  = ((await contactsRes.json()).data || [])
-                    .filter(c => c.email)
-                    .map(c => ({ email: c.email, label: [c.prenom, c.nom].filter(Boolean).join(' '), category: 'contact' }));
+            const [contacts, suppliers, partners] = await Promise.all([
+                loadComposeContactsSource('/api/admin/data?section=waitlist&page=1&limit=5000',
+                    c => c.email ? { email: c.email, label: [c.prenom, c.nom].filter(Boolean).join(' '), category: 'contact' } : null,
+                    'contacts'),
                 // Fournisseurs/partenaires sans email (contactés par téléphone) gardés ici plutôt
                 // que filtrés en silence : ils apparaissent grisés, non cliquables, avec "pas
                 // d'email enregistré" — sans quoi filtrer par catégorie sur un fournisseur qui
                 // n'a jamais eu d'email pouvait donner une liste vide sans aucune explication,
                 // indiscernable d'un bouton qui ne réagit pas.
-                const suppliers = ((await suppliersRes.json()).data || [])
-                    .filter(s => s.name)
-                    .map(s => ({ email: s.email || null, label: s.name, category: 'supplier' }));
-                const partners  = ((await partnersRes.json()).data || [])
-                    .filter(p => p.name)
-                    .map(p => ({ email: p.email || null, label: p.name, category: 'partner' }));
-                composeContactsCache = [...contacts, ...suppliers, ...partners];
-                const datalist = document.getElementById('composeContactsList');
-                datalist.innerHTML = composeContactsCache
-                    .filter(c => c.email)
-                    .map(c => `<option value="${escapeHtmlFront(c.email)}"${c.label ? ` label="${escapeHtmlFront(c.label)}"` : ''}>`)
-                    .join('');
-            } catch(e) {
-                composeContactsLoaded = false; // permet de réessayer au prochain passage sur l'onglet
-                console.error('loadComposeContacts', e);
-            }
+                loadComposeContactsSource('/api/admin/data?section=suppliers',
+                    s => s.name ? { email: s.email || null, label: s.name, category: 'supplier' } : null,
+                    'suppliers'),
+                loadComposeContactsSource('/api/admin/data?section=partners',
+                    p => p.name ? { email: p.email || null, label: p.name, category: 'partner' } : null,
+                    'partners')
+            ]);
+            composeContactsCache = [...contacts, ...suppliers, ...partners];
+            const datalist = document.getElementById('composeContactsList');
+            datalist.innerHTML = composeContactsCache
+                .filter(c => c.email)
+                .map(c => `<option value="${escapeHtmlFront(c.email)}"${c.label ? ` label="${escapeHtmlFront(c.label)}"` : ''}>`)
+                .join('');
+            // Si vraiment rien n'a pu être chargé (les 3 sources en échec), permettre de
+            // réessayer au prochain passage sur l'onglet plutôt que de rester bloqué à vide.
+            if (composeContactsCache.length === 0) composeContactsLoaded = false;
         }
 
         // Sélecteur déroulant du Répertoire (bouton icône à côté du champ Destinataire) —
