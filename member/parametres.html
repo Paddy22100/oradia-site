@@ -211,11 +211,33 @@
                 <div class="settings-section rounded-xl p-6 space-y-1">
                     <div class="flex justify-between items-center py-4 border-b border-gold/20">
                         <div>
-                            <p class="text-gold font-medium">Newsletter</p>
-                            <p class="text-light-gold/60 text-sm">Actualités, inspirations et nouveautés Oradia</p>
+                            <p class="text-gold font-medium">Tirage du dimanche</p>
+                            <p class="text-light-gold/60 text-sm">Un tirage thématique de l'Oracle envoyé chaque dimanche, en lien avec la situation astrologique du moment.</p>
                         </div>
                         <label class="toggle-switch">
-                            <input type="checkbox" id="toggleNewsletter">
+                            <input type="checkbox" id="toggleTirageDimanche">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center py-4 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Newsletter du mercredi</p>
+                            <p class="text-light-gold/60 text-sm">Réflexions et guidance autour de l'oracle, un email hebdomadaire envoyé chaque mercredi.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleNewsletterMercredi">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center py-4 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Actualités et offres</p>
+                            <p class="text-light-gold/60 text-sm">Actualités, nouveautés, promotions et offres ponctuelles sur les produits Oradia.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleActualitesOffres">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -369,7 +391,9 @@
             window.location.href = '../index.html';
         });
 
-        // ── Persistance toggles ───────────────────────────────────────────────
+        // ── Persistance des préférences d'affichage (fuseau, synchronicités) ───
+        // Contrairement aux 3 cases newsletter ci-dessous (réellement enregistrées côté
+        // serveur, voir plus bas), celles-ci restent purement locales au navigateur.
         const PREFS_KEY = 'oradia_prefs';
         function loadPrefs() {
             try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch(e) { return {}; }
@@ -380,29 +404,23 @@
 
         (function initUI() {
             const prefs = loadPrefs();
-            const nlToggle = document.getElementById('toggleNewsletter');
             const syncToggle = document.getElementById('toggleSynchronicites');
             const tzSel = document.getElementById('selectFuseau');
 
-            if (nlToggle)   nlToggle.checked   = prefs.newsletter    !== false;
             if (syncToggle) syncToggle.checked = prefs.synchronicites === true;
             if (tzSel    && prefs.fuseau)  tzSel.value    = prefs.fuseau;
 
-            // Auto-save les toggles
-            [nlToggle, syncToggle].forEach(el => {
-                if (!el) return;
-                el.addEventListener('change', () => {
+            if (syncToggle) {
+                syncToggle.addEventListener('change', () => {
                     const p = loadPrefs();
-                    p.newsletter     = document.getElementById('toggleNewsletter')?.checked ?? true;
-                    p.synchronicites = document.getElementById('toggleSynchronicites')?.checked ?? false;
+                    p.synchronicites = syncToggle.checked;
                     savePrefs(p);
                 });
-            });
+            }
         })();
 
         function savePreferences() {
             const prefs = loadPrefs();
-            prefs.newsletter     = document.getElementById('toggleNewsletter')?.checked ?? true;
             prefs.synchronicites = document.getElementById('toggleSynchronicites')?.checked ?? false;
             prefs.fuseau  = document.getElementById('selectFuseau')?.value  || 'Europe/Paris';
             savePrefs(prefs);
@@ -413,6 +431,55 @@
             btn.disabled = true;
             setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
         }
+
+        // ── Préférences newsletter par catégorie (réellement enregistrées côté serveur,
+        // newsletter_contacts) — remplace l'ancien interrupteur "Newsletter" unique qui
+        // n'écrivait en réalité que dans le localStorage, sans jamais rien changer aux
+        // envois réels. Chaque case s'enregistre immédiatement au changement (comme un
+        // vrai désabonnement/réabonnement), pas seulement au clic sur "Sauvegarder".
+        function getMemberEmail() {
+            try {
+                const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
+                return sess.email || localStorage.getItem('userEmail') || '';
+            } catch(e) { return localStorage.getItem('userEmail') || ''; }
+        }
+
+        (async function initNewsletterPrefs() {
+            const email = getMemberEmail();
+            const tDim = document.getElementById('toggleTirageDimanche');
+            const tMer = document.getElementById('toggleNewsletterMercredi');
+            const tAct = document.getElementById('toggleActualitesOffres');
+            if (!email || (!tDim && !tMer && !tAct)) return;
+
+            try {
+                const res = await fetch(`/api/auth/check-newsletter?email=${encodeURIComponent(email)}`);
+                const data = await res.json();
+                if (tDim) tDim.checked = data.pref_tirage_dimanche !== false;
+                if (tMer) tMer.checked = data.pref_newsletter_mercredi !== false;
+                if (tAct) tAct.checked = data.pref_actualites_offres !== false;
+            } catch(e) {
+                // Repli : cases cochées par défaut (comportement actuel préservé) si l'appel échoue.
+                if (tDim) tDim.checked = true;
+                if (tMer) tMer.checked = true;
+                if (tAct) tAct.checked = true;
+            }
+
+            const saveNewsletterPrefs = async () => {
+                try {
+                    await fetch('/api/auth/save-newsletter-prefs', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email,
+                            pref_tirage_dimanche: tDim?.checked ?? true,
+                            pref_newsletter_mercredi: tMer?.checked ?? true,
+                            pref_actualites_offres: tAct?.checked ?? true
+                        })
+                    });
+                } catch(e) { console.error('save-newsletter-prefs', e); }
+            };
+            [tDim, tMer, tAct].forEach(el => el?.addEventListener('change', saveNewsletterPrefs));
+        })();
 
         // ── 2FA / MFA ─────────────────────────────────────────────────────────
         const SUPABASE_URL = 'https://nxzetkdozynyutlbhxdx.supabase.co';

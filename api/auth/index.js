@@ -299,6 +299,33 @@ async function handleCheckSubscription(req, res) {
 // qui peut être incomplète pour des contacts ajoutés hors du formulaire du site),
 // avec repli sur newsletter_contacts si l'appel Brevo échoue. Utilisé côté front
 // pour masquer le bloc d'inscription newsletter aux membres déjà abonnés.
+// Préférences newsletter par catégorie (member/parametres.html) — n'existent que côté
+// Supabase (newsletter_contacts), Brevo n'en a pas la moindre notion. Toujours lues ici
+// séparément de la détection "subscribed" ci-dessous (qui reste Brevo-first), pour que
+// l'UI membre affiche les 3 cases même quand Brevo est indisponible.
+async function fetchNewsletterPrefs(email) {
+  const defaults = { pref_tirage_dimanche: true, pref_newsletter_mercredi: true, pref_actualites_offres: true };
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) return defaults;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data } = await supabase
+      .from('newsletter_contacts')
+      .select('pref_tirage_dimanche, pref_newsletter_mercredi, pref_actualites_offres')
+      .ilike('email', email)
+      .maybeSingle();
+    if (!data) return defaults;
+    return {
+      pref_tirage_dimanche: data.pref_tirage_dimanche !== false,
+      pref_newsletter_mercredi: data.pref_newsletter_mercredi !== false,
+      pref_actualites_offres: data.pref_actualites_offres !== false
+    };
+  } catch (_) {
+    return defaults;
+  }
+}
+
 async function handleCheckNewsletter(req, res) {
   const email = (req.query?.email || '').toLowerCase().trim();
   if (!email) {
@@ -306,6 +333,7 @@ async function handleCheckNewsletter(req, res) {
     return res.end(JSON.stringify({ subscribed: false, error: 'Email requis' }));
   }
 
+  const prefs = await fetchNewsletterPrefs(email);
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const listId = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5', 10);
 
@@ -320,12 +348,12 @@ async function handleCheckNewsletter(req, res) {
         // apparaît encore dans la liste — on ne le considère donc pas comme abonné.
         const subscribed = !contact.emailBlacklisted && Array.isArray(contact.listIds) && contact.listIds.includes(listId);
         res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ subscribed }));
+        return res.end(JSON.stringify({ subscribed, ...prefs }));
       }
       if (r.status === 404) {
         // Contact inconnu de Brevo : certainement pas abonné, réponse fiable.
         res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ subscribed: false }));
+        return res.end(JSON.stringify({ subscribed: false, ...prefs }));
       }
       // Autre statut (401, 429, 5xx…) : tombe sur le repli Supabase ci-dessous.
     } catch (_) { /* tombe sur le repli Supabase ci-dessous */ }
@@ -337,7 +365,7 @@ async function handleCheckNewsletter(req, res) {
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     if (!supabaseUrl || !supabaseKey) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ subscribed: false }));
+      return res.end(JSON.stringify({ subscribed: false, ...prefs }));
     }
     const supabase = createClient(supabaseUrl, supabaseKey);
     const { data } = await supabase
@@ -347,11 +375,47 @@ async function handleCheckNewsletter(req, res) {
       .maybeSingle();
     const subscribed = !!data && data.status !== 'unsubscribed' && data.brevo_synced === true;
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed }));
+    return res.end(JSON.stringify({ subscribed, ...prefs }));
   } catch (err) {
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed: false }));
+    return res.end(JSON.stringify({ subscribed: false, ...prefs }));
   }
+}
+
+// ============ SAUVEGARDE DES PRÉFÉRENCES NEWSLETTER ============
+// Même modèle de confiance que save-birth-info/mark-password-changed ci-dessous :
+// pas de vérification de Bearer token, juste l'email transmis par le client — cohérent
+// avec le reste des mises à jour de profil membre déjà en place dans ce fichier.
+async function handleSaveNewsletterPrefs(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => data += c);
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+  const email = (body.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Email invalide' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { error } = await supabase
+    .from('newsletter_contacts')
+    .update({
+      pref_tirage_dimanche: body.pref_tirage_dimanche !== false,
+      pref_newsletter_mercredi: body.pref_newsletter_mercredi !== false,
+      pref_actualites_offres: body.pref_actualites_offres !== false
+    })
+    .ilike('email', email);
+  if (error) {
+    res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: error.message }));
+  }
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true }));
 }
 
 // ============ REFRESH SESSION ============
@@ -768,6 +832,11 @@ module.exports = async (req, res) => {
     // POST /mark-password-changed — synchronise l'indicateur dashboard après changement de mdp
     if (path.includes('mark-password-changed') || fullUrl.includes('mark-password-changed')) {
       return await handleMarkPasswordChanged(req, res);
+    }
+
+    // POST /save-newsletter-prefs — préférences newsletter par catégorie (member/parametres.html)
+    if (path.includes('save-newsletter-prefs') || fullUrl.includes('save-newsletter-prefs')) {
+      return await handleSaveNewsletterPrefs(req, res);
     }
 
     // Route non reconnue
