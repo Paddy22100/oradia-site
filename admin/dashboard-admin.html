@@ -4285,11 +4285,22 @@
                 <p class="text-light-gold/50 text-sm mt-1">Rédige un email libre, envoyé depuis <span class="text-gold font-mono">contact@oradia.fr</span> avec la même mise en page que les réponses du Support technique.</p>
             </div>
             <div class="stat-card rounded-xl p-5 space-y-3">
-                <div>
+                <div class="relative">
                     <label class="text-light-gold/60 text-xs block mb-1">Destinataire</label>
-                    <input id="composeEmailTo" type="email" placeholder="destinataire@exemple.fr" list="composeContactsList" autocomplete="off"
-                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    <div class="flex gap-2">
+                        <input id="composeEmailTo" type="email" placeholder="destinataire@exemple.fr" list="composeContactsList" autocomplete="off"
+                            class="flex-1 min-w-0 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        <button type="button" data-compose-contacts-btn onclick="toggleComposeContactsPicker()" title="Choisir dans le répertoire"
+                            class="shrink-0 bg-white/5 hover:bg-white/10 border border-gold/30 text-gold/80 rounded-lg px-3 text-sm transition">
+                            <i class="fas fa-address-book"></i>
+                        </button>
+                    </div>
                     <datalist id="composeContactsList"></datalist>
+                    <div id="composeContactsPicker" class="hidden absolute z-20 top-full left-0 mt-1 w-full bg-[#0a192f] border border-gold/30 rounded-lg shadow-xl max-h-72 flex flex-col overflow-hidden">
+                        <input id="composeContactsSearch" type="text" placeholder="Rechercher un contact (nom, email)…" oninput="renderComposeContactsPicker()"
+                            class="bg-white/5 border-b border-gold/20 px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none">
+                        <div id="composeContactsPickerList" class="overflow-y-auto text-sm"></div>
+                    </div>
                 </div>
                 <div>
                     <label class="text-light-gold/60 text-xs block mb-1">Sujet</label>
@@ -10540,19 +10551,21 @@
             }
         }
 
-        // Alimente la liste d'autocomplétion du champ Destinataire avec le Répertoire
-        // de contacts (même source que l'export CSV "Tous les contacts") — chargé une
-        // seule fois par session dashboard, pas à chaque ouverture de l'onglet Mails.
+        // Alimente l'autocomplétion (datalist) ET le sélecteur déroulant du champ
+        // Destinataire avec le Répertoire de contacts (même source que l'export CSV
+        // "Tous les contacts") — chargé une seule fois par session dashboard, pas à
+        // chaque ouverture de l'onglet Mails.
         let composeContactsLoaded = false;
+        let composeContactsCache = [];
         async function loadComposeContacts() {
             if (composeContactsLoaded) return;
             composeContactsLoaded = true;
             try {
                 const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000');
                 const rows = (await res.json()).data || [];
+                composeContactsCache = rows.filter(c => c.email);
                 const datalist = document.getElementById('composeContactsList');
-                datalist.innerHTML = rows
-                    .filter(c => c.email)
+                datalist.innerHTML = composeContactsCache
                     .map(c => {
                         const label = [c.prenom, c.nom].filter(Boolean).join(' ');
                         return `<option value="${escapeHtmlFront(c.email)}"${label ? ` label="${escapeHtmlFront(label)}"` : ''}>`;
@@ -10563,6 +10576,54 @@
                 console.error('loadComposeContacts', e);
             }
         }
+
+        // Sélecteur déroulant du Répertoire (bouton icône à côté du champ Destinataire) —
+        // même source que la datalist ci-dessus, pour les cas où taper pour filtrer est
+        // moins pratique que parcourir/rechercher visuellement la liste.
+        function toggleComposeContactsPicker() {
+            const panel = document.getElementById('composeContactsPicker');
+            const opening = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !opening);
+            if (opening) {
+                document.getElementById('composeContactsSearch').value = '';
+                renderComposeContactsPicker();
+                document.getElementById('composeContactsSearch').focus();
+            }
+        }
+
+        function renderComposeContactsPicker() {
+            const list = document.getElementById('composeContactsPickerList');
+            const q = (document.getElementById('composeContactsSearch').value || '').trim().toLowerCase();
+            const matches = composeContactsCache.filter(c => {
+                if (!q) return true;
+                const label = [c.prenom, c.nom, c.email].filter(Boolean).join(' ').toLowerCase();
+                return label.includes(q);
+            }).slice(0, 200);
+            if (matches.length === 0) {
+                list.innerHTML = '<p class="text-light-gold/40 text-xs px-3 py-4 text-center">Aucun contact trouvé.</p>';
+                return;
+            }
+            list.innerHTML = matches.map(c => {
+                const label = [c.prenom, c.nom].filter(Boolean).join(' ');
+                return `<button type="button" onclick="selectComposeContact('${c.email.replace(/'/g,"\\'")}')"
+                    class="w-full text-left px-3 py-2 hover:bg-gold/10 transition border-b border-gold/5 last:border-0">
+                    <span class="text-light-gold block truncate">${escapeHtmlFront(label) || escapeHtmlFront(c.email)}</span>
+                    ${label ? `<span class="text-gold/40 text-xs block truncate">${escapeHtmlFront(c.email)}</span>` : ''}
+                </button>`;
+            }).join('');
+        }
+
+        function selectComposeContact(email) {
+            document.getElementById('composeEmailTo').value = email;
+            document.getElementById('composeContactsPicker').classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('composeContactsPicker');
+            if (!panel || panel.classList.contains('hidden')) return;
+            if (e.target.closest('#composeContactsPicker') || e.target.closest('[data-compose-contacts-btn]')) return;
+            panel.classList.add('hidden');
+        });
 
         async function composeEmail() {
             const to      = document.getElementById('composeEmailTo').value.trim();
