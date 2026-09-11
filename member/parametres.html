@@ -202,11 +202,11 @@
                 <p class="text-light-gold/60 text-sm">Gérez vos préférences de communication et d'affichage.</p>
             </section>
 
-            <!-- Notifications -->
+            <!-- Emails -->
             <section class="mb-8">
                 <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
-                    <i class="fas fa-bell"></i>
-                    Notifications
+                    <i class="fas fa-envelope"></i>
+                    Emails
                 </h3>
                 <div class="settings-section rounded-xl p-6 space-y-1">
                     <div class="flex justify-between items-center py-4 border-b border-gold/20">
@@ -249,6 +249,27 @@
                         </div>
                         <label class="toggle-switch">
                             <input type="checkbox" id="toggleSynchronicites">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notifications (natives, reçues sur le téléphone dans l'app — distinctes des
+                 emails ci-dessus) -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-bell"></i>
+                    Notifications
+                </h3>
+                <div class="settings-section rounded-xl p-6 space-y-1">
+                    <div class="flex justify-between items-center py-4">
+                        <div>
+                            <p class="text-gold font-medium">Fin de fenêtre d'observation</p>
+                            <p class="text-light-gold/60 text-sm">Un rappel sur votre téléphone au moment où votre fenêtre d'observation se referme, pour noter ce que vous avez remarqué.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleNotifFenetre">
                             <span class="slider"></span>
                         </label>
                     </div>
@@ -405,9 +426,13 @@
         (function initUI() {
             const prefs = loadPrefs();
             const syncToggle = document.getElementById('toggleSynchronicites');
+            const notifFenetreToggle = document.getElementById('toggleNotifFenetre');
             const tzSel = document.getElementById('selectFuseau');
 
             if (syncToggle) syncToggle.checked = prefs.synchronicites === true;
+            // Défaut à true : la notification existait déjà pour tout le monde avant cette
+            // case (voir js/local-notifications.js) — désactivé seulement si explicitement décoché.
+            if (notifFenetreToggle) notifFenetreToggle.checked = prefs.notif_fenetre_observation !== false;
             if (tzSel    && prefs.fuseau)  tzSel.value    = prefs.fuseau;
 
             if (syncToggle) {
@@ -417,11 +442,19 @@
                     savePrefs(p);
                 });
             }
+            if (notifFenetreToggle) {
+                notifFenetreToggle.addEventListener('change', () => {
+                    const p = loadPrefs();
+                    p.notif_fenetre_observation = notifFenetreToggle.checked;
+                    savePrefs(p);
+                });
+            }
         })();
 
         function savePreferences() {
             const prefs = loadPrefs();
             prefs.synchronicites = document.getElementById('toggleSynchronicites')?.checked ?? false;
+            prefs.notif_fenetre_observation = document.getElementById('toggleNotifFenetre')?.checked ?? true;
             prefs.fuseau  = document.getElementById('selectFuseau')?.value  || 'Europe/Paris';
             savePrefs(prefs);
 
