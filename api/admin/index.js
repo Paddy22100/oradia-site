@@ -5992,11 +5992,22 @@ async function runParcoursIndividualCron(supabase) {
 
     let totalSent = 0;
     const details = [];
-    // Une seule publication LinkedIn par passage du cron, pour l'étape la plus avancée
-    // réellement envoyée (celle qui reflète le mieux où en sont les abonnés à jour du
-    // parcours) — pas une publication par étape, même si plusieurs étapes différentes
-    // sont dues le même mercredi pour des abonnés à des stades différents.
-    let latestSentStep = null; // { ordre, subject, text }
+    // Une seule publication par passage du cron, pour l'étape au numéro d'ordre le plus
+    // ÉLEVÉ réellement envoyée ce mercredi-là, ÉTAPE 1 TOUJOURS EXCLUE (accueil des tout
+    // nouveaux inscrits, jamais publié sur les réseaux — voir plus bas : sans étape
+    // avancée envoyée ce passage-ci, aucun post n'est programmé cette semaine-là).
+    // Les membres les plus avancés représentent le mieux "à jour du parcours" : avant
+    // cette exclusion, un mercredi où seuls 2-3 tout nouveaux inscrits recevaient
+    // l'étape 1 (parce que l'étape due pour le gros de la liste n'était pas encore
+    // validée) faisait publier "Nous sommes tous des pêcheurs" à la place de l'étape
+    // suivie par les membres avancés — cause identifiée le 10/09/2026. Se baser sur le
+    // NOMBRE de destinataires plutôt que sur l'ordre semblait une autre piste, mais casse
+    // dans le sens inverse en cas de désabonnements massifs des membres avancés : les
+    // nouveaux inscrits (toujours à l'étape 1) redeviendraient majoritaires en nombre
+    // sans être plus "à jour" pour autant. L'ordre le plus élevé reste correct quel que
+    // soit l'effectif de chaque groupe.
+    let mainStep = null; // { ordre, subject, text }
+    const sentSteps = []; // { ordre, subject, text } pour chaque étape avec au moins 1 envoi réussi
     for (const { step, emails } of dueByStepId.values()) {
       // L'objet reçu doit toujours commencer par "Rudy d'ORADIA - ", quelle que soit
       // l'étape (consigne explicite) — filet de sécurité pour les étapes ajoutées plus
@@ -6055,16 +6066,24 @@ async function runParcoursIndividualCron(supabase) {
       const ordre = Number(step.extra?.ordre) || 0;
       details.push({ ordre, subject: finalSubject, sent: sentCount, targeted: emails.length });
 
-      if (sentCount > 0 && (!latestSentStep || ordre > latestSentStep.ordre)) {
-        latestSentStep = { ordre, subject: finalSubject, text };
-      }
+      if (sentCount > 0) sentSteps.push({ ordre, subject: finalSubject, text });
+    }
+
+    // Étape la plus avancée hors étape 1 — l'étape 1 (accueil des tout nouveaux
+    // inscrits) ne sert jamais de contenu pour la publication automatique, même si
+    // c'est la seule étape envoyée ce passage-ci : mainStep reste alors null et aucun
+    // post n'est programmé cette semaine-là plutôt que de publier le message d'accueil.
+    for (const s of sentSteps) {
+      if (s.ordre === 1) continue;
+      if (!mainStep || s.ordre > mainStep.ordre) mainStep = s;
     }
 
     // Publication Facebook + Instagram + LinkedIn pour l'étape la plus avancée
-    // effectivement envoyée ce passage-ci — jamais si aucune étape n'avait de destinataire dû.
+    // effectivement envoyée ce passage-ci (voir mainStep ci-dessus) — jamais si aucune
+    // étape n'avait de destinataire dû.
     let social = null;
-    if (latestSentStep) {
-      social = await scheduleAutoSocialPost(supabase, { subject: latestSentStep.subject, textContent: latestSentStep.text });
+    if (mainStep) {
+      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text });
     }
 
     // Journalisé pour de bon (contrairement à avant : ce cron ne laissait aucune trace
@@ -6074,7 +6093,7 @@ async function runParcoursIndividualCron(supabase) {
     // au lieu d'un visuel généré" : ce n'est pas un échec (le post part quand même),
     // mais sans ce signal ici, la seule trace était le log Vercel éphémère de
     // generateSocialImage — impossible à corréler après coup avec "pourquoi ce post-là".
-    const socialNote = !latestSentStep
+    const socialNote = !mainStep
       ? ' — aucun post social (aucune étape envoyée ce passage)'
       : social?.success
         ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
