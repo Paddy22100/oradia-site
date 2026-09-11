@@ -193,6 +193,6 @@ COMMENT ON TABLE supplier_files IS
 ALTER TABLE suppliers DROP CONSTRAINT IF EXISTS suppliers_type_check;
 ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'fabricant';
 ALTER TABLE suppliers ADD CONSTRAINT suppliers_type_check
-    CHECK (type IN ('fabricant', 'transporteur'));
+    CHECK (type IN ('fabricant', 'transporteur', 'technique'));
 
 CREATE INDEX IF NOT EXISTS idx_suppliers_type ON suppliers(type);
