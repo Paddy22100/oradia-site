@@ -5911,16 +5911,21 @@ async function runParcoursIndividualCron(supabase) {
 
     let totalSent = 0;
     const details = [];
-    // Une seule publication par passage du cron, pour l'étape reçue par le PLUS GRAND
-    // NOMBRE de destinataires ce mercredi-là — c'est elle qui représente le mieux "la
-    // newsletter envoyée aux membres à jour du parcours", pas forcément l'ordre le plus
-    // élevé. Avant, on prenait l'étape au plus haut numéro d'ordre réellement envoyée :
-    // un mercredi où seuls 2-3 tout nouveaux inscrits recevaient l'étape 1 (parce que
-    // l'étape due pour le gros de la liste n'était pas encore validée) faisait alors
-    // publier "Nous sommes tous des pêcheurs" sur les réseaux sociaux à la place de
-    // l'étape réellement suivie par la majorité — cause identifiée le 10/09/2026.
-    // En cas d'égalité de destinataires, l'ordre le plus élevé tranche (déterministe).
-    let mainStep = null; // { ordre, subject, text, recipientCount }
+    // Une seule publication par passage du cron, pour l'étape au numéro d'ordre le plus
+    // ÉLEVÉ réellement envoyée ce mercredi-là (les membres les plus avancés = "à jour"
+    // du parcours), à L'EXCEPTION de l'étape 1 : elle ne compte que si c'est la SEULE
+    // étape envoyée ce passage-ci. Sans cette exception, un mercredi où seuls 2-3 tout
+    // nouveaux inscrits recevaient l'étape 1 (parce que l'étape due pour le gros de la
+    // liste n'était pas encore validée) faisait publier "Nous sommes tous des pêcheurs"
+    // sur les réseaux sociaux à la place de l'étape suivie par les membres avancés —
+    // cause identifiée le 10/09/2026. Se baser sur le NOMBRE de destinataires plutôt que
+    // sur l'ordre semblait une autre piste, mais casse dans le sens inverse en cas de
+    // désabonnements massifs des membres avancés : les nouveaux inscrits (toujours à
+    // l'étape 1) redeviendraient majoritaires en nombre sans être plus "à jour" pour
+    // autant. L'ordre le plus élevé (hors étape 1) reste correct quel que soit l'effectif
+    // de chaque groupe.
+    let mainStep = null; // { ordre, subject, text }
+    const sentSteps = []; // { ordre, subject, text } pour chaque étape avec au moins 1 envoi réussi
     for (const { step, emails } of dueByStepId.values()) {
       // L'objet reçu doit toujours commencer par "Rudy d'ORADIA - ", quelle que soit
       // l'étape (consigne explicite) — filet de sécurité pour les étapes ajoutées plus
@@ -5979,14 +5984,20 @@ async function runParcoursIndividualCron(supabase) {
       const ordre = Number(step.extra?.ordre) || 0;
       details.push({ ordre, subject: finalSubject, sent: sentCount, targeted: emails.length });
 
-      if (sentCount > 0 && (!mainStep || sentCount > mainStep.recipientCount || (sentCount === mainStep.recipientCount && ordre > mainStep.ordre))) {
-        mainStep = { ordre, subject: finalSubject, text, recipientCount: sentCount };
-      }
+      if (sentCount > 0) sentSteps.push({ ordre, subject: finalSubject, text });
     }
 
-    // Publication Facebook + Instagram + LinkedIn pour l'étape reçue par le plus de monde
-    // ce passage-ci (voir mainStep ci-dessus) — jamais si aucune étape n'avait de
-    // destinataire dû.
+    // Étape la plus avancée hors étape 1, sauf si elle est la seule envoyée ce
+    // passage-ci (voir le commentaire au-dessus de la déclaration de sentSteps).
+    const advancedSteps = sentSteps.filter(s => s.ordre !== 1);
+    const candidates = advancedSteps.length > 0 ? advancedSteps : sentSteps;
+    for (const s of candidates) {
+      if (!mainStep || s.ordre > mainStep.ordre) mainStep = s;
+    }
+
+    // Publication Facebook + Instagram + LinkedIn pour l'étape la plus avancée
+    // effectivement envoyée ce passage-ci (voir mainStep ci-dessus) — jamais si aucune
+    // étape n'avait de destinataire dû.
     let social = null;
     if (mainStep) {
       social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text });
