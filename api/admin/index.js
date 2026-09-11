@@ -5912,18 +5912,19 @@ async function runParcoursIndividualCron(supabase) {
     let totalSent = 0;
     const details = [];
     // Une seule publication par passage du cron, pour l'étape au numéro d'ordre le plus
-    // ÉLEVÉ réellement envoyée ce mercredi-là (les membres les plus avancés = "à jour"
-    // du parcours), à L'EXCEPTION de l'étape 1 : elle ne compte que si c'est la SEULE
-    // étape envoyée ce passage-ci. Sans cette exception, un mercredi où seuls 2-3 tout
-    // nouveaux inscrits recevaient l'étape 1 (parce que l'étape due pour le gros de la
-    // liste n'était pas encore validée) faisait publier "Nous sommes tous des pêcheurs"
-    // sur les réseaux sociaux à la place de l'étape suivie par les membres avancés —
-    // cause identifiée le 10/09/2026. Se baser sur le NOMBRE de destinataires plutôt que
-    // sur l'ordre semblait une autre piste, mais casse dans le sens inverse en cas de
-    // désabonnements massifs des membres avancés : les nouveaux inscrits (toujours à
-    // l'étape 1) redeviendraient majoritaires en nombre sans être plus "à jour" pour
-    // autant. L'ordre le plus élevé (hors étape 1) reste correct quel que soit l'effectif
-    // de chaque groupe.
+    // ÉLEVÉ réellement envoyée ce mercredi-là, ÉTAPE 1 TOUJOURS EXCLUE (accueil des tout
+    // nouveaux inscrits, jamais publié sur les réseaux — voir plus bas : sans étape
+    // avancée envoyée ce passage-ci, aucun post n'est programmé cette semaine-là).
+    // Les membres les plus avancés représentent le mieux "à jour du parcours" : avant
+    // cette exclusion, un mercredi où seuls 2-3 tout nouveaux inscrits recevaient
+    // l'étape 1 (parce que l'étape due pour le gros de la liste n'était pas encore
+    // validée) faisait publier "Nous sommes tous des pêcheurs" à la place de l'étape
+    // suivie par les membres avancés — cause identifiée le 10/09/2026. Se baser sur le
+    // NOMBRE de destinataires plutôt que sur l'ordre semblait une autre piste, mais casse
+    // dans le sens inverse en cas de désabonnements massifs des membres avancés : les
+    // nouveaux inscrits (toujours à l'étape 1) redeviendraient majoritaires en nombre
+    // sans être plus "à jour" pour autant. L'ordre le plus élevé reste correct quel que
+    // soit l'effectif de chaque groupe.
     let mainStep = null; // { ordre, subject, text }
     const sentSteps = []; // { ordre, subject, text } pour chaque étape avec au moins 1 envoi réussi
     for (const { step, emails } of dueByStepId.values()) {
@@ -5987,11 +5988,12 @@ async function runParcoursIndividualCron(supabase) {
       if (sentCount > 0) sentSteps.push({ ordre, subject: finalSubject, text });
     }
 
-    // Étape la plus avancée hors étape 1, sauf si elle est la seule envoyée ce
-    // passage-ci (voir le commentaire au-dessus de la déclaration de sentSteps).
-    const advancedSteps = sentSteps.filter(s => s.ordre !== 1);
-    const candidates = advancedSteps.length > 0 ? advancedSteps : sentSteps;
-    for (const s of candidates) {
+    // Étape la plus avancée hors étape 1 — l'étape 1 (accueil des tout nouveaux
+    // inscrits) ne sert jamais de contenu pour la publication automatique, même si
+    // c'est la seule étape envoyée ce passage-ci : mainStep reste alors null et aucun
+    // post n'est programmé cette semaine-là plutôt que de publier le message d'accueil.
+    for (const s of sentSteps) {
+      if (s.ordre === 1) continue;
       if (!mainStep || s.ordre > mainStep.ordre) mainStep = s;
     }
 
