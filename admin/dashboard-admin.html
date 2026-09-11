@@ -4296,9 +4296,10 @@
                         </button>
                     </div>
                     <datalist id="composeContactsList"></datalist>
-                    <div id="composeContactsPicker" class="hidden absolute z-20 top-full left-0 mt-1 w-full bg-[#0a192f] border border-gold/30 rounded-lg shadow-xl max-h-72 flex flex-col overflow-hidden">
+                    <div id="composeContactsPicker" class="hidden absolute z-20 top-full left-0 mt-1 w-full bg-[#0a192f] border border-gold/30 rounded-lg shadow-xl max-h-80 flex flex-col overflow-hidden">
                         <input id="composeContactsSearch" type="text" placeholder="Rechercher un contact (nom, email)…" oninput="renderComposeContactsPicker()"
                             class="bg-white/5 border-b border-gold/20 px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none">
+                        <div id="composeContactsCategoryBar" class="flex gap-1.5 px-2 py-1.5 border-b border-gold/10 flex-wrap"></div>
                         <div id="composeContactsPickerList" class="overflow-y-auto text-sm"></div>
                     </div>
                 </div>
@@ -10552,24 +10553,48 @@
         }
 
         // Alimente l'autocomplétion (datalist) ET le sélecteur déroulant du champ
-        // Destinataire avec le Répertoire de contacts (même source que l'export CSV
-        // "Tous les contacts") — chargé une seule fois par session dashboard, pas à
-        // chaque ouverture de l'onglet Mails.
+        // Destinataire avec le Répertoire de contacts — fusionne 3 sources distinctes
+        // (newsletter_contacts, suppliers, retail_partners : trois tables séparées, pas
+        // une seule avec une colonne catégorie) pour que fournisseurs et partenaires
+        // soient trouvables ici aussi, pas seulement les contacts newsletter. Chargé une
+        // seule fois par session dashboard, pas à chaque ouverture de l'onglet Mails.
+        const COMPOSE_CONTACTS_CATEGORIES = [
+            { value: 'all',      label: 'Tous' },
+            { value: 'contact',  label: 'Contacts' },
+            { value: 'supplier', label: 'Fournisseurs' },
+            { value: 'partner',  label: 'Partenaires' }
+        ];
         let composeContactsLoaded = false;
         let composeContactsCache = [];
+        let composeContactsCategoryFilter = 'all';
         async function loadComposeContacts() {
             if (composeContactsLoaded) return;
             composeContactsLoaded = true;
             try {
-                const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000');
-                const rows = (await res.json()).data || [];
-                composeContactsCache = rows.filter(c => c.email);
+                const [contactsRes, suppliersRes, partnersRes] = await Promise.all([
+                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000'),
+                    adminFetch('/api/admin/data?section=suppliers'),
+                    adminFetch('/api/admin/data?section=partners')
+                ]);
+                const contacts  = ((await contactsRes.json()).data || [])
+                    .filter(c => c.email)
+                    .map(c => ({ email: c.email, label: [c.prenom, c.nom].filter(Boolean).join(' '), category: 'contact' }));
+                // Fournisseurs/partenaires sans email (contactés par téléphone) gardés ici plutôt
+                // que filtrés en silence : ils apparaissent grisés, non cliquables, avec "pas
+                // d'email enregistré" — sans quoi filtrer par catégorie sur un fournisseur qui
+                // n'a jamais eu d'email pouvait donner une liste vide sans aucune explication,
+                // indiscernable d'un bouton qui ne réagit pas.
+                const suppliers = ((await suppliersRes.json()).data || [])
+                    .filter(s => s.name)
+                    .map(s => ({ email: s.email || null, label: s.name, category: 'supplier' }));
+                const partners  = ((await partnersRes.json()).data || [])
+                    .filter(p => p.name)
+                    .map(p => ({ email: p.email || null, label: p.name, category: 'partner' }));
+                composeContactsCache = [...contacts, ...suppliers, ...partners];
                 const datalist = document.getElementById('composeContactsList');
                 datalist.innerHTML = composeContactsCache
-                    .map(c => {
-                        const label = [c.prenom, c.nom].filter(Boolean).join(' ');
-                        return `<option value="${escapeHtmlFront(c.email)}"${label ? ` label="${escapeHtmlFront(label)}"` : ''}>`;
-                    })
+                    .filter(c => c.email)
+                    .map(c => `<option value="${escapeHtmlFront(c.email)}"${c.label ? ` label="${escapeHtmlFront(c.label)}"` : ''}>`)
                     .join('');
             } catch(e) {
                 composeContactsLoaded = false; // permet de réessayer au prochain passage sur l'onglet
@@ -10586,29 +10611,65 @@
             panel.classList.toggle('hidden', !opening);
             if (opening) {
                 document.getElementById('composeContactsSearch').value = '';
+                composeContactsCategoryFilter = 'all';
+                renderComposeContactsCategoryBar();
                 renderComposeContactsPicker();
                 document.getElementById('composeContactsSearch').focus();
             }
         }
 
+        function renderComposeContactsCategoryBar() {
+            const bar = document.getElementById('composeContactsCategoryBar');
+            bar.innerHTML = COMPOSE_CONTACTS_CATEGORIES.map(cat => {
+                const active = cat.value === composeContactsCategoryFilter;
+                // Total à droite : signale tout de suite une catégorie vide ou presque, plutôt
+                // que de laisser croire que le clic n'a rien fait quand la liste filtrée est
+                // juste très courte (fournisseurs sans email par exemple).
+                const count = cat.value === 'all' ? composeContactsCache.length : composeContactsCache.filter(c => c.category === cat.value).length;
+                return `<button type="button" onclick="setComposeContactsCategory('${cat.value}')"
+                    class="text-xs px-2.5 py-1 rounded-md border transition ${active ? 'bg-gold/20 text-gold border-gold/40' : 'text-light-gold/50 border-gold/15 hover:border-gold/30'}">${cat.label} <span class="opacity-60">(${count})</span></button>`;
+            }).join('');
+        }
+
+        function setComposeContactsCategory(value) {
+            composeContactsCategoryFilter = value;
+            renderComposeContactsCategoryBar();
+            renderComposeContactsPicker();
+        }
+
+        const COMPOSE_CATEGORY_BADGE = {
+            supplier: '<span class="text-blue-300/70 text-[0.65rem] uppercase tracking-wide ml-1.5">Fournisseur</span>',
+            partner:  '<span class="text-purple-300/70 text-[0.65rem] uppercase tracking-wide ml-1.5">Partenaire</span>'
+        };
         function renderComposeContactsPicker() {
             const list = document.getElementById('composeContactsPickerList');
             const q = (document.getElementById('composeContactsSearch').value || '').trim().toLowerCase();
             const matches = composeContactsCache.filter(c => {
+                if (composeContactsCategoryFilter !== 'all' && c.category !== composeContactsCategoryFilter) return false;
                 if (!q) return true;
-                const label = [c.prenom, c.nom, c.email].filter(Boolean).join(' ').toLowerCase();
-                return label.includes(q);
+                const haystack = [c.label, c.email].filter(Boolean).join(' ').toLowerCase();
+                return haystack.includes(q);
             }).slice(0, 200);
             if (matches.length === 0) {
                 list.innerHTML = '<p class="text-light-gold/40 text-xs px-3 py-4 text-center">Aucun contact trouvé.</p>';
                 return;
             }
             list.innerHTML = matches.map(c => {
-                const label = [c.prenom, c.nom].filter(Boolean).join(' ');
+                const badge = COMPOSE_CATEGORY_BADGE[c.category] || '';
+                if (!c.email) {
+                    // Fournisseur/partenaire présent dans le répertoire mais sans email
+                    // enregistré : affiché pour qu'on sache qu'il existe (et qu'on ne se
+                    // demande pas pourquoi la recherche ne le trouve pas), mais pas
+                    // sélectionnable puisqu'il n'y a pas d'adresse à mettre dans "Destinataire".
+                    return `<div class="w-full text-left px-3 py-2 border-b border-gold/5 last:border-0 opacity-40 cursor-not-allowed" title="Pas d'email enregistré pour ce contact">
+                        <span class="text-light-gold block truncate">${escapeHtmlFront(c.label)}${badge}</span>
+                        <span class="text-gold/40 text-xs block truncate italic">Pas d'email enregistré</span>
+                    </div>`;
+                }
                 return `<button type="button" onclick="selectComposeContact('${c.email.replace(/'/g,"\\'")}')"
                     class="w-full text-left px-3 py-2 hover:bg-gold/10 transition border-b border-gold/5 last:border-0">
-                    <span class="text-light-gold block truncate">${escapeHtmlFront(label) || escapeHtmlFront(c.email)}</span>
-                    ${label ? `<span class="text-gold/40 text-xs block truncate">${escapeHtmlFront(c.email)}</span>` : ''}
+                    <span class="text-light-gold block truncate">${escapeHtmlFront(c.label) || escapeHtmlFront(c.email)}${badge}</span>
+                    ${c.label ? `<span class="text-gold/40 text-xs block truncate">${escapeHtmlFront(c.email)}</span>` : ''}
                 </button>`;
             }).join('');
         }
