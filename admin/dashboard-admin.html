@@ -1655,6 +1655,7 @@
                             <select id="supplierType" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
                                 <option value="fabricant">Fabricant / imprimeur</option>
                                 <option value="transporteur">Transporteur / transitaire</option>
+                                <option value="technique">Technique / API</option>
                             </select>
                         </div>
                         <div>
@@ -1704,6 +1705,7 @@
                     <button onclick="setSuppliersTypeFilter('all')" data-type="all" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition bg-gold/20 text-gold border-gold/40">Tous</button>
                     <button onclick="setSuppliersTypeFilter('fabricant')" data-type="fabricant" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Fabricants</button>
                     <button onclick="setSuppliersTypeFilter('transporteur')" data-type="transporteur" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Transporteurs</button>
+                    <button onclick="setSuppliersTypeFilter('technique')" data-type="technique" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Technique</button>
                 </div>
 
                 <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
@@ -6457,8 +6459,8 @@
             renderSuppliers();
         }
 
-        const supplierTypeLabels = { fabricant: 'Fabricant', transporteur: 'Transporteur' };
-        const supplierTypeColors = { fabricant: 'bg-blue-500/15 text-blue-300 border-blue-500/30', transporteur: 'bg-teal-500/15 text-teal-300 border-teal-500/30' };
+        const supplierTypeLabels = { fabricant: 'Fabricant', transporteur: 'Transporteur', technique: 'Technique' };
+        const supplierTypeColors = { fabricant: 'bg-blue-500/15 text-blue-300 border-blue-500/30', transporteur: 'bg-teal-500/15 text-teal-300 border-teal-500/30', technique: 'bg-purple-500/15 text-purple-300 border-purple-500/30' };
 
         async function loadSuppliers() {
             try {
