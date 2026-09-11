@@ -286,6 +286,11 @@ async function sendWaitlistConfirmationEmail(email) {
             <td class="pad-box" style="padding:0 32px 26px;">
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;" bgcolor="#0f1d35">
                 <tr>
+                  <td align="center" style="padding:20px 28px 4px; line-height:0; font-size:0;">
+                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="ORADIA — La Boussole Intérieure, coffret et cartes" width="220" style="display:block; width:220px; max-width:55%; height:auto; border:0; border-radius:8px;">
+                  </td>
+                </tr>
+                <tr>
                   <td align="center" style="padding:26px 28px;">
                     <p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;">
                       Édition limitée
@@ -314,6 +319,16 @@ async function sendWaitlistConfirmationEmail(email) {
             <td align="center" style="padding:0 40px 30px;">
               <a href="https://oradia.fr/tore.html" class="btn-tirage" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 40px; border-radius:50px; letter-spacing:0.05em;">
                 Faire un tirage maintenant
+              </a>
+            </td>
+          </tr>
+
+          <!-- Bannière app mobile bêta — plus petite que l'encart précommande ci-dessus
+               (500px vs ~636px de large) pour rester secondaire sans être trop discrète. -->
+          <tr>
+            <td align="center" style="padding:0 40px 26px;">
+              <a href="https://play.google.com/store/apps/details?id=fr.oradia.app" target="_blank">
+                <img src="https://oradia.fr/images/medias/banniere_pub_app_mobile.webp" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play" width="580" style="display:block; width:100%; height:auto; max-width:580px; border:0; border-radius:12px; margin:0 auto;">
               </a>
             </td>
           </tr>
@@ -360,7 +375,7 @@ async function sendWaitlistConfirmationEmail(email) {
 </body>
 </html>
         `,
-        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — Avec gratitude, Rudy Boucheron'
+        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — L\'app mobile ORADIA est aussi disponible en bêta : play.google.com/store/apps/details?id=fr.oradia.app — Avec gratitude, Rudy Boucheron'
       })
     });
 
@@ -635,7 +650,7 @@ module.exports = async (req, res) => {
     const email = String(body.email || '').trim().toLowerCase();
     // Source d'inscription : reçue du client (utile pour mesurer quelle page convertit),
     // repliée sur 'site' si absente ou invalide plutôt que codée en dur.
-    const ALLOWED_SOURCES = ['precommande-oracle', 'footer-newsletter', 'tore', 'oracle', 'blog', 'inline', 'site'];
+    const ALLOWED_SOURCES = ['precommande-oracle', 'footer-newsletter', 'tore', 'oracle', 'blog', 'inline', 'site', 'app-home', 'app-feedback'];
     const rawSource = String(body.source || 'site').trim().toLowerCase();
     const source = ALLOWED_SOURCES.includes(rawSource) ? rawSource : 'site';
 
@@ -649,6 +664,17 @@ module.exports = async (req, res) => {
 
     validateEnvironment();
     const supabase = getSupabaseClient();
+
+    // Un abonné déjà actif ne doit pas recevoir une seconde fois l'email "vous êtes
+    // inscrit" — confusion remontée par un testeur déjà abonné qui l'a reçu à
+    // nouveau simplement en laissant son email sur un formulaire (ex. page de
+    // feedback bêta) sans intention de se réinscrire.
+    const { data: existingContact } = await supabase
+      .from('newsletter_contacts')
+      .select('status')
+      .ilike('email', email)
+      .maybeSingle();
+    const isNewOrReactivated = !existingContact || existingContact.status !== 'active';
 
     const { error } = await supabase
       .from('newsletter_contacts')
@@ -675,7 +701,7 @@ module.exports = async (req, res) => {
     }
 
     const [emailSent, contactAdded] = await Promise.all([
-      sendWaitlistConfirmationEmail(email),
+      isNewOrReactivated ? sendWaitlistConfirmationEmail(email) : Promise.resolve(false),
       addContactToBrevoList(email)
     ]);
 

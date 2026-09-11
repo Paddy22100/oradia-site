@@ -2736,6 +2736,7 @@
                                         <select id="nl-banner-preset" onchange="nlApplyBannerPreset()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                                             <option value="custom">Personnalisé</option>
                                             <option value="precommande">Précommande — Oracle Oradia</option>
+                                            <option value="app_mobile">Application mobile — Google Play (bêta)</option>
                                         </select>
                                     </div>
                                     <div class="grid grid-cols-2 gap-3">
@@ -3668,6 +3669,10 @@
                     class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
                     <i class="fas fa-envelope-open-text mr-1.5"></i>Newsletter
                 </button>
+                <button onclick="showAnalyticsSubTab('social')" id="analytics-subtab-btn-social"
+                    class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-share-nodes mr-1.5"></i>Réseaux sociaux
+                </button>
                 <button onclick="showAnalyticsSubTab('conversion')" id="analytics-subtab-btn-conversion"
                     class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
                     <i class="fas fa-filter mr-1.5"></i>Conversion
@@ -3680,6 +3685,21 @@
 
             <!-- ══ SOUS-ONGLET : TRAFIC ══ -->
             <div id="analytics-subtab-traffic" class="analytics-subtab">
+
+            <!-- Sous-sous-onglets Site / App : tout était empilé dans une seule page très
+                 longue (KPIs site + usage app mobile + comportement), difficile à lire. -->
+            <div class="flex gap-1 mb-6 border-b border-gold/20 pb-0">
+                <button onclick="showTrafficSubTab('site')" id="traffic-subtab-btn-site"
+                    class="traffic-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                    <i class="fas fa-globe mr-1.5"></i>Site
+                </button>
+                <button onclick="showTrafficSubTab('app')" id="traffic-subtab-btn-app"
+                    class="traffic-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-mobile-alt mr-1.5"></i>App
+                </button>
+            </div>
+
+            <div id="traffic-subtab-site">
             <!-- KPIs trafic -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6" id="analytics-kpis">
                 <div class="stat-card rounded-xl p-4 text-center">
@@ -3753,6 +3773,34 @@
                     <div id="analytics-timing"></div>
                 </div>
             </div>
+            </div><!-- /traffic-subtab-site -->
+
+            <div id="traffic-subtab-app" class="hidden">
+            <!-- Usage de l'app mobile native -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fas fa-mobile-alt text-gold/60"></i> Sessions app</h4>
+                    <div id="ana-app-sessions" class="text-3xl font-bold text-gold">—</div>
+                    <p class="text-light-gold/35 text-xs mt-1">appareils ayant ouvert l'app</p>
+                </div>
+                <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                    <h4 class="text-gold font-semibold mb-2 flex items-center gap-2"><i class="fas fa-eye text-gold/60"></i> Vues via l'app</h4>
+                    <div id="ana-app-views" class="text-3xl font-bold text-gold">—</div>
+                    <p class="text-light-gold/35 text-xs mt-1" id="ana-app-last-seen">dernière activité : —</p>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-gold/60"></i> Pages consultées (app)</h4>
+                    <div id="ana-app-top-pages" class="space-y-2 text-sm"><p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p></div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Quand l'app est utilisée (heure de la journée)</h4>
+                    <div id="ana-app-by-hour" class="space-y-2 text-sm"></div>
+                </div>
+            </div>
+            </div><!-- /traffic-subtab-app -->
+
             </div><!-- /analytics-subtab-traffic -->
 
             <!-- ══ SOUS-ONGLET : NEWSLETTER ══ -->
@@ -3807,6 +3855,15 @@
                     <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
                 </div>
             </div>
+
+            <!-- Funnel de conversion — Précommande oracle physique -->
+            <div class="stat-card rounded-2xl p-6 mt-6">
+                <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-box text-gold/60"></i> Funnel de conversion — Précommande</h4>
+                <p class="text-gold/40 text-xs mb-4">Étapes du parcours sur la période sélectionnée. Mesuré en interne (pas de cookie tiers) — les précommandes payées ne sont pas strictement chaînées aux visites (redirection Stripe).</p>
+                <div id="analytics-funnel-precommande" class="space-y-3">
+                    <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
+                </div>
+            </div>
             </div><!-- /analytics-subtab-conversion -->
 
             <!-- ══ SOUS-ONGLET : QUANTIQUE ══ -->
@@ -3843,6 +3900,95 @@
                 <div id="qrng-fallback-reasons" class="text-gold/50 text-xs mt-2"></div>
             </div>
             </div><!-- /analytics-subtab-quantum -->
+
+            <!-- ══ SOUS-ONGLET : RÉSEAUX SOCIAUX ══ -->
+            <div id="analytics-subtab-social" class="analytics-subtab hidden">
+                <!-- Sous-sous-onglets Facebook / Instagram -->
+                <div class="flex gap-2 mb-6 border-b border-gold/10">
+                    <button onclick="showSocialSubTab('facebook')" id="social-subtab-btn-facebook"
+                        class="social-subtab-btn px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                        <i class="fab fa-facebook mr-1.5"></i>Facebook
+                    </button>
+                    <button onclick="showSocialSubTab('instagram')" id="social-subtab-btn-instagram"
+                        class="social-subtab-btn px-4 py-2 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                        <i class="fab fa-instagram mr-1.5"></i>Instagram
+                    </button>
+                </div>
+
+                <!-- Facebook -->
+                <div id="social-subtab-facebook" class="social-subtab">
+                    <div id="social-fb-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Fans</h4>
+                            <div id="social-fb-fans" class="text-3xl font-bold text-gold">—</div>
+                            <p class="text-light-gold/35 text-xs mt-1" id="social-fb-name">—</p>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Réactions (12 derniers posts)</h4>
+                            <div id="social-fb-likes" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
+                            <div id="social-fb-comments" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-6">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Nouveaux fans (7j)</h4>
+                            <div id="social-fb-new-followers" class="text-3xl font-bold text-green-400">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Interactions (7j)</h4>
+                            <div id="social-fb-engagements" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Vues de la page (7j)</h4>
+                            <div id="social-fb-page-views" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6 mb-6">
+                        <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-line text-gold/60"></i> Nouveaux fans par jour (7j)</h4>
+                        <div id="social-fb-followers-chart" class="space-y-2 text-sm"></div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
+                        <div id="social-fb-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+                </div>
+
+                <!-- Instagram -->
+                <div id="social-subtab-instagram" class="social-subtab hidden">
+                    <p class="text-light-gold/35 text-xs mb-4">Abonnés, likes et commentaires seulement — les vues/reach et la croissance dans le temps nécessitent une permission Meta (<code>instagram_manage_insights</code>) en attente de validation.</p>
+                    <div id="social-ig-error" class="hidden text-red-400/90 text-xs bg-red-500/10 border border-red-500/25 rounded-lg px-3 py-2 mb-4"></div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-4">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Abonnés</h4>
+                            <div id="social-ig-followers" class="text-3xl font-bold text-gold">—</div>
+                            <p class="text-light-gold/35 text-xs mt-1" id="social-ig-username">@—</p>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Likes (12 derniers posts)</h4>
+                            <div id="social-ig-likes" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Commentaires</h4>
+                            <div id="social-ig-comments" class="text-3xl font-bold text-gold">—</div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 gap-6 mb-6">
+                        <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                            <h4 class="text-gold/70 text-xs uppercase mb-2">Nouveaux abonnés (7j)</h4>
+                            <div id="social-ig-new-followers" class="text-3xl font-bold text-green-400">—</div>
+                            <p class="text-light-gold/30 text-xs mt-1" id="social-ig-growth-note"></p>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-2xl p-6">
+                        <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-images text-gold/60"></i> Dernières publications</h4>
+                        <div id="social-ig-posts" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+                    </div>
+                </div>
+            </div><!-- /analytics-subtab-social -->
         </section>
         </div><!-- /tab-analytics -->
 
@@ -5357,6 +5503,128 @@
             document.querySelectorAll('.analytics-subtab').forEach(el => {
                 el.classList.toggle('hidden', el.id !== 'analytics-subtab-' + name);
             });
+            // Chargé à la demande (pas dans loadAnalytics) : appelle l'API Meta, pas la
+            // peine de la solliciter tant que personne ne regarde cet onglet.
+            if (name === 'social' && !window._socialStatsLoaded) {
+                window._socialStatsLoaded = true;
+                loadSocialStats();
+            }
+        }
+
+        function showSocialSubTab(name) {
+            document.querySelectorAll('.social-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('social-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.querySelectorAll('.social-subtab').forEach(el => {
+                el.classList.toggle('hidden', el.id !== 'social-subtab-' + name);
+            });
+        }
+
+        function renderSocialPosts(containerId, posts, captionKey) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = (posts || []).length === 0
+                ? '<p class="text-gold/30 italic text-xs">Aucune publication trouvée.</p>'
+                : posts.map(p => `
+                    <a href="${p.permalink}" target="_blank" rel="noopener" class="block bg-white/3 border border-white/8 rounded-xl overflow-hidden hover:border-gold/40 transition">
+                        ${p.thumbnail ? `<img src="${p.thumbnail}" class="w-full h-36 object-cover" loading="lazy">` : '<div class="w-full h-36 bg-white/5 flex items-center justify-center"><i class="fas fa-image text-gold/20 text-2xl"></i></div>'}
+                        <div class="p-3">
+                            <p class="text-light-gold/70 text-xs line-clamp-2 mb-2">${(p[captionKey] || '').replace(/</g,'&lt;')}</p>
+                            <div class="flex items-center justify-between text-xs text-gold/50">
+                                <span><i class="fas fa-heart mr-1"></i>${p.likes}</span>
+                                <span><i class="fas fa-comment mr-1"></i>${p.comments}</span>
+                                <span>${new Date(p.timestamp).toLocaleDateString('fr-FR')}</span>
+                            </div>
+                        </div>
+                    </a>`).join('');
+        }
+
+        async function loadSocialStats() {
+            const igErrEl = document.getElementById('social-ig-error');
+            const fbErrEl = document.getElementById('social-fb-error');
+            if (igErrEl) igErrEl.classList.add('hidden');
+            if (fbErrEl) fbErrEl.classList.add('hidden');
+            try {
+                const res = await adminFetch('/api/admin/social-stats');
+                const data = await res.json();
+                if (!data.success) {
+                    if (igErrEl) { igErrEl.textContent = data.error || 'Erreur inconnue.'; igErrEl.classList.remove('hidden'); }
+                    return;
+                }
+
+                const ig = data.instagram;
+                if (ig && !ig.error) {
+                    setEl('social-ig-followers', ig.account.followers ?? '—');
+                    setEl('social-ig-username', '@' + (ig.account.username || '—'));
+                    setEl('social-ig-likes', ig.totals.likes ?? 0);
+                    setEl('social-ig-comments', ig.totals.comments ?? 0);
+                    const igGrowth = ig.new_followers_7d;
+                    setEl('social-ig-new-followers', igGrowth == null ? '—' : (igGrowth > 0 ? '+' : '') + igGrowth);
+                    setEl('social-ig-growth-note', igGrowth == null ? "Pas encore assez d'historique (revient dans quelques jours)" : 'vs. il y a 7 jours');
+                    renderSocialPosts('social-ig-posts', ig.media, 'caption');
+                } else if (igErrEl) {
+                    igErrEl.textContent = ig?.error || 'Données Instagram indisponibles.';
+                    igErrEl.classList.remove('hidden');
+                }
+
+                const fb = data.facebook;
+                if (fb && !fb.error) {
+                    setEl('social-fb-fans', fb.page.fans ?? '—');
+                    setEl('social-fb-name', fb.page.name || '—');
+                    setEl('social-fb-likes', fb.totals.likes ?? 0);
+                    setEl('social-fb-comments', fb.totals.comments ?? 0);
+                    renderSocialPosts('social-fb-posts', fb.posts, 'message');
+
+                    if (fb.insights) {
+                        setEl('social-fb-new-followers', fb.insights.new_followers_7d ?? '—');
+                        setEl('social-fb-engagements', fb.insights.engagements_7d ?? '—');
+                        setEl('social-fb-page-views', fb.insights.page_views_7d ?? '—');
+                        const chartEl = document.getElementById('social-fb-followers-chart');
+                        if (chartEl) {
+                            const days = fb.insights.daily_new_followers || [];
+                            const max = Math.max(...days.map(d => d.value), 1);
+                            chartEl.innerHTML = days.length === 0
+                                ? '<p class="text-gold/30 italic text-xs">Aucune donnée.</p>'
+                                : days.map(d => `
+                                    <div class="flex items-center gap-2">
+                                        <span class="text-gold/50 text-xs w-20 flex-shrink-0">${new Date(d.date).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric' })}</span>
+                                        <div class="flex-1 h-2 bg-white/5 rounded-full overflow-hidden">
+                                            <div class="h-full bg-green-400/60 rounded-full" style="width:${(d.value/max*100).toFixed(0)}%"></div>
+                                        </div>
+                                        <span class="text-gold/40 text-xs w-6 text-right">${d.value}</span>
+                                    </div>`).join('');
+                        }
+                    }
+                } else if (fbErrEl) {
+                    fbErrEl.textContent = fb?.error || 'Données Facebook indisponibles.';
+                    fbErrEl.classList.remove('hidden');
+                }
+            } catch (err) {
+                if (igErrEl) { igErrEl.textContent = 'Erreur de chargement : ' + err.message; igErrEl.classList.remove('hidden'); }
+            }
+        }
+
+        // Sous-sous-onglets du sous-onglet Trafic : Site (KPIs, comportement des
+        // visiteurs) vs App (usage de l'app mobile native) — auparavant tout empilé
+        // dans une seule longue page.
+        function showTrafficSubTab(name) {
+            document.querySelectorAll('.traffic-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('traffic-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.getElementById('traffic-subtab-site')?.classList.toggle('hidden', name !== 'site');
+            document.getElementById('traffic-subtab-app')?.classList.toggle('hidden', name !== 'app');
         }
 
         // Depuis le Plan de fabrication : bascule sur "Devis & comparateur" et centre la carte du fournisseur
@@ -9434,10 +9702,18 @@
             const makeSlot = (slotVal) => {
                 const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
                 if (img) {
+                    const w = img.width || 600;
                     return `<div class="border border-gold/30 bg-gold/5 rounded-lg px-3 py-1.5 flex items-center gap-2 my-1">
                         <img src="${img.path}" class="w-10 h-7 object-cover rounded flex-shrink-0">
                         <span class="text-xs text-gold/70 flex-1 truncate">${img.name}</span>
-                        <button onclick="nlClearImageSlot(${slotVal})" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕ retirer</button>
+                        <label class="flex items-center gap-1 text-xs text-gold/50 flex-shrink-0" title="Largeur de l'image dans l'email" onclick="event.stopPropagation()">
+                            <i class="fas fa-arrows-left-right text-[10px]"></i>
+                            <input type="number" min="80" max="700" step="10" value="${w}"
+                                oninput="nlSetImageWidth(${slotVal}, this.value)"
+                                class="w-14 bg-black/20 border border-gold/20 rounded px-1 py-0.5 text-gold text-xs text-center">
+                            <span class="text-gold/30">px</span>
+                        </label>
+                        <button onclick="event.stopPropagation();nlClearImageSlot(${slotVal})" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕ retirer</button>
                     </div>`;
                 }
                 return `<div onclick="${hasActive ? 'nlPlaceImageAtSlot(' + slotVal + ')' : ''}"
@@ -9504,6 +9780,17 @@
             const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
             if (img) img.position = -1;
             nlUpdateSelectedPreviews();
+        }
+
+        // Largeur d'affichage d'une image placée dans le corps de l'email (px, 80-700).
+        // Ne redessine pas tout le panneau de placement (nlUpdateSelectedPreviews) pour
+        // ne pas perdre le focus du champ pendant la saisie — seule la génération de
+        // l'aperçu/l'enregistrement lit `img.width` au moment voulu.
+        function nlSetImageWidth(slotVal, value) {
+            const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
+            if (!img) return;
+            const w = parseInt(value, 10);
+            img.width = (w > 0) ? Math.min(700, Math.max(80, w)) : undefined;
         }
 
         function nlClearAllImageSlots() {
@@ -12730,6 +13017,28 @@
 
         // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
         // Entonnoir + donut du taux de réponse pour l'onglet Retour fenêtre
+
+        // Rendu partagé par tous les funnels de conversion (Tore, précommande...) :
+        // barres empilées avec % du total et % de l'étape précédente (sauf étapes
+        // marquées unchained, dont la conversion finale n'est pas chaînable par
+        // session — redirection Stripe qui perd le session_id).
+        function buildFunnelStepsHtml(steps) {
+            const max = Math.max(steps[0].value, 1);
+            return steps.map((s, i) => {
+                const pct = Math.round((s.value / max) * 100);
+                const prevPct = i > 0 && !s.unchained && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                return `<div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                        <span class="font-semibold" style="color:${s.color}">${s.value}<span class="text-light-gold/30 font-normal ml-1">(${pct}% du total${prevPct != null ? ` · ${prevPct}% de l'étape préc.` : ''})</span></span>
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         function renderFunnel(funnel) {
             const el = document.getElementById('analytics-funnel');
             if (!el) return;
@@ -12747,24 +13056,32 @@
                 // Stripe qui perd le session_id) — on n'affiche donc pas de « % de l'étape préc. »
                 { label: 'Nouveaux abonnements',       value: funnel.abonnements,        color: '#4ade80', icon: 'fa-crown', unchained: true }
             ];
-            const max = Math.max(steps[0].value, 1);
             if (steps[0].value === 0) {
                 el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune visite sur tore.html pour cette période.</p>';
                 return;
             }
-            el.innerHTML = steps.map((s, i) => {
-                const pct = Math.round((s.value / max) * 100);
-                const prevPct = i > 0 && !s.unchained && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
-                return `<div>
-                    <div class="flex items-center justify-between text-xs mb-1">
-                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
-                        <span class="font-semibold" style="color:${s.color}">${s.value}<span class="text-light-gold/30 font-normal ml-1">(${pct}% du total${prevPct != null ? ` · ${prevPct}% de l'étape préc.` : ''})</span></span>
-                    </div>
-                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
-                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
-                    </div>
-                </div>`;
-            }).join('');
+            el.innerHTML = buildFunnelStepsHtml(steps);
+        }
+
+        function renderPrecommandeFunnel(funnel) {
+            const el = document.getElementById('analytics-funnel-precommande');
+            if (!el) return;
+            if (!funnel) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Migration en attente (supabase-migration-funnel-events.sql) — le funnel apparaîtra une fois exécutée dans Supabase.</p>';
+                return;
+            }
+            const steps = [
+                { label: 'Visites precommande-oracle.html', value: funnel.visites,          color: '#d4af37', icon: 'fa-eye' },
+                { label: 'Offre ajoutée au panier',          value: funnel.offres_ajoutees,  color: '#f0c75e', icon: 'fa-cart-plus' },
+                { label: 'Paiement lancé',                   value: funnel.checkouts_lances, color: '#a78bfa', icon: 'fa-credit-card' },
+                // Non chaînée par session (redirection Stripe) — conversion réelle de la période.
+                { label: 'Précommandes payées',              value: funnel.precommandes_payees, color: '#4ade80', icon: 'fa-circle-check', unchained: true }
+            ];
+            if (steps[0].value === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune visite sur precommande-oracle.html pour cette période.</p>';
+                return;
+            }
+            el.innerHTML = buildFunnelStepsHtml(steps);
         }
 
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
@@ -14232,6 +14549,13 @@
                 cta_text: 'Je pré-commande',
                 cta_url: 'https://oradia.fr/precommande-oracle',
                 image: 'https://oradia.fr/images/medias/banniere-facebook.png'
+            },
+            app_mobile: {
+                title: 'Découvrez l\'application Oradia en avant-première',
+                desc: 'Tirages guidés, synchronicités et exploration intérieure — testez la bêta sur Google Play.',
+                cta_text: 'Tester la bêta sur Google Play',
+                cta_url: 'https://play.google.com/store/apps/details?id=fr.oradia.app',
+                image: 'https://oradia.fr/images/medias/banniere_pub_app_mobile.png'
             }
         };
         function nlToggleBanner() {
@@ -15013,6 +15337,7 @@
                 renderDailyViewsChart(t.daily_views || []);
 
                 renderFunnel(data.funnel);
+                renderPrecommandeFunnel(data.funnel_precommande);
 
                 // Graphique donut nouveaux vs anciens visiteurs
                 renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);
@@ -15032,6 +15357,47 @@
                                     <div class="h-full bg-teal-400/60 rounded-full" style="width:${(p.count/max*100).toFixed(0)}%"></div>
                                 </div>
                             </div>`).join('');
+                }
+
+                // Usage de l'app mobile native
+                {
+                    const app = t.app_usage || {};
+                    setEl('ana-app-sessions', app.unique_sessions ?? 0);
+                    setEl('ana-app-views', app.total_views ?? 0);
+                    const lastSeenEl = document.getElementById('ana-app-last-seen');
+                    if (lastSeenEl) {
+                        lastSeenEl.textContent = app.last_seen
+                            ? 'dernière activité : ' + new Date(app.last_seen).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
+                            : 'dernière activité : —';
+                    }
+                    const appPagesEl = document.getElementById('ana-app-top-pages');
+                    if (appPagesEl) {
+                        const pages = app.top_pages || [];
+                        const max = Math.max(...pages.map(p => p.count), 1);
+                        appPagesEl.innerHTML = pages.length === 0
+                            ? '<p class="text-gold/30 italic text-xs">Aucune visite via l\'app pour cette période.</p>'
+                            : pages.map(p => `
+                                <div class="flex items-center gap-2">
+                                    <span class="text-gold/60 font-mono text-xs truncate flex-1" title="${p.path}">${p.path}</span>
+                                    <span class="text-gold/40 text-xs w-8 text-right">${p.count}</span>
+                                    <div class="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0">
+                                        <div class="h-full bg-gold/60 rounded-full" style="width:${(p.count/max*100).toFixed(0)}%"></div>
+                                    </div>
+                                </div>`).join('');
+                    }
+                    const byHourEl = document.getElementById('ana-app-by-hour');
+                    if (byHourEl) {
+                        const byHour = app.by_hour || Array(24).fill(0);
+                        const maxH = Math.max(...byHour, 1);
+                        const totalH = byHour.reduce((a,b) => a+b, 0);
+                        byHourEl.innerHTML = totalH === 0
+                            ? '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'
+                            : `<div class="flex items-end gap-0.5 h-24">${byHour.map((c,h) => `
+                                <div class="flex-1 flex flex-col items-center justify-end h-full" title="${h}h : ${c} vue(s)">
+                                    <div class="w-full bg-gold/50 rounded-t" style="height:${c > 0 ? Math.max(4,(c/maxH*100)) : 0}%"></div>
+                                </div>`).join('')}</div>
+                                <div class="flex gap-0.5 mt-1">${byHour.map((_,h) => `<span class="flex-1 text-center text-[9px] text-gold/25">${h % 3 === 0 ? h : ''}</span>`).join('')}</div>`;
+                    }
                 }
 
                 // Provenance

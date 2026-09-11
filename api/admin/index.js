@@ -5416,9 +5416,6 @@ function buildCommunicationEmailHtml(draft) {
     <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
     <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
   </td></tr>
-  <tr><td style="padding:20px 32px 40px; text-align:center;">
-    <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
-  </td></tr>
   ${extra.promo_banner ? (() => {
     const b = extra.promo_banner;
     const hasImage = !!b.image;
@@ -5429,7 +5426,9 @@ function buildCommunicationEmailHtml(draft) {
   <tr><td style="padding:0 24px 32px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.3); border-radius:14px; overflow:hidden;">
       <tr><td style="padding:0; line-height:0;">
-        <img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;">
+        ${hasCta
+          ? `<a href="${nlAbsUrl(b.cta_url).replace(/"/g,'')}" style="display:block; line-height:0;"><img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;"></a>`
+          : `<img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;">`}
       </td></tr>
       ${hasCta ? `<tr><td style="padding:18px 32px; text-align:center; background:linear-gradient(135deg,#0c1e3a,#07152b);">
         <a href="${nlAbsUrl(b.cta_url).replace(/"/g,'')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:13px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.05em;">${nlEscHtml(b.cta_text || 'En savoir plus')}</a>
@@ -5450,6 +5449,9 @@ function buildCommunicationEmailHtml(draft) {
   </td></tr>`;
     }
   })() : ''}
+  <tr><td style="padding:20px 32px 40px; text-align:center;">
+    <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
+  </td></tr>
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
     <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
@@ -8727,8 +8729,9 @@ Réponds en français, sans tiret long, format markdown compact.`
         const sessionId = String(body.session_id || '').slice(0, 100);
         const userAgent = String(body.user_agent || '').slice(0, 500);
         const isNewVisitor = body.is_new_visitor === true;
+        const isApp = body.is_app === true;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
-        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse'];
+        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
         // Rejette les requêtes qui ne proviennent pas réellement d'une page oradia.fr. Cet
@@ -8773,7 +8776,7 @@ Réponds en français, sans tiret long, format markdown compact.`
           return res.status(204).end();
         }
         if (pagePath) {
-          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });
+          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor, is_app: isApp });
         }
         if (event) {
           await sb.from('funnel_events').insert({ session_id: sessionId, event_name: event, path: pagePath || null }).select().single()
@@ -9276,7 +9279,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       // avec .range() jusqu'à épuisement des lignes, quel que soit le plafond réel.
       const [views, prevViews] = await Promise.all([
         sbFetchAllRows(() => sb.from('page_views')
-          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent')
+          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent,is_app')
           .gte('created_at', since).not('path', 'like', '/admin%')
           .order('created_at', { ascending: false })),
         sbFetchAllRows(() => sb.from('page_views')
@@ -9289,6 +9292,29 @@ Réponds en français, sans tiret long, format markdown compact.`
       const pctChange = (curr, prev) => (prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0));
       traffic.views_change_pct = pctChange(traffic.total_views, prevTraffic.total_views);
       traffic.visitors_change_pct = pctChange(traffic.unique_visitors, prevTraffic.unique_visitors);
+
+      // ── Usage de l'app mobile native (is_app, posé par js/page-tracker.js via
+      // window.Capacitor.isNativePlatform()) — permet de voir si l'app est
+      // effectivement utilisée, par qui (sessions) et à quel moment (heure/jour).
+      {
+        const appViews = views.filter(v => v.is_app);
+        const appSessions = new Set(appViews.map(v => v.session_id));
+        const appPageCounts = {};
+        appViews.forEach(v => { appPageCounts[v.path] = (appPageCounts[v.path] || 0) + 1; });
+        const appTopPages = Object.entries(appPageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({ path, count }));
+        const appByHour = Array(24).fill(0);
+        appViews.forEach(v => { const h = new Date(v.created_at).getHours(); appByHour[h]++; });
+        const appByDay = {};
+        appViews.forEach(v => { const d = v.created_at.slice(0,10); appByDay[d] = (appByDay[d] || 0) + 1; });
+        traffic.app_usage = {
+          total_views: appViews.length,
+          unique_sessions: appSessions.size,
+          top_pages: appTopPages,
+          by_hour: appByHour,
+          by_day: Object.entries(appByDay).sort((a,b) => a[0] < b[0] ? -1 : 1).map(([date,count]) => ({ date, count })),
+          last_seen: appViews.length ? appViews[0].created_at : null
+        };
+      }
 
       // ── Santé technique (erreurs, depuis system_logs) ──
       // On distingue les erreurs serveur (API) des erreurs JS côté client
@@ -9305,16 +9331,20 @@ Réponds en français, sans tiret long, format markdown compact.`
       // conversion (sinon l'IA parle de conversion à l'aveugle). Dégrade proprement
       // si une table/migration manque.
       let funnel = null;
+      let funnelPrecommande = null;
       try {
         // Même plafond de pagination que plus haut — non chaîné à la première requête
         // uniquement par coïncidence de volumes actuels, mais silencieusement exposé au
         // même risque de troncature dès que le trafic sur la page Tore grandira.
-        const [toreViews, events, { count: newSubs }] = await Promise.all([
+        const [toreViews, events, { count: newSubs }, precommandeViews, { count: preordersPayees }] = await Promise.all([
           sbFetchAllRows(() => sb.from('page_views').select('session_id')
             .gte('created_at', since).ilike('path', '%tore.html%').order('created_at', { ascending: false })),
           sbFetchAllRows(() => sb.from('funnel_events').select('session_id, event_name')
             .gte('created_at', since).order('created_at', { ascending: false })),
-          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
+          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active'),
+          sbFetchAllRows(() => sb.from('page_views').select('session_id')
+            .gte('created_at', since).ilike('path', '%precommande-oracle.html%').order('created_at', { ascending: false })),
+          sb.from('preorders').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('paid_status', 'completed')
         ]);
         // Funnel CHAÎNÉ : chaque étape ne compte que les sessions ayant franchi
         // cette étape ET toutes les précédentes. Sans chaînage, les compteurs
@@ -9322,9 +9352,9 @@ Réponds en français, sans tiret long, format markdown compact.`
         // « % de l'étape préc. » incohérents (voire > 100 %). On garantit ici une
         // décroissance monotone et de vrais taux de conversion.
         const sessionsFor = (name) => new Set((events || []).filter(e => e.event_name === name).map(e => e.session_id));
-        const visitSessions = new Set((toreViews || []).map(r => r.session_id));
-        // Intersection cumulative : on ne garde que les sessions déjà présentes à l'étape précédente.
         const chain = (prevSet, curSet) => { const r = new Set(); for (const s of curSet) if (prevSet.has(s)) r.add(s); return r; };
+
+        const visitSessions = new Set((toreViews || []).map(r => r.session_id));
         const sIntention = chain(visitSessions, sessionsFor('intention_saisie'));
         const sTirage    = chain(sIntention,    sessionsFor('tirage_lance'));
         const sAnalyse   = chain(sTirage,       sessionsFor('analyse_affichee'));
@@ -9340,6 +9370,22 @@ Réponds en français, sans tiret long, format markdown compact.`
           // donc cette étape n'est PAS chaînable par session — on la présente comme
           // une conversion de la période, pas comme un sous-ensemble des emails.
           abonnements:        newSubs || 0
+        };
+
+        // Funnel précommande de l'oracle physique — mêmes principes que ci-dessus.
+        // Le clic "Procéder au paiement" redirige vers livraison.html (formulaire de
+        // livraison) avant la session Stripe : precommande_checkout_lance capture donc
+        // l'intention de payer, pas encore la création de la session Stripe elle-même.
+        const precoVisitSessions = new Set((precommandeViews || []).map(r => r.session_id));
+        const sOffreAjoutee = chain(precoVisitSessions, sessionsFor('precommande_offre_ajoutee'));
+        const sCheckoutLance = chain(sOffreAjoutee,      sessionsFor('precommande_checkout_lance'));
+        funnelPrecommande = {
+          visites:              precoVisitSessions.size,
+          offres_ajoutees:      sOffreAjoutee.size,
+          checkouts_lances:     sCheckoutLance.size,
+          // Comme "abonnements" ci-dessus : la session Stripe finale n'est pas chaînable
+          // par session_id (redirection Stripe), présenté comme conversion de la période.
+          precommandes_payees:  preordersPayees || 0
         };
       } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
 
@@ -9380,6 +9426,12 @@ ${funnel ? `- Visites de la page de tirage (tore.html) : ${funnel.visites}
 - Analyse affichée : ${funnel.analyses_affichees}
 - Email laissé : ${funnel.emails_laisses}
 - Nouveaux abonnements Tore sur la période : ${funnel.abonnements}` : '- Données de tunnel indisponibles sur la période.'}
+
+Tunnel de conversion de la précommande oracle physique (visiteurs distincts à chaque étape) :
+${funnelPrecommande ? `- Visites de la page précommande (precommande-oracle.html) : ${funnelPrecommande.visites}
+- Offre ajoutée au panier : ${funnelPrecommande.offres_ajoutees}
+- Paiement lancé (passage au formulaire de livraison) : ${funnelPrecommande.checkouts_lances}
+- Précommandes payées sur la période : ${funnelPrecommande.precommandes_payees}` : '- Données de tunnel indisponibles sur la période.'}
 
 Conversions réelles de la période :
 - Précommandes de l'oracle physique : ${conversions.precommandes == null ? 'N/A' : conversions.precommandes}
@@ -9431,9 +9483,151 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         range,
         traffic,
         funnel,
+        funnel_precommande: funnelPrecommande,
         conversions,
         logs_stats: { errors, server_errors: serverErrors, client_errors: clientErrors, warnings, total: (logs||[]).length }
       });
+    }
+
+    // ── Stats réseaux sociaux (Instagram + Facebook, via l'API Graph Meta) ──
+    // Utilise un token de Page longue durée (META_PAGE_ACCESS_TOKEN) — jamais exposé
+    // au client, uniquement utilisé côté serveur ici. Les métriques "reach/impressions"
+    // (instagram_manage_insights) ne sont pas encore accessibles (permission avancée en
+    // attente de validation Meta) : on expose ce qui est disponible sans elle — abonnés,
+    // nombre de publications, likes et commentaires par publication, pour les deux
+    // plateformes (elles partagent le même token de Page).
+    if (path === '/social-stats' || path === '/social-stats/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'GET') return res.status(405).end();
+      const pageToken = process.env.META_PAGE_ACCESS_TOKEN;
+      const igId = process.env.META_IG_BUSINESS_ID;
+      const pageId = process.env.META_PAGE_ID;
+      if (!pageToken || !igId) {
+        return res.status(200).json({ success: false, error: 'Intégration Instagram non configurée (variables META_PAGE_ACCESS_TOKEN / META_IG_BUSINESS_ID manquantes).' });
+      }
+
+      const result = { success: true, instagram: null, facebook: null };
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      // Enregistre l'instantané du jour (idempotent, une ligne par plateforme/jour) et
+      // renvoie la croissance vs. le snapshot le plus proche d'il y a 7 jours. Sert de
+      // filet pour Instagram (pas d'historique fourni par l'API sans
+      // instagram_manage_insights) — dégrade proprement (null) tant que la migration
+      // supabase-migration-social-stats-history.sql n'est pas encore passée.
+      async function snapshotAndGetGrowth(platform, followers) {
+        if (followers == null) return null;
+        const today = new Date().toISOString().slice(0, 10);
+        try {
+          await sb.from('social_stats_history').upsert({ platform, snapshot_date: today, followers }, { onConflict: 'platform,snapshot_date' });
+          const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+          const { data: past } = await sb.from('social_stats_history')
+            .select('followers, snapshot_date')
+            .eq('platform', platform)
+            .lte('snapshot_date', weekAgo)
+            .order('snapshot_date', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (!past) return null;
+          return followers - past.followers;
+        } catch (e) {
+          console.error(`[social-stats] snapshot ${platform}:`, e.message);
+          return null;
+        }
+      }
+
+      try {
+        const accountRes = await fetch(`https://graph.facebook.com/v21.0/${igId}?fields=username,followers_count,follows_count,media_count&access_token=${pageToken}`);
+        const account = await accountRes.json();
+        if (account.error) throw new Error(account.error.message);
+
+        const mediaRes = await fetch(`https://graph.facebook.com/v21.0/${igId}/media?fields=id,caption,permalink,timestamp,media_type,media_url,thumbnail_url,like_count,comments_count&limit=12&access_token=${pageToken}`);
+        const mediaData = await mediaRes.json();
+        if (mediaData.error) throw new Error(mediaData.error.message);
+        const media = (mediaData.data || []).map(m => ({
+          id: m.id,
+          caption: (m.caption || '').slice(0, 140),
+          permalink: m.permalink,
+          timestamp: m.timestamp,
+          media_type: m.media_type,
+          thumbnail: m.media_type === 'VIDEO' ? m.thumbnail_url : m.media_url,
+          likes: m.like_count ?? 0,
+          comments: m.comments_count ?? 0
+        }));
+        const totals = media.reduce((acc, m) => ({ likes: acc.likes + m.likes, comments: acc.comments + m.comments }), { likes: 0, comments: 0 });
+        const igGrowth7d = await snapshotAndGetGrowth('instagram', account.followers_count);
+
+        result.instagram = {
+          account: { username: account.username, followers: account.followers_count, follows: account.follows_count, media_count: account.media_count },
+          media,
+          totals,
+          new_followers_7d: igGrowth7d,
+          insights_available: false
+        };
+      } catch (err) {
+        console.error('[social-stats] Erreur API Instagram:', err.message);
+        result.instagram = { error: err.message };
+      }
+
+      if (pageId) {
+        try {
+          const pageRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}?fields=name,fan_count,followers_count&access_token=${pageToken}`);
+          const page = await pageRes.json();
+          if (page.error) throw new Error(page.error.message);
+
+          const postsRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/posts?fields=message,created_time,permalink_url,full_picture,reactions.summary(total_count),comments.summary(total_count)&limit=12&access_token=${pageToken}`);
+          const postsData = await postsRes.json();
+          if (postsData.error) throw new Error(postsData.error.message);
+          const posts = (postsData.data || []).map(p => ({
+            id: p.id,
+            message: (p.message || '').slice(0, 140),
+            permalink: p.permalink_url,
+            timestamp: p.created_time,
+            thumbnail: p.full_picture || null,
+            likes: p.reactions?.summary?.total_count ?? 0,
+            comments: p.comments?.summary?.total_count ?? 0
+          }));
+          const fbTotals = posts.reduce((acc, p) => ({ likes: acc.likes + p.likes, comments: acc.comments + p.comments }), { likes: 0, comments: 0 });
+
+          // Insights de Page (read_insights) : noms de métriques valides en v21 — beaucoup
+          // d'anciens noms (page_impressions, page_fans, page_fan_adds...) sont retirés de
+          // l'API et renvoient une erreur générique "must be a valid insights metric", sans
+          // lister d'alternative ; ceux-ci ont été trouvés par tâtonnement.
+          let insights = null;
+          try {
+            const since = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+            const until = new Date().toISOString().slice(0, 10);
+            const metrics = 'page_daily_follows_unique,page_post_engagements,page_views_total';
+            const insightsRes = await fetch(`https://graph.facebook.com/v21.0/${pageId}/insights?metric=${metrics}&period=day&since=${since}&until=${until}&access_token=${pageToken}`);
+            const insightsData = await insightsRes.json();
+            if (insightsData.error) throw new Error(insightsData.error.message);
+            const byMetric = {};
+            (insightsData.data || []).forEach(m => { byMetric[m.name] = (m.values || []).map(v => ({ date: v.end_time.slice(0, 10), value: v.value })); });
+            const sum = (arr) => (arr || []).reduce((a, v) => a + (v.value || 0), 0);
+            insights = {
+              new_followers_7d: sum(byMetric.page_daily_follows_unique),
+              engagements_7d: sum(byMetric.page_post_engagements),
+              page_views_7d: sum(byMetric.page_views_total),
+              daily_new_followers: byMetric.page_daily_follows_unique || [],
+              daily_engagements: byMetric.page_post_engagements || [],
+              daily_page_views: byMetric.page_views_total || []
+            };
+          } catch (err) {
+            console.error('[social-stats] Erreur insights Facebook:', err.message);
+          }
+
+          result.facebook = {
+            page: { name: page.name, fans: page.fan_count, followers: page.followers_count },
+            posts,
+            totals: fbTotals,
+            insights
+          };
+        } catch (err) {
+          console.error('[social-stats] Erreur API Facebook:', err.message);
+          result.facebook = { error: err.message };
+        }
+      }
+
+      return res.status(200).json(result);
     }
 
     // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──

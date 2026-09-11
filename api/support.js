@@ -49,7 +49,7 @@ function buildEmailHTML(type, data) {
   
   let detailsHTML = '';
   if (type === 'support' && data.sujet) {
-    detailsHTML += `<p><strong>Sujet :</strong> ${escapeHtml(data.sujet)}</p>`;
+    detailsHTML += `<p style="margin:4px 0;color:#e9e7df;font-family:Georgia,serif;font-size:14px;"><strong>Sujet :</strong> ${escapeHtml(data.sujet)}</p>`;
   }
   if (type === 'suggestion' && data.categorie) {
     const catLabels = {
@@ -59,7 +59,7 @@ function buildEmailHTML(type, data) {
       'fonctionnalite': 'Nouvelle fonctionnalité',
       'autre': 'Autre'
     };
-    detailsHTML += `<p><strong>Catégorie :</strong> ${escapeHtml(catLabels[data.categorie] || data.categorie)}</p>`;
+    detailsHTML += `<p style="margin:4px 0;color:#e9e7df;font-family:Georgia,serif;font-size:14px;"><strong>Catégorie :</strong> ${escapeHtml(catLabels[data.categorie] || data.categorie)}</p>`;
   }
   if (type === 'temoignage' && data.publication) {
     const pubLabels = {
@@ -67,45 +67,82 @@ function buildEmailHTML(type, data) {
       'prenom': 'Publication avec prénom',
       'non': 'Ne pas publier'
     };
-    detailsHTML += `<p><strong>Autorisation :</strong> ${escapeHtml(pubLabels[data.publication] || data.publication)}</p>`;
+    detailsHTML += `<p style="margin:4px 0;color:#e9e7df;font-family:Georgia,serif;font-size:14px;"><strong>Autorisation :</strong> ${escapeHtml(pubLabels[data.publication] || data.publication)}</p>`;
   }
 
   return `<!DOCTYPE html>
 <html lang="fr">
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a192f;font-family:'Georgia',serif;">
-  <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <img src="https://oradia.fr/images/logo-hd-v2.jpeg"
-           alt="Oradia" style="width:64px;height:64px;border-radius:50%;border:2px solid rgba(212,175,55,0.4);">
-      <p style="color:rgba(212,175,55,0.6);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;margin:12px 0 0;">
-        ${title}
-      </p>
-    </div>
-    
-    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
-      <p style="color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 12px;">
-        Informations
-      </p>
-      <p style="color:#e9e7df;margin:4px 0;"><strong>De :</strong> ${escapeHtml(data.name || 'Anonyme')} (${escapeHtml(data.email || 'non fourni')})</p>
-      <p style="color:#e9e7df;margin:4px 0;"><strong>Type :</strong> ${escapeHtml(type)}</p>
-      ${detailsHTML}
-    </div>
-    
-    <div style="background:rgba(5,20,40,0.8);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:20px 24px;">
-      <p style="color:#d4af37;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 14px;">
-        Message
-      </p>
-      <p style="color:#e9e7df;line-height:1.8;white-space:pre-wrap;">${escapeHtml(data.message || '')}</p>
-    </div>
-    
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.2),transparent);margin:24px 0;"></div>
-    
-    <p style="color:rgba(212,175,55,0.35);font-size:11px;text-align:center;line-height:1.6;margin:0;">
-      Envoyé depuis l'espace membre Oradia<br>
-      <a href="https://oradia.fr" style="color:rgba(212,175,55,0.5);">oradia.fr</a>
-    </p>
-  </div>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
+<meta name="supported-color-schemes" content="light">
+</head>
+<body style="margin:0;padding:0;background-color:#0a192f;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0a192f" style="background-color:#0a192f;">
+    <tr>
+      <td align="center" style="padding:40px 24px;">
+        <table role="presentation" width="560" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:560px;" bgcolor="#0a192f">
+          <tr>
+            <td align="center" style="padding:0 0 32px;">
+              <img src="https://oradia.fr/images/logo-hd-v2.jpeg"
+                   alt="Oradia" width="64" height="64" style="display:block;width:64px;height:64px;border-radius:50%;border:2px solid #6b5b28;">
+              <p style="margin:12px 0 0;color:#d4af37;font-family:Georgia,serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;">
+                ${title}
+              </p>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:0 0 24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#162230" style="background-color:#162230;border:1px solid #3a3020;border-radius:12px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 12px;color:#d4af37;font-family:Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">
+                      Informations
+                    </p>
+                    <p style="margin:4px 0;color:#e9e7df;font-family:Georgia,serif;font-size:14px;"><strong>De :</strong> ${escapeHtml(data.name || 'Anonyme')} (${escapeHtml(data.email || 'non fourni')})</p>
+                    <p style="margin:4px 0;color:#e9e7df;font-family:Georgia,serif;font-size:14px;"><strong>Type :</strong> ${escapeHtml(type)}</p>
+                    ${detailsHTML}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#061529" style="background-color:#061529;border:1px solid #3a3020;border-radius:12px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <p style="margin:0 0 14px;color:#d4af37;font-family:Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">
+                      Message
+                    </p>
+                    <p style="margin:0;color:#e9e7df;font-family:Georgia,serif;font-size:15px;line-height:1.8;white-space:pre-wrap;">${escapeHtml(data.message || '')}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
+          <tr>
+            <td style="padding:24px 0 0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" bgcolor="#3a3020" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table>
+            </td>
+          </tr>
+
+          <tr>
+            <td align="center" style="padding:16px 0 0;">
+              <p style="margin:0;color:#8a7a52;font-family:Georgia,serif;font-size:11px;text-align:center;line-height:1.6;">
+                Envoyé depuis l'espace membre Oradia<br>
+                <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>`;
 }

@@ -6872,10 +6872,22 @@ function maybePromptToreReconnect() {
               sess.subscribed = true;
               localStorage.setItem('oradia_was_subscribed', 'true');
             } else {
-              // Le serveur ne confirme plus l'abonnement. Si le cache local le croyait
-              // encore actif, c'est une résiliation/échec de paiement détecté juste ici —
-              // pas un simple visiteur qui n'a jamais été abonné.
-              if (isSubscribed) subscriptionLapsed = true;
+              // Le serveur ne confirme plus l'abonnement. Deux façons de détecter que ce
+              // n'est PAS un simple visiteur qui n'a jamais été abonné, plutôt qu'un abonné
+              // dont l'accès vient de se couper :
+              // 1. le cache local le croyait encore actif juste avant cet appel (transition
+              //    détectée en direct) ;
+              // 2. data.status est renseigné (payment_failed, cancelled, ou tout autre statut
+              //    non actif) — même si le cache local disait déjà "non abonné" (ex: revisite
+              //    après un précédent passage sur cette page qui avait déjà mis subscribed=
+              //    false en cache). Un compte qui a UNE ligne tore_subscriptions, quel que
+              //    soit son statut exact (Stripe finit par passer payment_failed → cancelled
+              //    après l'épuisement des relances), doit TOUJOURS renvoyer vers la page
+              //    d'abonnement plutôt que de retomber silencieusement dans le quota freemium
+              //    générique (2 tirages gratuits), qui ne veut rien dire pour un compte qui a
+              //    déjà payé. Seul un compte SANS aucune ligne (status: null) est un vrai
+              //    nouveau visiteur freemium.
+              if (isSubscribed || data.status) subscriptionLapsed = true;
               isSubscribed = false;
               sess.subscribed = false;
               // Mémorisé pour que member/abonnements.html sache proposer "corriger le
