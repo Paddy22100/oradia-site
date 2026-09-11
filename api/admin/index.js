@@ -6138,6 +6138,31 @@ async function handleNewsletter(req, res) {
         });
       }
 
+      // ── Dernière étape réellement reçue, par contact — même source et même logique
+      // que le cron d'envoi (runParcoursIndividualCron, table newsletter_sends filtrée
+      // sur ordre non nul), au lieu de deviner l'étape à partir du sujet du dernier
+      // email reçu (newsletter_contacts.last_newsletter_subject), qui se fait écraser
+      // par n'importe quel envoi hors parcours (newsletter classique, relance...) et
+      // affichait alors "à jour"/"dernière étape" à des contacts qui n'ont en réalité
+      // reçu aucune étape du parcours. Utilisé par l'onglet Contacts > Inscrits
+      // Newsletter (colonne "Avancement parcours").
+      if (action === 'parcours-contact-progress') {
+        const { data: sends, error } = await supabase
+          .from('newsletter_sends')
+          .select('contact_email, ordre, sent_at')
+          .not('ordre', 'is', null)
+          .order('sent_at', { ascending: false });
+        if (error) {
+          console.error('Error fetching parcours-contact-progress:', error);
+          return res.status(500).json({ error: 'Erreur lors du calcul de l\'avancement par contact' });
+        }
+        const lastOrdreByEmail = {};
+        for (const s of sends || []) {
+          if (!(s.contact_email in lastOrdreByEmail)) lastOrdreByEmail[s.contact_email] = Number(s.ordre);
+        }
+        return res.status(200).json({ success: true, lastOrdreByEmail });
+      }
+
       if (action === 'drafts') {
         const id = url.searchParams.get('id');
         if (id) {
