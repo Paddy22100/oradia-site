@@ -7673,7 +7673,12 @@
                             ${(item.tags || []).map(tag => `<span class="px-2 py-0.5 rounded text-xs bg-gold/10 text-gold border border-gold/30">${escapeHtmlFront(contactTagLabel(tag))}</span>`).join('') || '-'}
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-light-gold">${item.created_at_fr || formatDate(item.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">
+                        ${item.status === 'unsubscribed' && item.unsubscribed_at
+                            ? `<span class="text-red-400/80 text-xs block">Désabonné le</span>${formatDate(item.unsubscribed_at)}`
+                            : (item.created_at_fr || formatDate(item.created_at))
+                        }
+                    </td>
                     <td class="px-6 py-4">
                         ${item.status === 'unsubscribed'
                             ? '<span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">Désabonné</span>'
