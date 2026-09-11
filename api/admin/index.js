@@ -957,6 +957,95 @@ async function handleAuth(req, res) {
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────
+// Purge automatique des vieux déploiements Vercel : ne garde que les `keep` plus
+// récents (par createdAt), supprime le reste via l'API REST Vercel. Nécessaire
+// car le plan Hobby ne permet pas de configurer sa politique de rétention dans le
+// dashboard — sans ça, le "Stockage de déploiement" finit par dépasser le quota
+// gratuit (vécu en 2026-09 : 119 Go / 10 Go, causé par ~164 déploiements accumulés
+// en quelques jours). Un déploiement avec un alias actif (production ou preview
+// d'une branche encore ouverte) est refusé à la suppression par l'API elle-même :
+// on traite ça comme "ignoré", jamais comme une erreur bloquante.
+async function cleanupOldDeployments(supabase, { keep = 8, dryRun = false } = {}) {
+  const token = process.env.VERCEL_TOKEN;
+  const projectId = process.env.VERCEL_PROJECT_ID || 'prj_0DJh0iGvBHlRVp6MfrTCUa53Yhkd';
+  const teamId = process.env.VERCEL_TEAM_ID || 'team_OH3FH8jY7Lx9tjNcayHH42xg';
+  if (!token) {
+    return { success: false, error: 'VERCEL_TOKEN manquant' };
+  }
+
+  const all = [];
+  let until;
+  for (let page = 0; page < 20; page++) {
+    const url = new URL('https://api.vercel.com/v6/deployments');
+    url.searchParams.set('projectId', projectId);
+    url.searchParams.set('teamId', teamId);
+    url.searchParams.set('limit', '100');
+    if (until) url.searchParams.set('until', String(until));
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({}));
+      throw new Error(`Vercel API ${r.status}: ${body?.error?.message || r.statusText}`);
+    }
+    const data = await r.json();
+    const batch = data.deployments || [];
+    all.push(...batch);
+    until = data.pagination?.next;
+    if (!until || batch.length === 0) break;
+  }
+
+  all.sort((a, b) => b.createdAt - a.createdAt);
+  const toDelete = all.slice(keep);
+
+  let deleted = 0, skipped = 0;
+  const errors = [];
+  if (!dryRun) {
+    for (const dep of toDelete) {
+      try {
+        const delRes = await fetch(`https://api.vercel.com/v13/deployments/${dep.uid}?teamId=${teamId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (delRes.ok) {
+          deleted++;
+        } else {
+          skipped++;
+          const body = await delRes.json().catch(() => ({}));
+          errors.push({ uid: dep.uid, url: dep.url, status: delRes.status, error: body?.error?.message });
+        }
+      } catch (e) {
+        skipped++;
+        errors.push({ uid: dep.uid, url: dep.url, error: e.message });
+      }
+      await new Promise(r => setTimeout(r, 150));
+    }
+  }
+
+  const summary = {
+    success: true,
+    total: all.length,
+    kept: Math.min(keep, all.length),
+    to_delete: toDelete.length,
+    deleted,
+    skipped,
+    dry_run: dryRun,
+    errors: errors.slice(0, 10)
+  };
+
+  await logSystemEvent(supabase, {
+    level: errors.length > 0 ? 'warn' : 'info',
+    source: 'cron-cleanup-deployments',
+    method: 'GET',
+    path: '/api/admin/data',
+    status_code: 200,
+    message: dryRun
+      ? `[dry-run] ${toDelete.length} déploiement(s) seraient supprimés sur ${all.length} (garde les ${keep} plus récents)`
+      : `${deleted} déploiement(s) supprimé(s), ${skipped} ignoré(s) (alias actif ou erreur) sur ${toDelete.length} candidats — ${all.length} au total, garde les ${keep} plus récents`,
+    details: summary
+  });
+
+  return summary;
+}
+
 async function handleData(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -1497,6 +1586,16 @@ async function handleData(req, res) {
       if (getAction === 'cron-tirage-hebdo') {
         return await runWeeklyTirageCron(supabase, res);
       }
+
+      if (getAction === 'cron-cleanup-deployments') {
+        try {
+          const result = await cleanupOldDeployments(supabase, { keep: 8, dryRun: req.query?.dry_run === '1' });
+          return res.status(200).json(result);
+        } catch (e) {
+          await logSystemEvent(supabase, { level: 'error', source: 'cron-cleanup-deployments', message: e.message });
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
       return res.status(403).json({ error: 'Action non autorisée' });
     }
 
@@ -1507,6 +1606,19 @@ async function handleData(req, res) {
     // déjà passé plus haut si on arrive jusqu'ici) ne peut jamais le satisfaire.
     if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-tirage-hebdo') {
       return await runWeeklyTirageCron(supabase, res, { force: true });
+    }
+
+    // Test manuel de la purge des déploiements Vercel (session admin, sans secret
+    // cron) : permet de vérifier le comportement (idéalement d'abord avec
+    // ?dry_run=1) avant de faire confiance au cron quotidien non surveillé.
+    if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-cleanup-deployments') {
+      try {
+        const result = await cleanupOldDeployments(supabase, { keep: 8, dryRun: req.query?.dry_run === '1' });
+        return res.status(200).json(result);
+      } catch (e) {
+        await logSystemEvent(supabase, { level: 'error', source: 'cron-cleanup-deployments', message: e.message });
+        return res.status(200).json({ success: false, error: e.message });
+      }
     }
 
     // Les actions "support-*" (utilisées par le dashboard Support technique) sont
