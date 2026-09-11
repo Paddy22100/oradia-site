@@ -2936,6 +2936,20 @@
                                     <input type="datetime-local" id="nl-social-schedule"
                                         class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                                 </div>
+                                <div class="mb-3">
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Réseaux</label>
+                                    <div class="flex gap-4">
+                                        <label class="flex items-center gap-1.5 text-sm text-light-gold/80 cursor-pointer">
+                                            <input type="checkbox" id="nl-social-net-facebook" checked class="accent-purple-500"> Facebook
+                                        </label>
+                                        <label class="flex items-center gap-1.5 text-sm text-light-gold/80 cursor-pointer">
+                                            <input type="checkbox" id="nl-social-net-instagram" checked class="accent-purple-500"> Instagram
+                                        </label>
+                                        <label class="flex items-center gap-1.5 text-sm text-light-gold/80 cursor-pointer">
+                                            <input type="checkbox" id="nl-social-net-linkedin" checked class="accent-purple-500"> LinkedIn
+                                        </label>
+                                    </div>
+                                </div>
                                 <div class="flex gap-2 mb-3">
                                     <button onclick="nlPreviewSocial()" id="nl-btn-social-preview"
                                         class="flex-1 bg-white/5 border border-gold/20 text-gold/70 font-medium rounded-lg py-2 hover:bg-white/10 transition text-sm flex items-center justify-center gap-2">
@@ -10016,6 +10030,21 @@
             if (!subject) return nlSocialStatus('error', 'Remplis d\'abord le sujet de la newsletter.');
             if (!textContent) return nlSocialStatus('error', 'Le contenu de la newsletter est vide.');
             const scheduleVal = document.getElementById('nl-social-schedule')?.value;
+            // Conversion en UTC faite ICI, dans le navigateur (fuseau du visiteur) — comme
+            // nlSchedule() le fait déjà pour l'email. Sans ça, la chaîne "2026-09-11T09:00"
+            // partait telle quelle vers le serveur, qui l'interprétait en UTC (fuseau du
+            // runtime Vercel) au lieu de l'heure de Paris choisie dans le champ : un décalage
+            // de 1h à 2h selon la saison, la publication programmée pour "9h" ne partant en
+            // réalité qu'à 10h ou 11h.
+            const scheduleAt = scheduleVal ? new Date(scheduleVal).toISOString() : null;
+            const networks = {
+                facebook: document.getElementById('nl-social-net-facebook')?.checked !== false,
+                instagram: document.getElementById('nl-social-net-instagram')?.checked !== false,
+                linkedin: document.getElementById('nl-social-net-linkedin')?.checked !== false
+            };
+            if (!networks.facebook && !networks.instagram && !networks.linkedin) {
+                return nlSocialStatus('error', 'Coche au moins un réseau avant de publier.');
+            }
             // Priorité : URL manuelle > première image de la newsletter sélectionnée > logo par défaut
             const manualUrl = document.getElementById('nl-social-image')?.value.trim() || '';
             const autoUrl = nlSelectedImages.length > 0 ? nlSelectedImages[0].path : '';
@@ -10041,7 +10070,8 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         subject, textContent,
-                        scheduleAt: scheduleVal || null,
+                        scheduleAt,
+                        networks,
                         imageUrl: imageUrl || null,
                         facebook_text: editedFb || undefined,
                         instagram_text: editedIg || undefined,

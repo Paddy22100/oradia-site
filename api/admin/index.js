@@ -471,9 +471,16 @@ async function sendDueSocialPosts(supabase) {
   for (const post of dueSocial || []) {
     try {
       if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
+      // post.networks : absent tant que la migration social-posts-networks n'est pas
+      // passée, ou sur une ligne créée avant elle — les 3 réseaux restent alors activés,
+      // comportement historique inchangé.
+      const netw = { facebook: true, instagram: true, linkedin: true, ...(post.networks || {}) };
       const makeRes = await fetch(MAKE_WEBHOOK_URL, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+        body: JSON.stringify({
+          subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString(),
+          networks: netw, send_facebook: netw.facebook, send_instagram: netw.instagram, send_linkedin: netw.linkedin
+        })
       });
       if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
       await supabase.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
@@ -7470,6 +7477,17 @@ async function handlePublishSocial(req, res) {
     const body = req.body || {};
     const { subject, textContent, scheduleAt, imageUrl } = body;
     if (!subject || !textContent) return res.status(400).json({ error: 'subject et textContent requis' });
+    // Réseaux à cibler (cases à cocher du dashboard, les 3 activées par défaut si absentes
+    // — ex. appel programmatique existant qui n'envoie pas ce champ).
+    const rawNetworks = body.networks || {};
+    const networks = {
+      facebook: rawNetworks.facebook !== false,
+      instagram: rawNetworks.instagram !== false,
+      linkedin: rawNetworks.linkedin !== false
+    };
+    if (!networks.facebook && !networks.instagram && !networks.linkedin) {
+      return res.status(400).json({ error: 'Au moins un réseau doit être sélectionné' });
+    }
 
     const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
     if (!previewOnly && !MAKE_WEBHOOK_URL) return res.status(500).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL non configuré' });
@@ -7513,15 +7531,28 @@ async function handlePublishSocial(req, res) {
         process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
-      const { error: insErr } = await sbSocial.from('social_posts').insert({
+      const scheduledRow = {
         subject, facebook_text, instagram_text, linkedin_text, image_url, scheduled_at: new Date(scheduleAt).toISOString()
-      });
+      };
+      let { error: insErr } = await sbSocial.from('social_posts').insert({ ...scheduledRow, networks });
+      // Colonne optionnelle tant que supabase-migration-social-posts-networks.sql n'a pas
+      // été exécutée — retente sans elle plutôt que de casser la programmation.
+      if (insErr && /networks/i.test(insErr.message || '')) {
+        ({ error: insErr } = await sbSocial.from('social_posts').insert(scheduledRow));
+      }
       if (insErr) return res.status(500).json({ error: 'Erreur enregistrement programmation : ' + insErr.message });
       return res.status(200).json({ success: true, facebook_text, instagram_text, linkedin_text, image_url, scheduled: true });
     }
 
     // Pas de date : publication immédiate, comportement inchangé.
-    const payload = { subject, facebook_text, instagram_text, linkedin_text, image_url, schedule_at: null, sent_at: new Date().toISOString() };
+    const payload = {
+      subject, facebook_text, instagram_text, linkedin_text, image_url, schedule_at: null, sent_at: new Date().toISOString(),
+      networks,
+      // À plat, en plus de l'objet networks : un filtre Make.com sur un champ imbriqué
+      // demande un mapping supplémentaire, alors qu'un booléen à plat (send_facebook,
+      // etc.) se branche directement sur la condition du filtre de chaque module.
+      send_facebook: networks.facebook, send_instagram: networks.instagram, send_linkedin: networks.linkedin
+    };
     const makeRes = await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
