@@ -1941,7 +1941,16 @@
                         durGroup.style.opacity = '0.5';
                     }
                     window._obsWindowActivated = true;
-                    window.oradiaNotifications?.scheduleObservationClosing(data.closesAt, intention);
+                    // Réglage local (member/parametres.html > Notifications), pas de flag =
+                    // activé par défaut, cohérent avec le comportement d'avant l'ajout de cette case.
+                    let notifFenetreEnabled = true;
+                    try {
+                        const prefs = JSON.parse(localStorage.getItem('oradia_prefs') || '{}');
+                        notifFenetreEnabled = prefs.notif_fenetre_observation !== false;
+                    } catch (e) {}
+                    if (notifFenetreEnabled) {
+                        window.oradiaNotifications?.scheduleObservationClosing(data.closesAt, intention);
+                    }
                 } else {
                     throw new Error(data.message || 'Erreur inconnue');
                 }
