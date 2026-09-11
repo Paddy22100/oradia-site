@@ -18,10 +18,13 @@
 
     <!-- Écran de démarrage natif : utilise l'API Android SplashScreen (icône centrée sans
          étirement) plutôt qu'un bitmap plein écran, qui se déformait ("logo tassé") sur les
-         résolutions ne correspondant pas exactement aux tailles prégénérées par capacitor-assets. -->
+         résolutions ne correspondant pas exactement aux tailles prégénérées par capacitor-assets.
+         @mipmap/ic_launcher_foreground (et non @drawable/ic_launcher_foreground, qui pointait
+         vers le pictogramme générique par défaut de Capacitor jamais remplacé) est le mandala
+         Oradia réellement utilisé pour l'icône de l'app sur l'écran d'accueil. -->
     <style name="AppTheme.NoActionBarLaunch" parent="Theme.SplashScreen">
         <item name="windowSplashScreenBackground">@color/splashBackground</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_launcher_foreground</item>
         <item name="postSplashScreenTheme">@style/AppTheme.NoActionBar</item>
     </style>
 </resources>

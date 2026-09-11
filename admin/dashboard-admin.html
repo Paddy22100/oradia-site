@@ -360,6 +360,11 @@
                 <i class="fas fa-address-book w-4 text-center"></i>
                 <span>Contacts</span>
             </div>
+            <div class="nav-item" onclick="showTab('nl-subscribers')" id="nav-nl-subscribers" title="Qui est inscrit/désabonné de la newsletter, et depuis quand">
+                <i class="fas fa-envelope-open-text w-4 text-center"></i>
+                <span>Abonnés newsletter</span>
+                <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-nl-subscribers"></span>
+            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Commerce</p>
             <div class="nav-item" onclick="showTab('preorders')" id="nav-preorders">
@@ -1650,6 +1655,7 @@
                             <select id="supplierType" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
                                 <option value="fabricant">Fabricant / imprimeur</option>
                                 <option value="transporteur">Transporteur / transitaire</option>
+                                <option value="technique">Technique / API</option>
                             </select>
                         </div>
                         <div>
@@ -1699,6 +1705,7 @@
                     <button onclick="setSuppliersTypeFilter('all')" data-type="all" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition bg-gold/20 text-gold border-gold/40">Tous</button>
                     <button onclick="setSuppliersTypeFilter('fabricant')" data-type="fabricant" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Fabricants</button>
                     <button onclick="setSuppliersTypeFilter('transporteur')" data-type="transporteur" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Transporteurs</button>
+                    <button onclick="setSuppliersTypeFilter('technique')" data-type="technique" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Technique</button>
                 </div>
 
                 <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
@@ -2510,26 +2517,6 @@
                 </div>
             </div>
 
-            <div id="nl-kpi-bar" class="flex gap-4 mb-6 bg-white/5 border border-gold/15 rounded-xl px-5 py-3">
-                <div class="flex items-center gap-3 flex-1">
-                    <i class="fas fa-envelope text-purple-400 text-sm"></i>
-                    <span class="text-2xl font-bold text-gold" id="nl-kpi-total">—</span>
-                    <span class="text-light-gold/60 text-xs">créées</span>
-                </div>
-                <div class="w-px bg-gold/15"></div>
-                <div class="flex items-center gap-3 flex-1">
-                    <i class="fas fa-edit text-gold text-sm"></i>
-                    <span class="text-2xl font-bold text-gold" id="nl-kpi-brouillons">—</span>
-                    <span class="text-light-gold/60 text-xs">brouillons</span>
-                </div>
-                <div class="w-px bg-gold/15"></div>
-                <div class="flex items-center gap-3 flex-1">
-                    <i class="fas fa-paper-plane text-green-400 text-sm"></i>
-                    <span class="text-2xl font-bold text-gold" id="nl-kpi-envoyes">—</span>
-                    <span class="text-light-gold/60 text-xs">envoyées</span>
-                </div>
-            </div>
-
             <!-- Barre de statut propre à l'onglet Tirage hebdo : remplace la barre générique
                  ci-dessus (créées/brouillons/envoyées, sans rapport avec ce canal précis)
                  pendant que cet onglet est actif — voir le toggle dans nlShowTab(). -->
@@ -2568,11 +2555,6 @@
 
             <!-- TAB GÉNÉRER -->
             <div id="nl-tab-generate" class="nl-tab-content">
-                <div class="flex justify-end mb-2">
-                    <button onclick="nlNewDraft()" class="text-xs text-gold/50 hover:text-gold underline underline-offset-2" title="Vide l'éditeur pour repartir de zéro (te demande confirmation si la newsletter en cours n'est pas enregistrée)">
-                        <i class="fas fa-eraser mr-1"></i>Effacer et repartir de zéro
-                    </button>
-                </div>
                 <!-- Indicateur d'étapes -->
                 <div id="nl-step-indicator" class="flex items-center gap-0 mb-6">
                     <div id="nl-step-1" class="nl-step flex items-center gap-2 px-4 py-2 rounded-lg transition-all">
@@ -3683,6 +3665,25 @@
                 </button>
             </div>
 
+            <!-- Analyse IA : couvre trafic + tunnels de conversion (Tore et précommande) en un
+                 seul appel, donc placée au-dessus des sous-onglets plutôt que dans un seul
+                 d'entre eux — visible et utilisable depuis Trafic comme depuis Conversion. -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA — trafic & tunnels de conversion</h4>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="copyAnalysis()" id="btn-copy-analysis" class="hidden items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/80 px-4 py-2 rounded-xl text-sm font-medium transition">
+                            <i class="fas fa-copy"></i> Copier
+                        </button>
+                        <button onclick="analyzeTrafficWithAI()" id="btn-ai-traffic" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition">
+                            <i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations
+                        </button>
+                    </div>
+                </div>
+                <p class="text-gold/40 text-xs mb-3 italic">Analyse le trafic et les tunnels de conversion (tirage Tore, précommande) de la période sélectionnée, et cible la plus grosse fuite entre deux étapes avec des actions concrètes.</p>
+                <div id="analytics-ai-result" class="text-gold/80 text-sm leading-relaxed whitespace-pre-line hidden bg-white/5 border border-gold/10 rounded-xl p-4"></div>
+            </div>
+
             <!-- ══ SOUS-ONGLET : TRAFIC ══ -->
             <div id="analytics-subtab-traffic" class="analytics-subtab">
 
@@ -3715,23 +3716,6 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-blue-300" id="ana-pages-per-visit">—</div><p class="text-gold/50 text-xs mt-1">Pages / visite</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-bounce">—</div><p class="text-gold/50 text-xs mt-1">Taux de rebond</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
-            </div>
-
-            <!-- Analyse IA -->
-            <div class="stat-card rounded-2xl p-6 mb-6">
-                <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA du trafic</h4>
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button onclick="copyAnalysis()" id="btn-copy-analysis" class="hidden items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/80 px-4 py-2 rounded-xl text-sm font-medium transition">
-                            <i class="fas fa-copy"></i> Copier
-                        </button>
-                        <button onclick="analyzeTrafficWithAI()" id="btn-ai-traffic" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition">
-                            <i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations
-                        </button>
-                    </div>
-                </div>
-                <p class="text-gold/40 text-xs mb-3 italic">Analyse les statistiques de la période sélectionnée et propose des actions concrètes pour améliorer le trafic et la conversion.</p>
-                <div id="analytics-ai-result" class="text-gold/80 text-sm leading-relaxed whitespace-pre-line hidden bg-white/5 border border-gold/10 rounded-xl p-4"></div>
             </div>
 
             <!-- Pages vues par jour -->
@@ -4301,10 +4285,22 @@
                 <p class="text-light-gold/50 text-sm mt-1">Rédige un email libre, envoyé depuis <span class="text-gold font-mono">contact@oradia.fr</span> avec la même mise en page que les réponses du Support technique.</p>
             </div>
             <div class="stat-card rounded-xl p-5 space-y-3">
-                <div>
+                <div class="relative">
                     <label class="text-light-gold/60 text-xs block mb-1">Destinataire</label>
-                    <input id="composeEmailTo" type="email" placeholder="destinataire@exemple.fr"
-                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    <div class="flex gap-2">
+                        <input id="composeEmailTo" type="email" placeholder="destinataire@exemple.fr" list="composeContactsList" autocomplete="off"
+                            class="flex-1 min-w-0 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        <button type="button" data-compose-contacts-btn onclick="toggleComposeContactsPicker()" title="Choisir dans le répertoire"
+                            class="shrink-0 bg-white/5 hover:bg-white/10 border border-gold/30 text-gold/80 rounded-lg px-3 text-sm transition">
+                            <i class="fas fa-address-book"></i>
+                        </button>
+                    </div>
+                    <datalist id="composeContactsList"></datalist>
+                    <div id="composeContactsPicker" class="hidden absolute z-20 top-full left-0 mt-1 w-full bg-[#0a192f] border border-gold/30 rounded-lg shadow-xl max-h-72 flex flex-col overflow-hidden">
+                        <input id="composeContactsSearch" type="text" placeholder="Rechercher un contact (nom, email)…" oninput="renderComposeContactsPicker()"
+                            class="bg-white/5 border-b border-gold/20 px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none">
+                        <div id="composeContactsPickerList" class="overflow-y-auto text-sm"></div>
+                    </div>
                 </div>
                 <div>
                     <label class="text-light-gold/60 text-xs block mb-1">Sujet</label>
@@ -4764,7 +4760,7 @@
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
             if (name === 'guidances')      loadGuidances();
-            if (name === 'mails')          loadToreEmails();
+            if (name === 'mails')          { loadToreEmails(); loadComposeContacts(); }
             if (name === 'analytics')      { loadAnalytics(); nlLoadCampaignStats(); }
             if (name === 'etude')          loadExperiment();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
@@ -6452,8 +6448,8 @@
             renderSuppliers();
         }
 
-        const supplierTypeLabels = { fabricant: 'Fabricant', transporteur: 'Transporteur' };
-        const supplierTypeColors = { fabricant: 'bg-blue-500/15 text-blue-300 border-blue-500/30', transporteur: 'bg-teal-500/15 text-teal-300 border-teal-500/30' };
+        const supplierTypeLabels = { fabricant: 'Fabricant', transporteur: 'Transporteur', technique: 'Technique' };
+        const supplierTypeColors = { fabricant: 'bg-blue-500/15 text-blue-300 border-blue-500/30', transporteur: 'bg-teal-500/15 text-teal-300 border-teal-500/30', technique: 'bg-purple-500/15 text-purple-300 border-purple-500/30' };
 
         async function loadSuppliers() {
             try {
@@ -7668,7 +7664,12 @@
                             ${(item.tags || []).map(tag => `<span class="px-2 py-0.5 rounded text-xs bg-gold/10 text-gold border border-gold/30">${escapeHtmlFront(contactTagLabel(tag))}</span>`).join('') || '-'}
                         </div>
                     </td>
-                    <td class="px-6 py-4 text-light-gold">${item.created_at_fr || formatDate(item.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">
+                        ${item.status === 'unsubscribed' && item.unsubscribed_at
+                            ? `<span class="text-red-400/80 text-xs block">Désabonné le</span>${formatDate(item.unsubscribed_at)}`
+                            : (item.created_at_fr || formatDate(item.created_at))
+                        }
+                    </td>
                     <td class="px-6 py-4">
                         ${item.status === 'unsubscribed'
                             ? '<span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">Désabonné</span>'
@@ -8723,7 +8724,7 @@
         // ne connaissent que les champs pilotés par l'éditeur (cta, bannière...) ;
         // sans cette copie, prévisualiser ou sauvegarder depuis l'éditeur reconstruit
         // un extra qui ne garde que ces champs-là et efface silencieusement tout le
-        // reste. Voir nlOpenDraft() (la remplit) et nlNewDraft() (la vide).
+        // reste. Voir nlOpenDraft() (la remplit) et nlResetEditorSilent() (la vide).
         let nlCurrentDraftExtra = {};
         let nlCurrentType = 'newsletter';
 
@@ -8756,8 +8757,8 @@
         // dernière newsletter ouverte/modifiée (sujet, contenu, images, aperçu réseaux
         // sociaux...), au risque de continuer à modifier l'ancienne par erreur, ou de
         // devoir tout effacer champ par champ pour en démarrer une nouvelle.
-        // Vide l'éditeur (sans confirmation ni changement d'onglet) — utilisé par nlNewDraft()
-        // et par le garde-fou de navigation de nlShowTab() après un choix "Ne pas enregistrer".
+        // Vide l'éditeur (sans confirmation ni changement d'onglet) — utilisé par le
+        // garde-fou de navigation de nlShowTab() après un choix "Ne pas enregistrer".
         function nlResetEditorSilent() {
             nlCurrentDraftId = null;
             nlCurrentDraftExtra = {};
@@ -8797,15 +8798,6 @@
             nlUpdateSelectedPreviews();
         }
 
-        async function nlNewDraft() {
-            if (document.getElementById('nl-content')?.value.trim() &&
-                !(await adminConfirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.', { danger: true }))) return;
-
-            nlResetEditorSilent();
-            nlShowTab('generate');
-            nlStatus('info', 'Nouvelle newsletter — tout est à renseigner.');
-        }
-
         let nlCurrentTab = 'generate';
         async function nlShowTab(name) {
             // Garde-fou : quitter l'éditeur (Générer) avec du contenu non enregistré propose
@@ -8835,10 +8827,6 @@
             nlCurrentTab = name;
             document.querySelectorAll('.nl-tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('nl-tab-' + name).classList.remove('hidden');
-            // Barre de KPI générique (créées/brouillons/envoyées, tous canaux confondus)
-            // remplacée par la barre de statut spécifique pendant que l'onglet Tirage
-            // hebdo est actif, sans rapport avec ces chiffres globaux.
-            document.getElementById('nl-kpi-bar')?.classList.toggle('hidden', name === 'tirage');
             document.getElementById('nl-tirage-kpi-bar')?.classList.toggle('hidden', name !== 'tirage');
             document.querySelectorAll('.nl-tab-btn').forEach(btn => {
                 const active = btn.getAttribute('data-nltab') === name;
@@ -10563,6 +10551,80 @@
             }
         }
 
+        // Alimente l'autocomplétion (datalist) ET le sélecteur déroulant du champ
+        // Destinataire avec le Répertoire de contacts (même source que l'export CSV
+        // "Tous les contacts") — chargé une seule fois par session dashboard, pas à
+        // chaque ouverture de l'onglet Mails.
+        let composeContactsLoaded = false;
+        let composeContactsCache = [];
+        async function loadComposeContacts() {
+            if (composeContactsLoaded) return;
+            composeContactsLoaded = true;
+            try {
+                const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000');
+                const rows = (await res.json()).data || [];
+                composeContactsCache = rows.filter(c => c.email);
+                const datalist = document.getElementById('composeContactsList');
+                datalist.innerHTML = composeContactsCache
+                    .map(c => {
+                        const label = [c.prenom, c.nom].filter(Boolean).join(' ');
+                        return `<option value="${escapeHtmlFront(c.email)}"${label ? ` label="${escapeHtmlFront(label)}"` : ''}>`;
+                    })
+                    .join('');
+            } catch(e) {
+                composeContactsLoaded = false; // permet de réessayer au prochain passage sur l'onglet
+                console.error('loadComposeContacts', e);
+            }
+        }
+
+        // Sélecteur déroulant du Répertoire (bouton icône à côté du champ Destinataire) —
+        // même source que la datalist ci-dessus, pour les cas où taper pour filtrer est
+        // moins pratique que parcourir/rechercher visuellement la liste.
+        function toggleComposeContactsPicker() {
+            const panel = document.getElementById('composeContactsPicker');
+            const opening = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden', !opening);
+            if (opening) {
+                document.getElementById('composeContactsSearch').value = '';
+                renderComposeContactsPicker();
+                document.getElementById('composeContactsSearch').focus();
+            }
+        }
+
+        function renderComposeContactsPicker() {
+            const list = document.getElementById('composeContactsPickerList');
+            const q = (document.getElementById('composeContactsSearch').value || '').trim().toLowerCase();
+            const matches = composeContactsCache.filter(c => {
+                if (!q) return true;
+                const label = [c.prenom, c.nom, c.email].filter(Boolean).join(' ').toLowerCase();
+                return label.includes(q);
+            }).slice(0, 200);
+            if (matches.length === 0) {
+                list.innerHTML = '<p class="text-light-gold/40 text-xs px-3 py-4 text-center">Aucun contact trouvé.</p>';
+                return;
+            }
+            list.innerHTML = matches.map(c => {
+                const label = [c.prenom, c.nom].filter(Boolean).join(' ');
+                return `<button type="button" onclick="selectComposeContact('${c.email.replace(/'/g,"\\'")}')"
+                    class="w-full text-left px-3 py-2 hover:bg-gold/10 transition border-b border-gold/5 last:border-0">
+                    <span class="text-light-gold block truncate">${escapeHtmlFront(label) || escapeHtmlFront(c.email)}</span>
+                    ${label ? `<span class="text-gold/40 text-xs block truncate">${escapeHtmlFront(c.email)}</span>` : ''}
+                </button>`;
+            }).join('');
+        }
+
+        function selectComposeContact(email) {
+            document.getElementById('composeEmailTo').value = email;
+            document.getElementById('composeContactsPicker').classList.add('hidden');
+        }
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('composeContactsPicker');
+            if (!panel || panel.classList.contains('hidden')) return;
+            if (e.target.closest('#composeContactsPicker') || e.target.closest('[data-compose-contacts-btn]')) return;
+            panel.classList.add('hidden');
+        });
+
         async function composeEmail() {
             const to      = document.getElementById('composeEmailTo').value.trim();
             const subject = document.getElementById('composeEmailSubject').value.trim();
@@ -10793,10 +10855,6 @@
                 nlDrafts = await res.json();
                 if (!Array.isArray(nlDrafts)) nlDrafts = [];
                 nlRenderDrafts();
-                const envoyes = nlDrafts.filter(d => d.statut === 'envoyé').length;
-                document.getElementById('nl-kpi-total').textContent = nlDrafts.length;
-                document.getElementById('nl-kpi-brouillons').textContent = nlDrafts.length - envoyes;
-                document.getElementById('nl-kpi-envoyes').textContent = envoyes;
             } catch(e) { console.error(e); }
         }
 
@@ -11756,33 +11814,40 @@
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
         let _nlData = [];
-        // Étapes du parcours (subject → ordre), pour situer chaque contact dans le
-        // parcours à partir de last_newsletter_subject — pas de table de liaison
-        // contact↔newsletter dédiée, on retrouve donc l'étape par le sujet du dernier
-        // email reçu, seule trace conservée aujourd'hui (newsletter_contacts.last_newsletter_subject).
-        let _parcoursOrdreBySubject = new Map();
+        // Dernier ordre de parcours réellement reçu, par email — vient de
+        // newsletter_sends (action=parcours-contact-progress), la même table et la
+        // même logique que le cron d'envoi réel (runParcoursIndividualCron). Remplace
+        // l'ancienne estimation par sujet (newsletter_contacts.last_newsletter_subject),
+        // qui se faisait écraser par n'importe quel envoi hors parcours (newsletter
+        // classique, relance...) et affichait alors à tort "à jour" ou "dernière étape"
+        // à des contacts n'ayant en réalité reçu aucune étape du parcours.
+        let _parcoursLastOrdreByEmail = {};
         let _parcoursMaxSentOrdre = null;
         async function loadParcoursStepsForProgress() {
             try {
-                const res = await adminFetch('/api/admin/newsletter?action=drafts-parcours');
-                const rows = await res.json();
-                if (!Array.isArray(rows)) return;
-                _parcoursOrdreBySubject = new Map();
-                let maxOrdre = null;
-                for (const d of rows) {
-                    if (d.extra?.canal !== 'parcours') continue;
-                    const ordre = Number(d.extra?.ordre) || null;
-                    if (!ordre || !d.subject) continue;
-                    _parcoursOrdreBySubject.set(d.subject, ordre);
-                    // Dénominateur = étape la plus avancée du parcours tel qu'il existe
-                    // aujourd'hui (déjà envoyée à quelqu'un OU validée et prête à
-                    // partir) — pas seulement déjà envoyée. Avec l'envoi individualisé,
-                    // une étape validée mais pas encore partie (ex. n°8 "Validée") est
-                    // due sous peu ; l'ignorer ferait afficher "à jour" à des contacts
-                    // qui vont en fait recevoir la suite dans les prochains jours.
-                    if ((d.statut === 'envoyé' || d.extra?.parcours_valide === true) && (maxOrdre === null || ordre > maxOrdre)) maxOrdre = ordre;
+                const [stepsRes, progressRes] = await Promise.all([
+                    adminFetch('/api/admin/newsletter?action=drafts-parcours'),
+                    adminFetch('/api/admin/newsletter?action=parcours-contact-progress')
+                ]);
+                const rows = await stepsRes.json();
+                if (Array.isArray(rows)) {
+                    let maxOrdre = null;
+                    for (const d of rows) {
+                        if (d.extra?.canal !== 'parcours') continue;
+                        const ordre = Number(d.extra?.ordre) || null;
+                        if (!ordre) continue;
+                        // Dénominateur = étape la plus avancée du parcours tel qu'il existe
+                        // aujourd'hui (déjà envoyée à quelqu'un OU validée et prête à
+                        // partir) — pas seulement déjà envoyée. Avec l'envoi individualisé,
+                        // une étape validée mais pas encore partie (ex. n°8 "Validée") est
+                        // due sous peu ; l'ignorer ferait afficher "à jour" à des contacts
+                        // qui vont en fait recevoir la suite dans les prochains jours.
+                        if ((d.statut === 'envoyé' || d.extra?.parcours_valide === true) && (maxOrdre === null || ordre > maxOrdre)) maxOrdre = ordre;
+                    }
+                    _parcoursMaxSentOrdre = maxOrdre;
                 }
-                _parcoursMaxSentOrdre = maxOrdre;
+                const progressJson = await progressRes.json();
+                _parcoursLastOrdreByEmail = progressJson?.success ? (progressJson.lastOrdreByEmail || {}) : {};
             } catch (_) { /* silencieux — l'avancement s'affiche juste en "—" */ }
         }
 
@@ -11801,26 +11866,21 @@
             } catch(e) { /* silencieux */ }
         }
 
-        // Rend l'avancement dans le parcours d'un contact à partir du sujet de la
-        // dernière newsletter qu'il a reçue. Estimation, pas une trace exacte : si ce
-        // sujet ne correspond à aucune étape connue du parcours (email hors parcours,
-        // ou jamais rien reçu), on l'affiche comme tel plutôt que de deviner une étape.
+        // Rend l'avancement réel dans le parcours d'un contact, à partir de
+        // newsletter_sends (voir _parcoursLastOrdreByEmail) — pas d'une estimation par
+        // sujet. Un contact absent de cette table n'a reçu aucune étape du parcours,
+        // même s'il a déjà reçu d'autres emails (newsletter classique, relance...).
         function renderParcoursProgress(contact) {
-            if (!contact.last_newsletter_subject) {
-                return '<span class="text-light-gold/25 text-xs italic">Aucun envoi</span>';
-            }
             const total = _parcoursMaxSentOrdre;
             if (!total) {
                 // Aucune étape du parcours n'a encore été envoyée à qui que ce soit :
                 // rien à rattraper, tout le monde est par définition à jour.
                 return '<span class="text-teal-300 text-xs">À jour</span>';
             }
-            const matchedOrdre = _parcoursOrdreBySubject.get(contact.last_newsletter_subject);
-            // Sujet non reconnu (email hors séquence, ou envoyé avant la mise en place du
-            // parcours) : on ne peut pas savoir précisément où il en est, mais il a bien
-            // reçu quelque chose de récent — on le traite comme à jour plutôt que de
-            // donner l'impression trompeuse qu'il en serait exclu.
-            const ordre = matchedOrdre || total;
+            const ordre = _parcoursLastOrdreByEmail[contact.email] || 0;
+            if (ordre === 0) {
+                return '<span class="text-light-gold/25 text-xs italic">Pas encore commencé</span>';
+            }
             const pct = Math.min(100, Math.round((ordre / total) * 100));
             const isCaughtUp = ordre >= total;
             const badgeClass = isCaughtUp ? 'text-teal-300' : 'text-gold/70';
@@ -14548,14 +14608,14 @@
                 desc: 'Livraison prévue automne 2025 · Édition limitée · 3,90€',
                 cta_text: 'Je pré-commande',
                 cta_url: 'https://oradia.fr/precommande-oracle',
-                image: 'https://oradia.fr/images/medias/banniere-facebook.png'
+                image: 'https://oradia.fr/images/medias/banniere-facebook.webp'
             },
             app_mobile: {
                 title: 'Découvrez l\'application Oradia en avant-première',
                 desc: 'Tirages guidés, synchronicités et exploration intérieure — testez la bêta sur Google Play.',
                 cta_text: 'Tester la bêta sur Google Play',
                 cta_url: 'https://play.google.com/store/apps/details?id=fr.oradia.app',
-                image: 'https://oradia.fr/images/medias/banniere_pub_app_mobile.png'
+                image: 'https://oradia.fr/images/medias/banniere_pub_app_mobile.webp'
             }
         };
         function nlToggleBanner() {

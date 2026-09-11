@@ -4,6 +4,32 @@
 // utilise son lien et complète son premier tirage, filleul ET parrain
 // reçoivent chacun 1 tirage gratuit supplémentaire (voir freemium-tracker.js).
 (function () {
+  // Confirmation visuelle qu'un tirage bonus vient d'être crédité — sans ça, le
+  // compteur bouge silencieusement en localStorage et personne ne s'en aperçoit,
+  // d'où des signalements répétés "le parrainage ne marche pas" alors qu'il
+  // fonctionnait déjà côté serveur.
+  function showBonusToast(message) {
+    try {
+      const el = document.createElement('div');
+      el.textContent = message;
+      el.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);' +
+        'background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;font-weight:700;' +
+        'font-family:Georgia,serif;font-size:14px;padding:14px 22px;border-radius:50px;' +
+        'box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:99999;max-width:90vw;text-align:center;' +
+        'opacity:0;transition:opacity .35s ease,transform .35s ease;';
+      document.body.appendChild(el);
+      requestAnimationFrame(function () {
+        el.style.opacity = '1';
+        el.style.transform = 'translateX(-50%) translateY(0)';
+      });
+      setTimeout(function () {
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(-50%) translateY(20px)';
+        setTimeout(function () { el.remove(); }, 400);
+      }, 5000);
+    } catch (e) {}
+  }
+
   function genCode() {
     return Math.random().toString(36).slice(2, 8) + Math.random().toString(36).slice(2, 5);
   }
@@ -41,6 +67,7 @@
       if (!localStorage.getItem('oradia_referred_by')) {
         localStorage.setItem('oradia_referred_by', ref);
         if (window.freemiumTracker) window.freemiumTracker.addBonusDraws(1);
+        showBonusToast('🎁 Un tirage gratuit vous a été offert !');
       }
     } catch (e) {}
   }
@@ -76,6 +103,9 @@
         .then(function (data) {
           if (data && data.claimed > 0 && window.freemiumTracker) {
             window.freemiumTracker.addBonusDraws(data.claimed);
+            showBonusToast(data.claimed === 1
+              ? '🎁 Un proche a utilisé votre lien — vous avez gagné 1 tirage gratuit !'
+              : '🎁 ' + data.claimed + ' proches ont utilisé votre lien — vous avez gagné ' + data.claimed + ' tirages gratuits !');
           }
         })
         .catch(function () {});

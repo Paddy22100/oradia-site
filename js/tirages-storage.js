@@ -18,10 +18,20 @@
   const GUEST_KEY = 'oradia_tirages_invite';
   const API_BASE = '/api/tirages/send-email'; // routeur unique des actions tirages (action=save|list|send-email)
 
+  // Un des deux emplacements peut se retrouver partiel — par ex. un bug de page qui ne
+  // réécrivait que sessionStorage a déjà produit un objet réduit à { email } après une
+  // mise à jour d'email, sans access_token ni refresh_token. Comme sessionStorage est
+  // vérifié en premier, ce résidu partiel masquait indéfiniment la copie complète de
+  // localStorage. On privilégie donc celui des deux qui porte réellement un token.
   function getSession() {
     try {
-      const raw = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
-      return raw ? JSON.parse(raw) : null;
+      const sessRaw = sessionStorage.getItem('oradia_member_session');
+      const localRaw = localStorage.getItem('oradia_member_session');
+      const sess = sessRaw ? JSON.parse(sessRaw) : null;
+      const local = localRaw ? JSON.parse(localRaw) : null;
+      if (sess && (sess.access_token || sess.refresh_token)) return sess;
+      if (local && (local.access_token || local.refresh_token)) return local;
+      return sess || local;
     } catch (e) { return null; }
   }
 

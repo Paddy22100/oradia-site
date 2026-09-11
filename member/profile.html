@@ -463,10 +463,17 @@
                 const data = await res.json();
                 if (data.success) {
                     showMsg('E-mail mis à jour avec succès. Un e-mail de confirmation a été envoyé.', true);
-                    // Mettre à jour la session locale
-                    const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || '{}');
+                    // Mettre à jour la session locale — partir de sessionStorage OU localStorage
+                    // (jamais sessionStorage seul : sur l'app mobile, où sessionStorage survit à la
+                    // fermeture de l'app, ça écrasait la session complète par un objet ne contenant
+                    // plus que l'email, perdant access_token/refresh_token jusqu'à une reconnexion
+                    // manuelle — l'historique de tirages semblait alors vide indéfiniment) puis
+                    // réécrire dans les deux emplacements pour rester cohérent.
+                    const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session') || '{}');
                     sess.email = newEmail;
-                    sessionStorage.setItem('oradia_member_session', JSON.stringify(sess));
+                    const updatedSess = JSON.stringify(sess);
+                    sessionStorage.setItem('oradia_member_session', updatedSess);
+                    if (localStorage.getItem('oradia_member_session')) localStorage.setItem('oradia_member_session', updatedSess);
                     document.querySelectorAll('#profileEmail, #infoEmail').forEach(el => { if(el) el.textContent = newEmail; });
                     document.getElementById('newEmail').value = '';
                     document.getElementById('confirmEmail').value = '';

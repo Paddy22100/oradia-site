@@ -349,6 +349,9 @@
                 document.getElementById('dash-referral-copy-btn'),
                 document.getElementById('dash-referral-share-btn')
             );
+            // Le dashboard est l'endroit où un parrain revient vérifier son lien —
+            // sans cet appel, ses bonus ne se réclamaient que via tore.html.
+            window.oradiaReferral.claimPendingBonuses();
         });
     </script>
 <script src="../js/page-tracker.js" defer></script>

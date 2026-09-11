@@ -308,7 +308,7 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
           <tr>
             <td align="center" style="padding:0;position:relative;">
               <div style="position:relative;width:100%;height:200px;overflow:hidden;">
-                <img src="https://oradia.fr/images/medias/bandeau_mail_fenetre_observation.png" alt="Fenêtre d'observation — ORADIA" width="600" style="display:block;width:100%;height:auto;max-height:220px;object-fit:cover;border:0;">
+                <img src="https://oradia.fr/images/medias/bandeau_mail_fenetre_observation.webp" alt="Fenêtre d'observation — ORADIA" width="600" style="display:block;width:100%;height:auto;max-height:220px;object-fit:cover;border:0;">
                 <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(13,29,56,0) 0%, rgba(13,29,56,0.35) 60%, rgba(13,29,56,0.75) 100%);"></div>
               </div>
             </td>
@@ -439,7 +439,7 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
                 <span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span>
               </p>
               <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a></p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
             </td>
           </tr>
 

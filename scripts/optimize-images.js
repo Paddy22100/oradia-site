@@ -121,12 +121,12 @@ main().catch(console.error);
   ── Comment utiliser les WebP dans tore.html ──────────────────────────────────
 
   Remplacer :
-    <img src="images/emotions/amour.png" alt="...">
+    <img src="images/emotions/amour.webp" alt="...">
 
   Par :
     <picture>
       <source srcset="images/emotions/amour.webp" type="image/webp">
-      <img src="images/emotions/amour.png" alt="...">
+      <img src="images/emotions/amour.webp" alt="...">
     </picture>
 
   OU (plus simple, déjà géré par le code JS qui construit les cartes) :

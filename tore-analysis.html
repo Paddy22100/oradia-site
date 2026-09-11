@@ -1941,6 +1941,7 @@
                         durGroup.style.opacity = '0.5';
                     }
                     window._obsWindowActivated = true;
+                    window.oradiaNotifications?.scheduleObservationClosing(data.closesAt, intention);
                 } else {
                     throw new Error(data.message || 'Erreur inconnue');
                 }
@@ -2487,6 +2488,7 @@
 </script>
 
 <script src="js/referral.js" defer></script>
+<script src="js/local-notifications.js" defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         if (!window.oradiaReferral) return;
@@ -2495,6 +2497,7 @@
             document.getElementById('referral-copy-btn'),
             document.getElementById('referral-share-btn')
         );
+        window.oradiaReferral.claimPendingBonuses();
     });
 </script>
 <script src="js/page-tracker.js" defer></script>

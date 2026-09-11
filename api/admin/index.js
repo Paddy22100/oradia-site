@@ -438,7 +438,7 @@ async function sendRenewalReminderEmail(email, expiresAt) {
     <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
     <p style="margin:0;color:#d4af37;font-size:40px;font-family:'Dancing Script','Brush Script MT',cursive;line-height:1.1;">Rudy</p>
     <p style="margin:12px 0 14px;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:12px;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
   </td></tr>
 </table></td></tr></table></body></html>`;
   try {
@@ -957,6 +957,95 @@ async function handleAuth(req, res) {
 }
 
 // ── DATA ─────────────────────────────────────────────────────────────────
+// Purge automatique des vieux déploiements Vercel : ne garde que les `keep` plus
+// récents (par createdAt), supprime le reste via l'API REST Vercel. Nécessaire
+// car le plan Hobby ne permet pas de configurer sa politique de rétention dans le
+// dashboard — sans ça, le "Stockage de déploiement" finit par dépasser le quota
+// gratuit (vécu en 2026-09 : 119 Go / 10 Go, causé par ~164 déploiements accumulés
+// en quelques jours). Un déploiement avec un alias actif (production ou preview
+// d'une branche encore ouverte) est refusé à la suppression par l'API elle-même :
+// on traite ça comme "ignoré", jamais comme une erreur bloquante.
+async function cleanupOldDeployments(supabase, { keep = 8, dryRun = false } = {}) {
+  const token = process.env.VERCEL_TOKEN;
+  const projectId = process.env.VERCEL_PROJECT_ID || 'prj_0DJh0iGvBHlRVp6MfrTCUa53Yhkd';
+  const teamId = process.env.VERCEL_TEAM_ID || 'team_OH3FH8jY7Lx9tjNcayHH42xg';
+  if (!token) {
+    return { success: false, error: 'VERCEL_TOKEN manquant' };
+  }
+
+  const all = [];
+  let until;
+  for (let page = 0; page < 20; page++) {
+    const url = new URL('https://api.vercel.com/v6/deployments');
+    url.searchParams.set('projectId', projectId);
+    url.searchParams.set('teamId', teamId);
+    url.searchParams.set('limit', '100');
+    if (until) url.searchParams.set('until', String(until));
+    const r = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!r.ok) {
+      const body = await r.json().catch(() => ({}));
+      throw new Error(`Vercel API ${r.status}: ${body?.error?.message || r.statusText}`);
+    }
+    const data = await r.json();
+    const batch = data.deployments || [];
+    all.push(...batch);
+    until = data.pagination?.next;
+    if (!until || batch.length === 0) break;
+  }
+
+  all.sort((a, b) => b.createdAt - a.createdAt);
+  const toDelete = all.slice(keep);
+
+  let deleted = 0, skipped = 0;
+  const errors = [];
+  if (!dryRun) {
+    for (const dep of toDelete) {
+      try {
+        const delRes = await fetch(`https://api.vercel.com/v13/deployments/${dep.uid}?teamId=${teamId}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        if (delRes.ok) {
+          deleted++;
+        } else {
+          skipped++;
+          const body = await delRes.json().catch(() => ({}));
+          errors.push({ uid: dep.uid, url: dep.url, status: delRes.status, error: body?.error?.message });
+        }
+      } catch (e) {
+        skipped++;
+        errors.push({ uid: dep.uid, url: dep.url, error: e.message });
+      }
+      await new Promise(r => setTimeout(r, 150));
+    }
+  }
+
+  const summary = {
+    success: true,
+    total: all.length,
+    kept: Math.min(keep, all.length),
+    to_delete: toDelete.length,
+    deleted,
+    skipped,
+    dry_run: dryRun,
+    errors: errors.slice(0, 10)
+  };
+
+  await logSystemEvent(supabase, {
+    level: errors.length > 0 ? 'warn' : 'info',
+    source: 'cron-cleanup-deployments',
+    method: 'GET',
+    path: '/api/admin/data',
+    status_code: 200,
+    message: dryRun
+      ? `[dry-run] ${toDelete.length} déploiement(s) seraient supprimés sur ${all.length} (garde les ${keep} plus récents)`
+      : `${deleted} déploiement(s) supprimé(s), ${skipped} ignoré(s) (alias actif ou erreur) sur ${toDelete.length} candidats — ${all.length} au total, garde les ${keep} plus récents`,
+    details: summary
+  });
+
+  return summary;
+}
+
 async function handleData(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
@@ -1497,6 +1586,16 @@ async function handleData(req, res) {
       if (getAction === 'cron-tirage-hebdo') {
         return await runWeeklyTirageCron(supabase, res);
       }
+
+      if (getAction === 'cron-cleanup-deployments') {
+        try {
+          const result = await cleanupOldDeployments(supabase, { keep: 8, dryRun: req.query?.dry_run === '1' });
+          return res.status(200).json(result);
+        } catch (e) {
+          await logSystemEvent(supabase, { level: 'error', source: 'cron-cleanup-deployments', message: e.message });
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
       return res.status(403).json({ error: 'Action non autorisée' });
     }
 
@@ -1507,6 +1606,19 @@ async function handleData(req, res) {
     // déjà passé plus haut si on arrive jusqu'ici) ne peut jamais le satisfaire.
     if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-tirage-hebdo') {
       return await runWeeklyTirageCron(supabase, res, { force: true });
+    }
+
+    // Test manuel de la purge des déploiements Vercel (session admin, sans secret
+    // cron) : permet de vérifier le comportement (idéalement d'abord avec
+    // ?dry_run=1) avant de faire confiance au cron quotidien non surveillé.
+    if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-cleanup-deployments') {
+      try {
+        const result = await cleanupOldDeployments(supabase, { keep: 8, dryRun: req.query?.dry_run === '1' });
+        return res.status(200).json(result);
+      } catch (e) {
+        await logSystemEvent(supabase, { level: 'error', source: 'cron-cleanup-deployments', message: e.message });
+        return res.status(200).json({ success: false, error: e.message });
+      }
     }
 
     // Les actions "support-*" (utilisées par le dashboard Support technique) sont
@@ -4661,7 +4773,7 @@ function buildFreeSubscriptionWelcomeHtml({ email, fullName, accessCode, expires
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
     <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car un accès à l'espace Tore a été créé pour toi sur oradia.fr.</p>
   </td></tr>
 </table>
@@ -4707,7 +4819,7 @@ function buildSupportReplyEmailHtml({ message }) {
   </td></tr>
   <tr><td style="padding:28px 32px 24px; text-align:center;">
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
   </td></tr>`, '#0a192f');
 
   return `<!DOCTYPE html>
@@ -5466,17 +5578,17 @@ function buildCommunicationEmailHtml(draft) {
       <tr>
         <td style="padding:0 8px;">
           <a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank" style="text-decoration:none;">
-            <img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
+            <img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
           </a>
         </td>
         <td style="padding:0 8px;">
           <a href="https://instagram.com/oradia_oracle_officiel" target="_blank" style="text-decoration:none;">
-            <img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
+            <img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
           </a>
         </td>
         <td style="padding:0 8px;">
           <a href="https://www.youtube.com/@oradiafr" target="_blank" style="text-decoration:none;">
-            <img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
+            <img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
           </a>
         </td>
       </tr>
@@ -6142,6 +6254,31 @@ async function handleNewsletter(req, res) {
           readyToSchedule: !!(nextReady && !nextReady.scheduled_at),
           alert: { needed: alertNeeded, reason, daysUntilLastScheduled }
         });
+      }
+
+      // ── Dernière étape réellement reçue, par contact — même source et même logique
+      // que le cron d'envoi (runParcoursIndividualCron, table newsletter_sends filtrée
+      // sur ordre non nul), au lieu de deviner l'étape à partir du sujet du dernier
+      // email reçu (newsletter_contacts.last_newsletter_subject), qui se fait écraser
+      // par n'importe quel envoi hors parcours (newsletter classique, relance...) et
+      // affichait alors "à jour"/"dernière étape" à des contacts qui n'ont en réalité
+      // reçu aucune étape du parcours. Utilisé par l'onglet Contacts > Inscrits
+      // Newsletter (colonne "Avancement parcours").
+      if (action === 'parcours-contact-progress') {
+        const { data: sends, error } = await supabase
+          .from('newsletter_sends')
+          .select('contact_email, ordre, sent_at')
+          .not('ordre', 'is', null)
+          .order('sent_at', { ascending: false });
+        if (error) {
+          console.error('Error fetching parcours-contact-progress:', error);
+          return res.status(500).json({ error: 'Erreur lors du calcul de l\'avancement par contact' });
+        }
+        const lastOrdreByEmail = {};
+        for (const s of sends || []) {
+          if (!(s.contact_email in lastOrdreByEmail)) lastOrdreByEmail[s.contact_email] = Number(s.ordre);
+        }
+        return res.status(200).json({ success: true, lastOrdreByEmail });
       }
 
       if (action === 'drafts') {
