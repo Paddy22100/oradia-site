@@ -5992,22 +5992,6 @@ async function runParcoursIndividualCron(supabase) {
 
     let totalSent = 0;
     const details = [];
-    // Une seule publication par passage du cron, pour l'étape au numéro d'ordre le plus
-    // ÉLEVÉ réellement envoyée ce mercredi-là, ÉTAPE 1 TOUJOURS EXCLUE (accueil des tout
-    // nouveaux inscrits, jamais publié sur les réseaux — voir plus bas : sans étape
-    // avancée envoyée ce passage-ci, aucun post n'est programmé cette semaine-là).
-    // Les membres les plus avancés représentent le mieux "à jour du parcours" : avant
-    // cette exclusion, un mercredi où seuls 2-3 tout nouveaux inscrits recevaient
-    // l'étape 1 (parce que l'étape due pour le gros de la liste n'était pas encore
-    // validée) faisait publier "Nous sommes tous des pêcheurs" à la place de l'étape
-    // suivie par les membres avancés — cause identifiée le 10/09/2026. Se baser sur le
-    // NOMBRE de destinataires plutôt que sur l'ordre semblait une autre piste, mais casse
-    // dans le sens inverse en cas de désabonnements massifs des membres avancés : les
-    // nouveaux inscrits (toujours à l'étape 1) redeviendraient majoritaires en nombre
-    // sans être plus "à jour" pour autant. L'ordre le plus élevé reste correct quel que
-    // soit l'effectif de chaque groupe.
-    let mainStep = null; // { ordre, subject, text }
-    const sentSteps = []; // { ordre, subject, text } pour chaque étape avec au moins 1 envoi réussi
     for (const { step, emails } of dueByStepId.values()) {
       // L'objet reçu doit toujours commencer par "Rudy d'ORADIA - ", quelle que soit
       // l'étape (consigne explicite) — filet de sécurité pour les étapes ajoutées plus
@@ -6065,25 +6049,42 @@ async function runParcoursIndividualCron(supabase) {
       totalSent += sentCount;
       const ordre = Number(step.extra?.ordre) || 0;
       details.push({ ordre, subject: finalSubject, sent: sentCount, targeted: emails.length });
-
-      if (sentCount > 0) sentSteps.push({ ordre, subject: finalSubject, text });
     }
 
-    // Étape la plus avancée hors étape 1 — l'étape 1 (accueil des tout nouveaux
-    // inscrits) ne sert jamais de contenu pour la publication automatique, même si
-    // c'est la seule étape envoyée ce passage-ci : mainStep reste alors null et aucun
-    // post n'est programmé cette semaine-là plutôt que de publier le message d'accueil.
-    for (const s of sentSteps) {
-      if (s.ordre === 1) continue;
-      if (!mainStep || s.ordre > mainStep.ordre) mainStep = s;
+    // Publication automatique du mercredi : avance de façon séquentielle et
+    // indépendante de qui a effectivement reçu quoi par email ce passage-ci — l'étape
+    // utilisée est celle dont l'ordre suit immédiatement la dernière étape déjà
+    // utilisée pour une publication (9, puis 10, puis 11...), retrouvée via
+    // social_posts.ordre (voir supabase-migration-social-posts-ordre.sql). Étape 1
+    // toujours exclue (accueil des tout nouveaux inscrits, jamais publié). Si la
+    // prochaine étape de la séquence n'est pas encore validée, mainStep reste null :
+    // aucun post cette semaine-là, elle sera retentée telle quelle la semaine suivante
+    // plutôt que de sauter à une étape ultérieure.
+    //
+    // Remplace le choix précédent ("l'ordre le plus élevé réellement envoyé ce
+    // passage-ci", puis "le plus de destinataires") : les deux dépendaient de l'envoi
+    // email du même passage et pouvaient se tromper d'étape si celui-ci échouait
+    // partiellement (cause identifiée le 10/09/2026) ou en cas de désabonnements
+    // massifs des membres avancés.
+    let mainStep = null; // { ordre, subject, text }
+    const { data: usedOrdreRows } = await supabase.from('social_posts').select('ordre').not('ordre', 'is', null);
+    const usedOrdres = new Set((usedOrdreRows || []).map(r => Number(r.ordre)));
+    const nextStep = steps.find(s => {
+      const o = Number(s.extra?.ordre) || 0;
+      return o > 1 && !usedOrdres.has(o);
+    });
+    if (nextStep) {
+      const rawSubject = nextStep.subject || 'Oradia';
+      const finalSubject = rawSubject.startsWith("Rudy d'ORADIA - ") ? rawSubject : `Rudy d'ORADIA - ${rawSubject}`;
+      const html = buildCommunicationEmailHtml({ ...nextStep, subject: finalSubject });
+      mainStep = { ordre: Number(nextStep.extra?.ordre) || 0, subject: finalSubject, text: nlEmailPlainText(html) };
     }
 
-    // Publication Facebook + Instagram + LinkedIn pour l'étape la plus avancée
-    // effectivement envoyée ce passage-ci (voir mainStep ci-dessus) — jamais si aucune
-    // étape n'avait de destinataire dû.
+    // Publication Facebook + Instagram + LinkedIn pour l'étape ci-dessus — jamais si
+    // la prochaine étape de la séquence n'est pas encore validée.
     let social = null;
     if (mainStep) {
-      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text });
+      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text, ordre: mainStep.ordre });
     }
 
     // Journalisé pour de bon (contrairement à avant : ce cron ne laissait aucune trace
@@ -6094,7 +6095,7 @@ async function runParcoursIndividualCron(supabase) {
     // mais sans ce signal ici, la seule trace était le log Vercel éphémère de
     // generateSocialImage — impossible à corréler après coup avec "pourquoi ce post-là".
     const socialNote = !mainStep
-      ? ' — aucun post social (aucune étape envoyée ce passage)'
+      ? ' — aucun post social (prochaine étape de la séquence pas encore validée)'
       : social?.success
         ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
         : ` — ÉCHEC de la programmation du post social : ${social?.error}`;
@@ -7681,17 +7682,28 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
 // d'accueil (mercredi, une fois par semaine pour l'étape la plus avancée envoyée) et les
 // newsletters promotionnelles envoyées via action=send (jamais les envois de test).
 // Erreur avalée : ne doit jamais faire échouer un envoi d'email déjà réussi.
-async function scheduleAutoSocialPost(supabase, { subject, textContent, imageUrl }) {
+async function scheduleAutoSocialPost(supabase, { subject, textContent, imageUrl, ordre }) {
   const LOGO_FALLBACK = 'https://oradia.fr/images/logo-hd-v2.webp';
   try {
     const { facebook_text, instagram_text, linkedin_text } = await generateSocialTexts({ subject, textContent });
     const generatedImage = imageUrl ? null : await generateSocialImage({ subject, textContent });
     const resolvedImage = imageUrl || generatedImage || LOGO_FALLBACK;
     const image_url = await ensureSafeSocialImageUrl(resolvedImage);
-    const { error } = await supabase.from('social_posts').insert({
+    const row = {
       subject, facebook_text, instagram_text, linkedin_text, image_url,
       scheduled_at: new Date().toISOString()
-    });
+    };
+    // ordre : uniquement pour les publications auto du parcours (voir
+    // runParcoursIndividualCron) — sert à retrouver la dernière étape utilisée pour
+    // avancer séquentiellement la semaine suivante. Colonne optionnelle tant que
+    // supabase-migration-social-posts-ordre.sql n'a pas été exécutée — retombe sur
+    // l'insert sans elle plutôt que de casser la programmation du post.
+    let { error } = ordre != null
+      ? await supabase.from('social_posts').insert({ ...row, ordre })
+      : await supabase.from('social_posts').insert(row);
+    if (error && ordre != null && /ordre/i.test(error.message || '')) {
+      ({ error } = await supabase.from('social_posts').insert(row));
+    }
     if (error) throw error;
     // usedFallbackImage signale un post programmé "en silence" avec le logo générique
     // au lieu d'un visuel généré — jamais une erreur en soi (le post part quand même),
