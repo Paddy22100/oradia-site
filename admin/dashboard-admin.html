@@ -2517,26 +2517,6 @@
                 </div>
             </div>
 
-            <div id="nl-kpi-bar" class="flex gap-4 mb-6 bg-white/5 border border-gold/15 rounded-xl px-5 py-3">
-                <div class="flex items-center gap-3 flex-1">
-                    <i class="fas fa-envelope text-purple-400 text-sm"></i>
-                    <span class="text-2xl font-bold text-gold" id="nl-kpi-total">—</span>
-                    <span class="text-light-gold/60 text-xs">créées</span>
-                </div>
-                <div class="w-px bg-gold/15"></div>
-                <div class="flex items-center gap-3 flex-1">
-                    <i class="fas fa-edit text-gold text-sm"></i>
-                    <span class="text-2xl font-bold text-gold" id="nl-kpi-brouillons">—</span>
-                    <span class="text-light-gold/60 text-xs">brouillons</span>
-                </div>
-                <div class="w-px bg-gold/15"></div>
-                <div class="flex items-center gap-3 flex-1">
-                    <i class="fas fa-paper-plane text-green-400 text-sm"></i>
-                    <span class="text-2xl font-bold text-gold" id="nl-kpi-envoyes">—</span>
-                    <span class="text-light-gold/60 text-xs">envoyées</span>
-                </div>
-            </div>
-
             <!-- Barre de statut propre à l'onglet Tirage hebdo : remplace la barre générique
                  ci-dessus (créées/brouillons/envoyées, sans rapport avec ce canal précis)
                  pendant que cet onglet est actif — voir le toggle dans nlShowTab(). -->
@@ -2575,11 +2555,6 @@
 
             <!-- TAB GÉNÉRER -->
             <div id="nl-tab-generate" class="nl-tab-content">
-                <div class="flex justify-end mb-2">
-                    <button onclick="nlNewDraft()" class="text-xs text-gold/50 hover:text-gold underline underline-offset-2" title="Vide l'éditeur pour repartir de zéro (te demande confirmation si la newsletter en cours n'est pas enregistrée)">
-                        <i class="fas fa-eraser mr-1"></i>Effacer et repartir de zéro
-                    </button>
-                </div>
                 <!-- Indicateur d'étapes -->
                 <div id="nl-step-indicator" class="flex items-center gap-0 mb-6">
                     <div id="nl-step-1" class="nl-step flex items-center gap-2 px-4 py-2 rounded-lg transition-all">
@@ -8735,7 +8710,7 @@
         // ne connaissent que les champs pilotés par l'éditeur (cta, bannière...) ;
         // sans cette copie, prévisualiser ou sauvegarder depuis l'éditeur reconstruit
         // un extra qui ne garde que ces champs-là et efface silencieusement tout le
-        // reste. Voir nlOpenDraft() (la remplit) et nlNewDraft() (la vide).
+        // reste. Voir nlOpenDraft() (la remplit) et nlResetEditorSilent() (la vide).
         let nlCurrentDraftExtra = {};
         let nlCurrentType = 'newsletter';
 
@@ -8768,8 +8743,8 @@
         // dernière newsletter ouverte/modifiée (sujet, contenu, images, aperçu réseaux
         // sociaux...), au risque de continuer à modifier l'ancienne par erreur, ou de
         // devoir tout effacer champ par champ pour en démarrer une nouvelle.
-        // Vide l'éditeur (sans confirmation ni changement d'onglet) — utilisé par nlNewDraft()
-        // et par le garde-fou de navigation de nlShowTab() après un choix "Ne pas enregistrer".
+        // Vide l'éditeur (sans confirmation ni changement d'onglet) — utilisé par le
+        // garde-fou de navigation de nlShowTab() après un choix "Ne pas enregistrer".
         function nlResetEditorSilent() {
             nlCurrentDraftId = null;
             nlCurrentDraftExtra = {};
@@ -8809,15 +8784,6 @@
             nlUpdateSelectedPreviews();
         }
 
-        async function nlNewDraft() {
-            if (document.getElementById('nl-content')?.value.trim() &&
-                !(await adminConfirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.', { danger: true }))) return;
-
-            nlResetEditorSilent();
-            nlShowTab('generate');
-            nlStatus('info', 'Nouvelle newsletter — tout est à renseigner.');
-        }
-
         let nlCurrentTab = 'generate';
         async function nlShowTab(name) {
             // Garde-fou : quitter l'éditeur (Générer) avec du contenu non enregistré propose
@@ -8847,10 +8813,6 @@
             nlCurrentTab = name;
             document.querySelectorAll('.nl-tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('nl-tab-' + name).classList.remove('hidden');
-            // Barre de KPI générique (créées/brouillons/envoyées, tous canaux confondus)
-            // remplacée par la barre de statut spécifique pendant que l'onglet Tirage
-            // hebdo est actif, sans rapport avec ces chiffres globaux.
-            document.getElementById('nl-kpi-bar')?.classList.toggle('hidden', name === 'tirage');
             document.getElementById('nl-tirage-kpi-bar')?.classList.toggle('hidden', name !== 'tirage');
             document.querySelectorAll('.nl-tab-btn').forEach(btn => {
                 const active = btn.getAttribute('data-nltab') === name;
@@ -10805,10 +10767,6 @@
                 nlDrafts = await res.json();
                 if (!Array.isArray(nlDrafts)) nlDrafts = [];
                 nlRenderDrafts();
-                const envoyes = nlDrafts.filter(d => d.statut === 'envoyé').length;
-                document.getElementById('nl-kpi-total').textContent = nlDrafts.length;
-                document.getElementById('nl-kpi-brouillons').textContent = nlDrafts.length - envoyes;
-                document.getElementById('nl-kpi-envoyes').textContent = envoyes;
             } catch(e) { console.error(e); }
         }
 
