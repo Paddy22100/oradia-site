@@ -6179,6 +6179,136 @@ async function brevoErrorMessage(r, context) {
   return `${context} : ${diagnostic}${brevoMsg ? ` (Brevo : ${brevoMsg})` : ''}`;
 }
 
+// Notifications push (Firebase Cloud Messaging) déclenchées depuis le dashboard.
+// action=register-device est publique (appelée par l'app mobile elle-même, voir
+// js/push-notifications.js) ; toute autre action exige l'auth admin.
+async function handleNotifications(req, res) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const action = url.searchParams.get('action');
+    const supabase = nlSupabase();
+
+    if (action === 'register-device') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const body = await parseBody(req);
+      const deviceId = String(body.device_id || '').trim();
+      const fcmToken = String(body.fcm_token || '').trim();
+      if (!deviceId || !fcmToken) return res.status(400).json({ error: 'device_id et fcm_token requis' });
+
+      const { error } = await supabase.from('push_devices').upsert({
+        device_id: deviceId,
+        fcm_token: fcmToken,
+        platform: body.platform ? String(body.platform).slice(0, 50) : null,
+        last_seen_at: new Date().toISOString()
+      }, { onConflict: 'device_id' });
+
+      if (error) {
+        // Table pas encore créée (migration non exécutée) : ne pas faire échouer
+        // le chargement de l'app pour autant, juste ne rien enregistrer. PostgREST
+        // renvoie ce cas comme une erreur de "schema cache", pas un code Postgres.
+        if (/schema cache/i.test(error.message || '')) return res.status(200).json({ success: true });
+        return res.status(500).json({ error: error.message });
+      }
+      return res.status(200).json({ success: true });
+    }
+
+    // Tout le reste (compteur, envoi) est réservé au dashboard admin.
+    verifyAdminAuth(req);
+
+    if (action === 'device-count') {
+      const { count, error } = await supabase.from('push_devices').select('*', { count: 'exact', head: true });
+      if (error) return res.status(200).json({ success: true, count: 0 });
+      return res.status(200).json({ success: true, count: count || 0 });
+    }
+
+    if (action === 'send-notification') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const body = await parseBody(req);
+      const title = String(body.title || '').trim();
+      const message = String(body.body || '').trim();
+      if (!title || !message) return res.status(400).json({ error: 'Titre et message requis' });
+
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKey = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+      if (!projectId || !clientEmail || !privateKey) {
+        return res.status(500).json({ error: 'Configuration Firebase manquante côté serveur (FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY)' });
+      }
+
+      const { data: devices, error: devErr } = await supabase.from('push_devices').select('id, fcm_token');
+      if (devErr) return res.status(500).json({ error: devErr.message });
+      if (!devices || devices.length === 0) {
+        return res.status(200).json({ success: true, sent: 0, failed: 0, total: 0, message: 'Aucun appareil enregistré.' });
+      }
+
+      // Échange la clé de service Firebase contre un access_token OAuth2 — flow
+      // JWT-bearer standard Google, sans dépendance supplémentaire : jsonwebtoken
+      // (déjà utilisé pour les sessions admin) sait déjà signer en RS256.
+      const now = Math.floor(Date.now() / 1000);
+      const assertion = jwt.sign({
+        iss: clientEmail,
+        scope: 'https://www.googleapis.com/auth/firebase.messaging',
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600
+      }, privateKey, { algorithm: 'RS256' });
+
+      const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion
+        })
+      });
+      if (!tokenResp.ok) {
+        const errText = await tokenResp.text();
+        return res.status(502).json({ error: 'Échec authentification Firebase : ' + errText.slice(0, 300) });
+      }
+      const { access_token } = await tokenResp.json();
+
+      let sent = 0, failed = 0;
+      const invalidIds = [];
+      await Promise.all(devices.map(async (d) => {
+        try {
+          const fcmResp = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
+            body: JSON.stringify({
+              message: {
+                token: d.fcm_token,
+                notification: { title, body: message },
+                ...(body.url ? { data: { url: String(body.url) } } : {})
+              }
+            })
+          });
+          if (fcmResp.ok) { sent++; return; }
+          failed++;
+          const errBody = await fcmResp.json().catch(() => ({}));
+          const status = errBody && errBody.error && errBody.error.status;
+          if (status === 'NOT_FOUND' || status === 'UNREGISTERED' || status === 'INVALID_ARGUMENT') {
+            invalidIds.push(d.id);
+          }
+        } catch (e) {
+          failed++;
+        }
+      }));
+
+      // Nettoyage best-effort des tokens invalides (désinstallations, etc.) — n'empêche
+      // pas de répondre à la requête si ça échoue.
+      if (invalidIds.length > 0) {
+        supabase.from('push_devices').delete().in('id', invalidIds).then(() => {}).catch(() => {});
+      }
+
+      return res.status(200).json({ success: true, sent, failed, total: devices.length });
+    }
+
+    return res.status(400).json({ error: 'action inconnue' });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ error: error.message });
+  }
+}
+
 async function handleNewsletter(req, res) {
   try {
     verifyAdminAuth(req);
@@ -8236,6 +8366,10 @@ module.exports = async (req, res) => {
     if (path === '/newsletter' || path === '/newsletter/') {
       return await handleNewsletter(req, res);
     }
+
+    if (path === '/notifications' || path === '/notifications/') {
+      return await handleNotifications(req, res);
+    }
     
     if (path === '/newsletter-images' || path === '/newsletter-images/') {
       return await handleNewsletterImages(req, res);
@@ -8991,7 +9125,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         const isNewVisitor = body.is_new_visitor === true;
         const isApp = body.is_app === true;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
-        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance'];
+        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance', 'parrainage_lien_utilise'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
         // Rejette les requêtes qui ne proviennent pas réellement d'une page oradia.fr. Cet
@@ -9649,6 +9783,32 @@ Réponds en français, sans tiret long, format markdown compact.`
         };
       } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
 
+      // ── Programme de parrainage : combien de liens ont été utilisés, et combien
+      // ont réellement abouti (le filleul est allé jusqu'au bout d'un tirage) ──
+      // "Utilisé" = événement parrainage_lien_utilise (posé dès que le bonus du filleul
+      // est crédité, voir js/referral.js) ; "abouti" = ligne dans referral_conversions
+      // (posée seulement quand le filleul termine son 1er tirage). Le delta entre les
+      // deux mesure l'attrition : des gens cliquent le lien mais ne tirent jamais.
+      let referral = null;
+      try {
+        const [linkEvents, { data: refRows }] = await Promise.all([
+          sbFetchAllRows(() => sb.from('funnel_events').select('session_id')
+            .eq('event_name', 'parrainage_lien_utilise').gte('created_at', since)),
+          sb.from('referral_conversions').select('code, claimed_at').gte('converted_at', since)
+        ]);
+        const liensUtilises = new Set((linkEvents || []).map(e => e.session_id)).size;
+        const conversions = refRows || [];
+        const bonusReclames = conversions.filter(c => c.claimed_at).length;
+        referral = {
+          liens_utilises: liensUtilises,
+          conversions_abouties: conversions.length,
+          taux_conversion_pct: liensUtilises > 0 ? Math.round((conversions.length / liensUtilises) * 100) : null,
+          parrains_actifs: new Set(conversions.map(c => c.code)).size,
+          bonus_reclames: bonusReclames,
+          bonus_en_attente: conversions.length - bonusReclames
+        };
+      } catch (_) { /* migration referral_conversions ou funnel_events pas encore exécutée */ }
+
       // ── Conversions réelles de la période (précommandes, dons, inscriptions newsletter) ──
       const conversions = {};
       await Promise.all([
@@ -9698,6 +9858,12 @@ Conversions réelles de la période :
 - Dons libres : ${conversions.dons == null ? 'N/A' : conversions.dons}
 - Nouvelles inscriptions newsletter : ${conversions.inscriptions_newsletter == null ? 'N/A' : conversions.inscriptions_newsletter}
 
+Programme de parrainage ("offrir un tirage à un proche", chaque lien utilisé crédite immédiatement 1 tirage gratuit au filleul ; le parrain gagne 1 tirage quand le filleul termine son 1er tirage) :
+${referral ? `- Liens de parrainage utilisés (bonus filleul crédité) : ${referral.liens_utilises}
+- Dont allés au bout d'un 1er tirage (conversion réelle) : ${referral.conversions_abouties}${referral.taux_conversion_pct != null ? ` (${referral.taux_conversion_pct}% des liens utilisés)` : ''}
+- Parrains distincts ayant obtenu au moins une conversion : ${referral.parrains_actifs}
+- Bonus parrain réclamés : ${referral.bonus_reclames} / en attente de réclamation : ${referral.bonus_en_attente}` : '- Données de parrainage indisponibles sur la période (ou aucun lien utilisé).'}
+
 Santé technique (erreurs journalisées, pas forcément visibles par le visiteur) :
 - Erreurs serveur (API) : ${serverErrors}
 - Erreurs JavaScript côté client (bugs réellement rencontrés dans le navigateur) : ${clientErrors}
@@ -9710,6 +9876,7 @@ Analyse ces chiffres et donne-moi, en français, de façon concise et actionnabl
 
 Consignes d'interprétation importantes :
 - Le tunnel ci-dessus montre où les visiteurs décrochent : concentre les recommandations sur la plus grosse fuite entre deux étapes, pas sur des généralités.
+- Pour le parrainage : si le taux de conversion (liens utilisés → 1er tirage terminé) est bas, c'est un signal que le parcours du filleul après clic sur le lien a un problème (pas que le programme lui-même ne marche pas) — creuse cette piste plutôt que de recommander "communiquer plus sur le parrainage" par défaut. À l'inverse, si peu de liens sont utilisés mais que ceux qui le sont convertissent bien, le problème est en amont (visibilité/incitation à partager, pas le parcours filleul).
 - Ne confonds pas erreurs serveur et erreurs client : les erreurs serveur sont des incidents d'API (souvent invisibles pour le visiteur), les erreurs client sont des bugs JS vécus dans le navigateur (impact UX direct). Si les deux sont à 0 ou très faibles, ne dramatise pas une « catastrophe technique ».
 - Priorise les actions sur les leviers déjà en place plutôt que d'en réinventer : le site a déjà un blog (SEO de contenu), des CTA en page d'accueil, et un suivi de conversion first-party. Ne recommande pas d'« ajouter Google Analytics / Pixel Facebook » ni d'« écrire des articles » sans vérifier ce qui existe déjà.
 
@@ -9744,6 +9911,7 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         traffic,
         funnel,
         funnel_precommande: funnelPrecommande,
+        referral,
         conversions,
         logs_stats: { errors, server_errors: serverErrors, client_errors: clientErrors, warnings, total: (logs||[]).length }
       });

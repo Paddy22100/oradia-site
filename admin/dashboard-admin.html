@@ -3848,6 +3848,21 @@
                     <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
                 </div>
             </div>
+
+            <!-- Funnel de conversion — Parrainage -->
+            <div class="stat-card rounded-2xl p-6 mt-6">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-gift text-gold/60"></i> Funnel de conversion — Parrainage</h4>
+                    <div class="flex items-center gap-4 text-xs">
+                        <span class="text-light-gold/50">Taux de conversion : <strong class="text-gold" id="ana-referral-rate">—</strong></span>
+                        <span class="text-light-gold/50">Parrains actifs : <strong class="text-gold" id="ana-referral-active">—</strong></span>
+                    </div>
+                </div>
+                <p class="text-gold/40 text-xs mb-4">Combien de liens de parrainage ("offrir un tirage à un proche") ont été utilisés sur la période, et combien ont réellement abouti (le filleul est allé au bout d'un 1er tirage) — sert à repérer si le programme perd des gens en route ou manque simplement de visibilité.</p>
+                <div id="analytics-funnel-referral" class="space-y-3">
+                    <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
+                </div>
+            </div>
             </div><!-- /analytics-subtab-conversion -->
 
             <!-- ══ SOUS-ONGLET : QUANTIQUE ══ -->
@@ -4316,6 +4331,29 @@
                 <div class="flex items-center gap-3">
                     <button onclick="composeEmail()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer</button>
                     <span id="composeEmailStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Notification push (app mobile)</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Envoyée immédiatement à tous les appareils ayant l'app installée — <span id="pushDeviceCount" class="text-gold/70">…</span>.</p>
+            </div>
+            <div class="stat-card rounded-xl p-5 space-y-3">
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Titre</label>
+                    <input id="pushTitle" type="text" placeholder="Ex: Nouveau tirage disponible"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                </div>
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Message</label>
+                    <textarea id="pushBody" rows="3" placeholder="Le texte affiché dans la notification…"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="pushSendNotification()" id="pushSendBtn" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer</button>
+                    <span id="pushSendStatus" class="text-xs text-light-gold/40"></span>
                 </div>
             </div>
         </section>
@@ -10567,39 +10605,56 @@
         let composeContactsLoaded = false;
         let composeContactsCache = [];
         let composeContactsCategoryFilter = 'all';
+        // Chaque source est chargée indépendamment (au lieu d'un seul Promise.all + try/catch
+        // partagé) : avant, une seule source en échec (erreur réseau, réponse non-JSON, erreur
+        // serveur) faisait avorter le bloc entier et laissait composeContactsCache vide — y
+        // compris les contacts, qui eux fonctionnaient très bien seuls avant l'ajout de
+        // fournisseurs/partenaires. Symptôme observé : "Tous (0)" alors que les contacts
+        // newsletter existent bel et bien. Ici, si fournisseurs ou partenaires échoue, les
+        // contacts restent chargés normalement — et l'erreur précise de la source fautive est
+        // loguée (au lieu d'un unique catch générique qui ne dit pas laquelle des 3 a échoué).
+        async function loadComposeContactsSource(url, mapFn, label) {
+            try {
+                const res = await adminFetch(url);
+                const json = await res.json();
+                if (!res.ok || json.error) {
+                    console.error(`loadComposeContacts (${label}): réponse en erreur`, res.status, json.error);
+                    return [];
+                }
+                return (json.data || []).map(mapFn).filter(Boolean);
+            } catch (e) {
+                console.error(`loadComposeContacts (${label}):`, e);
+                return [];
+            }
+        }
         async function loadComposeContacts() {
             if (composeContactsLoaded) return;
             composeContactsLoaded = true;
-            try {
-                const [contactsRes, suppliersRes, partnersRes] = await Promise.all([
-                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000'),
-                    adminFetch('/api/admin/data?section=suppliers'),
-                    adminFetch('/api/admin/data?section=partners')
-                ]);
-                const contacts  = ((await contactsRes.json()).data || [])
-                    .filter(c => c.email)
-                    .map(c => ({ email: c.email, label: [c.prenom, c.nom].filter(Boolean).join(' '), category: 'contact' }));
+            const [contacts, suppliers, partners] = await Promise.all([
+                loadComposeContactsSource('/api/admin/data?section=waitlist&page=1&limit=5000',
+                    c => c.email ? { email: c.email, label: [c.prenom, c.nom].filter(Boolean).join(' '), category: 'contact' } : null,
+                    'contacts'),
                 // Fournisseurs/partenaires sans email (contactés par téléphone) gardés ici plutôt
                 // que filtrés en silence : ils apparaissent grisés, non cliquables, avec "pas
                 // d'email enregistré" — sans quoi filtrer par catégorie sur un fournisseur qui
                 // n'a jamais eu d'email pouvait donner une liste vide sans aucune explication,
                 // indiscernable d'un bouton qui ne réagit pas.
-                const suppliers = ((await suppliersRes.json()).data || [])
-                    .filter(s => s.name)
-                    .map(s => ({ email: s.email || null, label: s.name, category: 'supplier' }));
-                const partners  = ((await partnersRes.json()).data || [])
-                    .filter(p => p.name)
-                    .map(p => ({ email: p.email || null, label: p.name, category: 'partner' }));
-                composeContactsCache = [...contacts, ...suppliers, ...partners];
-                const datalist = document.getElementById('composeContactsList');
-                datalist.innerHTML = composeContactsCache
-                    .filter(c => c.email)
-                    .map(c => `<option value="${escapeHtmlFront(c.email)}"${c.label ? ` label="${escapeHtmlFront(c.label)}"` : ''}>`)
-                    .join('');
-            } catch(e) {
-                composeContactsLoaded = false; // permet de réessayer au prochain passage sur l'onglet
-                console.error('loadComposeContacts', e);
-            }
+                loadComposeContactsSource('/api/admin/data?section=suppliers',
+                    s => s.name ? { email: s.email || null, label: s.name, category: 'supplier' } : null,
+                    'suppliers'),
+                loadComposeContactsSource('/api/admin/data?section=partners',
+                    p => p.name ? { email: p.email || null, label: p.name, category: 'partner' } : null,
+                    'partners')
+            ]);
+            composeContactsCache = [...contacts, ...suppliers, ...partners];
+            const datalist = document.getElementById('composeContactsList');
+            datalist.innerHTML = composeContactsCache
+                .filter(c => c.email)
+                .map(c => `<option value="${escapeHtmlFront(c.email)}"${c.label ? ` label="${escapeHtmlFront(c.label)}"` : ''}>`)
+                .join('');
+            // Si vraiment rien n'a pu être chargé (les 3 sources en échec), permettre de
+            // réessayer au prochain passage sur l'onglet plutôt que de rester bloqué à vide.
+            if (composeContactsCache.length === 0) composeContactsLoaded = false;
         }
 
         // Sélecteur déroulant du Répertoire (bouton icône à côté du champ Destinataire) —
@@ -10682,7 +10737,18 @@
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('composeContactsPicker');
             if (!panel || panel.classList.contains('hidden')) return;
-            if (e.target.closest('#composeContactsPicker') || e.target.closest('[data-compose-contacts-btn]')) return;
+            // composedPath() plutôt que e.target.closest(...) : cliquer sur un bouton de
+            // catégorie (Fournisseurs, etc.) déclenche setComposeContactsCategory, qui
+            // réécrit bar.innerHTML AVANT que ce clic ne finisse de remonter jusqu'ici —
+            // le bouton cliqué est alors un noeud détaché sans parent, donc
+            // e.target.closest('#composeContactsPicker') ne le retrouve plus et le panneau
+            // se refermait aussitôt (symptôme : "ça se ferme et rien ne se passe"). Le
+            // chemin de composedPath() est figé au moment du clic, avant toute mutation du
+            // DOM, donc il reste correct même si le bouton a depuis été remplacé.
+            const path = e.composedPath ? e.composedPath() : [e.target];
+            const insidePanel = path.includes(panel);
+            const onToggleBtn = path.some(el => el.hasAttribute && el.hasAttribute('data-compose-contacts-btn'));
+            if (insidePanel || onToggleBtn) return;
             panel.classList.add('hidden');
         });
 
@@ -10707,6 +10773,57 @@
                 document.getElementById('composeEmailMessage').value = '';
             } catch (e) {
                 if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Erreur : ' + e.message; }
+            }
+        }
+
+        async function pushRefreshDeviceCount() {
+            const el = document.getElementById('pushDeviceCount');
+            if (!el) return;
+            try {
+                const res = await adminFetch('/api/admin/notifications?action=device-count');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const n = data.count || 0;
+                el.textContent = n === 0 ? 'aucun appareil enregistré' : `${n} appareil${n > 1 ? 's' : ''} enregistré${n > 1 ? 's' : ''}`;
+            } catch (e) {
+                el.textContent = 'nombre d\'appareils indisponible';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', pushRefreshDeviceCount);
+
+        async function pushSendNotification() {
+            const title = document.getElementById('pushTitle').value.trim();
+            const body  = document.getElementById('pushBody').value.trim();
+            const btn   = document.getElementById('pushSendBtn');
+            const status = document.getElementById('pushSendStatus');
+            if (!title || !body) { status.className = 'text-xs text-red-400'; status.textContent = 'Titre et message requis.'; return; }
+            if (!confirm('Envoyer cette notification à tous les appareils enregistrés ?')) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Envoi…';
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = '';
+            try {
+                const res = await adminFetch('/api/admin/notifications?action=send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                status.className = 'text-xs text-green-400';
+                status.textContent = data.total === 0
+                    ? 'Aucun appareil enregistré.'
+                    : `Envoyé à ${data.sent}/${data.total} appareil${data.total > 1 ? 's' : ''}${data.failed ? ' (' + data.failed + ' échec' + (data.failed > 1 ? 's' : '') + ')' : ''} ✓`;
+                document.getElementById('pushTitle').value = '';
+                document.getElementById('pushBody').value = '';
+                pushRefreshDeviceCount();
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         }
 
@@ -13205,6 +13322,53 @@
             el.innerHTML = buildFunnelStepsHtml(steps);
         }
 
+        function renderReferralFunnel(referral) {
+            const el = document.getElementById('analytics-funnel-referral');
+            const rateEl = document.getElementById('ana-referral-rate');
+            const activeEl = document.getElementById('ana-referral-active');
+            if (!el) return;
+            if (!referral) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Migration en attente (supabase-migration-referrals.sql / supabase-migration-funnel-events.sql) — apparaîtra une fois exécutée dans Supabase.</p>';
+                if (rateEl) rateEl.textContent = '—';
+                if (activeEl) activeEl.textContent = '—';
+                return;
+            }
+            if (rateEl) rateEl.textContent = referral.taux_conversion_pct != null ? referral.taux_conversion_pct + '%' : '—';
+            if (activeEl) activeEl.textContent = referral.parrains_actifs;
+            const steps = [
+                { label: 'Liens utilisés (bonus filleul crédité)', value: referral.liens_utilises,      color: '#d4af37', icon: 'fa-link' },
+                { label: '1er tirage terminé (conversion)',        value: referral.conversions_abouties, color: '#a78bfa', icon: 'fa-circle-check' },
+                { label: 'Bonus parrain réclamé',                  value: referral.bonus_reclames,       color: '#4ade80', icon: 'fa-gift' }
+            ];
+            if (steps.every(s => s.value === 0)) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune activité de parrainage pour cette période.</p>';
+                return;
+            }
+            // "Liens utilisés" est un événement introduit après coup (voir js/referral.js) :
+            // sur une période remontant avant son déploiement, il peut rester à 0 alors que
+            // des conversions plus anciennes existent déjà — buildFunnelStepsHtml suppose la
+            // 1re étape comme référence à 100%, ce qui casserait l'échelle dans ce cas précis.
+            // On cale donc l'échelle sur le max réel des trois valeurs plutôt que sur la 1re.
+            const max = Math.max(...steps.map(s => s.value), 1);
+            let note = '';
+            if (referral.liens_utilises === 0 && referral.conversions_abouties > 0) {
+                note = '<p class="text-amber-300/70 text-xs italic mb-3"><i class="fas fa-circle-info mr-1"></i>"Liens utilisés" est une mesure ajoutée récemment : les conversions ci-dessous sont antérieures à sa mise en place, d\'où l\'absence de liens comptés pour cette période.</p>';
+            }
+            el.innerHTML = note + steps.map((s, i) => {
+                const pct = Math.round((s.value / max) * 100);
+                const prevPct = i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                return `<div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                        <span class="font-semibold" style="color:${s.color}">${s.value}${prevPct != null ? `<span class="text-light-gold/30 font-normal ml-1">(${prevPct}% de l'étape préc.)</span>` : ''}</span>
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
             const funnel = document.getElementById('obsFunnel');
             if (funnel) {
@@ -15459,6 +15623,7 @@
 
                 renderFunnel(data.funnel);
                 renderPrecommandeFunnel(data.funnel_precommande);
+                renderReferralFunnel(data.referral);
 
                 // Graphique donut nouveaux vs anciens visiteurs
                 renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);

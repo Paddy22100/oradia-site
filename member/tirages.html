@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
     <script src="../js/member-header-fix.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <!-- Hébergées localement (pas de CDN) : évite un point de défaillance supplémentaire
+         pour le PDF quand le réseau mobile est faible — cause probable de "le tirage
+         plante" côté app, en plus du blocage connu des liens <a download> en WebView. -->
+    <script src="../vendor/html2canvas.min.js" defer></script>
+    <script src="../vendor/jspdf.umd.min.js" defer></script>
 
     <script>
         tailwind.config = {

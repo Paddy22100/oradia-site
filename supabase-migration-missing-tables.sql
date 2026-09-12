@@ -122,34 +122,12 @@ COMMENT ON TABLE tore_subscriptions IS
 
 
 -- ============================================================
--- TABLES ORPHELINES — à nettoyer manuellement si elles existent
+-- TABLES ORPHELINES — ménage effectué (juin 2026), voir CLAUDE.md
 -- ============================================================
--- Les tables suivantes ont une migration SQL mais ne sont plus utilisées dans le code.
--- À supprimer dans Supabase après vérification qu'elles sont bien vides en production :
---
---   waitlist_tirages     → Ancien nom de newsletter_contacts (migration waitlist-tirages-clean.sql)
---                          Jamais référencée dans aucun fichier .js ou .html.
---                          Peut être supprimée après vérification : SELECT COUNT(*) FROM waitlist_tirages;
---
---   precommande_subscribers → Ancien schéma initial (supabase-schema.sql)
---                             Remplacée par preorders + newsletter_contacts.
---                             Peut être supprimée après vérification : SELECT COUNT(*) FROM precommande_subscribers;
---
---   analytics_events    → Créée dans supabase-schema.sql, jamais utilisée dans le code.
---                          Peut être supprimée : SELECT COUNT(*) FROM analytics_events;
---
---   subscriptions       → Dans supabase-schema-complete.sql (table "abonnements Tore").
---                          Doublon de tore_subscriptions. À vérifier si vide :
---                          SELECT COUNT(*) FROM subscriptions;
---
---   credits             → Dans supabase-schema-complete.sql ("crédits Traversée").
---                          Concept abandonné — le modèle Tore est basé sur abonnement.
---                          À vérifier si vide : SELECT COUNT(*) FROM credits;
---
--- COMMANDES DE NETTOYAGE (à exécuter UNIQUEMENT après vérification que les tables sont vides) :
--- DROP TABLE IF EXISTS waitlist_tirages;
--- DROP TABLE IF EXISTS precommande_subscribers;
--- DROP TABLE IF EXISTS analytics_events;
--- DROP TABLE IF EXISTS subscriptions;
--- DROP TABLE IF EXISTS credits;
+-- Les 5 tables ci-dessous (waitlist_tirages, precommande_subscribers,
+-- analytics_events, subscriptions, credits) ont été vérifiées vides puis
+-- supprimées en production — voir CLAUDE.md section "Tables supprimées".
+-- Leurs migrations d'origine (waitlist-tirages-clean.sql, supabase-schema.sql,
+-- supabase-schema-complete.sql) ont été retirées du dépôt (ménage 2026-09) :
+-- ce bloc ne reste que comme trace historique, aucune action à faire ici.
 -- ============================================================

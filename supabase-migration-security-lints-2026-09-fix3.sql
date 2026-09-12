@@ -1,0 +1,12 @@
+-- ============================================================
+-- CORRECTIF 3 : rls_policy_always_true sur intentions_anonymes
+-- ============================================================
+-- Vérifié dans le code (api/admin/index.js, route /intentions) : la sauvegarde
+-- d'une intention passe TOUJOURS par ce endpoint serveur, avec la clé
+-- service_role — jamais par un insert direct anon/authenticated depuis le
+-- navigateur (aucune occurrence de intentions_anonymes dans un fichier HTML).
+-- La policy INSERT ouverte à anon/authenticated n'est donc utilisée par
+-- personne de légitime : service_role contourne de toute façon RLS, il n'a
+-- besoin d'aucune policy pour continuer à écrire. La retirer ferme l'accès
+-- direct sans rien changer au fonctionnement réel du site.
+DROP POLICY IF EXISTS "insert_anonymous_intentions" ON public.intentions_anonymes;

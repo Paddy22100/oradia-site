@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "974743037509",
+    "project_id": "oradia-67a61",
+    "storage_bucket": "oradia-67a61.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:974743037509:android:ef26ea252cb52039e3252c",
+        "android_client_info": {
+          "package_name": "fr.oradia.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDaBLBVp84D_x8j3B-I22T_7wlM9vCsVks"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
