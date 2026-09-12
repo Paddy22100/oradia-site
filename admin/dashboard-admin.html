@@ -10699,7 +10699,18 @@
         document.addEventListener('click', (e) => {
             const panel = document.getElementById('composeContactsPicker');
             if (!panel || panel.classList.contains('hidden')) return;
-            if (e.target.closest('#composeContactsPicker') || e.target.closest('[data-compose-contacts-btn]')) return;
+            // composedPath() plutôt que e.target.closest(...) : cliquer sur un bouton de
+            // catégorie (Fournisseurs, etc.) déclenche setComposeContactsCategory, qui
+            // réécrit bar.innerHTML AVANT que ce clic ne finisse de remonter jusqu'ici —
+            // le bouton cliqué est alors un noeud détaché sans parent, donc
+            // e.target.closest('#composeContactsPicker') ne le retrouve plus et le panneau
+            // se refermait aussitôt (symptôme : "ça se ferme et rien ne se passe"). Le
+            // chemin de composedPath() est figé au moment du clic, avant toute mutation du
+            // DOM, donc il reste correct même si le bouton a depuis été remplacé.
+            const path = e.composedPath ? e.composedPath() : [e.target];
+            const insidePanel = path.includes(panel);
+            const onToggleBtn = path.some(el => el.hasAttribute && el.hasAttribute('data-compose-contacts-btn'));
+            if (insidePanel || onToggleBtn) return;
             panel.classList.add('hidden');
         });
 
