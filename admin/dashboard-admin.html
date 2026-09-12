@@ -3848,6 +3848,21 @@
                     <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
                 </div>
             </div>
+
+            <!-- Funnel de conversion — Parrainage -->
+            <div class="stat-card rounded-2xl p-6 mt-6">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-gift text-gold/60"></i> Funnel de conversion — Parrainage</h4>
+                    <div class="flex items-center gap-4 text-xs">
+                        <span class="text-light-gold/50">Taux de conversion : <strong class="text-gold" id="ana-referral-rate">—</strong></span>
+                        <span class="text-light-gold/50">Parrains actifs : <strong class="text-gold" id="ana-referral-active">—</strong></span>
+                    </div>
+                </div>
+                <p class="text-gold/40 text-xs mb-4">Combien de liens de parrainage ("offrir un tirage à un proche") ont été utilisés sur la période, et combien ont réellement abouti (le filleul est allé au bout d'un 1er tirage) — sert à repérer si le programme perd des gens en route ou manque simplement de visibilité.</p>
+                <div id="analytics-funnel-referral" class="space-y-3">
+                    <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
+                </div>
+            </div>
             </div><!-- /analytics-subtab-conversion -->
 
             <!-- ══ SOUS-ONGLET : QUANTIQUE ══ -->
@@ -13307,6 +13322,31 @@
             el.innerHTML = buildFunnelStepsHtml(steps);
         }
 
+        function renderReferralFunnel(referral) {
+            const el = document.getElementById('analytics-funnel-referral');
+            const rateEl = document.getElementById('ana-referral-rate');
+            const activeEl = document.getElementById('ana-referral-active');
+            if (!el) return;
+            if (!referral) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Migration en attente (supabase-migration-referrals.sql / supabase-migration-funnel-events.sql) — apparaîtra une fois exécutée dans Supabase.</p>';
+                if (rateEl) rateEl.textContent = '—';
+                if (activeEl) activeEl.textContent = '—';
+                return;
+            }
+            if (rateEl) rateEl.textContent = referral.taux_conversion_pct != null ? referral.taux_conversion_pct + '%' : '—';
+            if (activeEl) activeEl.textContent = referral.parrains_actifs;
+            if (referral.liens_utilises === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucun lien de parrainage utilisé pour cette période.</p>';
+                return;
+            }
+            const steps = [
+                { label: 'Liens utilisés (bonus filleul crédité)', value: referral.liens_utilises,      color: '#d4af37', icon: 'fa-link' },
+                { label: '1er tirage terminé (conversion)',        value: referral.conversions_abouties, color: '#a78bfa', icon: 'fa-circle-check' },
+                { label: 'Bonus parrain réclamé',                  value: referral.bonus_reclames,       color: '#4ade80', icon: 'fa-gift' }
+            ];
+            el.innerHTML = buildFunnelStepsHtml(steps);
+        }
+
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
             const funnel = document.getElementById('obsFunnel');
             if (funnel) {
@@ -15561,6 +15601,7 @@
 
                 renderFunnel(data.funnel);
                 renderPrecommandeFunnel(data.funnel_precommande);
+                renderReferralFunnel(data.referral);
 
                 // Graphique donut nouveaux vs anciens visiteurs
                 renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);

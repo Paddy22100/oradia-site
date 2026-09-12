@@ -9114,7 +9114,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         const isNewVisitor = body.is_new_visitor === true;
         const isApp = body.is_app === true;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
-        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance'];
+        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance', 'parrainage_lien_utilise'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
         // Rejette les requêtes qui ne proviennent pas réellement d'une page oradia.fr. Cet
@@ -9772,6 +9772,32 @@ Réponds en français, sans tiret long, format markdown compact.`
         };
       } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
 
+      // ── Programme de parrainage : combien de liens ont été utilisés, et combien
+      // ont réellement abouti (le filleul est allé jusqu'au bout d'un tirage) ──
+      // "Utilisé" = événement parrainage_lien_utilise (posé dès que le bonus du filleul
+      // est crédité, voir js/referral.js) ; "abouti" = ligne dans referral_conversions
+      // (posée seulement quand le filleul termine son 1er tirage). Le delta entre les
+      // deux mesure l'attrition : des gens cliquent le lien mais ne tirent jamais.
+      let referral = null;
+      try {
+        const [linkEvents, { data: refRows }] = await Promise.all([
+          sbFetchAllRows(() => sb.from('funnel_events').select('session_id')
+            .eq('event_name', 'parrainage_lien_utilise').gte('created_at', since)),
+          sb.from('referral_conversions').select('code, claimed_at').gte('converted_at', since)
+        ]);
+        const liensUtilises = new Set((linkEvents || []).map(e => e.session_id)).size;
+        const conversions = refRows || [];
+        const bonusReclames = conversions.filter(c => c.claimed_at).length;
+        referral = {
+          liens_utilises: liensUtilises,
+          conversions_abouties: conversions.length,
+          taux_conversion_pct: liensUtilises > 0 ? Math.round((conversions.length / liensUtilises) * 100) : null,
+          parrains_actifs: new Set(conversions.map(c => c.code)).size,
+          bonus_reclames: bonusReclames,
+          bonus_en_attente: conversions.length - bonusReclames
+        };
+      } catch (_) { /* migration referral_conversions ou funnel_events pas encore exécutée */ }
+
       // ── Conversions réelles de la période (précommandes, dons, inscriptions newsletter) ──
       const conversions = {};
       await Promise.all([
@@ -9821,6 +9847,12 @@ Conversions réelles de la période :
 - Dons libres : ${conversions.dons == null ? 'N/A' : conversions.dons}
 - Nouvelles inscriptions newsletter : ${conversions.inscriptions_newsletter == null ? 'N/A' : conversions.inscriptions_newsletter}
 
+Programme de parrainage ("offrir un tirage à un proche", chaque lien utilisé crédite immédiatement 1 tirage gratuit au filleul ; le parrain gagne 1 tirage quand le filleul termine son 1er tirage) :
+${referral ? `- Liens de parrainage utilisés (bonus filleul crédité) : ${referral.liens_utilises}
+- Dont allés au bout d'un 1er tirage (conversion réelle) : ${referral.conversions_abouties}${referral.taux_conversion_pct != null ? ` (${referral.taux_conversion_pct}% des liens utilisés)` : ''}
+- Parrains distincts ayant obtenu au moins une conversion : ${referral.parrains_actifs}
+- Bonus parrain réclamés : ${referral.bonus_reclames} / en attente de réclamation : ${referral.bonus_en_attente}` : '- Données de parrainage indisponibles sur la période (ou aucun lien utilisé).'}
+
 Santé technique (erreurs journalisées, pas forcément visibles par le visiteur) :
 - Erreurs serveur (API) : ${serverErrors}
 - Erreurs JavaScript côté client (bugs réellement rencontrés dans le navigateur) : ${clientErrors}
@@ -9833,6 +9865,7 @@ Analyse ces chiffres et donne-moi, en français, de façon concise et actionnabl
 
 Consignes d'interprétation importantes :
 - Le tunnel ci-dessus montre où les visiteurs décrochent : concentre les recommandations sur la plus grosse fuite entre deux étapes, pas sur des généralités.
+- Pour le parrainage : si le taux de conversion (liens utilisés → 1er tirage terminé) est bas, c'est un signal que le parcours du filleul après clic sur le lien a un problème (pas que le programme lui-même ne marche pas) — creuse cette piste plutôt que de recommander "communiquer plus sur le parrainage" par défaut. À l'inverse, si peu de liens sont utilisés mais que ceux qui le sont convertissent bien, le problème est en amont (visibilité/incitation à partager, pas le parcours filleul).
 - Ne confonds pas erreurs serveur et erreurs client : les erreurs serveur sont des incidents d'API (souvent invisibles pour le visiteur), les erreurs client sont des bugs JS vécus dans le navigateur (impact UX direct). Si les deux sont à 0 ou très faibles, ne dramatise pas une « catastrophe technique ».
 - Priorise les actions sur les leviers déjà en place plutôt que d'en réinventer : le site a déjà un blog (SEO de contenu), des CTA en page d'accueil, et un suivi de conversion first-party. Ne recommande pas d'« ajouter Google Analytics / Pixel Facebook » ni d'« écrire des articles » sans vérifier ce qui existe déjà.
 
@@ -9867,6 +9900,7 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         traffic,
         funnel,
         funnel_precommande: funnelPrecommande,
+        referral,
         conversions,
         logs_stats: { errors, server_errors: serverErrors, client_errors: clientErrors, warnings, total: (logs||[]).length }
       });
