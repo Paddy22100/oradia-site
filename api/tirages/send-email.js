@@ -24,6 +24,21 @@ async function runWithConcurrency(items, limit, fn) {
   return results;
 }
 
+// Un "Gateway Timeout" de Supabase (observé en prod sur run-scheduled-draws et
+// fenetre/close, 2026-09-12) est transitoire — probablement plusieurs crons qui
+// tapent Supabase à quelques secondes d'intervalle. Retenter une fois après un
+// court délai évite de perdre un cycle de cron entier (jusqu'à 15 min d'attente
+// sinon) pour un blip réseau, sans changer le comportement en cas d'erreur
+// persistante (elle remonte telle quelle après le second essai).
+async function withGatewayTimeoutRetry(queryFn) {
+  const result = await queryFn();
+  if (result.error && /gateway timeout/i.test(result.error.message || '')) {
+    await new Promise(r => setTimeout(r, 1500));
+    return queryFn();
+  }
+  return result;
+}
+
 // Consulte le registre de fonctionnalités (dashboard admin). Fail-open si la
 // table n'existe pas encore ou si le flag n'est pas défini, pour ne jamais
 // casser une fonctionnalité existante par défaut.
@@ -958,13 +973,13 @@ async function handleCronCheckin(req, res) {
     // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
     const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
     const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: rawTargets, error } = await supabase
+    const { data: rawTargets, error } = await withGatewayTimeoutRetry(() => supabase
       .from('tore_emails')
       .select('email')
       .is('checkin_sent_at', null)
       .gte('created_at', from)
       .lt('created_at', to)
-      .limit(50);
+      .limit(50));
 
     if (error) {
       console.error('[cron-checkin] Supabase error:', error.message);
@@ -1320,13 +1335,13 @@ async function handleCronPromoTirage(req, res) {
     // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
     // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
     const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: targets, error } = await supabase
+    const { data: targets, error } = await withGatewayTimeoutRetry(() => supabase
       .from('tore_emails')
       .select('email')
       .is('promo_sent_at', null)
       .or('promo_skipped.is.null,promo_skipped.eq.false')
       .lt('created_at', cutoff)
-      .limit(50);
+      .limit(50));
 
     if (error) {
       console.error('[cron-promo-tirage] Supabase error:', error.message);
@@ -1508,11 +1523,11 @@ async function handleRunScheduledDraws(req, res) {
     );
 
     const now = getParisNow();
-    const { data: due, error } = await supabase
+    const { data: due, error } = await withGatewayTimeoutRetry(() => supabase
       .from('tore_scheduled_draws')
       .select('*')
       .eq('active', true)
-      .eq('hour', now.hour);
+      .eq('hour', now.hour));
 
     if (error) {
       console.error('[run-scheduled-draws] fetch error:', error.message);
