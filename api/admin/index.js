@@ -6316,7 +6316,18 @@ async function handleNewsletter(req, res) {
         const ordreOf = d => Number(d.extra?.ordre) || 0;
         const sent = validated.filter(d => d.statut === 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
         const queue = validated.filter(d => d.statut !== 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
-        const maxSentOrdre = sent.length ? ordreOf(sent[sent.length - 1]) : null;
+        // maxSentOrdre : les étapes de l'envoi individualisé (cron-send-parcours-individual)
+        // ne sont JAMAIS marquées statut='envoyé' (ce sont des gabarits réutilisables,
+        // chaque contact avance à son rythme) — seules les étapes 1-6/7 de l'ancien envoi
+        // groupé le sont encore. Sans compléter avec newsletter_sends.ordre (qui trace,
+        // lui, les vrais envois individualisés), une étape déjà partie à tout le monde
+        // (ex. étape 8) restait indéfiniment "prochaine étape prête" ici, alors qu'elle
+        // était déjà passée pour de bon — bug repéré le 12/09/2026 sur la carte "Parcours
+        // — mercredi prochain" de l'onglet Réseaux sociaux.
+        const statutSentMax = sent.length ? ordreOf(sent[sent.length - 1]) : 0;
+        const { data: sendRows } = await supabase.from('newsletter_sends').select('ordre').not('ordre', 'is', null);
+        const individualSentMax = (sendRows || []).reduce((max, r) => Math.max(max, Number(r.ordre) || 0), 0);
+        const maxSentOrdre = Math.max(statutSentMax, individualSentMax) || null;
 
         const now = Date.now();
         const scheduledQueue = queue.filter(d => d.scheduled_at && new Date(d.scheduled_at).getTime() > now);
