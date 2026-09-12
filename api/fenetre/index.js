@@ -29,6 +29,20 @@ function setCORS(res) {
   Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
 }
 
+// Un "Gateway Timeout" de Supabase (observé en prod le 2026-09-12, en même temps que sur
+// api/tirages/send-email.js — probablement plusieurs crons qui sollicitent Supabase à
+// quelques secondes d'intervalle) est transitoire. Retenter une fois après un court délai
+// évite de perdre un cycle de cron entier (jusqu'au passage suivant) pour un simple blip,
+// sans changer le comportement si l'erreur persiste (elle remonte telle quelle).
+async function withGatewayTimeoutRetry(queryFn) {
+  const result = await queryFn();
+  if (result.error && /gateway timeout/i.test(result.error.message || '')) {
+    await new Promise(r => setTimeout(r, 1500));
+    return queryFn();
+  }
+  return result;
+}
+
 // Vérifie si un email est déjà abonné à la liste newsletter Brevo.
 // En cas d'erreur/timeout, retourne false pour ne pas bloquer l'envoi.
 async function isBrevoSubscribed(email) {
@@ -119,13 +133,13 @@ async function handleClose(req, res) {
   // dit « vos jours viennent de s'achever », il ne doit pas partir des semaines trop tard).
   const now = new Date();
   const cutoffWindow = new Date(now.getTime() - 96 * 60 * 60 * 1000).toISOString();
-  const { data: windows, error } = await supabase
+  const { data: windows, error } = await withGatewayTimeoutRetry(() => supabase
     .from('observation_windows')
     .select('*, response_token')
     .lte('closes_at', now.toISOString())
     .gte('closes_at', cutoffWindow)
     .is('closing_email_sent_at', null)
-    .limit(50);
+    .limit(50));
 
   if (error) {
     console.error('[fenetre] Supabase error:', error);
