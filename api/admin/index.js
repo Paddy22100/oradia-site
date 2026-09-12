@@ -6204,8 +6204,9 @@ async function handleNotifications(req, res) {
 
       if (error) {
         // Table pas encore créée (migration non exécutée) : ne pas faire échouer
-        // le chargement de l'app pour autant, juste ne rien enregistrer.
-        if (error.code === '42P01') return res.status(200).json({ success: true });
+        // le chargement de l'app pour autant, juste ne rien enregistrer. PostgREST
+        // renvoie ce cas comme une erreur de "schema cache", pas un code Postgres.
+        if (/schema cache/i.test(error.message || '')) return res.status(200).json({ success: true });
         return res.status(500).json({ error: error.message });
       }
       return res.status(200).json({ success: true });
