@@ -285,6 +285,20 @@
                 </a>
             </div>
 
+            <!-- Bilan de parcours -->
+            <div id="bilanParcoursCard" class="hidden bg-[rgba(26,54,93,0.4)] border border-gold/20 rounded-2xl p-6 mb-6">
+                <div id="bilanParcoursIntro" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="cormorant text-xl text-gold mb-1"><i class="fas fa-route mr-2"></i>Bilan de parcours</h3>
+                        <p class="text-light-gold/60 text-sm">Ce que révèlent vos tirages pris ensemble, sur la durée.</p>
+                    </div>
+                    <button id="bilanParcoursBtn" onclick="genererBilanParcours()" class="flex-shrink-0 bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-5 rounded-lg transition-colors text-sm whitespace-nowrap">
+                        Générer mon bilan
+                    </button>
+                </div>
+                <div id="bilanParcoursResult" class="hidden mt-5 pt-5 border-t border-gold/15 space-y-5"></div>
+            </div>
+
             <!-- Catégories -->
             <div class="flex gap-1 mb-6 border-b border-gold/15">
                 <button data-tab="historique" onclick="setMesTiragesTab('historique')" class="tirages-tab-btn px-4 sm:px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-light-gold/60">
@@ -496,6 +510,12 @@
 
             const n = tirages.length;
             if(info) info.textContent = n === 0 ? 'Aucun tirage enregistré' : `${n} tirage${n > 1 ? 's' : ''} enregistré${n > 1 ? 's' : ''}`;
+
+            // Bilan de parcours : n'a de sens qu'avec un minimum d'historique et un
+            // compte connecté (le seuil réel est revérifié côté serveur, voir
+            // MIN_TIRAGES_FOR_BILAN dans lib/parcours-bilan-prompt.js).
+            const bilanCard = document.getElementById('bilanParcoursCard');
+            if (bilanCard) bilanCard.classList.toggle('hidden', !(window.OradiaTirageStorage?.isAuthenticated?.() && n >= 3));
 
             if (n === 0) {
                 // Diagnostic temporaire : distingue "vraiment aucun tirage" de "session
@@ -1012,6 +1032,47 @@
         });
 
         // ============ Filtre ponctuel / programmé ============
+        // ============ Bilan de parcours ============
+        async function genererBilanParcours() {
+            const btn = document.getElementById('bilanParcoursBtn');
+            const resultEl = document.getElementById('bilanParcoursResult');
+            if (!btn || !resultEl) return;
+
+            btn.disabled = true;
+            const originalLabel = btn.textContent;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i>Génération...';
+
+            try {
+                const res = await window.OradiaTirageStorage.bilanParcours();
+                if (!res || !res.success) {
+                    resultEl.innerHTML = `<p class="text-light-gold/60 text-sm text-center py-2">${(res && res.message) || "Le bilan n'a pas pu être généré, réessayez dans un instant."}</p>`;
+                    resultEl.classList.remove('hidden');
+                    return;
+                }
+
+                const { recurrent, evolution, question } = res.bilan;
+                const section = (title, icon, text) => text ? `
+                    <div>
+                        <p class="text-gold text-xs uppercase tracking-wider mb-2"><i class="fas ${icon} mr-1.5"></i>${title}</p>
+                        <p class="text-light-gold/85 text-sm leading-relaxed">${text.replace(/\n+/g, ' ')}</p>
+                    </div>` : '';
+
+                resultEl.innerHTML = [
+                    section('Ce qui revient', 'fa-repeat', recurrent),
+                    section('Ce qui a bougé', 'fa-arrow-trend-up', evolution),
+                    section('Une question pour la suite', 'fa-compass', question)
+                ].join('');
+                resultEl.classList.remove('hidden');
+                document.getElementById('bilanParcoursIntro')?.classList.add('hidden');
+            } catch (e) {
+                resultEl.innerHTML = `<p class="text-light-gold/60 text-sm text-center py-2">Erreur réseau, réessayez dans un instant.</p>`;
+                resultEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalLabel;
+            }
+        }
+
         function setSourceFilter(filter) {
             document.querySelectorAll('#sourceFilters .filter-btn').forEach(b => {
                 b.classList.toggle('active', b.dataset.filter === filter);

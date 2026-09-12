@@ -212,6 +212,53 @@ async function handleListTirages(req, res) {
   return res.status(200).json({ success: true, tirages });
 }
 
+// ============ ACTION : bilan de parcours (motifs récurrents sur l'historique) ============
+async function handleBilanParcours(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) {
+    return res.status(401).json({ success: false, message: 'Authentification requise.' });
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+  }
+
+  const { data, error } = await supabase
+    .from('tirages')
+    .select('created_at, intention, cartes, synthese')
+    .eq('user_id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error('Bilan parcours: list tirages error:', error);
+    return res.status(500).json({ success: false, message: 'Impossible de récupérer l\'historique.' });
+  }
+
+  const { MIN_TIRAGES_FOR_BILAN, generateParcoursBilan } = require('../../lib/parcours-bilan-prompt.js');
+  const tirages = (data || []).map(t => ({ date: t.created_at, intention: t.intention, cartes: t.cartes || [], synthese: t.synthese }));
+
+  if (tirages.length < MIN_TIRAGES_FOR_BILAN) {
+    return res.status(200).json({
+      success: false,
+      reason: 'not_enough_tirages',
+      count: tirages.length,
+      needed: MIN_TIRAGES_FOR_BILAN,
+      message: `Encore ${MIN_TIRAGES_FOR_BILAN - tirages.length} tirage${MIN_TIRAGES_FOR_BILAN - tirages.length > 1 ? 's' : ''} avant de pouvoir dresser un bilan de parcours.`
+    });
+  }
+
+  const bilan = await generateParcoursBilan({ tirages, userEmail: userData.user.email });
+  if (!bilan) {
+    return res.status(502).json({ success: false, message: 'Le bilan n\'a pas pu être généré, réessayez dans un instant.' });
+  }
+
+  return res.status(200).json({ success: true, bilan, count: tirages.length });
+}
+
 // ============ ACTION : envoyer l'email du tirage (comportement existant, inchangé) ============
 async function handleSendEmail(req, res) {
   if (req.method !== 'POST') {
@@ -1594,6 +1641,7 @@ export default async function handler(req, res) {
     case 'save':          return handleSaveTirage(req, res);
     case 'update':        return handleUpdateTirage(req, res);
     case 'list':          return handleListTirages(req, res);
+    case 'bilan-parcours': return handleBilanParcours(req, res);
     case 'collect-email':      return handleCollectEmail(req, res);
     case 'check-brevo':        return handleCheckBrevo(req, res);
     case 'send-promo-preview': return handleSendPromoPreview(req, res);

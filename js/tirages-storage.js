@@ -227,6 +227,8 @@
     }
   }
 
+  function bilanParcours() { return authFetch('bilan-parcours', { method: 'POST' }); }
+
   function getSchedule() { return authFetch('get-schedule'); }
   function saveSchedule(fields) { return authFetch('save-schedule', { method: 'POST', body: fields }); }
   function deleteSchedule() { return authFetch('delete-schedule', { method: 'POST' }); }
@@ -269,6 +271,7 @@
     loadTirages,
     addTirage,
     updateTirage: apiUpdate,
+    bilanParcours,
     getSchedule,
     saveSchedule,
     deleteSchedule,
