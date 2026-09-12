@@ -4322,6 +4322,29 @@
 
         <section class="mb-10">
             <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Notification push (app mobile)</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Envoyée immédiatement à tous les appareils ayant l'app installée — <span id="pushDeviceCount" class="text-gold/70">…</span>.</p>
+            </div>
+            <div class="stat-card rounded-xl p-5 space-y-3">
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Titre</label>
+                    <input id="pushTitle" type="text" placeholder="Ex: Nouveau tirage disponible"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                </div>
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Message</label>
+                    <textarea id="pushBody" rows="3" placeholder="Le texte affiché dans la notification…"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="pushSendNotification()" id="pushSendBtn" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer</button>
+                    <span id="pushSendStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Mails du site</h3>
                 <p class="text-light-gold/50 text-sm mt-1">Envoie une version test de chaque email transactionnel à <span class="text-gold font-mono">contact@oradia.fr</span>. Aucun envoi aux vrais destinataires.</p>
             </div>
@@ -10707,6 +10730,57 @@
                 document.getElementById('composeEmailMessage').value = '';
             } catch (e) {
                 if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Erreur : ' + e.message; }
+            }
+        }
+
+        async function pushRefreshDeviceCount() {
+            const el = document.getElementById('pushDeviceCount');
+            if (!el) return;
+            try {
+                const res = await adminFetch('/api/admin/notifications?action=device-count');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const n = data.count || 0;
+                el.textContent = n === 0 ? 'aucun appareil enregistré' : `${n} appareil${n > 1 ? 's' : ''} enregistré${n > 1 ? 's' : ''}`;
+            } catch (e) {
+                el.textContent = 'nombre d\'appareils indisponible';
+            }
+        }
+        document.addEventListener('DOMContentLoaded', pushRefreshDeviceCount);
+
+        async function pushSendNotification() {
+            const title = document.getElementById('pushTitle').value.trim();
+            const body  = document.getElementById('pushBody').value.trim();
+            const btn   = document.getElementById('pushSendBtn');
+            const status = document.getElementById('pushSendStatus');
+            if (!title || !body) { status.className = 'text-xs text-red-400'; status.textContent = 'Titre et message requis.'; return; }
+            if (!confirm('Envoyer cette notification à tous les appareils enregistrés ?')) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Envoi…';
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = '';
+            try {
+                const res = await adminFetch('/api/admin/notifications?action=send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ title, body })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                status.className = 'text-xs text-green-400';
+                status.textContent = data.total === 0
+                    ? 'Aucun appareil enregistré.'
+                    : `Envoyé à ${data.sent}/${data.total} appareil${data.total > 1 ? 's' : ''}${data.failed ? ' (' + data.failed + ' échec' + (data.failed > 1 ? 's' : '') + ')' : ''} ✓`;
+                document.getElementById('pushTitle').value = '';
+                document.getElementById('pushBody').value = '';
+                pushRefreshDeviceCount();
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
             }
         }
 

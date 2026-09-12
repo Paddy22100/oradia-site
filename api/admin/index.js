@@ -6179,6 +6179,135 @@ async function brevoErrorMessage(r, context) {
   return `${context} : ${diagnostic}${brevoMsg ? ` (Brevo : ${brevoMsg})` : ''}`;
 }
 
+// Notifications push (Firebase Cloud Messaging) déclenchées depuis le dashboard.
+// action=register-device est publique (appelée par l'app mobile elle-même, voir
+// js/push-notifications.js) ; toute autre action exige l'auth admin.
+async function handleNotifications(req, res) {
+  try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const action = url.searchParams.get('action');
+    const supabase = nlSupabase();
+
+    if (action === 'register-device') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const body = await parseBody(req);
+      const deviceId = String(body.device_id || '').trim();
+      const fcmToken = String(body.fcm_token || '').trim();
+      if (!deviceId || !fcmToken) return res.status(400).json({ error: 'device_id et fcm_token requis' });
+
+      const { error } = await supabase.from('push_devices').upsert({
+        device_id: deviceId,
+        fcm_token: fcmToken,
+        platform: body.platform ? String(body.platform).slice(0, 50) : null,
+        last_seen_at: new Date().toISOString()
+      }, { onConflict: 'device_id' });
+
+      if (error) {
+        // Table pas encore créée (migration non exécutée) : ne pas faire échouer
+        // le chargement de l'app pour autant, juste ne rien enregistrer.
+        if (error.code === '42P01') return res.status(200).json({ success: true });
+        return res.status(500).json({ error: error.message });
+      }
+      return res.status(200).json({ success: true });
+    }
+
+    // Tout le reste (compteur, envoi) est réservé au dashboard admin.
+    verifyAdminAuth(req);
+
+    if (action === 'device-count') {
+      const { count, error } = await supabase.from('push_devices').select('*', { count: 'exact', head: true });
+      if (error) return res.status(200).json({ success: true, count: 0 });
+      return res.status(200).json({ success: true, count: count || 0 });
+    }
+
+    if (action === 'send-notification') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const body = await parseBody(req);
+      const title = String(body.title || '').trim();
+      const message = String(body.body || '').trim();
+      if (!title || !message) return res.status(400).json({ error: 'Titre et message requis' });
+
+      const projectId = process.env.FIREBASE_PROJECT_ID;
+      const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
+      const privateKey = (process.env.FIREBASE_PRIVATE_KEY || '').replace(/\\n/g, '\n');
+      if (!projectId || !clientEmail || !privateKey) {
+        return res.status(500).json({ error: 'Configuration Firebase manquante côté serveur (FIREBASE_PROJECT_ID / FIREBASE_CLIENT_EMAIL / FIREBASE_PRIVATE_KEY)' });
+      }
+
+      const { data: devices, error: devErr } = await supabase.from('push_devices').select('id, fcm_token');
+      if (devErr) return res.status(500).json({ error: devErr.message });
+      if (!devices || devices.length === 0) {
+        return res.status(200).json({ success: true, sent: 0, failed: 0, total: 0, message: 'Aucun appareil enregistré.' });
+      }
+
+      // Échange la clé de service Firebase contre un access_token OAuth2 — flow
+      // JWT-bearer standard Google, sans dépendance supplémentaire : jsonwebtoken
+      // (déjà utilisé pour les sessions admin) sait déjà signer en RS256.
+      const now = Math.floor(Date.now() / 1000);
+      const assertion = jwt.sign({
+        iss: clientEmail,
+        scope: 'https://www.googleapis.com/auth/firebase.messaging',
+        aud: 'https://oauth2.googleapis.com/token',
+        iat: now,
+        exp: now + 3600
+      }, privateKey, { algorithm: 'RS256' });
+
+      const tokenResp = await fetch('https://oauth2.googleapis.com/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams({
+          grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+          assertion
+        })
+      });
+      if (!tokenResp.ok) {
+        const errText = await tokenResp.text();
+        return res.status(502).json({ error: 'Échec authentification Firebase : ' + errText.slice(0, 300) });
+      }
+      const { access_token } = await tokenResp.json();
+
+      let sent = 0, failed = 0;
+      const invalidIds = [];
+      await Promise.all(devices.map(async (d) => {
+        try {
+          const fcmResp = await fetch(`https://fcm.googleapis.com/v1/projects/${projectId}/messages:send`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${access_token}` },
+            body: JSON.stringify({
+              message: {
+                token: d.fcm_token,
+                notification: { title, body: message },
+                ...(body.url ? { data: { url: String(body.url) } } : {})
+              }
+            })
+          });
+          if (fcmResp.ok) { sent++; return; }
+          failed++;
+          const errBody = await fcmResp.json().catch(() => ({}));
+          const status = errBody && errBody.error && errBody.error.status;
+          if (status === 'NOT_FOUND' || status === 'UNREGISTERED' || status === 'INVALID_ARGUMENT') {
+            invalidIds.push(d.id);
+          }
+        } catch (e) {
+          failed++;
+        }
+      }));
+
+      // Nettoyage best-effort des tokens invalides (désinstallations, etc.) — n'empêche
+      // pas de répondre à la requête si ça échoue.
+      if (invalidIds.length > 0) {
+        supabase.from('push_devices').delete().in('id', invalidIds).then(() => {}).catch(() => {});
+      }
+
+      return res.status(200).json({ success: true, sent, failed, total: devices.length });
+    }
+
+    return res.status(400).json({ error: 'action inconnue' });
+  } catch (error) {
+    return res.status(error.statusCode || 500).json({ error: error.message });
+  }
+}
+
 async function handleNewsletter(req, res) {
   try {
     verifyAdminAuth(req);
@@ -8224,6 +8353,10 @@ module.exports = async (req, res) => {
     
     if (path === '/newsletter' || path === '/newsletter/') {
       return await handleNewsletter(req, res);
+    }
+
+    if (path === '/notifications' || path === '/notifications/') {
+      return await handleNotifications(req, res);
     }
     
     if (path === '/newsletter-images' || path === '/newsletter-images/') {

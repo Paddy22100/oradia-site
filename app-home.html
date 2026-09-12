@@ -340,6 +340,10 @@
     </div>
   </div>
 
+  <script src="js/push-notifications.js"></script>
+  <script>
+    if (window.oradiaPushNotifications) window.oradiaPushNotifications.init();
+  </script>
   <script>
     // Laisse l'animation se jouer au moins 1,1s (sinon, servi depuis le cache,
     // elle disparaîtrait avant même d'être perceptible), sans dépasser 2,5s si
