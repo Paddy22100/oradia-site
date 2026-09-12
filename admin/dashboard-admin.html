@@ -13335,16 +13335,38 @@
             }
             if (rateEl) rateEl.textContent = referral.taux_conversion_pct != null ? referral.taux_conversion_pct + '%' : '—';
             if (activeEl) activeEl.textContent = referral.parrains_actifs;
-            if (referral.liens_utilises === 0) {
-                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucun lien de parrainage utilisé pour cette période.</p>';
-                return;
-            }
             const steps = [
                 { label: 'Liens utilisés (bonus filleul crédité)', value: referral.liens_utilises,      color: '#d4af37', icon: 'fa-link' },
                 { label: '1er tirage terminé (conversion)',        value: referral.conversions_abouties, color: '#a78bfa', icon: 'fa-circle-check' },
                 { label: 'Bonus parrain réclamé',                  value: referral.bonus_reclames,       color: '#4ade80', icon: 'fa-gift' }
             ];
-            el.innerHTML = buildFunnelStepsHtml(steps);
+            if (steps.every(s => s.value === 0)) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune activité de parrainage pour cette période.</p>';
+                return;
+            }
+            // "Liens utilisés" est un événement introduit après coup (voir js/referral.js) :
+            // sur une période remontant avant son déploiement, il peut rester à 0 alors que
+            // des conversions plus anciennes existent déjà — buildFunnelStepsHtml suppose la
+            // 1re étape comme référence à 100%, ce qui casserait l'échelle dans ce cas précis.
+            // On cale donc l'échelle sur le max réel des trois valeurs plutôt que sur la 1re.
+            const max = Math.max(...steps.map(s => s.value), 1);
+            let note = '';
+            if (referral.liens_utilises === 0 && referral.conversions_abouties > 0) {
+                note = '<p class="text-amber-300/70 text-xs italic mb-3"><i class="fas fa-circle-info mr-1"></i>"Liens utilisés" est une mesure ajoutée récemment : les conversions ci-dessous sont antérieures à sa mise en place, d\'où l\'absence de liens comptés pour cette période.</p>';
+            }
+            el.innerHTML = note + steps.map((s, i) => {
+                const pct = Math.round((s.value / max) * 100);
+                const prevPct = i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                return `<div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                        <span class="font-semibold" style="color:${s.color}">${s.value}${prevPct != null ? `<span class="text-light-gold/30 font-normal ml-1">(${prevPct}% de l'étape préc.)</span>` : ''}</span>
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                    </div>
+                </div>`;
+            }).join('');
         }
 
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
