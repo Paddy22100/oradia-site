@@ -12383,8 +12383,15 @@
         // sans rien publier — pour vérifier ce qui partirait avant l'envoi réel du mercredi.
         async function nlPreviewSocialFromParcours(id) {
             await nlOpenDraft(id);
-            const alreadyFilled = document.getElementById('nl-social-fb-text')?.value?.trim();
-            if (!alreadyFilled) await nlPreviewSocial();
+            // Les 3 réseaux doivent être remplis pour sauter la régénération — un aperçu
+            // créé avant l'ajout du LinkedIn à ce flux (ou dont la génération avait
+            // partiellement échoué) n'avait que Facebook/Instagram : ne vérifier que
+            // Facebook laissait alors le LinkedIn manquant indéfiniment, "Revoir"
+            // affichant un aperçu à deux réseaux sans jamais le compléter.
+            const fbFilled = document.getElementById('nl-social-fb-text')?.value?.trim();
+            const igFilled = document.getElementById('nl-social-ig-text')?.value?.trim();
+            const liFilled = document.getElementById('nl-social-li-text')?.value?.trim();
+            if (!fbFilled || !igFilled || !liFilled) await nlPreviewSocial();
             document.getElementById('nl-social-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
