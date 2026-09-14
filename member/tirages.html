@@ -635,24 +635,23 @@
                         overflow:hidden;
                         margin-bottom:20px;
                     ">
-                        <div style="background:rgba(5,20,40,0.6);padding:18px 24px;border-bottom:1px solid rgba(212,175,55,0.2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                            <div>
-                                <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 2px;">${t.type || 'Tirage Tore'}</p>
+                        <div onclick="toggleTirageDetails('${tirageId}')" style="cursor:pointer;background:rgba(5,20,40,0.6);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                            <div style="min-width:0;flex:1;">
+                                <p style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:rgba(245,231,161,0.9);margin:0 0 4px;">${t.intention ? t.intention : (t.type || 'Tirage Tore')}</p>
                                 <p style="color:rgba(245,231,161,0.45);font-size:12px;margin:0;text-transform:capitalize;">${date}</p>
                                 ${sourceBadge}
                             </div>
-                            <button onclick="downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
-                                style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
-                                onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
-                                <i class="fas fa-file-pdf"></i> Télécharger PDF
-                            </button>
+                            <i id="${tirageId}-chevron" class="fas fa-chevron-down" style="color:#d4af37;opacity:0.6;transition:transform .25s;flex-shrink:0;"></i>
                         </div>
-                        <div style="padding:20px 24px;">
-                            ${t.intention ? `
-                            <div style="margin-bottom:16px;padding:12px 16px;background:rgba(212,175,55,0.06);border-radius:0 8px 8px 0;border-left:3px solid rgba(212,175,55,0.5);">
-                                <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Intention</p>
-                                <p style="color:rgba(245,231,161,0.9);font-size:14px;font-style:italic;">${t.intention}</p>
-                            </div>` : ''}
+                        <div id="${tirageId}-details" style="display:none;padding:20px 24px;border-top:1px solid rgba(212,175,55,0.2);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+                                <p style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0;">${t.type || 'Tirage Tore'}</p>
+                                <button onclick="event.stopPropagation(); downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
+                                    style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
+                                    onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
+                                    <i class="fas fa-file-pdf"></i> Télécharger PDF
+                                </button>
+                            </div>
                             ${cartesBadges ? `
                             <div style="margin-bottom:14px;">
                                 <p style="color:rgba(212,175,55,0.55);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Cartes tirées</p>
@@ -732,6 +731,17 @@
                 preview.classList.remove('visible');
             });
         })();
+
+        // Replie/déplie les détails d'un tirage — seule l'intention + la date restent
+        // visibles par défaut, pour alléger l'affichage d'un historique de 20 tirages.
+        function toggleTirageDetails(tirageId) {
+            const details = document.getElementById(tirageId + '-details');
+            const chevron = document.getElementById(tirageId + '-chevron');
+            if (!details) return;
+            const isOpen = details.style.display !== 'none';
+            details.style.display = isOpen ? 'none' : 'block';
+            if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
 
         // Téléchargement PDF élégant — Palier 3 #22 : design aligné sur le mail d'analyse,
         // ajout de la fenêtre d'observation et amélioration visuelle globale.
