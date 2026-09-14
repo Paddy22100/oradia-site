@@ -5633,18 +5633,21 @@ function closeToreExitModal(){
             backEl.setAttribute('aria-pressed', 'true');
             backEl.setAttribute('aria-label', 'Carte retournée — appuyer pour agrandir');
             backEl.setAttribute('tabindex', '-1');
-            // Agrandissement au clic/tactile — le zoom n'existait jusqu'ici qu'au survol
-            // de la carte passerelle (addZoomToBridgeCard), donc inaccessible sur mobile
-            // et absent des 7 cartes principales du tirage (signalé par un abonné : image
-            // impossible à agrandir depuis un smartphone pour "s'imprégner" du visuel).
-            backEl.style.cursor = 'zoom-in';
-            backEl.addEventListener('click', (ev) => {
-              if (card.classList.contains('flipping')) return;
-              ev.stopPropagation();
-              if (previewImg) previewImg.style.backgroundImage = `url('${imgPath}')`;
-              if (previewOverlay) previewOverlay.classList.add('card-preview-visible');
-            });
           }
+          // Agrandissement au clic/tactile — le zoom n'existait jusqu'ici qu'au survol
+          // de la carte passerelle (addZoomToBridgeCard), donc inaccessible sur mobile
+          // et absent des 7 cartes principales du tirage (signalé par un abonné : image
+          // impossible à agrandir depuis un smartphone pour "s'imprégner" du visuel).
+          // Le déclencheur est posé sur l'image révélée (imgEl2), un élément neuf créé
+          // ici, plutôt que sur .tore-card-back qui porte déjà l'écouteur de clic gérant
+          // le retournement des cartes suivantes : le partager avait bloqué le tirage
+          // sur la carte "besoins" (2e de l'ordre), un des deux écouteurs empêchant l'autre
+          // de fonctionner correctement sur le même élément.
+          imgEl2.style.cursor = 'zoom-in';
+          imgEl2.addEventListener('click', () => {
+            if (previewImg) previewImg.style.backgroundImage = `url('${imgPath}')`;
+            if (previewOverlay) previewOverlay.classList.add('card-preview-visible');
+          });
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               imgEl2.style.opacity = '1';
