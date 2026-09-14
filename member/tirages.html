@@ -1110,10 +1110,18 @@
                         <p class="text-light-gold/85 text-sm leading-relaxed">${text.replace(/\n+/g, ' ')}</p>
                     </div>` : '';
 
+                const questionCta = question ? `
+                    <div class="text-center pt-1">
+                        <a href="../tore.html?intention=${encodeURIComponent(question)}" class="inline-flex items-center gap-2 bg-gold/15 text-gold border border-gold/40 rounded-lg px-5 py-2.5 text-sm hover:bg-gold/25 transition-colors">
+                            <i class="fas fa-infinity"></i> Faire un tirage sur cette question
+                        </a>
+                    </div>` : '';
+
                 resultEl.innerHTML = [
                     section('Ce qui revient', 'fa-repeat', recurrent),
                     section('Ce qui a bougé', 'fa-arrow-trend-up', evolution),
-                    section('Une question pour la suite', 'fa-compass', question)
+                    section('Une question pour la suite', 'fa-compass', question),
+                    questionCta
                 ].join('');
                 resultEl.classList.remove('hidden');
                 document.getElementById('bilanParcoursIntro')?.classList.add('hidden');

@@ -6684,6 +6684,20 @@ function showArrowForStep(stepIndex, isMatch) {
   // Exécuter la configuration
   setupIntentionValidation();
 
+  // Pré-remplit l'intention depuis un lien externe (?intention=...) — utilisé par le
+  // bouton "Faire un tirage sur cette question" du bilan de parcours (member/tirages.html).
+  (function prefillIntentionFromUrl() {
+    try {
+      const raw = new URLSearchParams(location.search).get('intention');
+      if (!raw) return;
+      const input = el('tore-intention-input');
+      if (!input) return;
+      input.value = raw;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } catch (e) {}
+  })();
+
   // Remplit le champ d'intention depuis un exemple cliquable, puis déclenche la
   // validation (l'écouteur 'input' met à jour le bouton et le funnel). Exposé sur
   // window car appelé par les onclick inline des chips.
