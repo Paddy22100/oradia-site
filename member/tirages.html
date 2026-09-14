@@ -201,6 +201,49 @@
             color: #f4e4c1;
             line-height: 1.3;
         }
+
+        /* Bilan de parcours : même traitement que la carte dorée "Faire un
+           tirage" de l'accueil app (halo + balayage lumineux), pour qu'elle
+           ne se perde plus au milieu du reste de l'historique. */
+        #bilanParcoursCard.bilan-highlight {
+            position: relative; overflow: hidden;
+            border-color: rgba(212,175,55,0.7);
+            background: linear-gradient(150deg, #2a2410 0%, rgba(90,74,26,0.97) 30%, rgba(26,54,93,0.97) 75%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.15);
+            animation: bilanGlow 3.2s ease-in-out infinite;
+        }
+        @keyframes bilanGlow {
+            0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.18), 0 0 22px rgba(212,175,55,0.08); }
+            50%      { box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.4), 0 0 32px rgba(212,175,55,0.25); }
+        }
+        #bilanParcoursCard.bilan-highlight::before {
+            content: ''; position: absolute; left: -30px; top: 50%; transform: translateY(-50%);
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(245,231,161,0.3), transparent 70%);
+            pointer-events: none;
+        }
+        #bilanParcoursCard.bilan-highlight::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.12) 45%, transparent 60%);
+            background-size: 250% 100%; background-position: 150% 0;
+            animation: bilanShimmer 5s ease-in-out infinite;
+        }
+        @keyframes bilanShimmer {
+            0%, 40% { background-position: 150% 0; }
+            100%    { background-position: -50% 0; }
+        }
+        #bilanParcoursCard.bilan-highlight h3,
+        #bilanParcoursCard.bilan-highlight #bilanParcoursIntro > div > p,
+        #bilanParcoursCard.bilan-highlight #bilanParcoursBtn { position: relative; }
+        #bilanParcoursCard.bilan-highlight h3 {
+            font-size: 22px;
+            background: linear-gradient(135deg, var(--gold, #d4af37), var(--light-gold, #f5e7a1));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        #bilanParcoursCard.bilan-highlight #bilanParcoursBtn {
+            background: radial-gradient(circle at 35% 30%, #f5e7a1, #d4af37 70%);
+            box-shadow: 0 0 20px rgba(212,175,55,0.5);
+        }
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
@@ -286,17 +329,17 @@
             </div>
 
             <!-- Bilan de parcours -->
-            <div id="bilanParcoursCard" class="hidden bg-[rgba(26,54,93,0.4)] border border-gold/20 rounded-2xl p-6 mb-6">
+            <div id="bilanParcoursCard" class="hidden bilan-highlight border rounded-2xl p-6 mb-6">
                 <div id="bilanParcoursIntro" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
-                        <h3 class="cormorant text-xl text-gold mb-1"><i class="fas fa-route mr-2"></i>Bilan de parcours</h3>
-                        <p class="text-light-gold/60 text-sm">Ce que révèlent vos tirages pris ensemble, sur la durée.</p>
+                        <h3 class="cormorant mb-1"><i class="fas fa-sparkles mr-2"></i>Bilan de parcours</h3>
+                        <p class="text-light-gold/80 text-sm">Ce que révèlent vos tirages pris ensemble, sur la durée.</p>
                     </div>
-                    <button id="bilanParcoursBtn" onclick="genererBilanParcours()" class="flex-shrink-0 bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-5 rounded-lg transition-colors text-sm whitespace-nowrap">
+                    <button id="bilanParcoursBtn" onclick="genererBilanParcours()" class="flex-shrink-0 text-night-blue font-bold py-2.5 px-6 rounded-lg transition-colors text-sm whitespace-nowrap">
                         Générer mon bilan
                     </button>
                 </div>
-                <div id="bilanParcoursResult" class="hidden mt-5 pt-5 border-t border-gold/15 space-y-5"></div>
+                <div id="bilanParcoursResult" class="hidden mt-5 pt-5 border-t border-gold/25 space-y-5"></div>
             </div>
 
             <!-- Catégories -->
