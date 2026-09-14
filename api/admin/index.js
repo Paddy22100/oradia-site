@@ -1479,6 +1479,7 @@ async function handleData(req, res) {
             console.error('[cron-newsletter-scoring] Background error:', e.message);
           }
         })());
+        return;
       }
       // Publication des posts sociaux dus, déclenchable seule (cron externe horaire).
       if (getAction === 'cron-social-due') {
