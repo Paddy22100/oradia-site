@@ -5631,8 +5631,19 @@ function closeToreExitModal(){
           const backEl = card.querySelector('.tore-card-back');
           if (backEl) {
             backEl.setAttribute('aria-pressed', 'true');
-            backEl.setAttribute('aria-label', 'Carte retournée');
+            backEl.setAttribute('aria-label', 'Carte retournée — appuyer pour agrandir');
             backEl.setAttribute('tabindex', '-1');
+            // Agrandissement au clic/tactile — le zoom n'existait jusqu'ici qu'au survol
+            // de la carte passerelle (addZoomToBridgeCard), donc inaccessible sur mobile
+            // et absent des 7 cartes principales du tirage (signalé par un abonné : image
+            // impossible à agrandir depuis un smartphone pour "s'imprégner" du visuel).
+            backEl.style.cursor = 'zoom-in';
+            backEl.addEventListener('click', (ev) => {
+              if (card.classList.contains('flipping')) return;
+              ev.stopPropagation();
+              if (previewImg) previewImg.style.backgroundImage = `url('${imgPath}')`;
+              if (previewOverlay) previewOverlay.classList.add('card-preview-visible');
+            });
           }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
