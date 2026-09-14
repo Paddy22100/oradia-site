@@ -25,16 +25,20 @@ async function runWithConcurrency(items, limit, fn) {
 }
 
 // Un "Gateway Timeout" de Supabase (observé en prod sur run-scheduled-draws et
-// fenetre/close, 2026-09-12) est transitoire — probablement plusieurs crons qui
-// tapent Supabase à quelques secondes d'intervalle. Retenter une fois après un
-// court délai évite de perdre un cycle de cron entier (jusqu'à 15 min d'attente
-// sinon) pour un blip réseau, sans changer le comportement en cas d'erreur
-// persistante (elle remonte telle quelle après le second essai).
-async function withGatewayTimeoutRetry(queryFn) {
-  const result = await queryFn();
-  if (result.error && /gateway timeout/i.test(result.error.message || '')) {
-    await new Promise(r => setTimeout(r, 1500));
-    return queryFn();
+// fenetre/close, 2026-09-12, de façon récurrente — probablement plusieurs crons qui
+// tapent Supabase à quelques secondes d'intervalle) est transitoire mais peut durer
+// plus qu'un seul court délai : une unique retentative après 1,5s s'est révélée
+// insuffisante lors d'un incident où le Gateway Timeout a persisté plus longtemps.
+// Jusqu'à 2 retentatives avec un délai croissant (1,5s puis 3s) — sans changer le
+// comportement si l'erreur persiste malgré tout (elle remonte telle quelle après
+// la dernière tentative).
+async function withGatewayTimeoutRetry(queryFn, maxRetries = 2, delaysMs = [1500, 3000]) {
+  let result = await queryFn();
+  let attempt = 0;
+  while (result.error && /gateway timeout/i.test(result.error.message || '') && attempt < maxRetries) {
+    await new Promise(r => setTimeout(r, delaysMs[attempt] ?? delaysMs[delaysMs.length - 1]));
+    result = await queryFn();
+    attempt++;
   }
   return result;
 }

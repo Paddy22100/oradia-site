@@ -31,14 +31,17 @@ function setCORS(res) {
 
 // Un "Gateway Timeout" de Supabase (observé en prod le 2026-09-12, en même temps que sur
 // api/tirages/send-email.js — probablement plusieurs crons qui sollicitent Supabase à
-// quelques secondes d'intervalle) est transitoire. Retenter une fois après un court délai
-// évite de perdre un cycle de cron entier (jusqu'au passage suivant) pour un simple blip,
-// sans changer le comportement si l'erreur persiste (elle remonte telle quelle).
-async function withGatewayTimeoutRetry(queryFn) {
-  const result = await queryFn();
-  if (result.error && /gateway timeout/i.test(result.error.message || '')) {
-    await new Promise(r => setTimeout(r, 1500));
-    return queryFn();
+// quelques secondes d'intervalle) est transitoire mais peut durer plus qu'un seul court
+// délai : une unique retentative après 1,5s s'est révélée insuffisante lors d'un incident
+// récurrent. Jusqu'à 2 retentatives avec un délai croissant (1,5s puis 3s), sans changer
+// le comportement si l'erreur persiste malgré tout (elle remonte telle quelle).
+async function withGatewayTimeoutRetry(queryFn, maxRetries = 2, delaysMs = [1500, 3000]) {
+  let result = await queryFn();
+  let attempt = 0;
+  while (result.error && /gateway timeout/i.test(result.error.message || '') && attempt < maxRetries) {
+    await new Promise(r => setTimeout(r, delaysMs[attempt] ?? delaysMs[delaysMs.length - 1]));
+    result = await queryFn();
+    attempt++;
   }
   return result;
 }
