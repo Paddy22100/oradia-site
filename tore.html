@@ -2114,6 +2114,11 @@
 
   #card-preview-overlay #card-preview-img {
 
+    /* width explicite necessaire : ce div n'a pas de contenu propre (juste un
+       background-image), donc sans largeur fixee, aspect-ratio calcule une
+       hauteur de 0 et l'image agrandie reste invisible malgre l'overlay visible. */
+    width: min(500px, 90vw);
+
     max-width: min(500px, 90vw);
 
     max-height: 80vh;
