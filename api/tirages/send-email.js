@@ -1030,6 +1030,200 @@ async function handleCronCheckin(req, res) {
   }
 }
 
+// ============ EMAIL RELANCE ABONNÉS TORE INACTIFS (30j) ============
+// Ton volontairement léger, sans culpabilisation ("vous avez arrêté", "vous
+// nous manquez") — un simple signe de vie, l'abonnement reste actif de toute
+// façon. Envoyée une seule fois par période d'inactivité, jamais en rappel
+// récurrent (voir handleCronRelanceInactifs).
+function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = false) {
+  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
+  const paragraphs = [
+    `Ça fait un moment que je n'ai pas eu de nouvelles de vous par ici. Rien d'urgent, juste un petit signe.`,
+    `Votre abonnement au Tore est toujours actif, et l'oracle vous attend, sans aucune pression, pour un tirage le jour où l'envie reviendra.`,
+    `On s'éloigne parfois un temps, et c'est très bien aussi. Si une question se pose en ce moment, même vague, c'est peut-être l'occasion d'y revenir.`
+  ];
+  const bodyRows = paragraphs.map(p => `
+  <tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
+  </td></tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
+</head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+  <tr><td style="padding:0; line-height:0;">
+    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+  </td></tr>
+  <tr><td style="padding:30px 32px 0;">
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">Un petit signe de l'oracle</h2>
+  </td></tr>
+  ${bodyRows}
+  <tr><td style="padding:8px 32px 40px; text-align:center;">
+    <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Faire un tirage</a>
+  </td></tr>
+  ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
+      <tr><td style="padding:0;line-height:0;font-size:0;">
+        <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+      </td></tr>
+      <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+      </td></tr>
+    </table>
+  </td></tr>`}
+  ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
+      <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
+        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton abonnement au Tore. Pour recevoir mes prochains messages :</p>
+        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
+      </td></tr>
+    </table>
+  </td></tr>`}
+  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu es abonné·e au Tore sur oradia.fr.</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function sendRelanceInactifsEmail(email) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const { createClient } = require('@supabase/supabase-js');
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const alreadySub = await isBrevoSubscribed(email);
+  const hidePreorder = await hasCompletedPreorder(supabase, email);
+  const html = buildRelanceInactifsEmailHtml(alreadySub, hidePreorder);
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+      to: [{ email }],
+      subject: "Rudy d'Oradia — Un petit signe de l'oracle",
+      htmlContent: html
+    })
+  });
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    throw new Error(`Brevo error: ${err.message || brevoRes.status}`);
+  }
+}
+
+// ============ CRON : relance douce des abonnés Tore inactifs 30j ============
+// Déclenché par Make (planification quotidienne) plutôt que cron-job.org, pour
+// centraliser les automatisations marketing dans un seul outil visuel — même
+// mécanisme d'authentification (cron_secret) que les crons existants.
+//
+// "Inactif" = aucun tirage depuis 30 jours (ou depuis l'inscription si jamais
+// tiré). Envoyée UNE SEULE fois par période d'inactivité (jamais en rappel
+// récurrent, décision explicite) : last_relance_sent_at sert justement à ça,
+// et n'est jamais remis à NULL automatiquement si la personne reprend puis
+// s'arrête à nouveau (repasserait par un geste admin volontaire).
+async function handleCronRelanceInactifs(req, res) {
+  const secret = req.query.cron_secret || '';
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+    if (!(await isFeatureEnabled(supabase, 'relance_inactifs_30j'))) {
+      return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason: 'feature_disabled' });
+    }
+
+    const { data: subs, error } = await withGatewayTimeoutRetry(() => supabase
+      .from('tore_subscriptions')
+      .select('id, email, created_at')
+      .eq('status', 'active')
+      .is('last_relance_sent_at', null)
+      .limit(200));
+
+    if (error) {
+      console.error('[cron-relance-inactifs] Supabase error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!subs || subs.length === 0) {
+      return res.status(200).json({ success: true, sent: 0, failed: 0 });
+    }
+
+    // Répond tout de suite (voir handleCronCheckin pour la raison), le reste
+    // continue en arrière-plan via waitUntil.
+    res.status(200).json({ success: true, queued: subs.length });
+    const { waitUntil } = require('@vercel/functions');
+    waitUntil((async () => {
+      let sent = 0, failed = 0, skipped = 0;
+      try {
+        const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+        // email -> user_id : pas de lookup direct par email côté API Admin,
+        // on construit donc une table de correspondance une seule fois plutôt
+        // que d'appeler listUsers pour chaque abonné (voir findAuthUserByEmail
+        // dans api/admin/index.js pour le cas d'un lookup isolé).
+        const idByEmail = {};
+        for (let page = 1; page <= 20; page++) {
+          const { data, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+          if (listErr || !data?.users?.length) break;
+          data.users.forEach(u => { idByEmail[u.email] = u.id; });
+          if (data.users.length < 200) break;
+        }
+
+        await runWithConcurrency(subs, 5, async (sub) => {
+          try {
+            const uid = idByEmail[sub.email];
+            let lastActiveAt = sub.created_at;
+            if (uid) {
+              const { data: lastTirage } = await supabase
+                .from('tirages')
+                .select('created_at')
+                .eq('user_id', uid)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              if (lastTirage) lastActiveAt = lastTirage.created_at;
+            }
+
+            if (new Date(lastActiveAt).getTime() > cutoff) { skipped++; return; } // encore actif
+
+            await sendRelanceInactifsEmail(sub.email);
+            await supabase.from('tore_subscriptions')
+              .update({ last_relance_sent_at: new Date().toISOString() })
+              .eq('id', sub.id);
+            sent++;
+          } catch (e) {
+            console.error('[cron-relance-inactifs] Failed for', sub.email, e.message);
+            failed++;
+          }
+        });
+      } catch (e) {
+        console.error('[cron-relance-inactifs] Background error:', e.message);
+      }
+      console.log(`[cron-relance-inactifs] sent=${sent} failed=${failed} skipped=${skipped}`);
+    })());
+  } catch (e) {
+    console.error('[cron-relance-inactifs] Unexpected error:', e.message);
+    if (!res.headersSent) res.status(500).json({ error: e.message });
+  }
+}
+
 async function sendPromoTirageEmail(email) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const { createClient } = require('@supabase/supabase-js');
@@ -1670,6 +1864,7 @@ export default async function handler(req, res) {
     case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
     case 'cron-checkin':       return handleCronCheckin(req, res);
+    case 'cron-relance-inactifs': return handleCronRelanceInactifs(req, res);
     case 'get-schedule':       return handleGetSchedule(req, res);
     case 'save-schedule':      return handleSaveSchedule(req, res);
     case 'delete-schedule':    return handleDeleteSchedule(req, res);
