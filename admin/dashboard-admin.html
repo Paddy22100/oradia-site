@@ -3777,6 +3777,11 @@
                     <div id="ana-app-top-pages" class="space-y-2 text-sm"><p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p></div>
                 </div>
             </div>
+            <!-- Vues app par jour -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-gold/60"></i> Vues app par jour</h4>
+                <div id="analytics-app-daily-chart" class="h-40"></div>
+            </div>
             <div class="grid grid-cols-1 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6">
                     <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Quand l'app est utilisée (heure de la journée)</h4>
@@ -15210,8 +15215,9 @@
                 </div>`;
         }
 
-        function renderDailyViewsChart(days) {
-            const chartEl = document.getElementById('analytics-daily-chart');
+        function renderDailyViewsChart(days, opts = {}) {
+            const { elementId = 'analytics-daily-chart', color = '#2dd4bf', gradientId = 'dailyViewsGradient' } = opts;
+            const chartEl = document.getElementById(elementId);
             if (!chartEl) return;
             if (!days.length) { chartEl.innerHTML = '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'; return; }
 
@@ -15240,21 +15246,21 @@
                 return `<text x="${x(i).toFixed(1)}" y="${H-4}" font-size="10" fill="rgba(212,175,55,0.35)" text-anchor="middle">${d.date.slice(8,10)}/${d.date.slice(5,7)}</text>`;
             }).join('');
 
-            const dots = points.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="#2dd4bf">
+            const dots = points.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="${color}">
                 <title>${days[i].date} : ${days[i].count} vue(s)</title>
             </circle>`).join('');
 
             chartEl.innerHTML = `
                 <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
                     <defs>
-                        <linearGradient id="dailyViewsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.35"/>
-                            <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+                        <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${color}" stop-opacity="0.35"/>
+                            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
                         </linearGradient>
                     </defs>
                     ${gridLines}
-                    <path d="${areaPath}" fill="url(#dailyViewsGradient)" stroke="none"/>
-                    <path d="${linePath}" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    <path d="${areaPath}" fill="url(#${gradientId})" stroke="none"/>
+                    <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
                     ${dots}
                     ${xLabels}
                 </svg>`;
@@ -15657,6 +15663,7 @@
                     const app = t.app_usage || {};
                     setEl('ana-app-sessions', app.unique_sessions ?? 0);
                     setEl('ana-app-views', app.total_views ?? 0);
+                    renderDailyViewsChart(app.by_day || [], { elementId: 'analytics-app-daily-chart', color: '#d4af37', gradientId: 'dailyViewsGradientApp' });
                     const lastSeenEl = document.getElementById('ana-app-last-seen');
                     if (lastSeenEl) {
                         lastSeenEl.textContent = app.last_seen
