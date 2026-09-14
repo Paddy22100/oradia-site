@@ -1103,16 +1103,20 @@
                     return;
                 }
 
-                const { recurrent, evolution, question } = res.bilan;
+                const { recurrent, evolution, question, suggestedIntention } = res.bilan;
                 const section = (title, icon, text) => text ? `
                     <div>
                         <p class="text-gold text-xs uppercase tracking-wider mb-2"><i class="fas ${icon} mr-1.5"></i>${title}</p>
                         <p class="text-light-gold/85 text-sm leading-relaxed">${text.replace(/\n+/g, ' ')}</p>
                     </div>` : '';
 
-                const questionCta = question ? `
+                // suggestedIntention est une question courte et propre (validée côté serveur,
+                // voir lib/parcours-bilan-prompt.js), distincte du paragraphe narratif "question"
+                // ci-dessus — c'est elle qui part dans le champ intention de tore.html, jamais le
+                // paragraphe complet (qui ne passerait pas la checklist de validation du tirage).
+                const questionCta = suggestedIntention ? `
                     <div class="text-center pt-1">
-                        <a href="../tore.html?intention=${encodeURIComponent(question)}" class="inline-flex items-center gap-2 bg-gold/15 text-gold border border-gold/40 rounded-lg px-5 py-2.5 text-sm hover:bg-gold/25 transition-colors">
+                        <a href="../tore.html?intention=${encodeURIComponent(suggestedIntention)}" class="inline-flex items-center gap-2 bg-gold/15 text-gold border border-gold/40 rounded-lg px-5 py-2.5 text-sm hover:bg-gold/25 transition-colors">
                             <i class="fas fa-infinity"></i> Faire un tirage sur cette question
                         </a>
                     </div>` : '';
