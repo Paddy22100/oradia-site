@@ -9700,12 +9700,23 @@ Réponds en français, sans tiret long, format markdown compact.`
         appViews.forEach(v => { const h = new Date(v.created_at).getHours(); appByHour[h]++; });
         const appByDay = {};
         appViews.forEach(v => { const d = v.created_at.slice(0,10); appByDay[d] = (appByDay[d] || 0) + 1; });
+        // Nouveaux vs anciens visiteurs de l'app — même logique que sessionIsNew plus haut
+        // (une session est "nouvelle" dès qu'une de ses vues porte is_new_visitor=true).
+        const appSessionIsNew = {};
+        appViews.forEach(v => {
+          if (v.is_new_visitor === true) appSessionIsNew[v.session_id] = true;
+          else if (v.is_new_visitor === false && !(v.session_id in appSessionIsNew)) appSessionIsNew[v.session_id] = false;
+        });
+        let appNewVisitors = 0, appReturningVisitors = 0;
+        Object.values(appSessionIsNew).forEach(isNew => { if (isNew) appNewVisitors++; else appReturningVisitors++; });
         traffic.app_usage = {
           total_views: appViews.length,
           unique_sessions: appSessions.size,
           top_pages: appTopPages,
           by_hour: appByHour,
           by_day: Object.entries(appByDay).sort((a,b) => a[0] < b[0] ? -1 : 1).map(([date,count]) => ({ date, count })),
+          new_visitors: appNewVisitors,
+          returning_visitors: appReturningVisitors,
           last_seen: appViews.length ? appViews[0].created_at : null
         };
       }

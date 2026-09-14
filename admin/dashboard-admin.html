@@ -3782,6 +3782,11 @@
                 <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-gold/60"></i> Vues app par jour</h4>
                 <div id="analytics-app-daily-chart" class="h-40"></div>
             </div>
+            <!-- Type de visiteurs (app) -->
+            <div class="stat-card rounded-2xl p-6 mb-6 flex flex-col items-center justify-center">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2 self-start"><i class="fas fa-users text-gold/60"></i> Type de visiteurs (app)</h4>
+                <div id="analytics-app-visitor-type-chart" class="w-full flex flex-col items-center"></div>
+            </div>
             <div class="grid grid-cols-1 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6">
                     <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Quand l'app est utilisée (heure de la journée)</h4>
@@ -15174,8 +15179,8 @@
             nlSyncEditor();
         }
 
-        function renderVisitorTypeChart(newV, returning) {
-            const el = document.getElementById('analytics-visitor-type-chart');
+        function renderVisitorTypeChart(newV, returning, elementId = 'analytics-visitor-type-chart') {
+            const el = document.getElementById(elementId);
             if (!el) return;
             const total = newV + returning;
             if (total === 0) {
@@ -15664,6 +15669,7 @@
                     setEl('ana-app-sessions', app.unique_sessions ?? 0);
                     setEl('ana-app-views', app.total_views ?? 0);
                     renderDailyViewsChart(app.by_day || [], { elementId: 'analytics-app-daily-chart', color: '#d4af37', gradientId: 'dailyViewsGradientApp' });
+                    renderVisitorTypeChart(app.new_visitors || 0, app.returning_visitors || 0, 'analytics-app-visitor-type-chart');
                     const lastSeenEl = document.getElementById('ana-app-last-seen');
                     if (lastSeenEl) {
                         lastSeenEl.textContent = app.last_seen
