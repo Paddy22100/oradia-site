@@ -3854,9 +3854,18 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
   let coinThrowIndex = 0; // Index pour les lancers de pièce (0-5 pour les 6 familles)
 
-  const previewOverlay = el('card-preview-overlay');
+  // #card-preview-overlay est defini plus bas dans le HTML (apres ce script inline) :
+  // el() y retournerait null si on le capturait ici tout de suite, ce qui desactivait
+  // silencieusement tout le zoom clic/tactile (jamais fonctionnel, meme au survol de
+  // la carte passerelle). On differe la capture jusqu'a ce que le DOM soit complet.
+  let previewOverlay = el('card-preview-overlay');
 
-  const previewImg     = el('card-preview-img');
+  let previewImg     = el('card-preview-img');
+
+  document.addEventListener('DOMContentLoaded', () => {
+    if (!previewOverlay) previewOverlay = el('card-preview-overlay');
+    if (!previewImg) previewImg = el('card-preview-img');
+  });
 
   const coinWrapper = el('tore-coin-wrapper');
 
