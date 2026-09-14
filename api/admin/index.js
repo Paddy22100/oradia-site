@@ -711,6 +711,79 @@ async function sendToreCheckinReminders(supabase) {
   return out;
 }
 
+// Scoring d'engagement des contacts newsletter, à partir des statistiques Brevo
+// (ouvertures/clics) déjà suivies par Brevo lui-même — pas besoin de tracker nos
+// propres pixels d'ouverture. Un contact franchissant le seuil est tagué "chaud"
+// (colonne newsletter_contacts.tags, voir supabase-migration-contact-tags.sql) :
+// visible et filtrable depuis l'onglet Contacts > Inscrits Newsletter du dashboard.
+// Décision explicite : ne déclenche AUCUN envoi automatique de l'offre de guidance,
+// seulement un récapitulatif hebdomadaire envoyé à ADMIN_EMAIL pour une approche
+// manuelle, contact par contact — le scoring commercial reste piloté par un humain.
+async function scoreNewsletterEngagement(supabase) {
+  const out = { checked: 0, newlyHot: [], errors: [] };
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  if (!BREVO_API_KEY) { out.errors.push('BREVO_API_KEY manquant'); return out; }
+
+  const { data: contacts, error } = await supabase
+    .from('newsletter_contacts')
+    .select('id, email, tags')
+    .eq('status', 'active')
+    .limit(500);
+  if (error) { out.errors.push('select: ' + error.message); return out; }
+
+  const batchSize = 10;
+  const list = contacts || [];
+  for (let i = 0; i < list.length; i += batchSize) {
+    const batch = list.slice(i, i + batchSize);
+    await Promise.all(batch.map(async (contact) => {
+      out.checked++;
+      try {
+        const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+          headers: { 'api-key': BREVO_API_KEY }
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        const stats = data.statistics || {};
+        // La forme exacte (tableau détaillé par campagne vs simple compteur) a varié
+        // selon les versions de l'API Brevo : on gère les deux plutôt que de supposer.
+        const opensCount  = Array.isArray(stats.opened)  ? stats.opened.length  : (typeof stats.opened  === 'number' ? stats.opened  : 0);
+        const clicksCount = Array.isArray(stats.clicked) ? stats.clicked.length : (typeof stats.clicked === 'number' ? stats.clicked : 0);
+
+        const alreadyHot = (contact.tags || []).includes('chaud');
+        const isHot = opensCount >= 3 || clicksCount >= 1;
+
+        if (isHot && !alreadyHot) {
+          const newTags = [...new Set([...(contact.tags || []), 'chaud'])];
+          await supabase.from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
+          out.newlyHot.push({ email: contact.email, opens: opensCount, clicks: clicksCount });
+        }
+      } catch (e) {
+        out.errors.push(`${contact.email}: ${e.message}`);
+      }
+    }));
+  }
+  return out;
+}
+
+function buildNewsletterScoringRecapHtml(newlyHot) {
+  const rows = newlyHot.map(c => `
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #eee;">${c.email}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;">${c.opens}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;">${c.clicks}</td>
+    </tr>`).join('');
+
+  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+    <h2 style="color:#0a192f;">🔥 ${newlyHot.length} nouveau${newlyHot.length > 1 ? 'x' : ''} contact${newlyHot.length > 1 ? 's' : ''} "chaud${newlyHot.length > 1 ? 's' : ''}" cette semaine</h2>
+    <p style="color:#555;">Engagement newsletter au-dessus du seuil (≥3 ouvertures ou ≥1 clic). Aucun email n'a été envoyé automatiquement, c'est un signal pour toi.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="background:#f5f5f5;"><th style="padding:8px 14px;text-align:left;">Email</th><th style="padding:8px 14px;">Ouvertures</th><th style="padding:8px 14px;">Clics</th></tr>
+      ${rows}
+    </table>
+    <p style="color:#999;font-size:12px;margin-top:20px;">Tag "chaud" posé automatiquement — visible dans Contacts &gt; Inscrits Newsletter.</p>
+  </div>`;
+}
+
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -1375,6 +1448,37 @@ async function handleData(req, res) {
         } catch(e) {
           return res.status(200).json({ success: false, error: e.message });
         }
+      }
+      // Scoring d'engagement newsletter, déclenchable seul (cron externe hebdomadaire).
+      // Réponse immédiate + traitement en arrière-plan (voir handleCronCheckin dans
+      // api/tirages/send-email.js) : jusqu'à 500 contacts, un appel Brevo chacun,
+      // risque réel de dépasser les 30s configurés pour cette fonction (vercel.json).
+      if (getAction === 'cron-newsletter-scoring') {
+        if ((req.query?.cron_secret || '') !== process.env.CRON_SECRET) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        res.status(200).json({ success: true, queued: true });
+        const { waitUntil } = require('@vercel/functions');
+        waitUntil((async () => {
+          try {
+            const r = await scoreNewsletterEngagement(supabase);
+            if (r.newlyHot.length && process.env.ADMIN_EMAIL && process.env.BREVO_API_KEY) {
+              await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+                body: JSON.stringify({
+                  sender: { name: 'ORADIA Dashboard', email: 'contact@oradia.fr' },
+                  to: [{ email: process.env.ADMIN_EMAIL }],
+                  subject: `🔥 ${r.newlyHot.length} contact(s) newsletter "chaud(s)" cette semaine`,
+                  htmlContent: buildNewsletterScoringRecapHtml(r.newlyHot)
+                })
+              }).catch(() => {});
+            }
+            await logSystemEvent(supabase, { level: r.errors.length ? 'warn' : 'info', source: 'cron-newsletter-scoring', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Scoring newsletter : ${r.checked} vérifié(s), ${r.newlyHot.length} nouveau(x) "chaud"`, details: r });
+          } catch (e) {
+            console.error('[cron-newsletter-scoring] Background error:', e.message);
+          }
+        })());
       }
       // Publication des posts sociaux dus, déclenchable seule (cron externe horaire).
       if (getAction === 'cron-social-due') {
