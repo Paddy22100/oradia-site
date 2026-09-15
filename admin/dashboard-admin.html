@@ -360,11 +360,6 @@
                 <i class="fas fa-address-book w-4 text-center"></i>
                 <span>Contacts</span>
             </div>
-            <div class="nav-item" onclick="showTab('nl-subscribers')" id="nav-nl-subscribers" title="Qui est inscrit/désabonné de la newsletter, et depuis quand">
-                <i class="fas fa-envelope-open-text w-4 text-center"></i>
-                <span>Abonnés newsletter</span>
-                <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-nl-subscribers"></span>
-            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Commerce</p>
             <div class="nav-item" onclick="showTab('preorders')" id="nav-preorders">
@@ -1501,16 +1496,40 @@
                 </div>
             </div>
 
-            <!-- ── Sous-onglet Inscrits Newsletter ── -->
+            <!-- ── Sous-onglet Inscrits Newsletter ──
+                 Fusion de l'ancien onglet séparé "Abonnés newsletter" (nl-subscribers, retiré de
+                 la nav) et de ce sous-onglet : garde le suivi statut/désinscriptions du premier
+                 (KPI, filtre, colonne "Désabonné le", sync désinscriptions) et le suivi contenu
+                 du second (dernière newsletter reçue, avancement parcours, renvoi ciblé). -->
             <div id="contacts-subtab-newsletter" class="hidden">
                 <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex gap-3">
+                            <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
+                                <div class="text-xl font-bold text-emerald-400" id="nl-active-count">-</div>
+                                <div class="text-xs text-emerald-300/70">Inscrits</div>
+                            </div>
+                            <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
+                                <div class="text-xl font-bold text-red-400" id="nl-unsub-count">-</div>
+                                <div class="text-xs text-red-300/70">Désabonnés</div>
+                            </div>
+                        </div>
+                        <select id="nlStatusFilter" onchange="loadNlSubscribers(1)"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <option value="active">Inscrits actifs</option>
+                            <option value="unsubscribed">Désabonnés</option>
+                            <option value="all">Tous</option>
+                        </select>
                         <input id="nlSearch" type="text" placeholder="Rechercher…"
                             oninput="filterNlLocal()"
-                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
-                        <span class="text-gold/50 text-sm">Abonnés actifs Brevo liste #5</span>
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-44">
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="syncBrevoUnsubscribes()" id="syncUnsubBtn"
+                            class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold"
+                            title="Interroge Brevo pour détecter les désabonnements récents">
+                            <i class="fas fa-sync-alt"></i> Sync désinscriptions
+                        </button>
                         <button onclick="resendLastNewsletter()" id="resendLastNlBtn" class="flex items-center gap-2 bg-gold/15 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/25 transition text-sm">
                             <i class="fas fa-paper-plane"></i> Envoyer la dernière newsletter aux nouveaux inscrits
                         </button>
@@ -1528,6 +1547,7 @@
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Date inscription</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Désabonné le</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Dernière newsletter</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Avancement parcours</th>
@@ -1756,65 +1776,6 @@
 
         </section>
         </div><!-- /tab-waitlist -->
-
-        <!-- ══ ONGLET : NEWSLETTER ══ -->
-        <div id="tab-nl-subscribers" class="tab-panel">
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-8 gap-3 flex-wrap">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Abonnés Newsletter</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Personnes inscrites à la newsletter ORADIA (synchronisées avec Brevo)</p>
-                </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <!-- KPI chips -->
-                    <div class="flex gap-3">
-                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
-                            <div class="text-xl font-bold text-emerald-400" id="nl-active-count">-</div>
-                            <div class="text-xs text-emerald-300/70">Inscrits</div>
-                        </div>
-                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
-                            <div class="text-xl font-bold text-red-400" id="nl-unsub-count">-</div>
-                            <div class="text-xs text-red-300/70">Désabonnés</div>
-                        </div>
-                    </div>
-                    <!-- Filtre statut -->
-                    <select id="nlSubscribersFilter" onchange="loadNlSubscribersLegacy(1)"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                        <option value="active">Inscrits actifs</option>
-                        <option value="unsubscribed">Désabonnés</option>
-                        <option value="all">Tous</option>
-                    </select>
-                    <input id="nlSubscribersSearch" type="text" placeholder="Rechercher…"
-                        oninput="filterNlSubscribersLocal()"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-44">
-                    <button onclick="syncBrevoUnsubscribes()" id="syncUnsubBtn"
-                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold"
-                        title="Interroge Brevo pour détecter les désabonnements récents">
-                        <i class="fas fa-sync-alt"></i> Sync désinscriptions
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="nlSubscribersTable">
-                        <thead class="bg-[rgba(5,20,40,0.8)]">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Inscrit le</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Désabonné le</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gold/20">
-                        </tbody>
-                    </table>
-                </div>
-                <div id="nlSubscribersPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
-            </div>
-        </section>
-        </div><!-- /tab-nl-subscribers -->
 
         <!-- ══ ONGLET : ABONNEMENTS ══ -->
         <div id="tab-subscriptions" class="tab-panel">
@@ -4768,7 +4729,6 @@
             donors:             'Dons',
             quotes:             'Devis & Coûts',
             waitlist:           'Contacts',
-            'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
             newsletter:         'Newsletter & Réseaux',
             mails:              'Mails du site',
@@ -4801,7 +4761,6 @@
             document.getElementById('sidebar').classList.remove('open');
             if (name !== 'newsletter') nlShowFloatingBar(false);
             if (name === 'newsletter')    nlLoadDrafts();
-            if (name === 'nl-subscribers') { loadNlSubscribersLegacy(1); syncBrevoUnsubscribes(); }
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'quotes')      { initCostCalculator(); loadQuotes().then(initPlan); }
@@ -7205,38 +7164,37 @@
             }
         }
 
-        // ── Newsletter subscribers ──
-
-        // Ancien onglet "Newsletter — Abonnés" (nl-subscribers), conservé mais plus dans la nav.
-        // Renommée pour ne plus entrer en collision avec loadNlSubscribers() du sous-onglet Contacts.
-        async function loadNlSubscribersLegacy(page = 1, limit = 20) {
+        // ── Newsletter subscribers (sous-onglet Contacts > Inscrits Newsletter) ──
+        // Fusionne l'ancien onglet séparé "Abonnés newsletter" (statut, désinscriptions,
+        // pagination serveur) avec ce sous-onglet (dernière newsletter reçue, avancement
+        // parcours) — voir renderNlTable et resendLastNewsletter plus bas dans le fichier.
+        async function loadNlSubscribers(page = 1, limit = 20) {
             try {
-                const status = document.getElementById('nlSubscribersFilter')?.value || 'active';
+                const status = document.getElementById('nlStatusFilter')?.value || 'active';
                 let url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}`;
                 if (status === 'active')            url += '&newsletter=newsletter';
                 else if (status === 'unsubscribed') url += '&nl_status=unsubscribed';
                 // "all" = pas de filtre
 
-                // Charger la liste ET les compteurs KPI en parallèle (seulement page 1)
-                const promises = [adminFetch(url).then(r => r.json())];
+                // Charger la liste, les compteurs KPI (seulement page 1) et l'avancement du
+                // parcours en parallèle.
+                const promises = [adminFetch(url).then(r => r.json()), loadParcoursStepsForProgress()];
                 if (page === 1) {
                     promises.push(
                         adminFetch('/api/admin/data?section=waitlist&page=1&limit=1&newsletter=newsletter').then(r => r.json()),
                         adminFetch('/api/admin/data?section=waitlist&page=1&limit=1&nl_status=unsubscribed').then(r => r.json())
                     );
                 }
-                const [data, activeData, unsubData] = await Promise.all(promises);
+                const [data, , activeData, unsubData] = await Promise.all(promises);
 
                 if (data.success) {
                     currentData.nlSubscribers = data.data;
                     currentData.nlSubscribersPagination = data.pagination;
-                    updateNlSubscribersTable(data.data, data.pagination);
+                    renderNlTable(data.data, data.pagination);
                 }
                 if (activeData?.success) {
                     const el = document.getElementById('nl-active-count');
                     if (el) el.textContent = activeData.pagination?.total ?? '-';
-                    const badge = document.getElementById('nav-badge-nl-subscribers');
-                    if (badge) badge.textContent = activeData.pagination?.total || '';
                 }
                 if (unsubData?.success) {
                     const el = document.getElementById('nl-unsub-count');
@@ -7244,45 +7202,6 @@
                 }
             } catch (e) {
                 console.error('[Admin] Error loading nl-subscribers:', e);
-            }
-        }
-
-        function updateNlSubscribersTable(rows, pagination) {
-            const tbody = document.querySelector('#nlSubscribersTable tbody');
-            if (!tbody) return;
-            if (!rows || rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gold/40 text-sm">Aucun abonné trouvé</td></tr>';
-                document.getElementById('nlSubscribersPagination').innerHTML = '';
-                return;
-            }
-            const fmt = iso => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
-            tbody.innerHTML = rows.map(item => `
-                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.email || '-')}</td>
-                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.full_name || '-')}</td>
-                    <td class="px-6 py-4 text-light-gold/70 text-sm">${fmt(item.subscribed_at || item.created_at)}</td>
-                    <td class="px-6 py-4 text-sm">${item.unsubscribed_at ? `<span class="text-red-400">${fmt(item.unsubscribed_at)}</span>` : '<span class="text-gold/30">-</span>'}</td>
-                    <td class="px-6 py-4">
-                        ${item.status === 'unsubscribed'
-                            ? '<span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">Désabonné</span>'
-                            : '<span class="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400">Inscrit</span>'
-                        }
-                    </td>
-                </tr>
-            `).join('');
-            // Pagination
-            const pag = pagination || {};
-            const pagEl = document.getElementById('nlSubscribersPagination');
-            if (pagEl && pag.pages > 1) {
-                pagEl.innerHTML = `<div class="flex items-center justify-between">
-                    <span class="text-sm text-light-gold">${((pag.page-1)*pag.limit)+1} à ${Math.min(pag.page*pag.limit, pag.total)} sur ${pag.total}</span>
-                    <div class="flex gap-2">
-                        ${pag.page > 1 ? `<button onclick="loadNlSubscribersLegacy(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
-                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribersLegacy(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
-                    </div>
-                </div>`;
-            } else if (pagEl) {
-                pagEl.innerHTML = '';
             }
         }
 
@@ -7315,7 +7234,7 @@
                 const data = await res.json();
                 if (data.success) {
                     btn.innerHTML = `<i class="fas fa-check mr-2"></i>${data.unsubscribed} désabonnement(s) détecté(s)`;
-                    if (data.unsubscribed > 0) loadNlSubscribersLegacy(1);
+                    if (data.unsubscribed > 0) loadNlSubscribers(1);
                 } else {
                     btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Erreur';
                 }
@@ -7325,14 +7244,6 @@
             setTimeout(() => {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync désinscriptions'; }
             }, 4000);
-        }
-
-        function filterNlSubscribersLocal() {
-            const q = (document.getElementById('nlSubscribersSearch')?.value || '').toLowerCase().trim();
-            const source = currentData.nlSubscribers || [];
-            if (!q) { updateNlSubscribersTable(source, currentData.nlSubscribersPagination); return; }
-            const filtered = source.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q));
-            updateNlSubscribersTable(filtered, { page:1, limit:filtered.length, total:filtered.length, pages:1 });
         }
 
         // Catégories de contacts connues (rafraîchies depuis l'API à chaque chargement)
@@ -7398,7 +7309,6 @@
             const bd  = document.getElementById('nav-badge-donors');
             const bw  = document.getElementById('nav-badge-waitlist');
             const bs  = document.getElementById('nav-badge-subscriptions');
-            const bnl = document.getElementById('nav-badge-nl-subscribers');
             const bg  = document.getElementById('nav-badge-guidances');
             if (bp)  bp.textContent  = data.preorders.count || '';
             if (bd)  bd.textContent  = data.donors.count || '';
@@ -11974,10 +11884,6 @@
             }
         }
 
-        // Conservé pour compatibilité avec l'ancien code (tab nl-subscribers)
-        async function syncBrevo() { await triggerSyncAll(true); }
-        async function importFromBrevo() { await triggerSyncAll(true); }
-
         // ── Sous-onglets Contacts ──────────────────────────────────────────────────
         let _currentContactsSubTab = 'repertoire';
         function showContactsSubTab(name) {
@@ -12001,7 +11907,8 @@
         }
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
-        let _nlData = [];
+        // Le chargement (loadNlSubscribers, pagination serveur + KPI + filtre statut) vit
+        // plus haut dans ce fichier, fusionné avec l'ancien onglet "Abonnés newsletter".
         // Dernier ordre de parcours réellement reçu, par email — vient de
         // newsletter_sends (action=parcours-contact-progress), la même table et la
         // même logique que le cron d'envoi réel (runParcoursIndividualCron). Remplace
@@ -12039,21 +11946,6 @@
             } catch (_) { /* silencieux — l'avancement s'affiche juste en "—" */ }
         }
 
-        async function loadNlSubscribers() {
-            try {
-                const [res] = await Promise.all([
-                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter'),
-                    loadParcoursStepsForProgress()
-                ]);
-                const json = await res.json();
-                if (!json.success) return;
-                _nlData = json.data || [];
-                renderNlTable(_nlData);
-                const badge = document.getElementById('nl-count-badge');
-                if (badge) badge.textContent = _nlData.length || '';
-            } catch(e) { /* silencieux */ }
-        }
-
         // Rend l'avancement réel dans le parcours d'un contact, à partir de
         // newsletter_sends (voir _parcoursLastOrdreByEmail) — pas d'une estimation par
         // sujet. Un contact absent de cette table n'a reçu aucune étape du parcours,
@@ -12082,11 +11974,12 @@
                 </div>`;
         }
 
-        function renderNlTable(rows) {
+        function renderNlTable(rows, pagination) {
             const tbody = document.getElementById('nlTableBody');
             if (!tbody) return;
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                document.getElementById('nlPagination').innerHTML = '';
                 return;
             }
             tbody.innerHTML = rows.map(c => {
@@ -12111,12 +12004,27 @@
                 <tr class="hover:bg-gold/5 transition">
                     <td class="px-6 py-3 text-light-gold text-sm font-mono">${c.email || ''}</td>
                     <td class="px-6 py-3 text-light-gold/70 text-sm">${c.full_name || c.name || '—'}</td>
-                    <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
-                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Actif' : c.status || '—'}</span></td>
+                    <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at || c.subscribed_at ? new Date(c.created_at || c.subscribed_at).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td class="px-6 py-3 text-sm">${c.unsubscribed_at ? `<span class="text-red-400">${new Date(c.unsubscribed_at).toLocaleDateString('fr-FR')}</span>` : '<span class="text-gold/30">—</span>'}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Inscrit' : 'Désabonné'}</span></td>
                     <td class="px-6 py-3">${lastNl}</td>
                     <td class="px-6 py-3">${renderParcoursProgress(c)}</td>
                 </tr>`;
             }).join('');
+            // Pagination serveur (héritée de l'ancien onglet "Abonnés newsletter")
+            const pag = pagination || {};
+            const pagEl = document.getElementById('nlPagination');
+            if (pagEl && pag.pages > 1) {
+                pagEl.innerHTML = `<div class="flex items-center justify-between">
+                    <span class="text-sm text-light-gold">${((pag.page-1)*pag.limit)+1} à ${Math.min(pag.page*pag.limit, pag.total)} sur ${pag.total}</span>
+                    <div class="flex gap-2">
+                        ${pag.page > 1 ? `<button onclick="loadNlSubscribers(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
+                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribers(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
+                    </div>
+                </div>`;
+            } else if (pagEl) {
+                pagEl.innerHTML = '';
+            }
         }
 
         // ── Renvoi de la dernière newsletter aux inscrits qui ne l'ont pas reçue ──
@@ -12160,8 +12068,14 @@
         }
 
         function filterNlLocal() {
-            const q = (document.getElementById('nlSearch')?.value || '').toLowerCase();
-            renderNlTable(q ? _nlData.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q)) : _nlData);
+            // Filtre local sur la page actuellement chargée (pas d'appel serveur) — comme
+            // le reste est paginé côté serveur, ça ne cherche que parmi les lignes déjà
+            // affichées, pas l'ensemble des inscrits.
+            const q = (document.getElementById('nlSearch')?.value || '').toLowerCase().trim();
+            const source = currentData.nlSubscribers || [];
+            if (!q) { renderNlTable(source, currentData.nlSubscribersPagination); return; }
+            const filtered = source.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q));
+            renderNlTable(filtered, { page:1, limit:filtered.length, total:filtered.length, pages:1 });
         }
 
         // ── Emails Tirages ─────────────────────────────────────────────────────────
