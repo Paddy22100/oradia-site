@@ -11,6 +11,7 @@ const fs = require('fs');
 const path = require('path');
 const deck = require('../data/tore-deck.json');
 const { resolveCardImageUrl } = require('../lib/tore-card-images.js');
+const { slugify, titleCase } = require('../lib/tore-card-slug.js');
 
 const FAMILY_LABELS = {
   emotions: 'Émotions', besoins: 'Besoins', transmutation: 'Transmutation',
@@ -209,23 +210,6 @@ const MEANINGS = {
   'POINT ZÉRO': "La carte Point Zéro, famille Mémoire Cosmos, évoque un centre où tout se suspend dans un silence dense, là où s'esquisse la naissance d'un monde nouveau. Elle signale un moment de bascule, un point de départ plutôt qu'une fin. Tirer cette carte invite à reconnaître ce commencement, même s'il ne prend pas encore de forme visible.",
   'TISSAGE COSMIQUE': "La carte Tissage Cosmique, famille Mémoire Cosmos, évoque des fils invisibles qui se cherchent dans l'ombre, révélant dans leur rencontre une cohérence secrète. Elle signale que des éléments apparemment séparés pourraient former un ensemble plus cohérent qu'il n'y paraît. Cette carte invite à chercher le lien caché entre deux choses qui semblaient sans rapport."
 };
-
-function slugify(name) {
-  return String(name)
-    .normalize('NFD').replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[''`]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '');
-}
-
-// "LE TORE" -> "Le Tore", "L'ALCHIMISTE" -> "L'Alchimiste" (capitalise après
-// espace, apostrophe ou tiret, contrairement à un simple charAt(0)+toLowerCase
-// qui casse les noms à plusieurs mots).
-function titleCase(name) {
-  return String(name).toLowerCase()
-    .replace(/(^|[\s'\-])([a-zà-öø-ÿ])/g, (m, sep, c) => sep + c.toUpperCase());
-}
 
 // resolveCardImageUrl renvoie une URL absolue (utile pour les emails) ; les
 // pages du site utilisent des chemins relatifs comme /images/... (voir joie.html).
