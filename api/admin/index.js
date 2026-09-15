@@ -1660,8 +1660,22 @@ async function handleData(req, res) {
             });
             const events = await evRes.json();
             const crypto = require('crypto');
+            // Vercel écrit aussi des messages parfaitement normaux sur stderr (bannière CLI,
+            // confirmation "Build Completed", avertissement ESM/CommonJS systématique) — les
+            // traiter tous comme des erreurs noyait le dashboard Surveillance sous du bruit
+            // plusieurs fois par heure sans qu'aucun vrai problème ne se soit produit.
+            const BENIGN_STDERR_PATTERNS = [
+                /^Vercel CLI \d/,
+                /^Build Completed in /,
+                /^Warning: Node\.js functions are compiled from ESM to CommonJS/
+            ];
             const candidateLogs = (Array.isArray(events) ? events : [])
-                .filter(e => e.type === 'stderr' || e.type === 'error')
+                .filter(e => {
+                    if (e.type === 'error') return true;
+                    if (e.type !== 'stderr') return false;
+                    const text = typeof e.payload === 'string' ? e.payload : (e.payload?.text || '');
+                    return !BENIGN_STDERR_PATTERNS.some(re => re.test(text));
+                })
                 .map(e => {
                     const msg = typeof e.payload === 'string' ? e.payload.slice(0,500) : JSON.stringify(e.payload).slice(0,500);
                     const eventKey = crypto.createHash('md5').update(`${deployment.uid}:${e.created || ''}:${msg}`).digest('hex');
