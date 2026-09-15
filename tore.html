@@ -2791,6 +2791,13 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
   display: block;
 
+  /* Le drag natif du navigateur sur <img> casse le clic sur mobile : mousedown
+     cible bien l'image mais le click qui suit atterrit sur <body> une fois le
+     geste de glisser-deposer amorce, empechant le zoom de se declencher. */
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+
 }
 
 /* Badge Passerelle */
@@ -5623,6 +5630,7 @@ function closeToreExitModal(){
           imgEl2.alt = escName;
           imgEl2.setAttribute('loading', 'eager');
           imgEl2.setAttribute('fetchpriority', 'high');
+          imgEl2.setAttribute('draggable', 'false');
           front.style.position = 'relative';
           imgEl2.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.35s ease;';
           front.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;z-index:0;"></div>';
@@ -5820,7 +5828,7 @@ if (previewOverlay) {
     extra.innerHTML = `
       <div class="bridge-badge">Passerelle</div>
       <div class="extra-img-wrap">
-        <img src="${imgPath}" alt="${esc(dataNext.name)}">
+        <img src="${imgPath}" alt="${esc(dataNext.name)}" draggable="false">
       </div>
     `;
 
