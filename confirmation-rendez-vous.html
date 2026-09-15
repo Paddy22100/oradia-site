@@ -5,7 +5,6 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
-  <script src="js/gtag-init.js"></script>
   <title>Rendez-vous confirmé - Merci | Oradia</title>
   <meta name="description" content="Votre rendez-vous d'accompagnement personnalisé est confirmé. Vous recevrez prochainement le lien de visioconférence Jitsi Meet par email. Merci de votre confiance.">
   <script src="https://cdn.tailwindcss.com"></script>
@@ -358,9 +357,32 @@
       menu.classList.toggle('hidden');
     });
 
-    // Suivi de conversion Google Ads "Prise de rendez-vous" : configuré côté Google Ads
-    // comme conversion de type "chargement de page" sur cette URL (voir js/gtag-init.js,
-    // qui charge la balise AW-7530868061) — rien à déclencher explicitement ici.
+    // Google Ads conversion tracking (if needed)
+    function gtag_report_conversion(url) {
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'conversion', {
+          'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL',
+          'event_callback': function() {
+            if (typeof(url) != 'undefined') {
+              window.location = url;
+            }
+          }
+        });
+      } else {
+        if (typeof(url) != 'undefined') {
+          window.location = url;
+        }
+      }
+      return false;
+    }
+
+    // Track page view for conversion
+    if (typeof gtag !== 'undefined') {
+      gtag('config', 'GA_MEASUREMENT_ID', {
+        'page_title': 'Confirmation Rendez-vous',
+        'page_location': window.location.href
+      });
+    }
 
     // Auto-redirect timer (optional - remove if not needed)
     // setTimeout(function() {
