@@ -245,6 +245,12 @@
     animation: splashLetterIn .55s ease forwards;
   }
   @keyframes splashLetterIn { to { opacity: 1; transform: translateY(0); } }
+  .splash-welcome {
+    margin-top: 10px; font-family: 'Lora', Georgia, serif; font-size: 13.5px;
+    letter-spacing: 0.14em; text-transform: uppercase; color: var(--light-gold);
+    opacity: 0; animation: splashWelcomeIn .6s ease forwards; animation-delay: .55s;
+  }
+  @keyframes splashWelcomeIn { to { opacity: 0.75; } }
 </style>
 </head>
 <body>
@@ -259,6 +265,7 @@
     <p class="splash-wordmark">
       <span style="animation-delay:.05s">O</span><span style="animation-delay:.1s">R</span><span style="animation-delay:.15s">A</span><span style="animation-delay:.2s">D</span><span style="animation-delay:.25s">I</span><span style="animation-delay:.3s">A</span>
     </p>
+    <p class="splash-welcome">Bienvenue</p>
   </div>
 
   <div class="wrap">
@@ -363,12 +370,12 @@
     (function () {
       var splash = document.getElementById('splash');
       if (!splash) return;
-      var minDelay = new Promise(function (r) { setTimeout(r, 2000); });
+      var minDelay = new Promise(function (r) { setTimeout(r, 2800); });
       var ready = new Promise(function (r) {
         if (document.readyState === 'complete') return r();
         window.addEventListener('load', r, { once: true });
       });
-      var maxWait = new Promise(function (r) { setTimeout(r, 3200); });
+      var maxWait = new Promise(function (r) { setTimeout(r, 4000); });
       Promise.race([Promise.all([minDelay, ready]), maxWait]).then(function () {
         splash.classList.add('splash-hide');
         setTimeout(function () { splash.remove(); }, 650);
