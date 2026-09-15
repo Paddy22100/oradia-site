@@ -368,6 +368,14 @@
     // le chargement traîne (images, vérifs abonnement…) — la page reste
     // utilisable dessous, l'overlay n'est qu'un habillage visuel.
     (function () {
+      // Bascule immédiate de l'écran de démarrage natif (icône de l'app, gérée
+      // par l'OS) vers notre overlay #splash ci-dessus : les deux partagent le
+      // même fond (#050d1c), donc la transition est invisible — sans ce hide()
+      // explicite (launchAutoHide:false dans capacitor.config.json), l'écran
+      // natif resterait affiché indéfiniment par-dessus toute la page.
+      if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+        window.Capacitor.Plugins.SplashScreen.hide();
+      }
       var splash = document.getElementById('splash');
       if (!splash) return;
       var minDelay = new Promise(function (r) { setTimeout(r, 2800); });
