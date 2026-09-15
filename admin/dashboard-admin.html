@@ -3685,6 +3685,26 @@
                 <div id="analytics-daily-chart" class="h-40"></div>
             </div>
 
+            <!-- Version anglaise (/en/) -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-language text-gold/60"></i> Version anglaise (/en/)</h4>
+                <p class="text-light-gold/35 text-xs mb-3 -mt-2">Vues déjà filtrées des robots (même logique que le reste de ces statistiques).</p>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-teal-300" id="ana-en-views">—</div>
+                        <p class="text-gold/50 text-xs mt-1">Pages vues</p>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gold" id="ana-en-visitors">—</div>
+                        <p class="text-gold/50 text-xs mt-1">Visiteurs uniques</p>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-light-gold" id="ana-en-share">—</div>
+                        <p class="text-gold/50 text-xs mt-1">% du trafic total</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Nouveaux vs anciens visiteurs + Pages et provenance -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center">
@@ -15536,6 +15556,9 @@
                 setEl('ana-bounce', t.bounce_rate != null ? t.bounce_rate.toFixed(0) + '%' : '—');
                 setEl('ana-pages-per-visit', t.pages_per_visit != null ? t.pages_per_visit.toFixed(1) : '—');
                 setEl('ana-top-page', (t.top_pages && t.top_pages[0]) ? t.top_pages[0].path : '—');
+                setEl('ana-en-views', t.en_traffic ? t.en_traffic.views : 0);
+                setEl('ana-en-visitors', t.en_traffic ? t.en_traffic.unique_visitors : 0);
+                setEl('ana-en-share', (t.en_traffic ? t.en_traffic.share_pct : 0) + '%');
 
                 const rangeLabels = { '1d': 'hier', '7d': '7j préc.', '30d': 'mois préc.', '365d': 'an préc.' };
                 const rangeLabel = rangeLabels[range] || 'période préc.';

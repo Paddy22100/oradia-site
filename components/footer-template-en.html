@@ -1,0 +1,83 @@
+<!-- Bandeau Newsletter -->
+<section id="footer-newsletter-section" style="position:relative;overflow:hidden;border-top:1px solid rgba(212,175,55,0.2);">
+    <!-- Image de fond -->
+    <div style="position:absolute;inset:0;background-image:url('/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;"></div>
+    <!-- Voile sombre -->
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);"></div>
+    <!-- Contenu -->
+    <div style="position:relative;z-index:1;padding:64px 24px;text-align:center;">
+        <!-- Filet doré décoratif -->
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:0 auto 20px;"></div>
+        <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(26px,4vw,38px);font-weight:700;color:#f0c75e;margin:0 0 12px;letter-spacing:0.5px;line-height:1.2;">Stay in the ORADIA universe</p>
+        <p style="color:rgba(212,175,55,0.7);font-size:15px;font-family:'Cormorant Garamond',Georgia,serif;line-height:1.7;max-width:500px;margin:0 auto 32px;">Inspiration, news from The Inner Compass, and early previews.<br>No spam, unsubscribe with one click.</p>
+        <form id="footer-newsletter-form" style="display:flex;flex-direction:column;gap:12px;max-width:440px;margin:0 auto;">
+            <label for="footer-newsletter-email" style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;">Your email address</label>
+            <input type="email" id="footer-newsletter-email" aria-label="Your email address" placeholder="Your email address" required
+                style="background:rgba(5,20,40,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;padding:14px 18px;outline:none;width:100%;box-sizing:border-box;"
+                onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+                onblur="this.style.borderColor='rgba(212,175,55,0.3)'" />
+            <button type="submit" id="footer-newsletter-btn"
+                style="background:linear-gradient(to right,#d4af37,#f0c75e);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:700;padding:14px 32px;border:none;border-radius:9999px;cursor:pointer;letter-spacing:0.5px;transition:all 0.3s;width:100%;"
+                onmouseover="this.style.boxShadow='0 8px 20px rgba(212,175,55,0.3)';this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='none';this.style.transform='scale(1)'">
+                Subscribe to the newsletter
+            </button>
+            <p style="margin:12px 0 0;color:rgba(212,175,55,0.5);font-family:'Cormorant Garamond',Georgia,serif;font-size:12.5px;line-height:1.6;">By subscribing, you agree to receive the Oradia newsletter. Unsubscribe at any time. <a href="/politique-confidentialite.html" style="color:rgba(212,175,55,0.75);text-decoration:underline;">Privacy policy</a> (French only).</p>
+        </form>
+        <p id="footer-newsletter-msg" class="mt-4 text-sm hidden" style="margin-top:16px;font-size:14px;"></p>
+        <!-- Filet doré décoratif bas -->
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:28px auto 0;"></div>
+    </div>
+</section>
+
+<!-- Footer Template -->
+<footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
+            <div>
+                <a href="/en/" class="flex items-center justify-center md:justify-start mb-4 hover:opacity-80 transition-opacity">
+                    <img src="/images/logo-hd-v2.webp" alt="Oradia Logo" class="w-16 h-16 mr-4 rounded-full" />
+                    <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+                </a>
+                <p class="text-light-gold text-sm">The oracle that walks your personal path with you and reveals your essence.</p>
+            </div>
+            <div>
+                <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+                <ul class="space-y-2">
+                    <li><a href="/en/" class="text-light-gold/70 hover:text-gold transition">Home</a></li>
+                    <li><a href="/oracle.html" class="text-light-gold/70 hover:text-gold transition">Oracle</a></li>
+                    <li><a href="/guidance.html" class="text-light-gold/70 hover:text-gold transition">Guidance</a></li>
+                    <li><a href="/precommande-oracle.html" class="text-light-gold/70 hover:text-gold transition">Preorder</a></li>
+                    <li><a href="/a-propos.html" class="text-light-gold/70 hover:text-gold transition">About</a></li>
+                    <li><a href="/blog" class="text-light-gold/70 hover:text-gold transition">Blog</a></li>
+                    <li><a href="/contact.html" class="text-light-gold/70 hover:text-gold transition">Contact</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="cormorant text-xl text-gold mb-4">Legal (French only)</h4>
+                <ul class="space-y-2">
+                    <li><a href="/cgu.html" class="text-light-gold hover:text-gold transition">Terms of Use</a></li>
+                    <li><a href="/cgv.html" class="text-light-gold hover:text-gold transition">Terms of Sale</a></li>
+                    <li><a href="/mentions-legales.html" class="text-light-gold hover:text-gold transition">Legal Notice</a></li>
+                    <li><a href="/politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Privacy Policy</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+                <ul class="space-y-2">
+                    <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="footer-contact-link" class="text-light-gold hover:text-gold transition" href="/contact.html">Contact</a></li>
+                    <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('footer-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
+                    <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><a href="https://instagram.com/oradia_oracle_officiel" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradia_oracle_officiel</a></li>
+                    <li class="flex items-start"><i class="fab fa-youtube text-gold mt-1 mr-3"></i><a href="https://www.youtube.com/@oradiafr" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradiafr</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="pt-8 border-t border-gold/10 text-center">
+            <p class="mb-4">
+                <a href="/politique-confidentialite.html#sans-traqueur" style="display:inline-flex;align-items:center;gap:8px;color:rgba(212,175,55,0.6);font-size:12.5px;text-decoration:none;border:1px solid rgba(212,175,55,0.2);border-radius:999px;padding:6px 16px;transition:color 0.2s,border-color 0.2s;" onmouseover="this.style.color='#d4af37';this.style.borderColor='rgba(212,175,55,0.45)'" onmouseout="this.style.color='rgba(212,175,55,0.6)';this.style.borderColor='rgba(212,175,55,0.2)'">
+                <i class="fas fa-shield-halved"></i> No advertising tracker &mdash; 100% internal, cookie-free analytics
+                </a>
+            </p>
+            <p class="text-light-gold text-sm">&copy; 2026 Oradia. All rights reserved.</p>
+        </div>
+    </div>
+</footer>

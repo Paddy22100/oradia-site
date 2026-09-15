@@ -294,7 +294,7 @@
                                     </p>
                                     
                                     <p class="text-light-gold/70 text-sm mb-4">
-                                        France uniquement pour le lancement.
+                                        France, Suisse et Belgique pour le lancement. Pour tout autre pays, <a href="/contact.html" class="text-gold underline hover:text-light-gold transition">contactez-nous</a> avant de commander.
                                     </p>
                                     
                                     <div class="space-y-4">
@@ -396,7 +396,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block text-gold mb-2">Code postal *</label>
-                                                <input type="text" name="postalCode" required pattern="[0-9]{5}" autocomplete="postal-code" class="form-input" placeholder="75001">
+                                                <input type="text" name="postalCode" required pattern="[0-9]{4,5}" autocomplete="postal-code" class="form-input" placeholder="75001">
                                             </div>
                                             <div>
                                                 <label class="block text-gold mb-2">Ville *</label>
@@ -406,6 +406,8 @@
                                                 <label class="block text-gold mb-2">Pays *</label>
                                                 <select name="country" required class="form-input">
                                                     <option value="FR">France</option>
+                                                    <option value="CH">Suisse</option>
+                                                    <option value="BE">Belgique</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -435,7 +437,7 @@
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block text-gold mb-2">Code postal *</label>
-                                                <input type="text" name="billingPostalCode" pattern="[0-9]{5}" autocomplete="postal-code" class="form-input" placeholder="75001">
+                                                <input type="text" name="billingPostalCode" pattern="[0-9]{4,5}" autocomplete="postal-code" class="form-input" placeholder="75001">
                                             </div>
                                             <div>
                                                 <label class="block text-gold mb-2">Ville *</label>
@@ -445,6 +447,8 @@
                                                 <label class="block text-gold mb-2">Pays *</label>
                                                 <select name="billingCountry" class="form-input">
                                                     <option value="FR">France</option>
+                                                    <option value="CH">Suisse</option>
+                                                    <option value="BE">Belgique</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -571,12 +575,19 @@
                 
                 <!-- Recherche -->
                 <div class="mt-4">
-                    <div class="relative">
-                        <input type="text" id="relaySearch" placeholder="Code postal (ex: 75001)" 
-                               class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold placeholder-light-gold/50 focus:outline-none focus:border-gold/60">
-                        <button type="button" id="searchRelayBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gold/20 hover:bg-gold/30 text-gold px-3 py-1 rounded text-sm">
-                            Rechercher
-                        </button>
+                    <div class="relative flex gap-2">
+                        <select id="relaySearchCountry" class="bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg px-2 py-2 text-light-gold focus:outline-none focus:border-gold/60">
+                            <option value="FR">FR</option>
+                            <option value="CH">CH</option>
+                            <option value="BE">BE</option>
+                        </select>
+                        <div class="relative flex-1">
+                            <input type="text" id="relaySearch" placeholder="Code postal (ex: 75001)"
+                                   class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold placeholder-light-gold/50 focus:outline-none focus:border-gold/60">
+                            <button type="button" id="searchRelayBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gold/20 hover:bg-gold/30 text-gold px-3 py-1 rounded text-sm">
+                                Rechercher
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1390,6 +1401,12 @@
         function openRelayModal() {
             document.getElementById('relayModal').classList.remove('hidden');
             document.getElementById('relaySearch').value = '';
+            // Préremplit avec le pays choisi dans le formulaire principal plutôt que de
+            // forcer FR — sinon la recherche de points relais échouait silencieusement
+            // pour un code postal suisse ou belge saisi ailleurs dans le formulaire.
+            const mainCountry = document.querySelector('[name="country"]')?.value || 'FR';
+            const relayCountrySelect = document.getElementById('relaySearchCountry');
+            if (relayCountrySelect) relayCountrySelect.value = mainCountry;
             document.getElementById('relaySearch').focus();
         }
 
@@ -1402,8 +1419,10 @@
 
         async function searchRelayPoints() {
             const postalCode = document.getElementById('relaySearch').value.trim();
+            const relayCountry = document.getElementById('relaySearchCountry')?.value || 'FR';
 
-            if (!postalCode || postalCode.length < 5) {
+            // 4 chiffres minimum (codes postaux suisses/belges), 5 pour la France.
+            if (!postalCode || postalCode.length < 4) {
                 showRelayError('Veuillez entrer un code postal valide');
                 return;
             }
@@ -1413,7 +1432,7 @@
             document.getElementById('relayList').innerHTML = '';
 
             try {
-                const response = await fetch(`/api/mondial-relay/pickup-points?postalCode=${encodeURIComponent(postalCode)}&country=FR`);
+                const response = await fetch(`/api/mondial-relay/pickup-points?postalCode=${encodeURIComponent(postalCode)}&country=${encodeURIComponent(relayCountry)}`);
 
                 const contentType = response.headers.get('content-type') || '';
 

@@ -1,0 +1,86 @@
+<header class="header-bg w-full py-2 sm:py-3 px-4 md:py-4 md:px-8 relative z-[60]">
+  <div class="max-w-7xl mx-auto">
+    <div class="flex items-center justify-between flex-nowrap">
+      <!-- Logo -->
+      <div class="flex items-center flex-shrink-0">
+        <a href="/en/" class="flex items-center">
+          <img src="/images/logo-hd-v2.webp" alt="Oradia Logo"
+               class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
+          <span class="cormorant text-2xl sm:text-3xl font-bold gold-gradient">ORADIA</span>
+        </a>
+      </div>
+
+      <!-- Bouton burger mobile -->
+      <button id="mobileMenuBtn" type="button" class="lg:hidden inline-flex items-center justify-center gap-2 h-10 px-4 rounded-lg border border-gold text-gold" aria-label="Open menu">
+        <i class="fas fa-bars text-lg"></i>
+        <span class="text-sm font-semibold">Menu</span>
+      </button>
+
+      <!-- Navigation desktop -->
+      <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
+        <a href="/en/" data-page="home" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Home</a>
+        <a href="/oracle.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+        <a href="/precommande-oracle.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-shopping-cart mr-2"></i>Preorder</a>
+        <a href="/guidance.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-video mr-2"></i>Guidance</a>
+        <a href="/a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>About</a>
+        <a href="/blog" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-feather mr-2"></i>Blog</a>
+        <a href="/contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
+      </nav>
+      <!-- Espace membre desktop -->
+      <div class="hidden lg:flex items-center flex-shrink-0 relative" id="member-zone-desktop">
+        <!-- Lien retour vers le site français -->
+        <a href="/" title="Français" style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;margin-right:10px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.4);color:#d4af37;font-size:11px;font-weight:700;letter-spacing:0.02em;text-decoration:none;transition:all .2s;flex-shrink:0;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.4)';this.style.color='#d4af37'">FR</a>
+        <!-- Non connecté : lien simple -->
+        <a id="header-login-btn" href="/member/login.html" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.color='#d4af37'">
+          <i class="fas fa-user-circle" style="font-size:15px;"></i>
+          Log in
+        </a>
+        <!-- Connecté : dropdown -->
+        <div id="header-member-dropdown-wrap" style="display:none;position:relative;">
+          <button id="header-member-dropdown-btn" type="button" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-size:13px;font-weight:600;background:none;cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.color='#d4af37'">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;"></span>
+            <i class="fas fa-user-check" style="font-size:15px;"></i>
+            <span id="header-member-label">Hello</span>
+            <i class="fas fa-chevron-down" style="font-size:10px;opacity:0.7;"></i>
+          </button>
+          <div id="header-member-menu" style="display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:190px;background:rgba(5,18,38,0.97);border:1px solid rgba(212,175,55,0.3);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);backdrop-filter:blur(12px);z-index:200;overflow:hidden;">
+            <a href="/member/dashboard.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#d4af37;text-decoration:none;font-size:13px;transition:background .15s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='transparent'">
+              <i class="fas fa-th-large" style="width:16px;text-align:center;"></i> Dashboard
+            </a>
+            <a href="/member/profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#d4af37;text-decoration:none;font-size:13px;transition:background .15s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='transparent'">
+              <i class="fas fa-user" style="width:16px;text-align:center;"></i> My profile
+            </a>
+            <div style="height:1px;background:rgba(212,175,55,0.15);margin:4px 0;"></div>
+            <button id="header-logout-btn" type="button" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#f87171;font-size:13px;width:100%;background:none;border:none;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(248,113,113,0.08)'" onmouseout="this.style.background='transparent'">
+              <i class="fas fa-sign-out-alt" style="width:16px;text-align:center;"></i> Log out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Menu mobile déroulant -->
+    <nav id="mobileMenu" class="lg:hidden hidden absolute top-full left-0 right-0 bg-[rgba(5,20,40,0.98)] backdrop-blur-md border-t border-gold/20 mt-1 space-y-2 px-4 py-3">
+      <a href="/en/" data-page="home" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Home</a>
+      <a href="/oracle.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="/precommande-oracle.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-shopping-cart mr-2"></i>Preorder</a>
+      <a href="/guidance.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-video mr-2"></i>Guidance</a>
+      <a href="/a-propos.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>About</a>
+      <a href="/blog" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-feather mr-2"></i>Blog</a>
+      <a href="/contact.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
+      <a href="/" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-globe mr-2"></i>Fran&ccedil;ais</a>
+      <!-- Mobile : non connecté -->
+      <a id="header-login-btn-mobile" href="/member/login.html" class="block px-4 py-3 rounded-lg border border-gold/50 text-gold hover:bg-gold/10 transition-colors font-semibold"><i class="fas fa-user-circle mr-2"></i>Log in</a>
+      <!-- Mobile : connecté -->
+      <div id="header-member-mobile" style="display:none;">
+        <div class="px-4 py-2 text-gold font-semibold text-sm" style="border-bottom:1px solid rgba(212,175,55,0.2);">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;margin-right:6px;vertical-align:middle;"></span>
+          <span id="header-member-label-mobile">Hello</span>
+        </div>
+        <a href="/member/dashboard.html" class="block px-4 py-3 rounded-lg text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-th-large mr-2"></i>Dashboard</a>
+        <a href="/member/profile.html" class="block px-4 py-3 rounded-lg text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-user mr-2"></i>My profile</a>
+        <button id="header-logout-btn-mobile" type="button" class="block w-full text-left px-4 py-3 rounded-lg transition-colors font-semibold" style="color:#f87171;background:none;border:none;cursor:pointer;"><i class="fas fa-sign-out-alt mr-2"></i>Log out</button>
+      </div>
+    </nav>
+  </div>
+</header>

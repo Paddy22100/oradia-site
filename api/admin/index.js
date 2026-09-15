@@ -9796,7 +9796,17 @@ Réponds en français, sans tiret long, format markdown compact.`
         Object.values(firstBySession).forEach(p => { landingCounts[p] = (landingCounts[p] || 0) + 1; });
         const landingPages = Object.entries(landingCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([path,count]) => ({path,count}));
 
-        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors, devices, by_hour: byHour, by_weekday: byWeekday, landing_pages: landingPages };
+        // ── Version anglaise (/en/) : vues déjà filtrées anti-bot par ce même calcul,
+        // donc ce chiffre hérite du filtrage BOT_PATTERN + validation origin/referer
+        // appliqué à l'insertion dans page_views (voir POST /track ci-dessus).
+        const enRows = v.filter(r => r.path === '/en' || r.path === '/en/' || r.path.indexOf('/en/') === 0);
+        const enTraffic = {
+          views: enRows.length,
+          unique_visitors: new Set(enRows.map(r => r.session_id)).size,
+          share_pct: v.length > 0 ? +(enRows.length / v.length * 100).toFixed(1) : 0
+        };
+
+        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors, devices, by_hour: byHour, by_weekday: byWeekday, landing_pages: landingPages, en_traffic: enTraffic };
       };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
@@ -10685,7 +10695,8 @@ async function handleMondialRelayPickupPoints(req, res) {
   try {
     const { postalCode, country = 'FR' } = req.query;
 
-    if (!postalCode || postalCode.length < 5) {
+    // 4 chiffres minimum (codes postaux suisses/belges), 5 pour la France.
+    if (!postalCode || postalCode.length < 4) {
       return res.status(400).json({
         success: false,
         error: 'Bad Request',
