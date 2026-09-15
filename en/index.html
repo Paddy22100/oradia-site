@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oradia &mdash; A Quantum-Random Oracle</title>
+  <meta name="description" content="Oradia is an oracle powered by genuine quantum randomness, not a pseudo-random algorithm. Join the English-language waitlist to be first to know when it's ready for you.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://oradia.fr/en/">
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/">
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/">
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/">
+  <link rel="icon" type="image/jpeg" href="/images/logo-hd-v2.webp">
+
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://oradia.fr/en/">
+  <meta property="og:title" content="Oradia &mdash; A Quantum-Random Oracle">
+  <meta property="og:description" content="An oracle powered by genuine quantum randomness. Join the waitlist for the English launch.">
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg">
+  <meta property="og:site_name" content="Oradia">
+  <meta property="og:locale" content="en_US">
+  <meta name="author" content="Rudy Boucheron">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Oradia",
+    "alternateName": "Oracle Oradia",
+    "url": "https://oradia.fr/en/",
+    "logo": "https://oradia.fr/images/logo-hd-v2.webp",
+    "sameAs": ["https://www.instagram.com/oradia_oracle_officiel"]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: linear-gradient(rgba(10,25,47,0.82), rgba(10,25,47,0.92)), url('/images/oradia-hero-4k.webp') center top / cover no-repeat fixed, #0a192f; color: #c8c0a8; font-family: 'Lora', Georgia, serif; min-height: 100vh; }
+    a { color: inherit; }
+    .wrap { max-width: 720px; margin: 0 auto; padding: 0 24px; }
+
+    header.site-header { padding: 20px 0; }
+    header.site-header .wrap { display: flex; align-items: center; justify-content: space-between; }
+    .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+    .brand img { width: 40px; height: 40px; object-fit: contain; }
+    .brand span { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 21px; font-weight: 600; color: #f0c75e; letter-spacing: 0.04em; }
+    .lang-switch { font-size: 12.5px; color: rgba(212,175,55,0.6); border: 1px solid rgba(212,175,55,0.3); border-radius: 50px; padding: 6px 14px; text-decoration: none; transition: color 0.2s, border-color 0.2s; }
+    .lang-switch:hover { color: #d4af37; border-color: rgba(212,175,55,0.6); }
+
+    main { padding: 40px 0 100px; }
+    .eyebrow { font-size: 12px; letter-spacing: 0.25em; text-transform: uppercase; color: rgba(212,175,55,0.6); text-align: center; margin-bottom: 18px; }
+    h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(34px, 6vw, 52px); font-weight: 400; color: #f0c75e; line-height: 1.15; text-align: center; margin-bottom: 22px; }
+    .lede { font-size: 17px; line-height: 1.8; color: rgba(200,192,168,0.9); text-align: center; max-width: 560px; margin: 0 auto 40px; }
+
+    .cta-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-bottom: 64px; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a1628; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; font-weight: 600; padding: 14px 34px; border-radius: 50px; letter-spacing: 0.04em; text-decoration: none; transition: opacity 0.2s; }
+    .cta-btn:hover { opacity: 0.88; }
+    .cta-btn.secondary { background: transparent; border: 1px solid rgba(212,175,55,0.4); color: #d4af37; }
+
+    .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 64px; }
+    @media (max-width: 640px) { .pillars { grid-template-columns: 1fr; } }
+    .pillar { text-align: center; padding: 24px 16px; border: 1px solid rgba(212,175,55,0.15); border-radius: 12px; background: rgba(212,175,55,0.03); }
+    .pillar .icon { font-size: 26px; margin-bottom: 12px; }
+    .pillar h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 18px; font-weight: 500; color: #f0c75e; margin-bottom: 8px; }
+    .pillar p { font-size: 13.5px; line-height: 1.7; color: rgba(200,192,168,0.75); }
+
+    .waitlist { padding: 40px; background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 14px; text-align: center; }
+    .waitlist h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 24px; font-weight: 500; color: #f0c75e; margin-bottom: 10px; }
+    .waitlist p { font-size: 14px; color: rgba(200,192,168,0.75); line-height: 1.7; margin-bottom: 24px; }
+    #en-waitlist-form { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    #en-waitlist-form input[type="email"] { flex: 1 1 260px; max-width: 320px; padding: 12px 18px; border-radius: 50px; border: 1px solid rgba(212,175,55,0.35); background: rgba(255,255,255,0.04); color: #f0e9d0; font-family: 'Lora', Georgia, serif; font-size: 14px; }
+    #en-waitlist-form input[type="email"]::placeholder { color: rgba(200,192,168,0.45); }
+    #en-waitlist-form button { flex: 0 0 auto; border: none; cursor: pointer; }
+    #en-waitlist-note { font-size: 12px; color: rgba(200,192,168,0.55); margin-top: 16px; }
+    #en-waitlist-success { display: none; font-size: 14.5px; color: #f0c75e; }
+
+    footer.site-footer { padding: 40px 0; text-align: center; }
+    footer.site-footer p { font-size: 12px; color: rgba(200,192,168,0.4); line-height: 1.8; }
+    footer.site-footer a { color: rgba(212,175,55,0.55); text-decoration: none; }
+    footer.site-footer a:hover { color: #d4af37; }
+  </style>
+</head>
+<body>
+
+  <header class="site-header">
+    <div class="wrap">
+      <a href="/en/" class="brand">
+        <img src="/images/logo-hd-v2.webp" alt="Oradia logo">
+        <span>ORADIA</span>
+      </a>
+      <a href="/" class="lang-switch">Fran&ccedil;ais</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <p class="eyebrow">Oracle Oradia</p>
+    <h1>Reveal. Transmute. Connect.</h1>
+    <p class="lede">Oradia is an oracle built on genuine quantum randomness &mdash; verifiable, not a pseudo-random algorithm pretending to be chance. A moment of reflection, whenever you need one.</p>
+
+    <div class="cta-row">
+      <a href="#en-waitlist" class="cta-btn">Join the waitlist</a>
+      <a href="/tore.html" class="cta-btn secondary">Try a free draw (site in French)</a>
+    </div>
+
+    <div class="pillars">
+      <div class="pillar">
+        <div class="icon">&#9861;</div>
+        <h3>Quantum randomness</h3>
+        <p>Draws are generated from real quantum noise, not a seeded algorithm &mdash; genuine unpredictability, not its simulation.</p>
+      </div>
+      <div class="pillar">
+        <div class="icon">&#128302;</div>
+        <h3>The Tore draw</h3>
+        <p>A free online reading experience already live today, built around 118 cards across 7 families of meaning.</p>
+      </div>
+      <div class="pillar">
+        <div class="icon">&#127183;</div>
+        <h3>The physical deck</h3>
+        <p>A 64-card oracle deck is in the works, open for preorder in French while the English release is being prepared.</p>
+      </div>
+    </div>
+
+    <div class="waitlist" id="en-waitlist">
+      <h2>Be first to know</h2>
+      <p>The English version of Oradia is being prepared. Leave your email and we'll let you know as soon as there's more to try.</p>
+      <form id="en-waitlist-form" onsubmit="return submitEnWaitlist(event)">
+        <input type="email" id="en-waitlist-email" placeholder="you@email.com" required>
+        <button type="submit" class="cta-btn">Notify me</button>
+      </form>
+      <p id="en-waitlist-note">No spam &mdash; just a note when it's ready.</p>
+      <p id="en-waitlist-success">Thank you &mdash; you're on the list.</p>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p>
+        &copy; Oradia &middot; <a href="https://www.instagram.com/oradia_oracle_officiel" target="_blank" rel="noopener">Instagram</a> &middot;
+        <a href="/mentions-legales.html">Legal notice</a> &middot;
+        <a href="/politique-confidentialite.html">Privacy policy</a><br>
+        Legal pages are currently available in French only.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+    async function submitEnWaitlist(e) {
+      e.preventDefault();
+      const emailInput = document.getElementById('en-waitlist-email');
+      const email = emailInput.value.trim();
+      if (!email) return false;
+      const form = document.getElementById('en-waitlist-form');
+      const success = document.getElementById('en-waitlist-success');
+      try {
+        const res = await fetch('/api/waitlist', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, source: 'en-landing' })
+        });
+        if (res.ok) {
+          form.style.display = 'none';
+          success.style.display = 'block';
+        }
+      } catch (err) {
+        // Silent fail — the form simply stays visible for a retry.
+      }
+      return false;
+    }
+  </script>
+</body>
+</html>

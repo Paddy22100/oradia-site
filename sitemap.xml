@@ -12,6 +12,14 @@
         <priority>1.0</priority>
     </url>
     
+    <!-- Version anglaise (tête de pont) -->
+    <url>
+        <loc>https://oradia.fr/en/</loc>
+        <lastmod>2026-09-15</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.6</priority>
+    </url>
+
     <!-- Précommande -->
     <url>
         <loc>https://oradia.fr/precommande-oracle.html</loc>
