@@ -12,6 +12,24 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
   <script src="js/gtag-init.js"></script>
+  <script>
+    // Conversion Google Ads "Précommande" (AW-18010398784/wtRrCN-VufgcEMDAg4xD) :
+    // value et transaction_id viennent du montant réel et de l'ID de session Stripe,
+    // transmis par api/create-checkout-session.js dans l'URL de succès — pas de valeur
+    // fixe ni de libellé vide comme le suggérait le snippet par défaut de Google Ads.
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var sessionId = params.get('session_id') || '';
+      var value = parseFloat(params.get('value'));
+      if (!sessionId) return; // pas de session Stripe valide = pas une vraie conversion
+      gtag('event', 'conversion', {
+        'send_to': 'AW-18010398784/wtRrCN-VufgcEMDAg4xD',
+        'value': isNaN(value) ? 1.0 : value,
+        'currency': 'EUR',
+        'transaction_id': sessionId
+      });
+    })();
+  </script>
 
   <!-- SEO Meta Tags -->
   <title>Paiement Réussi - Précommande Oracle Oradia</title>
