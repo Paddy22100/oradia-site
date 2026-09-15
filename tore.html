@@ -5749,20 +5749,31 @@ if (previewOverlay) {
   // Ajouter le zoom aux cartes passerelles aussi
   function addZoomToBridgeCard(bridgeCard) {
     if (!previewOverlay || !previewImg || !bridgeCard) return;
-    
-    // SURVOL pour afficher le zoom
+
+    // SURVOL pour afficher le zoom (desktop)
     bridgeCard.addEventListener('mouseenter', (e) => {
       const img = bridgeCard.querySelector('img');
       if (!img || !img.src) return;
-      
+
       previewImg.style.backgroundImage = `url('${img.src}')`;
       previewOverlay.classList.add('card-preview-visible');
     });
 
-    // SORTIE du survol pour cacher le zoom
+    // SORTIE du survol pour cacher le zoom (desktop)
     bridgeCard.addEventListener('mouseleave', () => {
       previewOverlay.classList.remove('card-preview-visible');
       if (previewImg) previewImg.style.backgroundImage = '';
+    });
+
+    // CLIC/TACTILE pour afficher le zoom (mobile — pas de survol tactile,
+    // donc la carte passerelle restait inaccessible en agrandissement sur téléphone,
+    // contrairement aux 7 cartes principales déjà corrigées).
+    bridgeCard.style.cursor = 'zoom-in';
+    bridgeCard.addEventListener('click', () => {
+      const img = bridgeCard.querySelector('img');
+      if (!img || !img.src) return;
+      previewImg.style.backgroundImage = `url('${img.src}')`;
+      previewOverlay.classList.add('card-preview-visible');
     });
   }
 
