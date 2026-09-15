@@ -246,11 +246,20 @@
   }
   @keyframes splashLetterIn { to { opacity: 1; transform: translateY(0); } }
   .splash-welcome {
-    margin-top: 10px; font-family: 'Lora', Georgia, serif; font-size: 13.5px;
-    letter-spacing: 0.14em; text-transform: uppercase; color: var(--light-gold);
-    opacity: 0; animation: splashWelcomeIn .6s ease forwards; animation-delay: .55s;
+    margin-top: 16px; font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 600;
+    font-size: 22px; letter-spacing: 0.22em; text-transform: uppercase;
+    background: linear-gradient(135deg, var(--light-gold), var(--gold), var(--light-gold));
+    background-size: 200% auto;
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+    opacity: 0; filter: blur(6px); transform: scale(0.8) translateY(6px);
+    animation: splashWelcomeIn 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation-delay: .55s;
   }
-  @keyframes splashWelcomeIn { to { opacity: 0.75; } }
+  @keyframes splashWelcomeIn {
+    0%   { opacity: 0; filter: blur(6px); transform: scale(0.8) translateY(6px); background-position: 0% center; }
+    55%  { opacity: 1; filter: blur(0); transform: scale(1.06) translateY(0); }
+    100% { opacity: 1; filter: blur(0); transform: scale(1) translateY(0); background-position: 100% center; }
+  }
 </style>
 </head>
 <body>
