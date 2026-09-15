@@ -96,10 +96,40 @@ module.exports = async (req, res) => {
     if (hasSupabaseConfig) {
       try {
         const supabase = getSupabaseClient();
-        const { data, error } = await supabase
-          .from('preorders')
-          .select('id, items, paid_status, amount_total, shipping_price_cents')
-          .eq('paid_status', 'completed');
+        // Les 3 requêtes sont indépendantes : les lancer en parallèle plutôt qu'en
+        // série divise par ~3 la latence cumulée de cet endpoint (chaque await
+        // séquentiel ajoutait un aller-retour Supabase complet, ce qui pouvait faire
+        // dépasser le timeout côté client sur un cold start Vercel — voir l'audit du
+        // 14/09/2026, "API Précommandes inaccessible : timeout of 10000ms exceeded").
+        const [
+          { data, error },
+          { data: donorRows, error: donorsError },
+          { data: ksRows, error: ksError }
+        ] = await Promise.all([
+          supabase
+            .from('preorders')
+            .select('id, items, paid_status, amount_total, shipping_price_cents')
+            .eq('paid_status', 'completed'),
+          // amount_total sur donors est aussi en euros depuis la correction
+          // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
+          // Dons Stripe et espèces comptent tous les deux dans la cagnotte
+          // fabrication (même règle que le dashboard admin) — seuls les frais
+          // Stripe, qui ne s'appliquent qu'aux dons Stripe, les distinguent.
+          supabase
+            .from('donors')
+            .select('amount_total, paid_status, source')
+            .eq('paid_status', 'completed'),
+          // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au
+          // même titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau
+          // d'estimation que le reste de ce compteur), et leur pledge entre dans la
+          // cagnotte au même titre qu'une précommande ou un don. Seuls les pledges en
+          // EUR sont sommés — même règle que côté dashboard admin (lib/stripe-fees.js,
+          // import-transactions) : pas de taux de change inventé pour les autres
+          // devises. La table peut ne pas encore exister si la migration
+          // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
+          // ignore l'erreur plutôt que de casser le compteur public de précommandes.
+          supabase.from('kickstarter_backers').select('id, pledge_amount, currency')
+        ]);
 
         if (error) {
           console.error('Progress query failed:', error.message);
@@ -121,16 +151,6 @@ module.exports = async (req, res) => {
           }
         }
 
-        // amount_total sur donors est aussi en euros depuis la correction
-        // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
-        // Dons Stripe et espèces comptent tous les deux dans la cagnotte
-        // fabrication (même règle que le dashboard admin) — seuls les frais
-        // Stripe, qui ne s'appliquent qu'aux dons Stripe, les distinguent.
-        const { data: donorRows, error: donorsError } = await supabase
-          .from('donors')
-          .select('amount_total, paid_status, source')
-          .eq('paid_status', 'completed');
-
         if (donorsError) {
           console.error('Donors query failed:', donorsError.message);
         } else {
@@ -145,17 +165,6 @@ module.exports = async (req, res) => {
           }
         }
 
-        // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au même
-        // titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau d'estimation
-        // que le reste de ce compteur), et leur pledge entre dans la cagnotte au même titre
-        // qu'une précommande ou un don. Seuls les pledges en EUR sont sommés — même règle que
-        // côté dashboard admin (lib/stripe-fees.js, import-transactions) : pas de taux de
-        // change inventé pour les autres devises. La table peut ne pas encore exister si la
-        // migration supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
-        // ignore l'erreur plutôt que de casser le compteur public de précommandes.
-        const { data: ksRows, error: ksError } = await supabase
-          .from('kickstarter_backers')
-          .select('id, pledge_amount, currency');
         if (!ksError && Array.isArray(ksRows)) {
           sold += ksRows.length;
           for (const row of ksRows) {

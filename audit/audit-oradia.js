@@ -490,7 +490,14 @@ async function auditAPI(browser) {
   // Test interactif de la page tirage avec Playwright
   const page = await browser.newPage();
   try {
-    await page.goto(`${BASE_URL}/oracle`, { waitUntil: 'networkidle', timeout: 20000 });
+    try {
+      await page.goto(`${BASE_URL}/oracle`, { waitUntil: 'networkidle', timeout: 20000 });
+    } catch (e) {
+      // Même repli que auditResponsive (§7a) : certaines pages gardent une activité
+      // réseau en arrière-plan (widgets tiers, Stripe.js) et n'atteignent jamais
+      // 'networkidle' — ce n'est pas un signe que la page est cassée.
+      await page.goto(`${BASE_URL}/oracle`, { waitUntil: 'load', timeout: 20000 });
+    }
     await page.waitForTimeout(2000);
 
     // Le CTA de tirage sur /oracle est un lien (#cta-essai-oracle) qui mène à
@@ -521,7 +528,13 @@ async function auditAPI(browser) {
   try {
     // Chercher une page d'offre/tarif
     const offrePage = `${BASE_URL}/precommande-oracle`;
-    await stripePage.goto(offrePage, { waitUntil: 'networkidle', timeout: 20000 });
+    try {
+      await stripePage.goto(offrePage, { waitUntil: 'networkidle', timeout: 20000 });
+    } catch (e) {
+      // Stripe.js maintient une activité réseau en arrière-plan (détection de fraude)
+      // qui empêche 'networkidle' d'être jamais atteint — même repli que §7a/§7b.
+      await stripePage.goto(offrePage, { waitUntil: 'load', timeout: 20000 });
+    }
     const stripeEl = await stripePage.$('[data-testid*="stripe"], button:has-text("Abonner"), button:has-text("Acheter"), button:has-text("Payer"), button:has-text("Commander"), button:has-text("Précommander")');
     if (stripeEl) {
       addIssue('api', 'ok', 'Bouton de paiement Stripe trouvé sur /precommande-oracle');
