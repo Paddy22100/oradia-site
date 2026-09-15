@@ -5795,8 +5795,14 @@ if (previewOverlay) {
     if (bridgeImg) {
       bridgeImg.style.cursor = 'zoom-in';
       bridgeImg.addEventListener('click', () => {
-        // DIAGNOSTIC TEMPORAIRE — a retirer une fois le bug de zoom confirme resolu.
-        alert('DEBUG : clic detecte sur la carte passerelle');
+        // DIAGNOSTIC TEMPORAIRE — banniere non bloquante (jamais d'alert() natif :
+        // certaines webviews Capacitor ne l'affichent pas et gelent tout le JS).
+        // A retirer une fois le bug de zoom confirme resolu.
+        const dbg = document.createElement('div');
+        dbg.textContent = 'DEBUG : clic detecte sur la carte passerelle';
+        dbg.style.cssText = 'position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;z-index:99999;background:#0a0;color:#fff;padding:10px 14px;border-radius:8px;font-family:sans-serif;font-size:14px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+        document.body.appendChild(dbg);
+        setTimeout(() => dbg.remove(), 4000);
         if (!bridgeImg.src) return;
         previewImg.style.backgroundImage = `url('${bridgeImg.src}')`;
         previewOverlay.classList.add('card-preview-visible');
