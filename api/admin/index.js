@@ -9229,6 +9229,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         const userAgent = String(body.user_agent || '').slice(0, 500);
         const isNewVisitor = body.is_new_visitor === true;
         const isApp = body.is_app === true;
+        const utmSource = String(body.utm_source || '').slice(0, 100) || null;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
         const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance', 'parrainage_lien_utilise'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
@@ -9275,7 +9276,7 @@ Réponds en français, sans tiret long, format markdown compact.`
           return res.status(204).end();
         }
         if (pagePath) {
-          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor, is_app: isApp });
+          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor, is_app: isApp, utm_source: utmSource });
         }
         if (event) {
           await sb.from('funnel_events').insert({ session_id: sessionId, event_name: event, path: pagePath || null }).select().single()
@@ -9699,10 +9700,16 @@ Réponds en français, sans tiret long, format markdown compact.`
           'reddit.com': 'Reddit',
         };
         const EMAIL_DOMAINS = /sendibm|brevo|sendinblue|mailchimp|mailjet|sendgrid|mandrill|mailerlite|constantcontact|campaign-archive|list-manage/i;
+        // Trafic payant identifié via ?utm_source=... (voir js/page-tracker.js) — sans ça,
+        // un clic sur une annonce Google Ads arrive avec referrer=google.com ou vide, donc
+        // indiscernable du trafic organique Google dans "Provenance des visiteurs".
+        const UTM_SOURCE_NAMES = { google_ads: 'Google Ads (payant)' };
         const referrerCounts = {};
         v.forEach(r => {
           let ref = 'Accès direct';
-          if (r.referrer) {
+          if (r.utm_source) {
+            ref = UTM_SOURCE_NAMES[r.utm_source] || (r.utm_source + ' (payant)');
+          } else if (r.referrer) {
             try {
               const hostname = new URL(r.referrer).hostname.replace(/^www\./, '');
               if (SELF_REFERRERS.has(hostname)) return;
@@ -9778,7 +9785,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       // avec .range() jusqu'à épuisement des lignes, quel que soit le plafond réel.
       const [views, prevViews] = await Promise.all([
         sbFetchAllRows(() => sb.from('page_views')
-          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent,is_app')
+          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent,is_app,utm_source')
           .gte('created_at', since).not('path', 'like', '/admin%')
           .order('created_at', { ascending: false })),
         sbFetchAllRows(() => sb.from('page_views')
