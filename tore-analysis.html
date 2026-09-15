@@ -300,6 +300,42 @@
       object-position: top center;
       display: block;
       border-radius: 9px 9px 0 0;
+      cursor: zoom-in;
+    }
+
+    /* Agrandissement au clic/tactile des cartes de l'analyse (meme mecanisme
+       que sur le plateau de tirage dans tore.html). */
+    #analysis-card-preview-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0);
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease, background 0.3s ease;
+    }
+    #analysis-card-preview-overlay.visible {
+      opacity: 1;
+      background: rgba(0,0,0,0.8);
+      pointer-events: auto;
+    }
+    #analysis-card-preview-overlay img {
+      width: min(500px, 90vw);
+      max-height: 80vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(212,175,55,0.4);
+      border: 2px solid rgba(212,175,55,0.8);
+      object-fit: contain;
+      transform: scale(0.85);
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    #analysis-card-preview-overlay.visible img {
+      transform: scale(1);
+      opacity: 1;
     }
     .card-grid-label {
       padding: 4px 6px 2px;
@@ -2508,6 +2544,35 @@
         );
         window.oradiaReferral.claimPendingBonuses();
     });
+</script>
+<div id="analysis-card-preview-overlay"><img id="analysis-card-preview-img" alt="Aperçu de la carte"></div>
+<script>
+(function () {
+  const overlay = document.getElementById('analysis-card-preview-overlay');
+  const previewImg = document.getElementById('analysis-card-preview-img');
+  if (!overlay || !previewImg) return;
+
+  function openZoom(src) {
+    if (!src) return;
+    previewImg.src = src;
+    overlay.classList.add('visible');
+  }
+  function closeZoom() {
+    overlay.classList.remove('visible');
+    previewImg.src = '';
+  }
+  overlay.addEventListener('click', closeZoom);
+
+  // Les cartes sont injectees dynamiquement par displayCards() : on delegue
+  // le clic au conteneur plutot que d'attacher un listener par carte.
+  const container = document.getElementById('cardsDisplay');
+  if (container) {
+    container.addEventListener('click', (e) => {
+      const img = e.target.closest('.card-grid-item img');
+      if (img) openZoom(img.currentSrc || img.src);
+    });
+  }
+})();
 </script>
 <script src="js/page-tracker.js" defer></script>
 </body>
