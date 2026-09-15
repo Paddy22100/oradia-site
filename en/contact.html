@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Contact – ORADIA</title>
+  <meta name="description" content="Contact ORADIA with any question about our spiritual guidance, oracle draws, or booking an appointment.">
+  <link rel="canonical" href="https://oradia.fr/en/contact.html" />
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/contact.html" />
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/contact.html" />
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/contact.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://oradia.fr/en/contact.html" />
+  <meta property="og:title" content="Contact – ORADIA" />
+  <meta property="og:description" content="Contact ORADIA with any question about our spiritual guidance, oracle draws, or booking an appointment." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Oradia" />
+  <meta property="og:locale" content="en_US" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+
+    .btn-gold{
+      background: linear-gradient(135deg, #d4af37, #f5e7a1);
+      color: #0a192f;
+      font-weight: 600;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+    }
+    .btn-gold:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(212,175,55,0.4);
+      background: linear-gradient(135deg, #f5e7a1, #d4af37);
+    }
+
+    .btn-outline-gold{
+      background: transparent;
+      color: #d4af37;
+      font-weight: 600;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      border: 2px solid #d4af37;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-outline-gold:hover{
+      background: #d4af37;
+      color: #0a192f;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+    }
+
+    @media (max-width: 768px){
+      .hero-section { min-height: 70vh; padding: 1rem 0; }
+      .hero-content { padding: 1rem; }
+      .hero-title { font-size: 2.5rem; line-height: 1.1; }
+      .hero-subtitle { font-size: 1.1rem; }
+      .section-padding { padding: 3rem 1rem; }
+      .container { padding: 0 1rem; }
+      .max-w-6xl { max-width: 100%; }
+      .rounded-2xl { border-radius: 1rem; }
+      .p-8 { padding: 1.5rem; }
+      .text-4xl { font-size: 2rem; }
+      .text-5xl { font-size: 2.5rem; }
+      .btn-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+      #mobileMenu { max-height: 80vh; overflow-y: auto; }
+      #mobileMenu a { padding: 0.75rem 1rem; font-size: 0.9rem; }
+    }
+
+    @media (max-width: 480px){
+      .hero-section { min-height: 60vh; }
+      .hero-title { font-size: 2rem; }
+      .hero-subtitle { font-size: 1rem; }
+      .section-padding { padding: 2rem 0.75rem; }
+      .p-8 { padding: 1rem; }
+      .text-4xl { font-size: 1.75rem; }
+      .text-5xl { font-size: 2rem; }
+      .btn-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+    }
+
+    header { position: relative; overflow: visible; }
+    #mobileMenu {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+      z-index: 1200;
+      border-top: 1px solid rgba(212,175,55,.3);
+    }
+    #mobileMenuBtn { position: relative; z-index: 1300; }
+  </style>
+</head>
+
+<body class="relative">
+  <!-- Scroll to top button -->
+  <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Back to top">
+    <i class="fas fa-arrow-up text-sm"></i>
+  </button>
+
+  <!-- Header -->
+<div id="header-placeholder"></div>
+
+  <!-- Hero Section -->
+  <section class="hero-section min-h-[60vh] flex items-center justify-center relative overflow-hidden">
+    <div class="hero-overlay"></div>
+
+    <div class="absolute inset-0 opacity-10">
+      <div class="absolute top-20 left-10 w-32 h-32 border border-gold rounded-full"></div>
+      <div class="absolute bottom-20 right-10 w-40 h-40 border border-gold rounded-full"></div>
+      <div class="absolute top-1/2 left-1/4 w-24 h-24 border border-gold/50 rounded-full"></div>
+    </div>
+
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-4xl mx-auto">
+        <div class="mb-6 inline-block">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-br from-gold/20 to-light-gold/10 rounded-full flex items-center justify-center border border-gold/30 backdrop-blur-sm">
+            <i class="fas fa-envelope-open-text text-3xl text-gold"></i>
+          </div>
+        </div>
+
+        <h1 class="cormorant text-5xl md:text-6xl font-bold gold-gradient mb-6">
+          Contact ORADIA
+        </h1>
+
+        <p class="text-xl md:text-2xl text-light-gold/90 mb-4 leading-relaxed">
+          I'm here to listen
+        </p>
+
+        <p class="text-base md:text-lg text-light-gold/70 max-w-2xl mx-auto leading-relaxed">
+          Whether you have a question about the Oracle, want to know more about my readings,
+          or simply want to get in touch, I'd be glad to hear from you.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Contact Section -->
+  <section class="py-16 md:py-24 px-4 md:px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid md:grid-cols-2 gap-12">
+        <!-- Contact Form -->
+        <div class="bg-night-blue/60 border border-gold/30 rounded-2xl p-8 backdrop-blur-sm">
+          <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-6 text-center">Send me a message</h2>
+
+          <form id="contactForm" class="space-y-6">
+            <div>
+              <label for="name" class="block text-light-gold mb-2">Full name</label>
+              <input type="text" id="name" name="name" required
+                     class="w-full bg-night-blue/30 border border-gold/40 rounded-lg p-3 text-light-gold placeholder-gold/50 focus:border-gold focus:outline-none transition-colors"
+                     placeholder="Your name">
+            </div>
+
+            <div>
+              <label for="email" class="block text-light-gold mb-2">Email</label>
+              <input type="email" id="email" name="email" required
+                     class="w-full bg-night-blue/30 border border-gold/40 rounded-lg p-3 text-light-gold placeholder-gold/50 focus:border-gold focus:outline-none transition-colors"
+                     placeholder="you@email.com">
+            </div>
+
+            <div>
+              <label for="subject" class="block text-light-gold mb-2">Subject</label>
+              <select id="subject" name="subject" required
+                      class="w-full bg-night-blue/30 border border-gold/40 rounded-lg p-3 text-light-gold focus:border-gold focus:outline-none transition-colors">
+                <option value="">Choose a subject</option>
+                <option value="oracle">Question about the Oracle</option>
+                <option value="guidance">Personal guidance</option>
+                <option value="accompagnement">One-on-one support</option>
+                <option value="cercles">Circle sessions</option>
+                <option value="collective">Collective intelligence</option>
+                <option value="partenariat">Partnership proposal</option>
+                <option value="autre">Other</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="message" class="block text-light-gold mb-2">Message</label>
+              <textarea id="message" name="message" rows="5" required
+                        class="w-full bg-night-blue/30 border border-gold/40 rounded-lg p-3 text-light-gold placeholder-gold/50 focus:border-gold focus:outline-none transition-colors resize-none"
+                        placeholder="Your message..."></textarea>
+            </div>
+
+            <button type="submit" class="btn-gold w-full">
+              <i class="fas fa-paper-plane mr-2"></i>
+              Send message
+            </button>
+          </form>
+
+          <div id="formMessage" class="mt-4 hidden"></div>
+        </div>
+
+        <!-- Contact Information -->
+        <div class="space-y-8">
+          <div class="bg-night-blue/60 border border-gold/30 rounded-2xl p-8 backdrop-blur-sm">
+            <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-6">Get in touch</h2>
+
+            <div class="space-y-6">
+              <div class="flex items-start space-x-4">
+                <div class="text-gold text-xl mt-1">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div>
+                  <h3 class="text-gold font-semibold mb-1">Email</h3>
+                  <p class="text-light-gold">contact@oradia.fr</p>
+                </div>
+              </div>
+
+              <div class="flex items-start space-x-4">
+                <div class="text-gold text-xl mt-1">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div>
+                  <h3 class="text-gold font-semibold mb-1">Availability</h3>
+                  <p class="text-light-gold">Monday - Friday: 9am-12pm / 2pm-4pm (Paris time)</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div class="bg-night-blue/60 border border-gold/30 rounded-2xl p-8 backdrop-blur-sm">
+            <h3 class="cormorant text-2xl font-bold gold-gradient mb-4">Quick links</h3>
+            <div class="space-y-3">
+              <a href="/en/oracle.html" class="block text-light-gold hover:text-gold transition-colors">
+                <i class="fas fa-dice mr-2"></i>Discover the ORADIA oracle
+              </a>
+              <a href="/a-propos.html" class="block text-light-gold hover:text-gold transition-colors">
+                <i class="fas fa-info-circle mr-2"></i>Learn more about ORADIA (French)
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <script src="/navigation.js"></script>
+  <script src="/components/header-manager-en.js" defer></script>
+  <script src="/components/footer-manager-en.js" defer></script>
+  <script>
+    document.getElementById('contactForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+
+      const formMessage = document.getElementById('formMessage');
+      const submitButton = this.querySelector('button[type="submit"]');
+      const buttonIcon = submitButton.querySelector('i');
+      const buttonText = submitButton.childNodes[2];
+
+      const formData = {
+        type: 'support',
+        name: document.getElementById('name').value,
+        email: document.getElementById('email').value,
+        sujet: document.getElementById('subject').value,
+        message: document.getElementById('message').value
+      };
+
+      submitButton.disabled = true;
+      buttonIcon.className = 'fas fa-spinner fa-spin mr-2';
+      buttonText.textContent = 'Sending...';
+
+      formMessage.classList.add('hidden');
+
+      try {
+        const response = await fetch('/api/support', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(formData)
+        });
+
+        const data = await response.json();
+
+        if (response.ok && data.success) {
+          formMessage.innerHTML = `
+            <div class="bg-gold/20 border border-gold/50 rounded-lg p-4 text-light-gold">
+              <i class="fas fa-check-circle mr-2"></i>
+              Your message has been sent. I'll get back to you as soon as possible.
+            </div>
+          `;
+          formMessage.classList.remove('hidden');
+
+          this.reset();
+
+          setTimeout(() => {
+            formMessage.classList.add('hidden');
+          }, 8000);
+
+        } else {
+          formMessage.innerHTML = `
+            <div class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300">
+              <i class="fas fa-exclamation-circle mr-2"></i>
+              Something went wrong. Please try again.
+            </div>
+          `;
+          formMessage.classList.remove('hidden');
+        }
+
+      } catch (error) {
+        console.error('Error sending message:', error);
+        formMessage.innerHTML = `
+          <div class="bg-red-900/30 border border-red-500/50 rounded-lg p-4 text-red-300">
+            <i class="fas fa-exclamation-circle mr-2"></i>
+            Something went wrong. Please check your connection and try again.
+          </div>
+        `;
+        formMessage.classList.remove('hidden');
+
+      } finally {
+        submitButton.disabled = false;
+        buttonIcon.className = 'fas fa-paper-plane mr-2';
+        buttonText.textContent = 'Send message';
+      }
+    });
+
+    const backToTopBtn = document.getElementById('backToTop');
+
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.classList.remove('opacity-0');
+        backToTopBtn.classList.add('opacity-100');
+      } else {
+        backToTopBtn.classList.add('opacity-0');
+        backToTopBtn.classList.remove('opacity-100');
+      }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }, 100);
+    });
+  </script>
+
+<script src="/js/page-tracker.js" defer></script>
+</body>
+</html>
