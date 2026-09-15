@@ -455,7 +455,10 @@ module.exports = async (req, res) => {
             payment_method_types: ['card'],
             line_items: lineItems,
             mode: 'payment',
-            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}`,
+            // value en clair dans l'URL (pas une donnée sensible, juste un montant) : évite un
+            // aller-retour serveur depuis success-precommande.html pour retrouver le montant payé
+            // au moment de déclencher la conversion Google Ads (voir js/gtag-init.js).
+            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}&value=${(totalAmount / 100).toFixed(2)}`,
             cancel_url: `${frontendUrl}/livraison.html?checkout=cancelled`,
             custom_text: {
               submit: {
