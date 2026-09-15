@@ -2436,6 +2436,7 @@
   .tore-coin.ripple { animation: none !important; }
   #tore-beam-svg { display: none !important; }
   .quantum-pulse { animation: none !important; }
+  .tore-card-extra { animation: none !important; opacity: 1 !important; }
 }
 
 @keyframes fadeInUp {
@@ -2726,6 +2727,11 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
   left: 50%;
 
+  /* Position/taille finale posée en statique (pas seulement via l'étape 100%
+     de l'animation) : sur certains appareils l'animation reste bloquée à son
+     état de départ (scale 0.2) et la carte passerelle apparaît alors minuscule
+     et coupée en permanence, plutôt que de simplement sauter directement à
+     sa taille normale. */
   transform: translateX(-50%) translateY(30%) scale(0.85);
 
   width: 80%;
@@ -2746,7 +2752,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
   background: #020817;
 
-  animation: tore-extra-appear 0.45s ease-out forwards;
+  animation: tore-extra-fade 0.45s ease-out forwards;
 
   z-index: 5;
 
@@ -2800,21 +2806,17 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 }
 
 
-@keyframes tore-extra-appear {
+@keyframes tore-extra-fade {
 
   0% {
 
     opacity: 0;
-
-    transform: translate(0, 0) scale(0.2);
 
   }
 
   100% {
 
     opacity: 1;
-
-    transform: translateX(-50%) translateY(30%) scale(0.85);
 
   }
 
