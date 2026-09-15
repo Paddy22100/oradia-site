@@ -5787,13 +5787,19 @@ if (previewOverlay) {
     // CLIC/TACTILE pour afficher le zoom (mobile — pas de survol tactile,
     // donc la carte passerelle restait inaccessible en agrandissement sur téléphone,
     // contrairement aux 7 cartes principales déjà corrigées).
-    bridgeCard.style.cursor = 'zoom-in';
-    bridgeCard.addEventListener('click', () => {
-      const img = bridgeCard.querySelector('img');
-      if (!img || !img.src) return;
-      previewImg.style.backgroundImage = `url('${img.src}')`;
-      previewOverlay.classList.add('card-preview-visible');
-    });
+    // Écouteur posé directement sur <img> (comme pour les 7 cartes principales)
+    // plutôt que sur le conteneur .tore-card-extra : en s'appuyant sur la
+    // remontée (bubbling) du clic depuis l'image jusqu'au conteneur, le clic
+    // ne déclenchait jamais rien sur certains mobiles.
+    const bridgeImg = bridgeCard.querySelector('img');
+    if (bridgeImg) {
+      bridgeImg.style.cursor = 'zoom-in';
+      bridgeImg.addEventListener('click', () => {
+        if (!bridgeImg.src) return;
+        previewImg.style.backgroundImage = `url('${bridgeImg.src}')`;
+        previewOverlay.classList.add('card-preview-visible');
+      });
+    }
   }
 
   function placeBridgeCard(stepIndex, familyKey, dataNext) {
