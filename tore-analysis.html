@@ -2133,6 +2133,15 @@
                     </div>
                 `;
                 container.appendChild(cardElement);
+
+                // Ecouteurs directs sur chaque image (plutot qu'une delegation sur
+                // le conteneur) : dans la webview de l'appli mobile, le tap sur la
+                // carte passerelle ne declenchait pas le clic delegue.
+                cardElement.querySelectorAll('.card-grid-item img').forEach(img => {
+                    img.addEventListener('click', () => {
+                        if (typeof openAnalysisCardZoom === 'function') openAnalysisCardZoom(img.currentSrc || img.src);
+                    });
+                });
             });
         }
         
@@ -2552,26 +2561,21 @@
   const previewImg = document.getElementById('analysis-card-preview-img');
   if (!overlay || !previewImg) return;
 
-  function openZoom(src) {
+  // Expose globalement : les cartes sont injectees dynamiquement par
+  // displayCards() (plus haut dans la page), qui attache un ecouteur de
+  // clic direct sur chaque image et appelle cette fonction. Une delegation
+  // sur le conteneur #cardsDisplay ne declenchait pas le clic dans la
+  // webview de l'appli mobile pour la carte passerelle - un ecouteur direct
+  // sur l'image, comme sur tore.html, est le pattern qui fonctionne partout.
+  window.openAnalysisCardZoom = function (src) {
     if (!src) return;
     previewImg.src = src;
     overlay.classList.add('visible');
-  }
-  function closeZoom() {
+  };
+  overlay.addEventListener('click', () => {
     overlay.classList.remove('visible');
     previewImg.src = '';
-  }
-  overlay.addEventListener('click', closeZoom);
-
-  // Les cartes sont injectees dynamiquement par displayCards() : on delegue
-  // le clic au conteneur plutot que d'attacher un listener par carte.
-  const container = document.getElementById('cardsDisplay');
-  if (container) {
-    container.addEventListener('click', (e) => {
-      const img = e.target.closest('.card-grid-item img');
-      if (img) openZoom(img.currentSrc || img.src);
-    });
-  }
+  });
 })();
 </script>
 <script src="js/page-tracker.js" defer></script>
