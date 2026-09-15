@@ -5795,6 +5795,8 @@ if (previewOverlay) {
     if (bridgeImg) {
       bridgeImg.style.cursor = 'zoom-in';
       bridgeImg.addEventListener('click', () => {
+        // DIAGNOSTIC TEMPORAIRE — a retirer une fois le bug de zoom confirme resolu.
+        alert('DEBUG : clic detecte sur la carte passerelle');
         if (!bridgeImg.src) return;
         previewImg.style.backgroundImage = `url('${bridgeImg.src}')`;
         previewOverlay.classList.add('card-preview-visible');
