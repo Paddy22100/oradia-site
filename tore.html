@@ -5787,27 +5787,29 @@ if (previewOverlay) {
     // CLIC/TACTILE pour afficher le zoom (mobile — pas de survol tactile,
     // donc la carte passerelle restait inaccessible en agrandissement sur téléphone,
     // contrairement aux 7 cartes principales déjà corrigées).
-    // Écouteur posé directement sur <img> (comme pour les 7 cartes principales)
-    // plutôt que sur le conteneur .tore-card-extra : en s'appuyant sur la
-    // remontée (bubbling) du clic depuis l'image jusqu'au conteneur, le clic
-    // ne déclenchait jamais rien sur certains mobiles.
+    // Confirmé sur appareil réel : le clic ne se déclenche JAMAIS quand l'écouteur
+    // est posé sur l'<img> elle-même (drag/callout natif du navigateur sur les
+    // balises image qui avale le geste tactile). L'image est donc rendue inerte
+    // au pointeur (pointer-events:none) et c'est le conteneur qui reçoit le tap.
+    const bridgeImgWrap = bridgeCard.querySelector('.extra-img-wrap') || bridgeCard;
     const bridgeImg = bridgeCard.querySelector('img');
-    if (bridgeImg) {
-      bridgeImg.style.cursor = 'zoom-in';
-      bridgeImg.addEventListener('click', () => {
-        // DIAGNOSTIC TEMPORAIRE — banniere non bloquante (jamais d'alert() natif :
-        // certaines webviews Capacitor ne l'affichent pas et gelent tout le JS).
-        // A retirer une fois le bug de zoom confirme resolu.
-        const dbg = document.createElement('div');
-        dbg.textContent = 'DEBUG : clic detecte sur la carte passerelle';
-        dbg.style.cssText = 'position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;z-index:99999;background:#0a0;color:#fff;padding:10px 14px;border-radius:8px;font-family:sans-serif;font-size:14px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
-        document.body.appendChild(dbg);
-        setTimeout(() => dbg.remove(), 4000);
-        if (!bridgeImg.src) return;
-        previewImg.style.backgroundImage = `url('${bridgeImg.src}')`;
-        previewOverlay.classList.add('card-preview-visible');
-      });
-    }
+    if (bridgeImg) bridgeImg.style.pointerEvents = 'none';
+    bridgeImgWrap.style.cursor = 'zoom-in';
+    const openBridgeZoom = () => {
+      // DIAGNOSTIC TEMPORAIRE — banniere non bloquante (jamais d'alert() natif :
+      // certaines webviews Capacitor ne l'affichent pas et gelent tout le JS).
+      // A retirer une fois le bug de zoom confirme resolu.
+      const dbg = document.createElement('div');
+      dbg.textContent = 'DEBUG : clic detecte sur la carte passerelle';
+      dbg.style.cssText = 'position:fixed;top:max(10px,env(safe-area-inset-top));left:10px;right:10px;z-index:99999;background:#0a0;color:#fff;padding:10px 14px;border-radius:8px;font-family:sans-serif;font-size:14px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,0.4);';
+      document.body.appendChild(dbg);
+      setTimeout(() => dbg.remove(), 4000);
+      if (!bridgeImg || !bridgeImg.src) return;
+      previewImg.style.backgroundImage = `url('${bridgeImg.src}')`;
+      previewOverlay.classList.add('card-preview-visible');
+    };
+    bridgeImgWrap.addEventListener('click', openBridgeZoom);
+    bridgeImgWrap.addEventListener('touchend', (e) => { e.preventDefault(); openBridgeZoom(); });
   }
 
   function placeBridgeCard(stepIndex, familyKey, dataNext) {
