@@ -720,7 +720,7 @@ async function sendToreCheckinReminders(supabase) {
 // seulement un récapitulatif hebdomadaire envoyé à ADMIN_EMAIL pour une approche
 // manuelle, contact par contact — le scoring commercial reste piloté par un humain.
 async function scoreNewsletterEngagement(supabase) {
-  const out = { checked: 0, newlyHot: [], errors: [] };
+  const out = { checked: 0, newlyHot: [], noLongerHot: [], errors: [] };
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   if (!BREVO_API_KEY) { out.errors.push('BREVO_API_KEY manquant'); return out; }
 
@@ -750,12 +750,23 @@ async function scoreNewsletterEngagement(supabase) {
         const clicksCount = Array.isArray(stats.clicked) ? stats.clicked.length : (typeof stats.clicked === 'number' ? stats.clicked : 0);
 
         const alreadyHot = (contact.tags || []).includes('chaud');
-        const isHot = opensCount >= 3 || clicksCount >= 1;
+        // Seuil resserré après un premier essai en prod : >=3 ouvertures OU >=1 clic
+        // taguait 39 des 74 contacts actifs (53%) — beaucoup trop large pour prioriser
+        // qui approcher. Exige maintenant un engagement plus soutenu ET pas juste
+        // sporadique.
+        const isHot = opensCount >= 6 && clicksCount >= 1;
 
         if (isHot && !alreadyHot) {
           const newTags = [...new Set([...(contact.tags || []), 'chaud'])];
           await supabase.from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
           out.newlyHot.push({ email: contact.email, opens: opensCount, clicks: clicksCount });
+        } else if (!isHot && alreadyHot) {
+          // Le tag reflète l'engagement courant, pas un cumul historique : un contact
+          // qui ne correspond plus au seuil (ancien seuil trop large, ou engagement
+          // retombé) est retiré plutôt que de rester "chaud" indéfiniment.
+          const newTags = (contact.tags || []).filter(t => t !== 'chaud');
+          await supabase.from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
+          out.noLongerHot.push({ email: contact.email, opens: opensCount, clicks: clicksCount });
         }
       } catch (e) {
         out.errors.push(`${contact.email}: ${e.message}`);
@@ -1474,7 +1485,7 @@ async function handleData(req, res) {
                 })
               }).catch(() => {});
             }
-            await logSystemEvent(supabase, { level: r.errors.length ? 'warn' : 'info', source: 'cron-newsletter-scoring', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Scoring newsletter : ${r.checked} vérifié(s), ${r.newlyHot.length} nouveau(x) "chaud"`, details: r });
+            await logSystemEvent(supabase, { level: r.errors.length ? 'warn' : 'info', source: 'cron-newsletter-scoring', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Scoring newsletter : ${r.checked} vérifié(s), ${r.newlyHot.length} nouveau(x) "chaud", ${r.noLongerHot.length} retiré(s)`, details: r });
           } catch (e) {
             console.error('[cron-newsletter-scoring] Background error:', e.message);
           }
