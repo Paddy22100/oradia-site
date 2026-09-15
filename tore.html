@@ -1169,6 +1169,13 @@
     pointer-events: none;
     transition: opacity 0.35s ease, filter 0.35s ease;
   }
+  /* pointer-events:none ci-dessus est hérité par .tore-card-extra (carte
+     passerelle), enfant de la carte retournée : elle en devenait inatteignable
+     au clic/tactile (le zoom ne se déclenchait jamais, signalé par un abonné).
+     On lui redonne explicitement ses propres événements de pointeur. */
+  #tore-immersif .tore-board-7.has-active-card .tore-card.flipped .tore-card-extra {
+    pointer-events: auto;
+  }
 
   /* Retour à la normale quand plus de carte active */
   #tore-immersif .tore-board-7:not(.has-active-card):not(.tore-dealing) .tore-card {
