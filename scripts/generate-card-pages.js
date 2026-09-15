@@ -1,9 +1,11 @@
 // scripts/generate-card-pages.js
-// Génère les pages SEO individuelles pour les 118 cartes du deck (data/tore-deck.json),
-// à partir du gabarit validé (cartes/joie.html). Usage : node scripts/generate-card-pages.js
+// Génère les pages SEO individuelles pour les 118 cartes du deck (data/tore-deck.json).
+// Usage : node scripts/generate-card-pages.js
 //
-// Ne régénère jamais joie.html (gabarit de référence déjà affiné à la main) : le
-// script s'arrête avant si le slug correspond, pour ne pas écraser les ajustements.
+// Le visuel de chaque carte n'est PAS inclus dans le HTML servi (donc invisible à un
+// crawler ou à un simple clic-droit) : il n'est révélé côté client, via
+// js/card-image-gate.js, qu'aux visiteurs dont l'abonnement actif est confirmé par
+// /api/auth/check-subscription. Le texte (sens, SEO) reste public et indexable.
 
 const fs = require('fs');
 const path = require('path');
@@ -251,8 +253,11 @@ function buildPage({ name, familyLabel, polarity, quote, meaning, mirror, slug, 
     ? `Dans le système des cartes miroirs d'Oradia, ${displayName} répond à <a href="/cartes/${mirrorSlug}.html" style="color:#d4af37;border-bottom:1px solid rgba(212,175,55,0.3);">${mirrorDisplay}</a> : les deux ne s'opposent pas, elles se répondent, comme deux versants d'un même mouvement.`
     : `Cette carte appartient aux dix cartes de Mémoire Cosmos, une famille sans carte miroir, qui apporte une perspective plus large (temps, mémoire, cycles) quand le tirage l'appelle.`;
 
-  const imgTag = imageUrl
-    ? `<img src="${imageUrl}" alt="Carte ${displayName}, famille ${familyLabel}, Oracle Oradia" onerror="this.style.display='none'">`
+  const imgAlt = `Carte ${displayName}, famille ${familyLabel}, Oracle Oradia`;
+  // Le visuel n'est jamais servi dans le HTML initial (voir js/card-image-gate.js) :
+  // il n'apparaît, injecté côté client, qu'après confirmation d'un abonnement actif.
+  const cardVisualAttrs = imageUrl
+    ? ` id="card-visual" data-image="${imageUrl}" data-alt="${imgAlt.replace(/"/g, '&quot;')}"`
     : '';
 
   return `<!DOCTYPE html>
@@ -297,6 +302,11 @@ function buildPage({ name, familyLabel, polarity, quote, meaning, mirror, slug, 
     .back-link:hover { color: #d4af37; }
     .card-visual { text-align: center; margin-bottom: 32px; }
     .card-visual img { display: block; width: 240px; height: 360px; object-fit: cover; border-radius: 14px; border: 1px solid rgba(212,175,55,0.4); box-shadow: 0 12px 40px rgba(0,0,0,0.45); margin: 0 auto; }
+    .card-locked { width: 240px; height: 360px; margin: 0 auto; border-radius: 14px; border: 1px solid rgba(212,175,55,0.25); background: rgba(212,175,55,0.04); box-shadow: 0 12px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+    .card-locked .lock-icon { font-size: 30px; opacity: 0.7; }
+    .card-locked p { font-size: 13px; color: rgba(200,192,168,0.75); line-height: 1.6; }
+    .card-locked a { font-size: 12.5px; color: #d4af37; border: 1px solid rgba(212,175,55,0.35); border-radius: 50px; padding: 8px 18px; letter-spacing: 0.03em; }
+    .card-locked a:hover { background: rgba(212,175,55,0.08); }
     .card-meta { font-size: 12px; color: rgba(212,175,55,0.5); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; text-align: center; }
     h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(32px, 5vw, 46px); font-weight: 400; color: #f0c75e; line-height: 1.2; margin-bottom: 22px; text-align: center; }
     .quote { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 19px; color: #f5e7a1; text-align: center; line-height: 1.6; margin: 0 auto 40px; max-width: 460px; opacity: 0.9; }
@@ -321,7 +331,13 @@ function buildPage({ name, familyLabel, polarity, quote, meaning, mirror, slug, 
   <main>
     <a href="/cartes.html" class="back-link">&larr; Toutes les cartes</a>
 
-    <div class="card-visual">${imgTag}</div>
+    <div class="card-visual"${cardVisualAttrs}>
+      <div class="card-locked">
+        <span class="lock-icon">&#128274;</span>
+        <p>Visuel r&eacute;serv&eacute; aux abonn&eacute;&middot;e&middot;s</p>
+        <a href="/member/login.html">Se connecter</a>
+      </div>
+    </div>
     <p class="card-meta">Famille ${familyLabel} &middot; Polarit&eacute; ${polarityLabel}</p>
     <h1>Carte ${displayName}</h1>
     <p class="quote">&laquo;&nbsp;${quote}&nbsp;&raquo;</p>
@@ -344,19 +360,19 @@ ${mirrorBlock}
   <script src="/components/header-manager.js" defer><\/script>
   <script src="/components/footer-manager.js" defer><\/script>
   <script src="/js/page-tracker.js" defer><\/script>
+  <script src="/js/card-image-gate.js" defer><\/script>
 </body>
 </html>
 `;
 }
 
-let created = 0, skipped = 0, missingMeaning = [], missingImage = [];
+let created = 0, missingMeaning = [], missingImage = [];
 
 Object.keys(deck).forEach(familyKey => {
   const familyLabel = FAMILY_LABELS[familyKey] || familyKey;
   deck[familyKey].forEach(card => {
     const name = card.name;
     const slug = slugify(name);
-    if (slug === 'joie') { skipped++; return; } // gabarit déjà affiné à la main
 
     const meaning = MEANINGS[name];
     if (!meaning) { missingMeaning.push(name); return; }
@@ -374,6 +390,6 @@ Object.keys(deck).forEach(familyKey => {
   });
 });
 
-console.log(`Créées: ${created}, ignorées (joie): ${skipped}`);
+console.log(`Créées: ${created}`);
 if (missingMeaning.length) console.log('MEANINGS manquants pour:', missingMeaning.join(', '));
 if (missingImage.length) console.log('Images introuvables pour:', missingImage.join(', '));

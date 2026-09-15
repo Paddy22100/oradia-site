@@ -40,6 +40,11 @@
     .back-link:hover { color: #d4af37; }
     .card-visual { text-align: center; margin-bottom: 32px; }
     .card-visual img { display: block; width: 240px; height: 360px; object-fit: cover; border-radius: 14px; border: 1px solid rgba(212,175,55,0.4); box-shadow: 0 12px 40px rgba(0,0,0,0.45); margin: 0 auto; }
+    .card-locked { width: 240px; height: 360px; margin: 0 auto; border-radius: 14px; border: 1px solid rgba(212,175,55,0.25); background: rgba(212,175,55,0.04); box-shadow: 0 12px 40px rgba(0,0,0,0.45); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; padding: 24px; }
+    .card-locked .lock-icon { font-size: 30px; opacity: 0.7; }
+    .card-locked p { font-size: 13px; color: rgba(200,192,168,0.75); line-height: 1.6; }
+    .card-locked a { font-size: 12.5px; color: #d4af37; border: 1px solid rgba(212,175,55,0.35); border-radius: 50px; padding: 8px 18px; letter-spacing: 0.03em; }
+    .card-locked a:hover { background: rgba(212,175,55,0.08); }
     .card-meta { font-size: 12px; color: rgba(212,175,55,0.5); letter-spacing: 0.18em; text-transform: uppercase; margin-bottom: 10px; text-align: center; }
     h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(32px, 5vw, 46px); font-weight: 400; color: #f0c75e; line-height: 1.2; margin-bottom: 22px; text-align: center; }
     .quote { font-family: 'Cormorant Garamond', Georgia, serif; font-style: italic; font-size: 19px; color: #f5e7a1; text-align: center; line-height: 1.6; margin: 0 auto 40px; max-width: 460px; opacity: 0.9; }
@@ -64,7 +69,13 @@
   <main>
     <a href="/cartes.html" class="back-link">&larr; Toutes les cartes</a>
 
-    <div class="card-visual"><img src="/images/memoire_cosmos/souvenir_d_ame.webp" alt="Carte Souvenir D'Âme, famille Mémoire Cosmos, Oracle Oradia" onerror="this.style.display='none'"></div>
+    <div class="card-visual" id="card-visual" data-image="/images/memoire_cosmos/souvenir_d_ame.webp" data-alt="Carte Souvenir D'Âme, famille Mémoire Cosmos, Oracle Oradia">
+      <div class="card-locked">
+        <span class="lock-icon">&#128274;</span>
+        <p>Visuel r&eacute;serv&eacute; aux abonn&eacute;&middot;e&middot;s</p>
+        <a href="/member/login.html">Se connecter</a>
+      </div>
+    </div>
     <p class="card-meta">Famille Mémoire Cosmos &middot; Polarit&eacute; Yang</p>
     <h1>Carte Souvenir D'Âme</h1>
     <p class="quote">&laquo;&nbsp;Les résonances anciennes émergent sans prévenir. Ce qui revient cherche moins à expliquer qu'à révéler.&nbsp;&raquo;</p>
@@ -87,5 +98,6 @@
   <script src="/components/header-manager.js" defer></script>
   <script src="/components/footer-manager.js" defer></script>
   <script src="/js/page-tracker.js" defer></script>
+  <script src="/js/card-image-gate.js" defer></script>
 </body>
 </html>
