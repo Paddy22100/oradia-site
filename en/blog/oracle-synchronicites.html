@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synchronicities after an oracle draw: what I actually observe — Oradia</title>
+  <meta name="description" content="What happens in the days after an oracle draw? Oradia runs an open study on synchronicities, with data published without filtering. Here's the process.">
+  <link rel="canonical" href="https://oradia.fr/en/blog/oracle-synchronicites.html">
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/blog/oracle-synchronicites">
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/blog/oracle-synchronicites.html">
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/blog/oracle-synchronicites">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://oradia.fr/en/blog/oracle-synchronicites.html">
+  <meta property="og:title" content="Synchronicities after an oracle draw: what I actually observe">
+  <meta property="og:description" content="An open study on meaningful coincidences observed after a draw made with quantum randomness. Method, honesty, first observations.">
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg">
+  <meta property="og:site_name" content="Oradia">
+  <meta property="og:locale" content="en_US">
+  <meta name="author" content="Rudy Boucheron">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Synchronicities after an oracle draw: what I actually observe",
+    "description": "An open study on meaningful coincidences observed after a draw made with quantum randomness. Method, honesty, first observations.",
+    "author": { "@type": "Person", "name": "Rudy Boucheron", "url": "https://oradia.fr/en/a-propos.html" },
+    "publisher": { "@type": "Organization", "name": "Oradia", "url": "https://oradia.fr" },
+    "datePublished": "2026-07-19",
+    "dateModified": "2026-07-19",
+    "url": "https://oradia.fr/en/blog/oracle-synchronicites.html",
+    "inLanguage": "en"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: linear-gradient(rgba(10,25,47,0.82), rgba(10,25,47,0.92)), url('/images/oradia-hero-4k.webp') center top / cover no-repeat fixed, #0a192f; color: #c8c0a8; font-family: 'Lora', Georgia, serif; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+    .site-header { padding: 20px 32px; border-bottom: 1px solid rgba(212,175,55,0.12); display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo img { width: 40px; height: 40px; border-radius: 50%; }
+    .logo span { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 600; letter-spacing: 0.12em; background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-nav { display: flex; gap: 24px; font-size: 14px; }
+    .header-nav a { color: rgba(212,175,55,0.7); transition: color 0.2s; }
+    .header-nav a:hover { color: #d4af37; }
+    main { max-width: 700px; margin: 0 auto; padding: 48px 24px 96px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(212,175,55,0.5); margin-bottom: 40px; transition: color 0.2s; letter-spacing: 0.05em; }
+    .back-link:hover { color: #d4af37; }
+    .article-meta { font-size: 12px; color: rgba(212,175,55,0.4); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+    h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(28px, 4.5vw, 42px); font-weight: 300; color: #f0c75e; line-height: 1.25; margin-bottom: 40px; }
+    .article-body { font-size: 16.5px; line-height: 1.85; color: #c8c0a8; }
+    .article-body p { margin-bottom: 24px; }
+    .article-body h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(20px, 3vw, 26px); font-weight: 400; color: #f0c75e; margin: 48px 0 20px; line-height: 1.3; }
+    .article-body em { font-style: italic; color: rgba(200,192,168,0.85); }
+    .article-body strong { font-weight: 600; color: #d4af37; }
+    .article-body a { color: #d4af37; border-bottom: 1px solid rgba(212,175,55,0.35); }
+    .article-body hr { border: none; border-top: 1px solid rgba(212,175,55,0.12); margin: 40px 0; }
+    .cta-block { margin-top: 64px; padding: 40px; background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 12px; text-align: center; }
+    .cta-block p { font-size: 15px; color: rgba(200,192,168,0.7); margin-bottom: 24px; line-height: 1.7; font-style: italic; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a1628; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; font-weight: 600; padding: 14px 36px; border-radius: 50px; letter-spacing: 0.05em; transition: opacity 0.2s; }
+    .cta-btn:hover { opacity: 0.88; }
+    .site-footer { border-top: 1px solid rgba(212,175,55,0.1); padding: 40px 32px; text-align: center; }
+    .site-footer a { color: rgba(212,175,55,0.5); font-size: 13px; }
+    .site-footer a:hover { color: #d4af37; }
+  </style>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/security.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { 'night-blue':'#0a192f','gold':'#d4af37','light-gold':'#f5e7a1','dark-blue':'#051428','celtic-blue':'#1a365d' },
+      fontFamily: { 'cormorant':['Cormorant Garamond','serif'],'cinzel':['Cinzel','serif'] }
+    } } };
+  </script>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <a href="/en/blog/" class="back-link">&larr; Back to the blog</a>
+    <p class="article-meta">7 min read &nbsp;&middot;&nbsp; Oradia</p>
+    <h1>Synchronicities after an oracle draw: what I actually observe</h1>
+
+    <div class="article-body">
+      <p>You draw a card that speaks of a necessary break. Three days later, a conversation you'd been putting off for months starts on its own. Coincidence? Probably. And yet something in you refuses to wave the event away.</p>
+      <p>This kind of experience has had a name since Carl Gustav Jung: <strong>synchronicity</strong>, which he defined as a coincidence in time between an inner state and an outer event, connected by meaning rather than causality.</p>
+      <p>The concept is fascinating and slippery at once. Fascinating, because almost everyone has lived through at least one unsettling coincidence. Slippery, because it's impossible to prove and easy to fantasize about. Our brain is a pattern-detecting machine, including where there is no pattern.</p>
+      <p>So what can you do seriously with that?</p>
+
+      <hr>
+
+      <h2>The problem with synchronicity stories</h2>
+      <p>Accounts of synchronicities suffer from three well-documented biases.</p>
+      <p><strong>Confirmation bias</strong>: we notice the coincidences that confirm what we were hoping for, and forget the hundred times nothing happened. <strong>Selection bias</strong>: only the spectacular stories circulate, never the draws that were followed by nothing. And the <strong>Barnum effect</strong>: the vaguer a message, the more precisely it seems to apply to our life.</p>
+      <p>Most oracle sites ignore these biases, or worse, exploit them. I chose a different path: look them in the eye and build a process that accounts for them.</p>
+
+      <h2>An open study, with strict rules</h2>
+      <p>Since 2026, Oradia has run an ongoing study on synchronicities reported after a Tore draw. Here are the rules I hold myself to:</p>
+      <p><strong>Genuine randomness.</strong> Only draws made with the Australian National University's quantum generator are counted. If a draw used even a single byte of simulated randomness, it's excluded. I explained why in <a href="/en/blog/oracle-tirage-quantique.html">a dedicated article on quantum draws</a>.</p>
+      <p><strong>An observation window set in advance.</strong> After their draw, each person chooses a period of 7 to 21 days during which they simply commit to staying attentive. The questionnaire is only sent once that window closes, never before. We don't ask "did something extraordinary happen to you?" in the heat of the moment &mdash; we ask for a calm, cold observation.</p>
+      <p><strong>Results published without filtering.</strong> Average scores, the distribution of felt intensity, the types of observations reported: everything is visible on <a href="https://oradia.fr/etude-synchronicites.html">the study's public page</a> (currently in French), even when the numbers don't work in our favor. A month where no one reports anything will be shown as such.</p>
+      <p><strong>No promises.</strong> Answering is optional, anonymized, and I say clearly that this sample proves nothing on its own. It's a collection of observations, not a demonstration.</p>
+
+      <hr>
+
+      <h2>What people report</h2>
+      <p>Without revealing numbers that keep evolving (they're on the study page), the most frequent categories of observation speak for themselves: <em>timing coincidences</em> (a call, an offer, an encounter that falls precisely within the window), <em>thoughts or intuitions that come true</em>, <em>recurring signs in the environment</em>, and <em>dreams connected to the intention set</em>.</p>
+      <p>One observation strikes us in particular: many people report that simply having defined an observation window changed the quality of their attention. They noticed things they wouldn't otherwise have noticed. Is that a synchronicity, or sharpened attention? Perhaps the question is framed wrong: perhaps sharpened attention is precisely the doorway in.</p>
+
+      <h2>Even the most cautious reading stays interesting</h2>
+      <p>Even under the most skeptical reading, where no "objective" synchronicity exists at all, the process still does something real: it turns a vague question into a stated intention, then into a period of conscious attention. That's exactly the mechanism the psychology of attention describes: what we actively look for, we find more often, because we finally see it.</p>
+      <p>And under the most open reading, the one held by Jung and Pauli, meaningful coincidences would be a property of reality our science can't yet describe. I don't settle the question. I observe, I publish, and I let each person form their own opinion based on honest data rather than promises.</p>
+      <p>As far as we know, this is the only study of its kind run by a French-language online oracle. It grows with every draw.</p>
+    </div>
+
+    <div class="cta-block">
+      <p>Do a draw, choose your observation window,<br>and contribute to the study if you're moved to.</p>
+      <a href="/tore.html" class="cta-btn">Do a draw and observe</a>
+    </div>
+    <nav class="related-articles" aria-label="Articles to read next" style="max-width:700px;margin:56px auto 0;padding:32px 0 0;border-top:1px solid rgba(212,175,55,0.15);">
+      <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin:0 0 20px;">Read next</p>
+      <ul style="list-style:none;padding:0;margin:0;display:grid;gap:14px;">
+        <li><a href="/en/blog/jung-pauli-synchronicites.html" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.4;border-bottom:1px solid rgba(212,175,55,0.25);padding-bottom:2px;">Jung, Pauli, and synchronicity</a></li>
+        <li><a href="/en/blog/oracle-tirage-quantique.html" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.4;border-bottom:1px solid rgba(212,175,55,0.25);padding-bottom:2px;">Oracle and quantum draws: randomness that isn't simulated</a></li>
+        <li><a href="/en/blog/fenetre-observation.html" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.4;border-bottom:1px solid rgba(212,175,55,0.25);padding-bottom:2px;">The observation window: living a draw differently</a></li>
+      </ul>
+    </nav>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <script src="/components/header-manager-en.js" defer></script>
+  <script src="/components/footer-manager-en.js" defer></script>
+</body>
+</html>
