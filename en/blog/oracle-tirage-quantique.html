@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Oracle and quantum draws: when randomness is no longer simulated — Oradia</title>
+  <meta name="description" content="Most online oracles use randomness simulated by a computer. The Oradia oracle draws its cards with a verifiable quantum generator. Here's why that difference matters.">
+  <link rel="canonical" href="https://oradia.fr/en/blog/oracle-tirage-quantique.html">
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/blog/oracle-tirage-quantique">
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/blog/oracle-tirage-quantique.html">
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/blog/oracle-tirage-quantique">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://oradia.fr/en/blog/oracle-tirage-quantique.html">
+  <meta property="og:title" content="Oracle and quantum draws: when randomness is no longer simulated">
+  <meta property="og:description" content="What sets real quantum randomness apart from computer pseudo-randomness, and why it changes the meaning of an online card draw.">
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg">
+  <meta property="og:site_name" content="Oradia">
+  <meta property="og:locale" content="en_US">
+  <meta name="author" content="Rudy Boucheron">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Oracle and quantum draws: when randomness is no longer simulated",
+    "description": "What sets real quantum randomness apart from computer pseudo-randomness, and why it changes the meaning of an online card draw.",
+    "author": { "@type": "Person", "name": "Rudy Boucheron", "url": "https://oradia.fr/en/a-propos.html" },
+    "publisher": { "@type": "Organization", "name": "Oradia", "url": "https://oradia.fr" },
+    "datePublished": "2026-07-19",
+    "dateModified": "2026-07-19",
+    "url": "https://oradia.fr/en/blog/oracle-tirage-quantique.html",
+    "inLanguage": "en"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: linear-gradient(rgba(10,25,47,0.82), rgba(10,25,47,0.92)), url('/images/oradia-hero-4k.webp') center top / cover no-repeat fixed, #0a192f; color: #c8c0a8; font-family: 'Lora', Georgia, serif; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+    .site-header { padding: 20px 32px; border-bottom: 1px solid rgba(212,175,55,0.12); display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo img { width: 40px; height: 40px; border-radius: 50%; }
+    .logo span { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 600; letter-spacing: 0.12em; background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-nav { display: flex; gap: 24px; font-size: 14px; }
+    .header-nav a { color: rgba(212,175,55,0.7); transition: color 0.2s; }
+    .header-nav a:hover { color: #d4af37; }
+    main { max-width: 700px; margin: 0 auto; padding: 48px 24px 96px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(212,175,55,0.5); margin-bottom: 40px; transition: color 0.2s; letter-spacing: 0.05em; }
+    .back-link:hover { color: #d4af37; }
+    .article-meta { font-size: 12px; color: rgba(212,175,55,0.4); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+    h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(28px, 4.5vw, 42px); font-weight: 300; color: #f0c75e; line-height: 1.25; margin-bottom: 40px; }
+    .article-body { font-size: 16.5px; line-height: 1.85; color: #c8c0a8; }
+    .article-body p { margin-bottom: 24px; }
+    .article-body h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(20px, 3vw, 26px); font-weight: 400; color: #f0c75e; margin: 48px 0 20px; line-height: 1.3; }
+    .article-body em { font-style: italic; color: rgba(200,192,168,0.85); }
+    .article-body strong { font-weight: 600; color: #d4af37; }
+    .article-body a { color: #d4af37; border-bottom: 1px solid rgba(212,175,55,0.35); }
+    .article-body hr { border: none; border-top: 1px solid rgba(212,175,55,0.12); margin: 40px 0; }
+    .cta-block { margin-top: 64px; padding: 40px; background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 12px; text-align: center; }
+    .cta-block p { font-size: 15px; color: rgba(200,192,168,0.7); margin-bottom: 24px; line-height: 1.7; font-style: italic; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a1628; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; font-weight: 600; padding: 14px 36px; border-radius: 50px; letter-spacing: 0.05em; transition: opacity 0.2s; }
+    .cta-btn:hover { opacity: 0.88; }
+    .site-footer { border-top: 1px solid rgba(212,175,55,0.1); padding: 40px 32px; text-align: center; }
+    .site-footer a { color: rgba(212,175,55,0.5); font-size: 13px; }
+    .site-footer a:hover { color: #d4af37; }
+  </style>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/security.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { 'night-blue':'#0a192f','gold':'#d4af37','light-gold':'#f5e7a1','dark-blue':'#051428','celtic-blue':'#1a365d' },
+      fontFamily: { 'cormorant':['Cormorant Garamond','serif'],'cinzel':['Cinzel','serif'] }
+    } } };
+  </script>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <a href="/en/blog/" class="back-link">&larr; Back to the blog</a>
+    <p class="article-meta">6 min read &nbsp;&middot;&nbsp; Oradia</p>
+    <h1>Oracle and quantum draws: when randomness is no longer simulated</h1>
+
+    <div class="article-body">
+      <p>When you draw a card on an online oracle site, who chooses the card?</p>
+      <p>The honest answer, for almost every site: an algorithm. A mathematical formula that produces numbers with the <em>appearance</em> of randomness, but which are actually entirely determined by their starting point. This is called pseudo-randomness, and it's perfectly fine for shuffling a playlist or dealing cards in online poker.</p>
+      <p>But for an oracle draw, this question deserves a closer look. Because if you take seriously the idea that a draw might mean something, the nature of the randomness that chooses the cards isn't a minor detail.</p>
+
+      <hr>
+
+      <h2>Pseudo-randomness: randomness that isn't</h2>
+      <p>A classical computer is a deterministic machine. It doesn't know how to produce randomness, only simulate it. Functions like <em>Math.random()</em>, used by most draw sites, start from an initial value (often the machine's clock) and run a sequence of calculations. The result looks unpredictable, but if you knew the starting value, you could predict every card drawn, indefinitely.</p>
+      <p>In other words: in a typical online draw, the card was already determined before you even set your intention. What you experience as a moment of openness is, technically, the unfolding of a calculation already written.</p>
+
+      <h2>Quantum randomness: genuine indeterminacy</h2>
+      <p>Quantum physics offers something else. At the scale of particles, some events are fundamentally undetermined: it isn't that we lack the information to predict them, it's that the outcome doesn't exist before it's measured. This is one of the most solid, and strangest, results of modern physics.</p>
+      <p>Some labs harness this property to produce genuine randomness. The Outshift QRNG generator (quantum hardware developed by Cisco) and the one at the Australian National University's (ANU) quantum optics lab measure quantum fluctuations &mdash; at the level of quantum vacuum or an equivalent phenomenon, a fundamental noise in reality itself &mdash; and convert them into random numbers. These numbers are predicted by nothing and no one. They come into being at the moment they're measured.</p>
+      <p><strong>The Oradia oracle uses these generators for every card drawn</strong>: Outshift QRNG as the primary source, with the ANU generator as a backup if Outshift is temporarily unavailable. When you flip the coin and turn over a card during a Tore draw, the choice is made by a quantum measurement taken at that exact moment, not by a calculation run in advance.</p>
+
+      <hr>
+
+      <h2>Does it actually change anything?</h2>
+      <p>Let's be rigorous: nothing scientifically proves that a quantum draw is "more accurate" than a simulated one. It would be dishonest to claim that.</p>
+      <p>What changes is the nature of the gesture. With simulated randomness, the draw is theater: the result pre-exists the question. With quantum randomness, the draw is an event: at the moment you set your intention, the universe hasn't yet "decided" which cards will come up. The indeterminacy is real, physical, measurable.</p>
+      <p>For anyone interested in synchronicities &mdash; those meaningful coincidences Jung named &mdash; this distinction opens a fascinating question: if correspondences between a draw and the events of a life were to exist, they could only be seriously studied using genuine randomness. On pseudo-randomness, the exercise would make no sense at all.</p>
+      <p>That's exactly what I do with <a href="https://oradia.fr/etude-synchronicites.html">the synchronicities study</a> (currently in French): only 100% quantum draws are counted there, and results are published as they are, without filtering.</p>
+
+      <h2>Transparency as a principle</h2>
+      <p>Every Tore draw is labeled with its actual source. If the Australian quantum API is temporarily unavailable, the system falls back to a local cryptographic generator, and the draw is then marked as such and excluded from the study's statistics. No gray area: either the draw is fully quantum, or it doesn't count.</p>
+      <p>This rigor may seem excessive for an oracle. I believe, on the contrary, that it's the condition for the whole approach to make sense. An oracle that takes itself seriously has to be beyond reproach on what it can control: the quality of its randomness, the honesty of its data, the clarity of what it promises and what it doesn't.</p>
+      <p>The Tore doesn't predict the future. It holds up a symbolic mirror to you, chosen by a quantum event that belongs to no one. What you see in it belongs to you.</p>
+    </div>
+
+    <div class="cta-block">
+      <p>Two free draws, chosen by verifiable quantum randomness.<br>No sign-up required to try it.</p>
+      <a href="/tore.html" class="cta-btn">Do a quantum draw</a>
+    </div>
+    <nav class="related-articles" aria-label="Articles to read next" style="max-width:700px;margin:56px auto 0;padding:32px 0 0;border-top:1px solid rgba(212,175,55,0.15);">
+      <p style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin:0 0 20px;">Read next</p>
+      <ul style="list-style:none;padding:0;margin:0;display:grid;gap:14px;">
+        <li><a href="/en/blog/oracle-synchronicites.html" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.4;border-bottom:1px solid rgba(212,175,55,0.25);padding-bottom:2px;">Synchronicities after an oracle draw</a></li>
+        <li><a href="/en/blog/jung-pauli-synchronicites.html" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.4;border-bottom:1px solid rgba(212,175,55,0.25);padding-bottom:2px;">Jung, Pauli, and synchronicity</a></li>
+        <li><a href="/en/blog/tirage-gratuit-sans-inscription.html" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;line-height:1.4;border-bottom:1px solid rgba(212,175,55,0.25);padding-bottom:2px;">Free oracle draw, no sign-up</a></li>
+      </ul>
+    </nav>
+  </main>
+
+  <div id="footer-placeholder"></div>
+  <script src="/components/header-manager-en.js" defer></script>
+  <script src="/components/footer-manager-en.js" defer></script>
+</body>
+</html>
