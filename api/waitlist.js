@@ -327,8 +327,8 @@ async function sendWaitlistConfirmationEmail(email) {
                (500px vs ~636px de large) pour rester secondaire sans être trop discrète. -->
           <tr>
             <td align="center" style="padding:0 40px 26px;">
-              <a href="https://play.google.com/store/apps/details?id=fr.oradia.app" target="_blank">
-                <img src="https://oradia.fr/images/medias/banniere_pub_app_mobile.webp" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play" width="580" style="display:block; width:100%; height:auto; max-width:580px; border:0; border-radius:12px; margin:0 auto;">
+              <a href="https://oradia.fr/app-beta-inscription.html" target="_blank">
+                <img src="https://oradia.fr/images/medias/banniere_pub_app_mobile.webp" alt="Oradia bêta — Découvrez l'application mobile en avant-première, rejoindre la liste d'attente" width="580" style="display:block; width:100%; height:auto; max-width:580px; border:0; border-radius:12px; margin:0 auto;">
               </a>
             </td>
           </tr>
@@ -375,7 +375,7 @@ async function sendWaitlistConfirmationEmail(email) {
 </body>
 </html>
         `,
-        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — L\'app mobile ORADIA est aussi disponible en bêta : play.google.com/store/apps/details?id=fr.oradia.app — Avec gratitude, Rudy Boucheron'
+        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — L\'app mobile ORADIA est aussi disponible en bêta, sur liste d\'attente : oradia.fr/app-beta-inscription.html — Avec gratitude, Rudy Boucheron'
       })
     });
 
@@ -623,7 +623,60 @@ module.exports = async (req, res) => {
         });
       }
     }
-    
+
+    // ===== BETA-SIGNUP : demande d'accès à la bêta de l'app mobile =====
+    // Ne donne jamais directement le lien Play Store (piste "Tests fermés" — un
+    // non-testeur y atterrit sur "Élément introuvable"). La personne est taguée
+    // 'beta-app-en-attente' ; un admin l'ajoute ensuite manuellement au groupe
+    // Google Play (aucune API disponible pour un compte Google personnel), puis
+    // déclenche l'email avec le vrai lien depuis le dashboard (Répertoire).
+    if (body && body.action === 'beta-signup') {
+      try {
+        const email = String(body.email || '').trim().toLowerCase();
+        const name = String(body.name || '').trim().slice(0, 100);
+        if (!isValidEmail(email)) {
+          return res.status(400).json({ success: false, message: 'Veuillez entrer une adresse email valide.' });
+        }
+
+        validateEnvironment();
+        const supabase = getSupabaseClient();
+
+        const { data: existing } = await supabase
+          .from('newsletter_contacts')
+          .select('status, tags, full_name')
+          .ilike('email', email)
+          .maybeSingle();
+        const isNewOrReactivated = !existing || existing.status !== 'active';
+        const tags = Array.from(new Set([...(existing?.tags || ['general']), 'beta-app-en-attente']));
+
+        const { error } = await supabase
+          .from('newsletter_contacts')
+          .upsert({
+            email,
+            source: 'app-beta',
+            status: 'active',
+            tags,
+            full_name: name || existing?.full_name || null,
+            metadata: { page: 'app-beta', subscribed_at: new Date().toISOString() }
+          }, { onConflict: 'email' });
+
+        if (error) {
+          console.error('[BetaSignup] upsert failed:', error.message);
+          return res.status(500).json({ success: false, message: "Impossible d'enregistrer votre demande pour le moment." });
+        }
+
+        await Promise.all([
+          isNewOrReactivated ? sendWaitlistConfirmationEmail(email) : Promise.resolve(false),
+          addContactToBrevoList(email)
+        ]);
+
+        return res.status(200).json({ success: true, message: 'Demande enregistrée.' });
+      } catch (betaError) {
+        console.error('[BetaSignup] exception:', betaError.message);
+        return res.status(500).json({ success: false, message: 'Erreur serveur, réessayez dans un instant.' });
+      }
+    }
+
     // ===== WAITLIST : inscription newsletter (comportement existant) =====
 
     // ── Rate limiting newsletter ──
