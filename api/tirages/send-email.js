@@ -286,7 +286,74 @@ async function handleSendEmail(req, res) {
 
   try {
     const { email, intention, cards, analysis, synthesis, pistes, subscribeNewsletter,
-            observationWindow: obsWinRaw, observationDays, observationText, attentionPoints } = req.body;
+            observationWindow: obsWinRaw, observationDays, observationText, attentionPoints,
+            lang: rawLang } = req.body;
+    const lang = rawLang === 'en' ? 'en' : 'fr';
+    // Chrome de l'email (habillage autour du texte IA, déjà dans la bonne langue
+    // puisque produit par lib/tore-analysis-prompt.js côté lang correspondant).
+    // Par défaut 'fr' : les tirages programmés (qui n'envoient jamais lang)
+    // produisent un email strictement identique à avant cet ajout.
+    const EMAIL_STRINGS = {
+      fr: {
+        title: 'Votre Tirage du Tore', tagline: 'La Boussole Int\u00e9rieure',
+        yourIntention: 'Votre intention', yourCards: 'Vos Cartes',
+        messageFromOracle: "Message de l'Oracle", pathsToExplore: 'Pistes \u00e0 explorer',
+        synthesis: 'Synth\u00e8se', newDraw: 'Nouveau tirage',
+        newsletterLabel: "La lettre d'Oradia",
+        newsletterDesc: "Symbolique du Tore, int\u00e9riorit\u00e9 et pratiques d'observation.",
+        subscribe: "S'inscrire", preorderOpen: 'Pr\u00e9commandes ouvertes',
+        oracleName: "L'Oracle Oradia",
+        oracleDesc: '64 cartes \u00b7 Livret \u00b7 Conte initiatique \u00b7 Pi\u00e8ce artisanale',
+        preorderBtn: 'Pr\u00e9commander', gratitude: 'Avec gratitude,',
+        founder: "Fondateur d'Oradia",
+        footerDisclaimer: 'Tu re\u00e7ois cet email car tu as demand\u00e9 \u00e0 recevoir ton tirage.<br>Il ne constitue pas un abonnement \u00e0 notre newsletter.',
+        bridgeLabel: 'Passerelle', mutatingLine: 'ligne mutante', cosmosCenter: 'Centre du Tore',
+        obsWindowLabel: "Fen\u00eatre d'observation",
+        dayWord: (n) => n > 1 ? 'jours' : 'jour',
+        oracleRecoNote: (n) => ` (recommandation de l'oracle : ${n} jours)`,
+        obsChoiceSentence: (durLabel, oracleNote) => `Vous avez choisi une fen\u00eatre d'observation de ${durLabel} pour votre tirage${oracleNote}.`,
+        obsClosingSentence: (dateStr) => `Un email de cl\u00f4ture vous sera envoy\u00e9 le ${dateStr} pour recueillir vos retours d'exp\u00e9rience.`,
+        dateLocale: 'fr-FR',
+        subjectWithIntention: (i) => `Rudy d'Oradia - Votre tirage du Tore : ${i}`,
+        subjectPlain: "Rudy d'Oradia - Votre tirage du Tore",
+        successMsg: 'Email envoy\u00e9 avec succ\u00e8s',
+        genericErrorMsg: "Erreur lors de l'envoi de l'email",
+        textTitle: 'VOTRE TIRAGE DU TORE', textYourCards: 'VOS CARTES:',
+        textMessageFromOracle: "MESSAGE DE L'ORACLE:", textPathsToExplore: 'PISTES \u00c0 EXPLORER:',
+        textSynthesis: 'SYNTH\u00c8SE:', textNewDraw: 'Faire un nouveau tirage : ',
+        textGratitude: 'Avec gratitude,'
+      },
+      en: {
+        title: 'Your Torus Draw', tagline: 'The Inner Compass',
+        yourIntention: 'Your intention', yourCards: 'Your Cards',
+        messageFromOracle: 'Message from the Oracle', pathsToExplore: 'Paths to Explore',
+        synthesis: 'Synthesis', newDraw: 'New Draw',
+        newsletterLabel: "Oradia's Letter",
+        newsletterDesc: 'Torus symbolism, inner life, and observation practices.',
+        subscribe: 'Subscribe', preorderOpen: 'Preorders Open',
+        oracleName: 'The Oradia Oracle',
+        oracleDesc: '64 cards \u00b7 Booklet \u00b7 Initiatory tale \u00b7 Handcrafted coin',
+        preorderBtn: 'Preorder', gratitude: 'With gratitude,',
+        founder: 'Founder of Oradia',
+        footerDisclaimer: 'You are receiving this email because you asked to receive your draw.<br>It does not constitute a subscription to our newsletter.',
+        bridgeLabel: 'Bridge', mutatingLine: 'bridge line', cosmosCenter: 'Center of the Torus',
+        obsWindowLabel: 'Observation Window',
+        dayWord: (n) => n > 1 ? 'days' : 'day',
+        oracleRecoNote: (n) => ` (the oracle's recommendation: ${n} days)`,
+        obsChoiceSentence: (durLabel, oracleNote) => `You chose an observation window of ${durLabel} for your draw${oracleNote}.`,
+        obsClosingSentence: (dateStr) => `A closing email will be sent to you on ${dateStr} to gather your feedback.`,
+        dateLocale: 'en-US',
+        subjectWithIntention: (i) => `Rudy from Oradia - Your Torus Draw: ${i}`,
+        subjectPlain: 'Rudy from Oradia - Your Torus Draw',
+        successMsg: 'Email sent successfully',
+        genericErrorMsg: 'Error sending the email',
+        textTitle: 'YOUR TORUS DRAW', textYourCards: 'YOUR CARDS:',
+        textMessageFromOracle: 'MESSAGE FROM THE ORACLE:', textPathsToExplore: 'PATHS TO EXPLORE:',
+        textSynthesis: 'SYNTHESIS:', textNewDraw: 'Do a new draw: ',
+        textGratitude: 'With gratitude,'
+      }
+    };
+    const S = EMAIL_STRINGS[lang];
 
     // Normaliser la fenêtre d'observation : accepte l'ancien format objet OU les champs séparés
     const observationWindow = obsWinRaw || (observationDays ? {
@@ -339,12 +406,12 @@ async function handleSendEmail(req, res) {
         bridgeHtml = `
           <div style="text-align:center;margin-top:8px;">
             <div style="width:1px;height:10px;background:rgba(212,175,55,0.25);margin:0 auto;"></div>
-            <p style="margin:3px 0 5px;color:rgba(212,175,55,0.45);font-size:7px;letter-spacing:1.5px;text-transform:uppercase;">&#9830; Passerelle</p>
+            <p style="margin:3px 0 5px;color:rgba(212,175,55,0.45);font-size:7px;letter-spacing:1.5px;text-transform:uppercase;">&#9830; ${S.bridgeLabel}</p>
             <img src="${bSrc}" alt="${b.name.replace(/_/g,' ')}" width="${BRIDGE_W}" height="${BRIDGE_H}"
               style="display:block;width:${BRIDGE_W}px;height:${BRIDGE_H}px;object-fit:cover;border-radius:6px;margin:0 auto;border:1px solid rgba(212,175,55,0.45);"
               onerror="this.style.background='${bColor}';this.removeAttribute('src');">
             <p style="margin:5px 0 1px;color:#f5e7a1;font-size:11px;font-weight:700;line-height:1.3;">${(b.name.replace(/_/g,' ')).replace(/\b\w/g, l => l.toUpperCase())}</p>
-            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:10px;font-style:italic;">ligne mutante</p>
+            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:10px;font-style:italic;">${S.mutatingLine}</p>
           </div>`;
       }
 
@@ -380,7 +447,7 @@ async function handleSendEmail(req, res) {
               style="display:block;width:${COSMOS_W}px;height:${COSMOS_H}px;object-fit:cover;border-radius:9px;margin:0 auto;border:2px solid rgba(212,175,55,0.55);"
               onerror="this.style.background='${FAMILY_COLORS.memoire_cosmos}';this.removeAttribute('src');">
             <p style="margin:8px 0 2px;color:#f0c75e;font-size:11px;font-weight:700;">${cosmosCard.name.replace(/_/g,' ')}</p>
-            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:8px;letter-spacing:2px;text-transform:uppercase;">Centre du Tore</p>
+            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:8px;letter-spacing:2px;text-transform:uppercase;">${S.cosmosCenter}</p>
           </td></tr>
         </table>
       </td></tr>`;
@@ -398,11 +465,10 @@ async function handleSendEmail(req, res) {
     if (observationWindow) {
       const dur = observationWindow.durationDays || 1;
       const aiMatch = observationWindow.observationText
-        ? observationWindow.observationText.match(/(\d+)\s*jour/i) : null;
+        ? observationWindow.observationText.match(lang === 'en' ? /(\d+)\s*day/i : /(\d+)\s*jour/i) : null;
       const suggested = aiMatch ? parseInt(aiMatch[1]) : null;
-      const durLabel = dur > 1 ? (dur + ' jours') : (dur + ' jour');
-      const oracleNote = (suggested && suggested !== dur)
-        ? ' (recommandation de l\'oracle : ' + suggested + ' jours)' : '';
+      const durLabel = dur + ' ' + S.dayWord(dur);
+      const oracleNote = (suggested && suggested !== dur) ? S.oracleRecoNote(suggested) : '';
 
       const attentionHtml = (observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0)
         ? '<ul style="margin:6px 0 0;padding-left:16px;">'
@@ -413,9 +479,9 @@ async function handleSendEmail(req, res) {
         : '';
 
       const closingHtml = observationWindow.closesAt
-        ? '<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">Un email de clôture vous sera envoyé le '
-          + new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-          + ' pour recueillir vos retours d\'expérience.</p>'
+        ? '<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">'
+          + S.obsClosingSentence(new Date(observationWindow.closesAt).toLocaleDateString(S.dateLocale, { weekday: 'long', day: 'numeric', month: 'long' }))
+          + '</p>'
         : '';
 
       obsWindowHtml = '<tr><td style="padding:0 32px 24px;">'
@@ -423,8 +489,8 @@ async function handleSendEmail(req, res) {
         + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
         + '<td style="vertical-align:top;width:50px;padding-right:14px;text-align:center;"><p style="margin:0;font-size:22px;line-height:1;">&#127758;</p></td>'
         + '<td style="vertical-align:top;">'
-        + '<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Fen&ecirc;tre d\'observation</p>'
-        + '<p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">Vous avez choisi une fen&ecirc;tre d\'observation de ' + durLabel + ' pour votre tirage' + oracleNote + '.</p>'
+        + '<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">' + S.obsWindowLabel + '</p>'
+        + '<p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">' + S.obsChoiceSentence(durLabel, oracleNote) + '</p>'
         + attentionHtml
         + closingHtml
         + '</td></tr></table></div></td></tr>';
@@ -445,7 +511,7 @@ async function handleSendEmail(req, res) {
     };
 
     const htmlContent = `<!DOCTYPE html>
-<html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="${lang}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -485,12 +551,12 @@ async function handleSendEmail(req, res) {
                 </td>
               </tr>
             </table>
-            <h1 style="margin:0 0 5px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">Votre Tirage du Tore</h1>
-            <p style="margin:0;color:#8a6d20;font-size:10px;letter-spacing:2px;text-transform:uppercase;">La Boussole Int&#233;rieure</p>
+            <h1 style="margin:0 0 5px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">${S.title}</h1>
+            <p style="margin:0;color:#8a6d20;font-size:10px;letter-spacing:2px;text-transform:uppercase;">${S.tagline}</p>
             ${intention ? `
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;border:1px solid #3a3010;" bgcolor="#0c1830">
               <tr><td style="padding:14px 20px;">
-                <p style="margin:0 0 4px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Votre intention</p>
+                <p style="margin:0 0 4px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">${S.yourIntention}</p>
                 <p style="margin:0;color:#f5e7a1;font-size:14px;font-style:italic;line-height:1.5;">&#8220; ${intention} &#8221;</p>
               </td></tr>
             </table>` : ''}
@@ -500,7 +566,7 @@ async function handleSendEmail(req, res) {
         <!-- CARTES -->
         <tr>
           <td class="pad-sm" style="padding:24px 24px 16px;" bgcolor="#050a19">
-            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Vos Cartes &#10022;</p>
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; ${S.yourCards} &#10022;</p>
             ${cardsWheelHtml}
           </td>
         </tr>
@@ -512,7 +578,7 @@ async function handleSendEmail(req, res) {
         ${analysis ? `
         <tr>
           <td class="pad-sm" style="padding:24px 32px 16px;" bgcolor="#050a19">
-            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Message de l'Oracle &#10022;</p>
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; ${S.messageFromOracle} &#10022;</p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:2px solid #8a6d20;">
               <tr><td style="padding:4px 0 4px 20px;">${formatAnalysis(analysis)}</td></tr>
             </table>
@@ -523,7 +589,7 @@ async function handleSendEmail(req, res) {
         ${pistes ? `
         <tr>
           <td class="pad-sm" style="padding:4px 32px 16px;" bgcolor="#050a19">
-            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Pistes &#224; explorer &#10022;</p>
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; ${S.pathsToExplore} &#10022;</p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:2px solid #8a6d20;">
               <tr><td style="padding:4px 0 4px 20px;">${formatAnalysis(pistes)}</td></tr>
             </table>
@@ -536,7 +602,7 @@ async function handleSendEmail(req, res) {
           <td style="padding:0 32px 20px;" bgcolor="#050a19">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #3a3010;" bgcolor="#0c1830">
               <tr><td style="padding:16px 20px;">
-                <p style="margin:0 0 5px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Synth&#232;se</p>
+                <p style="margin:0 0 5px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">${S.synthesis}</p>
                 <p style="margin:0;color:#f5e7a1;font-size:14px;line-height:1.8;font-style:italic;">${synthesis.replace(/\n/g, ' ')}</p>
               </td></tr>
             </table>
@@ -549,8 +615,8 @@ async function handleSendEmail(req, res) {
         <!-- CTA TIRAGE -->
         <tr>
           <td style="padding:16px 32px 20px;text-align:center;" bgcolor="#050a19">
-            <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:13px 36px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">
-              Nouveau tirage
+            <a href="https://oradia.fr/${lang === 'en' ? 'en/' : ''}tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:13px 36px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">
+              ${S.newDraw}
             </a>
           </td>
         </tr>
@@ -565,12 +631,12 @@ async function handleSendEmail(req, res) {
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td class="card-col" style="vertical-align:middle;">
-                  <p style="margin:0 0 3px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">La lettre d'Oradia</p>
-                  <p style="margin:0;color:#c8c0a8;font-size:12px;line-height:1.6;">Symbolique du Tore, int&#233;riorit&#233; et pratiques d'observation.</p>
+                  <p style="margin:0 0 3px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">${S.newsletterLabel}</p>
+                  <p style="margin:0;color:#c8c0a8;font-size:12px;line-height:1.6;">${S.newsletterDesc}</p>
                 </td>
                 <td style="vertical-align:middle;padding-left:20px;white-space:nowrap;width:110px;">
                   <a href="https://oradia.fr/#newsletter" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:10px 20px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:0.05em;white-space:nowrap;font-family:Georgia,serif;">
-                    S'inscrire
+                    ${S.subscribe}
                   </a>
                 </td>
               </tr>
@@ -586,10 +652,10 @@ async function handleSendEmail(req, res) {
                 <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
               </td></tr>
               <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-                <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-                <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-                <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-                <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+                <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">${S.preorderOpen}</p>
+                <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">${S.oracleName}</p>
+                <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">${S.oracleDesc}</p>
+                <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${S.preorderBtn}</a>
               </td></tr>
             </table>
           </td>
@@ -598,9 +664,9 @@ async function handleSendEmail(req, res) {
         <!-- FOOTER -->
         <tr>
           <td align="center" style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15);" bgcolor="#040c1a">
-            <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+            <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">${S.gratitude}</p>
             <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-            <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+            <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">${S.founder}</p>
             <p style="margin:0 0 20px; text-align:center;">
               <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
               <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
@@ -608,7 +674,7 @@ async function handleSendEmail(req, res) {
             </p>
             <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
-            <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as demandé à recevoir ton tirage.<br>Il ne constitue pas un abonnement à notre newsletter.</p>
+            <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">${S.footerDisclaimer}</p>
           </td>
         </tr>
 
@@ -622,19 +688,19 @@ async function handleSendEmail(req, res) {
 </html>`;
 
     const textContent = `
-VOTRE TIRAGE DU TORE
+${S.textTitle}
 ${intention ? `\n« ${intention} »\n` : ''}
 
-VOS CARTES:
+${S.textYourCards}
 ${cards.map(c => `- ${c.name} (${c.family})`).join('\n')}
 
-${analysis ? `\nMESSAGE DE L'ORACLE:\n${analysis}\n` : ''}
-${pistes ? `\nPISTES À EXPLORER:\n${pistes}\n` : ''}
-${synthesis ? `\nSYNTHÈSE:\n${synthesis}\n` : ''}
+${analysis ? `\n${S.textMessageFromOracle}\n${analysis}\n` : ''}
+${pistes ? `\n${S.textPathsToExplore}\n${pistes}\n` : ''}
+${synthesis ? `\n${S.textSynthesis}\n${synthesis}\n` : ''}
 
-Faire un nouveau tirage : https://oradia.fr/tore.html
+${S.textNewDraw}https://oradia.fr/${lang === 'en' ? 'en/' : ''}tore.html
 
-Avec gratitude,
+${S.textGratitude}
 Rudy Boucheron
 oradia.fr
     `;
@@ -653,7 +719,7 @@ oradia.fr
           email: 'contact@oradia.fr'
         },
         to: [{ email }],
-        subject: intention ? `Rudy d'Oradia - Votre tirage du Tore : ${intention}` : "Rudy d'Oradia - Votre tirage du Tore",
+        subject: intention ? S.subjectWithIntention(intention) : S.subjectPlain,
         htmlContent,
         textContent
       })
@@ -662,7 +728,7 @@ oradia.fr
     if (!brevoResponse.ok) {
       const error = await brevoResponse.json();
       console.error('Brevo error:', error);
-      throw new Error('Erreur lors de l\'envoi de l\'email');
+      throw new Error(S.genericErrorMsg);
     }
 
     // Si abonnement newsletter demandé
@@ -687,13 +753,13 @@ oradia.fr
       }
     }
 
-    return res.status(200).json({ success: true, message: 'Email envoyé avec succès' });
+    return res.status(200).json({ success: true, message: S.successMsg });
 
   } catch (error) {
     console.error('Send tirage email error:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Erreur lors de l\'envoi de l\'email'
+      message: error.message || S.genericErrorMsg
     });
   }
 }

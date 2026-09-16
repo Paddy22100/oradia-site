@@ -265,7 +265,8 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const { intention, cards, userEmail, gender } = body;
+  const { intention, cards, userEmail, gender, lang: rawLang } = body;
+  const lang = rawLang === 'en' ? 'en' : 'fr';
   if (!Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({ error: 'Cards array required' });
   }
@@ -278,12 +279,15 @@ export default async function handler(req, res) {
   // ── Gate rate limiting abonnés ───────────────────────────────────────────
   const rateCheck = await checkAndIncrementDrawCount(userEmail || null);
   if (!rateCheck.allowed) {
-    const resetDate = new Date(rateCheck.resetsAt).toLocaleDateString('fr-FR', {
+    const resetDate = new Date(rateCheck.resetsAt).toLocaleDateString(lang === 'en' ? 'en-US' : 'fr-FR', {
       day: 'numeric', month: 'long'
     });
+    const message = lang === 'en'
+      ? `Your draw space is taking a pause this month (${MONTHLY_DRAW_LIMIT} draws reached). It will reset on ${resetDate}.`
+      : `Votre espace de tirage marque une pause ce mois-ci (${MONTHLY_DRAW_LIMIT} tirages atteints). Il se renouvellera le ${resetDate}.`;
     return res.status(429).json({
       error: 'monthly_limit_reached',
-      message: `Votre espace de tirage marque une pause ce mois-ci (${MONTHLY_DRAW_LIMIT} tirages atteints). Il se renouvellera le ${resetDate}.`,
+      message,
       resetsAt: rateCheck.resetsAt,
     });
   }
@@ -294,7 +298,7 @@ export default async function handler(req, res) {
   // (elle annonçait "3 sections" pour 4 titres, entre autres) et ne portait pas les
   // correctifs appliqués à l'autre copie, comme l'interdiction de dates inventées.
   const { buildAnalysisPrompt, cleanAnalysisText } = require('../lib/tore-analysis-prompt.js');
-  const userPrompt = buildAnalysisPrompt({ intention, cards, gender });
+  const userPrompt = buildAnalysisPrompt({ intention, cards, gender, lang });
 
   try {
     const anthropicResponse = await callAnthropicWithFallback({
