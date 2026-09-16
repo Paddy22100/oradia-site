@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Oradia - About</title>
+  <meta name="description" content="Discover the story and vision behind Oradia: an ecosystem of inner transformation in service of life, created in Brittany by Rudy Boucheron." />
+  <link rel="canonical" href="https://oradia.fr/en/a-propos.html" />
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/a-propos.html" />
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/a-propos.html" />
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/a-propos.html" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://oradia.fr/en/a-propos.html" />
+  <meta property="og:title" content="About Oradia" />
+  <meta property="og:description" content="Discover the story and vision behind Oradia: an ecosystem of inner transformation in service of life, created in Brittany." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Oradia" />
+  <meta property="og:locale" content="en_US" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .header-bg{ background:rgba(5,20,40,.98); }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+.hero-section{
+  background-image: url("/images/oradia-hero-4k.webp");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+.hero-overlay{
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(5,20,40,0.2) 0%,
+    rgba(5,20,40,0.9) 70%
+  );
+  pointer-events: none;
+}
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+    .animate-spin-slow{ animation: spin 12s linear infinite }
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes orbit{0%{transform:rotate(0deg) translateX(100px) rotate(0deg)}100%{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+    .pulse{ animation:pulse 2s infinite }
+    @keyframes pulse{
+      0% { box-shadow:0 0 0 0 rgba(212,175,55,.4); transform:translate(-50%,-50%) scale(1) }
+      50%{ box-shadow:0 0 0 10px rgba(212,175,55,.2); transform:translate(-50%,-50%) scale(1.05) }
+      100%{ box-shadow:0 0 0 0 rgba(212,175,55,0); transform:translate(-50%,-50%) scale(1) }
+    }
+
+    @keyframes intentionGlow {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+
+    @keyframes inputPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes textGlow {
+      0% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+      50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+    }
+
+    @keyframes ripple {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+
+    .intention-animate { animation: intentionGlow 3s ease-in-out infinite; }
+    .input-focus { animation: inputPulse 0.5s ease-out; }
+    .text-glow { animation: textGlow 2s ease-in-out infinite; }
+
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.3);
+      transform: scale(0);
+      pointer-events: none;
+    }
+@keyframes zoom {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
+@media (max-width: 768px){
+  .header-bg { padding: 0.5rem 1rem; }
+  .header-bg .flex.items-center img { width: 3rem; height: 3rem; }
+  .header-bg .cormorant { font-size: 1.5rem; }
+  .hero-section { min-height: 70vh; padding: 1rem 0; }
+  .hero-content { padding: 1rem; }
+  .hero-title { font-size: 2.5rem; line-height: 1.1; }
+  .hero-subtitle { font-size: 1.1rem; }
+  .section-padding { padding: 3rem 1rem; }
+  .container { padding: 0 1rem; }
+  .max-w-4xl { max-width: 100%; }
+  .max-w-6xl { max-width: 100%; }
+  .grid-cols-1.md\:grid-cols-2 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-1.md\:grid-cols-3 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-3 { grid-template-columns: 1fr; gap: 1rem; }
+  .rounded-2xl { border-radius: 1rem; }
+  .p-8 { padding: 1.5rem; }
+  .p-6 { padding: 1rem; }
+  .text-4xl { font-size: 2rem; }
+  .text-5xl { font-size: 2.5rem; }
+  .text-3xl { font-size: 1.75rem; }
+  .text-2xl { font-size: 1.5rem; }
+  .btn-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  .btn-outline-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  #mobileMenu { max-height: 80vh; overflow-y: auto; }
+  #mobileMenu a { padding: 0.75rem 1rem; font-size: 0.9rem; }
+  .space-y-4 > * + * { margin-top: 1rem; }
+  .space-y-6 > * + * { margin-top: 1.5rem; }
+  .mb-8 { margin-bottom: 2rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .mb-12 { margin-bottom: 3rem; }
+  .gap-12 { gap: 3rem; }
+  .w-64.h-64 { width: 12rem; height: 12rem; }
+  .w-20.h-20 { width: 4rem; height: 4rem; }
+  .w-16.h-16 { width: 3.5rem; height: 3.5rem; }
+  .text-center { text-align: center; }
+  p.leading-relaxed:not(.text-center):not(.italic) {
+    text-align: justify;
+    text-align-last: left;
+    hyphens: auto;
+  }
+}
+
+@media (max-width: 480px){
+  .hero-section { min-height: 60vh; }
+  .hero-title { font-size: 2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  .header-bg .flex.items-center img { width: 2.5rem; height: 2.5rem; }
+  .header-bg .cormorant { font-size: 1.25rem; }
+  .section-padding { padding: 2rem 0.75rem; }
+  .p-8 { padding: 1rem; }
+  .p-6 { padding: 0.75rem; }
+  .text-4xl { font-size: 1.75rem; }
+  .text-5xl { font-size: 2rem; }
+  .text-3xl { font-size: 1.5rem; }
+  .text-2xl { font-size: 1.25rem; }
+  .grid-cols-3 { gap: 0.75rem; }
+  .gap-8 { gap: 1rem; }
+  .btn-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+  .btn-outline-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+  .text-xl { font-size: 1.1rem; }
+  .text-lg { font-size: 1rem; }
+  .text-base { font-size: 0.9rem; }
+  .text-sm { font-size: 0.8rem; }
+  p.italic.text-lg,
+  .quote {
+    font-size: 1.15rem;
+    line-height: 1.7;
+  }
+  .mb-8 { margin-bottom: 1.5rem; }
+  .mb-6 { margin-bottom: 1rem; }
+  .mb-4 { margin-bottom: 0.75rem; }
+  .mb-12 { margin-bottom: 2rem; }
+  .gap-12 { gap: 2rem; }
+  .w-64.h-64 { width: 10rem; height: 10rem; }
+  .w-20.h-20 { width: 3.5rem; height: 3.5rem; }
+  .w-16.h-16 { width: 3rem; height: 3rem; }
+}
+
+@media (min-width: 768px) and (max-width: 1024px){
+  .header-bg { padding: 0.75rem 2rem; }
+  .hero-section { min-height: 80vh; }
+  .hero-title { font-size: 3.5rem; }
+  .hero-subtitle { font-size: 1.5rem; }
+  .grid-cols-1.md\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-1.md\:grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .p-8 { padding: 2rem; }
+  .p-6 { padding: 1.5rem; }
+  .w-64.h-64 { width: 14rem; height: 14rem; }
+}
+
+@media (hover: none) and (pointer: coarse){
+  .btn-gold { min-height: 48px; min-width: 48px; }
+  .btn-outline-gold { min-height: 48px; min-width: 48px; }
+  a { min-height: 44px; display: flex; align-items: center; }
+  .bg-night-blue\/50 { margin-bottom: 1rem; }
+}
+
+@media (max-width: 768px) and (orientation: landscape){
+  .hero-section { min-height: 50vh; }
+  .section-padding { padding: 2rem 1rem; }
+}
+
+@media (prefers-color-scheme: dark){
+  .text-light-gold { color: #f5e7a1; }
+}
+
+@media (prefers-reduced-motion: reduce){
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (prefers-contrast: high){
+  .text-gold { color: #FFD700; }
+  .text-light-gold { color: #FFFACD; }
+  .border-gold { border-color: #FFD700; }
+  .bg-gold { background-color: #FFD700; }
+}
+
+@media (max-width: 768px){
+  img { max-width: 100%; height: auto; }
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce {
+    animation: none !important;
+  }
+  .shadow-lg { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+  .shadow-xl { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+}
+
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
+}
+
+    #mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(5,20,40,.98);
+  backdrop-filter: blur(10px);
+  z-index: 1001;
+  overflow: visible;
+}
+#mobileMenuBtn {
+  z-index: 1002;
+}
+
+    #mobileMenu.hidden {
+        display: none;
+      }
+
+      #mobileMenu:not(.hidden) {
+        display: block;
+      }
+
+      @media (max-width: 640px){
+  .slot .mini{ width: 170px; height: 255px; }
+}
+header { position: relative; overflow: visible; }
+#mobileMenu {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+  z-index: 1200;
+  border-top: 1px solid rgba(212,175,55,.3);
+}
+#mobileMenuBtn { position: relative; z-index: 1300; }
+
+.btn-gold:focus-visible,
+.btn-outline-gold:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--dore);
+  outline-offset: 2px;
+}
+
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3);
+}
+
+.section-padding {
+  padding: 4rem 0;
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 2rem 0;
+  }
+}
+
+.title-animate {
+  animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quote {
+  border-left: 4px solid var(--dore);
+  padding-left: 1.5rem;
+  font-style: italic;
+  margin: 2rem 0;
+}
+
+.custom-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.custom-list li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.custom-list li:before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  color: var(--dore);
+}
+
+button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
+  min-height: 44px;
+}
+#immersiveMenuBtn{ z-index: 1100; }
+#immersiveMenuPanel{ z-index: 1200; }
+
+#orderModal .max-w-md {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+  </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+  <!-- Header -->
+<div id="header-placeholder"></div>
+
+  <!-- Hero Section -->
+  <section class="hero-section relative min-h-screen flex items-center justify-center">
+    <div class="hero-overlay"></div>
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="hero-content">
+        <h1 class="hero-title cormorant text-5xl md:text-7xl font-bold gold-gradient mb-6 title-animate text-left">
+          About Oradia
+        </h1>
+        <p class="hero-subtitle text-xl md:text-2xl text-light-gold mb-8 max-w-3xl text-left">
+          The story and vision behind Oradia
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Story Section -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Who am I?
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p class="text-xl leading-relaxed mb-6 gold-gradient font-semibold">
+              Exploring what I live through, recognizing what nourishes me, and clarifying what calls to me.
+            </p>
+            <p class="text-lg leading-relaxed mb-6">
+              I am a <strong class="text-gold">facilitator and guide in personal and collective transformation</strong>, and the creator of the oracle <em>The Inner Compass</em>.
+            </p>
+            <p class="text-lg leading-relaxed mb-6">
+              I currently practice as a <strong class="text-gold">magnetic healer</strong>, after spending several years supporting people as a <strong class="text-gold">naturopath</strong>. This path around the body, energy, and listening deeply shapes the way I accompany others.
+            </p>
+            <p class="text-lg leading-relaxed mb-6">
+              I support individuals and groups who want to step back from what they're living through, better understand their experiences, and let more aligned choices emerge. In a world that often moves very fast, it can be precious to pause for a moment, put words on what's happening, and look at a situation from another angle.
+            </p>
+            <div class="quote">
+              "My role isn't to give ready-made answers, but to create a space for listening, dialogue, and reflection that lets awareness and new perspectives emerge."
+            </div>
+          </div>
+
+          <div class="text-center">
+            <div class="w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-gold/30 shadow-xl">
+              <img src="/images/medias/photo_a_propos.webp" alt="Photo of Oradia's creator" class="w-full h-full object-cover">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Approach Section -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          An Approach Rooted in Lived Experience
+        </h2>
+
+        <div class="bg-night-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-lg leading-relaxed mb-8">
+            In the sessions I offer, I explore tensions just as much as successes and aspirations. Every experience can become a doorway to better understand what's at stake and what's seeking to evolve.
+          </p>
+
+          <p class="text-lg leading-relaxed mb-8">
+            These spaces make room to welcome what weighs on you, recognize what nourishes you, and clarify what's calling to be transformed.
+          </p>
+
+          <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-user text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-xl font-bold text-gold mb-2">One-on-One Sessions</h3>
+              <p class="text-light-gold text-sm">A personal space to explore your unique path</p>
+            </div>
+
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-comments text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-xl font-bold text-gold mb-2">Circle Sessions</h3>
+              <p class="text-light-gold text-sm">Sharing and receiving within a supportive group</p>
+            </div>
+
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-brain text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-xl font-bold text-gold mb-2">Collective Intelligence</h3>
+              <p class="text-light-gold text-sm">Co-creating solutions from the group</p>
+            </div>
+          </div>
+
+          <p class="text-lg leading-relaxed text-center italic text-light-gold/90">
+            Where everyone can set down what they're living through and let new understandings emerge.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Philosophy Section -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          My Philosophy
+        </h2>
+
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-heart text-3xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Authenticity</h3>
+            <p class="text-light-gold">
+              I believe in the power of inner truth and the wisdom that lives within every being.
+            </p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-balance-scale text-3xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Balance</h3>
+            <p class="text-light-gold">
+              Harmonizing the energies of body, mind, and soul to find your center again.
+            </p>
+          </div>
+
+          <div class="text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-seedling text-3xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Growth</h3>
+            <p class="text-light-gold">
+              Supporting every person in their personal and inner evolution.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Oradia Section -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          The Inner Compass
+        </h2>
+
+        <div class="bg-dark-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-lg leading-relaxed mb-6">
+            The Inner Compass is a guidance oracle I designed to support these explorations.
+          </p>
+
+          <p class="text-lg leading-relaxed mb-6">
+            Drawing on both the dynamics of human experience and older symbolic structures, it sheds light on what you're living through and opens up new perspectives of understanding.
+          </p>
+
+          <div class="bg-gold/10 rounded-xl p-6 border border-gold/30 mb-6">
+            <p class="text-xl font-semibold text-center text-gold mb-2">
+              The Inner Compass is not a predictive tool.
+            </p>
+            <p class="text-lg text-center text-light-gold">
+              It is, above all, a support for dialogue, reflection, and awareness.
+            </p>
+          </div>
+
+          <!-- Why Oradia is unique -->
+          <div class="bg-gradient-to-br from-gold/5 to-night-blue/50 rounded-2xl p-8 border border-gold/25 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-3xl"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-purple-500/10 rounded-full blur-2xl"></div>
+
+            <div class="relative z-10">
+              <h3 class="cormorant text-2xl font-bold text-center text-gold mb-6 flex items-center justify-center gap-3">
+                <i class="fas fa-atom text-gold/80"></i>
+                Why The Inner Compass is different
+                <i class="fas fa-atom text-gold/80"></i>
+              </h3>
+
+              <div class="space-y-6">
+                <div class="bg-night-blue/30 rounded-xl p-6 border border-gold/20">
+                  <h4 class="text-lg font-semibold text-gold mb-3 flex items-center gap-2">
+                    <i class="fas fa-infinity text-gold/70"></i>
+                    A quantum draw, not a random one
+                  </h4>
+                  <p class="text-light-gold leading-relaxed">
+                    Unlike traditional oracles based on pure chance, The Inner Compass uses a <strong class="text-light-gold font-semibold">quantum</strong> approach that recognizes the deep interconnection between your consciousness and the draw. The cards aren't dealt "at random" — they respond to your state of consciousness in the moment.
+                  </p>
+                </div>
+
+                <div class="bg-night-blue/30 rounded-xl p-6 border border-gold/20">
+                  <h4 class="text-lg font-semibold text-gold mb-3 flex items-center gap-2">
+                    <i class="fas fa-brain text-gold/70"></i>
+                    Inspired by the science of consciousness
+                  </h4>
+                  <p class="text-light-gold leading-relaxed">
+                    How The Inner Compass works draws on the research of physicist <strong class="text-light-gold font-semibold">Philippe Guillemant</strong> on the quantum nature of consciousness and time. This research shows that our consciousness actively influences reality, making each draw deeply personal and revealing.
+                  </p>
+                </div>
+
+                <div class="bg-night-blue/30 rounded-xl p-6 border border-gold/20">
+                  <h4 class="text-lg font-semibold text-gold mb-3 flex items-center gap-2">
+                    <i class="fas fa-lightbulb text-gold/70"></i>
+                    A conversation with your inner wisdom
+                  </h4>
+                  <p class="text-light-gold leading-relaxed">
+                    Where other oracles give you answers from the outside, The Inner Compass puts you in dialogue with your own inner wisdom. Each draw reveals what you already know deep down, but which is seeking to emerge into your awareness.
+                  </p>
+                </div>
+              </div>
+
+              <div class="mt-8 text-center">
+                <p class="text-gold/90 italic text-lg">
+                  "The Inner Compass doesn't tell you what will happen,<br>
+                  it reveals what's seeking to be born in you."
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- My Intention Section -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-12">
+          My Intention
+        </h2>
+
+        <div class="bg-night-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-xl leading-relaxed mb-8">
+            Through these sessions and the creation of The Inner Compass, my intention is simple: <strong class="text-gold">to help create spaces where lived experience can become awareness, and a path toward evolution.</strong>
+          </p>
+
+          <p class="text-lg leading-relaxed mb-6">
+            Whether personal or within a group, these moments of stepping back often bring more clarity, coherence, and freedom to the choices you make.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ethical Commitment Section -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          An Ethical, Ecological Approach
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <div class="bg-dark-blue/50 rounded-2xl p-8 border border-gold/30">
+              <h3 class="cormorant text-2xl text-gold mb-4">Commitment to Life</h3>
+              <p class="text-lg leading-relaxed mb-6">
+                Oradia is committed to an ecological approach that respects the living world: an ethical host, thoughtfully-used AI, open-source tools, sovereignty over development...
+              </p>
+
+              <div class="grid md:grid-cols-2 gap-4 mt-8">
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-leaf text-gold text-xl"></i>
+                  <span class="text-light-gold">Ethical hosting</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-brain text-gold text-xl"></i>
+                  <span class="text-light-gold">Thoughtfully-used AI</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-code text-gold text-xl"></i>
+                  <span class="text-light-gold">Open-source tools</span>
+                </div>
+                <div class="flex items-center gap-3">
+                  <i class="fas fa-shield-alt text-gold text-xl"></i>
+                  <span class="text-light-gold">Digital sovereignty</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="text-center">
+            <div class="relative">
+              <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96 flex items-center justify-center">
+                <div class="text-center p-8">
+                  <i class="fas fa-seedling text-6xl text-gold mb-4"></i>
+                  <p class="text-xl text-light-gold font-semibold">
+                    Every gesture counts
+                  </p>
+                  <p class="text-lg text-light-gold mt-2">
+                    For a more respectful future
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <div id="footer-placeholder"></div>
+
+  <script src="/components/header-manager-en.js" defer></script>
+  <script src="/components/footer-manager-en.js" defer></script>
+  <script>
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.add('hidden');
+      }
+    });
+
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('title-animate');
+        }
+      });
+    }, observerOptions);
+
+    document.querySelectorAll('h2, h3').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+
+<!-- Back to top button -->
+<button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Back to top">
+  <i class="fas fa-arrow-up text-sm"></i>
+</button>
+
+<script>
+const backToTopBtn = document.getElementById('backToTop');
+
+window.addEventListener('scroll', () => {
+  if (window.pageYOffset > 300) {
+    backToTopBtn.classList.remove('opacity-0');
+    backToTopBtn.classList.add('opacity-100');
+  } else {
+    backToTopBtn.classList.add('opacity-0');
+    backToTopBtn.classList.remove('opacity-100');
+  }
+});
+
+backToTopBtn.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+
+  setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, 100);
+});
+</script>
+
+<script src="/js/page-tracker.js" defer></script>
+</body>
+</html>
