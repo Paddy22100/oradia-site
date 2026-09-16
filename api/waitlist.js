@@ -2,6 +2,7 @@ const { createClient } = require('@supabase/supabase-js');
 // Fonction loadLocalEnvIfNeeded fusionnée depuis lib
 const fs = require('fs');
 const path = require('path');
+const { sendBetaSignupAdminNotification } = require('../lib/app-beta-access-email.js');
 
 let hasLoaded = false;
 
@@ -647,6 +648,7 @@ module.exports = async (req, res) => {
           .ilike('email', email)
           .maybeSingle();
         const isNewOrReactivated = !existing || existing.status !== 'active';
+        const wasAlreadyPending = (existing?.tags || []).includes('beta-app-en-attente');
         const tags = Array.from(new Set([...(existing?.tags || ['general']), 'beta-app-en-attente']));
 
         const { error } = await supabase
@@ -667,7 +669,8 @@ module.exports = async (req, res) => {
 
         await Promise.all([
           isNewOrReactivated ? sendWaitlistConfirmationEmail(email) : Promise.resolve(false),
-          addContactToBrevoList(email)
+          addContactToBrevoList(email),
+          wasAlreadyPending ? Promise.resolve(false) : sendBetaSignupAdminNotification({ email, name })
         ]);
 
         return res.status(200).json({ success: true, message: 'Demande enregistrée.' });
