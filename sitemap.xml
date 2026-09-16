@@ -12,12 +12,60 @@
         <priority>1.0</priority>
     </url>
     
-    <!-- Version anglaise (tête de pont) -->
+    <!-- Version anglaise -->
     <url>
         <loc>https://oradia.fr/en/</loc>
-        <lastmod>2026-09-15</lastmod>
+        <lastmod>2026-09-16</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/oracle.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.5</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/guidance.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/contact.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/a-propos.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.4</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/cgu.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.2</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/cgv.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.2</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/mentions-legales.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.2</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/en/politique-confidentialite.html</loc>
+        <lastmod>2026-09-16</lastmod>
+        <changefreq>yearly</changefreq>
+        <priority>0.2</priority>
     </url>
 
     <!-- Précommande -->
