@@ -67,6 +67,10 @@
     <h1>Rejoindre la bêta de l'app</h1>
     <p class="intro">L'application mobile Oradia est encore en test fermé sur Google Play. Laissez votre email : <strong>vous recevrez votre lien d'installation dès que votre accès sera activé</strong> (généralement sous 24 à 48h).</p>
 
+    <p class="intro" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:12px 16px;font-size:13px;">
+      ⚠️ <strong>Important :</strong> l'accès aux tests Google Play ne fonctionne qu'avec une adresse déjà liée à un <strong>compte Google</strong> (Gmail, ou une autre adresse utilisée pour créer un compte Google). Une adresse Hotmail, Orange, Protonmail… sans compte Google associé ne pourra pas être activée. En cas de doute, indiquez plutôt votre adresse Gmail.
+    </p>
+
     <div id="feedbackMsg" class="feedback-msg"></div>
 
     <form id="betaForm">
@@ -75,8 +79,8 @@
         <input type="text" name="name" placeholder="Votre prénom">
       </div>
       <div class="field">
-        <label>Email</label>
-        <input type="email" name="email" required placeholder="votre@email.fr">
+        <label>Email <span style="opacity:0.7;font-weight:400;">(idéalement une adresse Gmail / liée à un compte Google)</span></label>
+        <input type="email" name="email" required placeholder="votre@gmail.com">
         <p class="rgpd-note">Vous serez aussi ajouté(e) à la newsletter Oradia si vous n'y êtes pas déjà — désinscription possible à tout moment. <a href="politique-confidentialite.html">En savoir plus</a>.</p>
       </div>
       <button type="submit" id="betaSubmitBtn">Rejoindre la liste d'attente</button>
