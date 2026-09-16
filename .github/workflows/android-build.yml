@@ -10,6 +10,9 @@ on:
   # Manuel : depuis l'onglet Actions sur GitHub
   workflow_dispatch:
 
+permissions:
+  contents: write  # requis pour publier/mettre à jour la GitHub Release (APK en téléchargement direct)
+
 jobs:
   build:
     name: Build APK / AAB Android
@@ -87,3 +90,45 @@ jobs:
           name: oradia-release.aab
           path: mobile-app/android/app/build/outputs/bundle/release/app-release.aab
           retention-days: 90
+
+      # APK signé (distinct de l'AAB, réservé au Play Store) : permet un
+      # téléchargement/installation directe depuis oradia.fr, en complément du
+      # Play Store — réduit la dépendance à Google pour les personnes qui
+      # préfèrent éviter le Store (ex. téléphones "dégooglisés").
+      - name: Build APK release signé (téléchargement direct)
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        working-directory: mobile-app/android
+        env:
+          ORADIA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ORADIA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ORADIA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew assembleRelease --no-daemon
+
+      # Renommé pour une URL de téléchargement lisible (oradia.apk plutôt que
+      # le nom générique app-release.apk).
+      - name: Renommer l'APK pour le téléchargement direct
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        run: cp android/app/build/outputs/apk/release/app-release.apk android/app/build/outputs/apk/release/oradia.apk
+
+      - name: Publier l'APK release signé (artifact)
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oradia-release.apk
+          path: mobile-app/android/app/build/outputs/apk/release/app-release.apk
+          retention-days: 90
+
+      # Publie/actualise une GitHub Release avec un tag fixe ("android-latest") :
+      # l'URL de l'asset reste stable d'une version à l'autre, donc le bouton de
+      # téléchargement sur oradia.fr n'a jamais besoin d'être changé.
+      - name: Publier l'APK en téléchargement direct (GitHub Release)
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: android-latest
+          name: "Oradia — dernière version Android (APK)"
+          body: |
+            APK signé, généré et mis à jour automatiquement à chaque nouvelle version de l'app mobile Oradia.
+            À installer manuellement (Android : autoriser "sources inconnues" pour l'app utilisée pour l'ouvrir), en alternative au Google Play Store.
+            Version : ${{ github.sha }}
+          files: mobile-app/android/app/build/outputs/apk/release/oradia.apk
