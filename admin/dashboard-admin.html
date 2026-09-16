@@ -4651,7 +4651,11 @@
                             <button onclick="exportCsv('contacts-newsletter')" class="w-full bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/30 transition flex items-center justify-center gap-1.5">
                                 <i class="fas fa-file-csv"></i> CSV
                             </button>
+                            <button onclick="exportCsv('contacts-newsletter-emails')" title="Liste brute d'e-mails, un par ligne, sans en-tête ni guillemets — le format attendu par l'import de testeurs de Google Play Console (le CSV complet ci-dessus a trop de colonnes pour lui)." class="w-full bg-blue-500/10 text-blue-300/80 border border-blue-500/25 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/20 transition flex items-center justify-center gap-1.5">
+                                <i class="fas fa-at"></i> E-mails seuls (testeurs Play Console)
+                            </button>
                             <p id="export-status-contacts-newsletter" class="text-xs text-center text-light-gold/40 hidden"></p>
+                            <p id="export-status-contacts-newsletter-emails" class="text-xs text-center text-light-gold/40 hidden"></p>
                         </div>
                         <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-lg p-3 flex flex-col gap-2">
                             <p class="text-light-gold/70 text-xs font-semibold">Fournisseurs</p>
@@ -14253,6 +14257,21 @@
                     if (rows.length === 0) { show('Aucun abonné à exporter', 'text-orange-400/80'); return; }
                     downloadCsvRows('abonnes-newsletter', ['email','prenom','nom','telephone','tags','status','created_at'], rows);
                     show(`${rows.length} abonnés exportés ✓`, 'text-green-400/80');
+                } else if (type === 'contacts-newsletter-emails') {
+                    // Liste brute d'e-mails (une par ligne, sans en-tête ni guillemets) :
+                    // le CSV multi-colonnes ci-dessus est illisible pour l'import de
+                    // testeurs Google Play Console, qui n'attend qu'une adresse par ligne.
+                    show('Récupération des abonnés…');
+                    const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000&newsletter=newsletter');
+                    const rows = (await res.json()).data || [];
+                    if (rows.length === 0) { show('Aucun abonné à exporter', 'text-orange-400/80'); return; }
+                    const emails = rows.map(r => r.email).filter(Boolean);
+                    const blob = new Blob([emails.join('\n')], { type: 'text/plain;charset=utf-8;' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url; a.download = `abonnes-newsletter-emails-${new Date().toISOString().slice(0,10)}.csv`;
+                    document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+                    show(`${emails.length} e-mails exportés ✓`, 'text-green-400/80');
                 } else if (type === 'suppliers') {
                     show('Récupération des fournisseurs…');
                     const res = await adminFetch('/api/admin/data?section=suppliers');
