@@ -2078,6 +2078,55 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Factures jointes à une transaction (Comptabilité > Recettes & dépenses) ──
+      // Bucket privé (contrairement à supplier-files) : une facture peut porter des
+      // informations sensibles (SIRET, IBAN, adresse) — pas de publicUrl stockée,
+      // l'accès passe uniquement par une URL signée à courte durée (action ci-dessous).
+      if (action === 'upload-transaction-invoice') {
+        const { transactionId, fileName, fileData } = body;
+        if (!transactionId) return res.status(400).json({ error: 'transactionId requis' });
+        const m = String(fileData || '').match(/^data:([\w/.+-]+);base64,(.+)$/i);
+        if (!m) return res.status(400).json({ error: 'Fichier invalide (attendu data URL base64)' });
+        const mimeType = m[1];
+        const buffer = Buffer.from(m[2], 'base64');
+        if (buffer.length > 15 * 1024 * 1024) return res.status(400).json({ error: 'Fichier trop lourd (max 15 Mo)' });
+        const ext = (mimeType.split('/')[1] || 'pdf').replace('jpeg', 'jpg');
+        const safeName = (fileName || `facture.${ext}`).replace(/[^\w.\- ]/g, '_').slice(0, 120);
+        const storagePath = `${transactionId}/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage.from('transaction-invoices').upload(storagePath, buffer, { contentType: mimeType, upsert: false });
+        if (upErr) return res.status(500).json({ error: 'Échec upload : ' + upErr.message });
+        const { error: insErr } = await supabase.from('transaction_invoices').insert({
+          transaction_id: transactionId,
+          file_name: safeName,
+          storage_path: storagePath,
+          file_size: buffer.length
+        });
+        if (insErr) throw insErr;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'delete-transaction-invoice') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: fileRow, error: fetchErr } = await supabase.from('transaction_invoices').select('storage_path').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (fileRow?.storage_path) await supabase.storage.from('transaction-invoices').remove([fileRow.storage_path]);
+        const { error } = await supabase.from('transaction_invoices').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'get-transaction-invoice-url') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: fileRow, error: fetchErr } = await supabase.from('transaction_invoices').select('storage_path').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!fileRow?.storage_path) return res.status(404).json({ error: 'Fichier introuvable' });
+        const { data: signed, error: signErr } = await supabase.storage.from('transaction-invoices').createSignedUrl(fileRow.storage_path, 300);
+        if (signErr) return res.status(500).json({ error: 'Échec génération du lien : ' + signErr.message });
+        return res.status(200).json({ success: true, url: signed.signedUrl });
+      }
+
       // ── Partenaires / magasins potentiels (onglet Partenaires) ──
       if (action === 'create-partner' || action === 'update-partner') {
         const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, nextContactDate, notes } = body;
@@ -3688,6 +3737,19 @@ async function handleData(req, res) {
       if (error) throw error;
       const rows = (data || []).map(f => ({ ...f, supplier_name: f.suppliers?.name || null, suppliers: undefined }));
       return res.status(200).json({ success: true, data: rows });
+    }
+
+    // ── Factures jointes à une transaction (Comptabilité > Recettes & dépenses) ──
+    if (section === 'transaction-invoices') {
+      const transactionId = req.query?.transactionId;
+      if (!transactionId) return res.status(400).json({ error: 'transactionId requis' });
+      const { data, error } = await supabase
+        .from('transaction_invoices')
+        .select('*')
+        .eq('transaction_id', transactionId)
+        .order('uploaded_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
     }
 
     // ── Section partners : magasins partenaires potentiels ──
@@ -9674,9 +9736,21 @@ Réponds en français, sans tiret long, format markdown compact.`
           .filter(t => t.source === 'don' || t.source === 'don-especes')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
 
+        // Nombre de factures jointes par transaction — une seule requête groupée plutôt
+        // qu'un appel par ligne, pour afficher un badge dans la liste sans surcharger l'API.
+        let invoiceCounts = {};
+        if ((data || []).length > 0) {
+          const { data: invoiceRows } = await sb
+            .from('transaction_invoices')
+            .select('transaction_id')
+            .in('transaction_id', data.map(t => t.id));
+          (invoiceRows || []).forEach(r => { invoiceCounts[r.transaction_id] = (invoiceCounts[r.transaction_id] || 0) + 1; });
+        }
+        const dataWithInvoiceCounts = (data || []).map(t => ({ ...t, invoice_count: invoiceCounts[t.id] || 0 }));
+
         return res.status(200).json({
           success: true,
-          data: data || [],
+          data: dataWithInvoiceCounts,
           summary: {
             recettes, depenses, net: recettes - depenses, urssaf,
             stripeFees, stripeFeesAreReal,

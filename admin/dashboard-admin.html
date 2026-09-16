@@ -798,6 +798,29 @@
         </div>
     </div>
 
+    <!-- Factures jointes à une transaction (Comptabilité > Recettes & dépenses) — même
+         mécanique que le modal "Devis joints" ci-dessus, bucket Storage privé (voir
+         api/admin/index.js, action upload/delete/get-transaction-invoice-url). -->
+    <div id="modalTransactionInvoices" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closeTransactionInvoicesModal()">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="cormorant text-xl font-bold text-gold" id="modalTransactionInvoicesTitle">Factures jointes</h4>
+                <button onclick="closeTransactionInvoicesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-4 bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg p-3 space-y-2">
+                <input type="file" id="transactionInvoiceInput" accept="application/pdf,image/*"
+                    class="w-full text-xs text-light-gold/70 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gold/30 file:bg-gold/10 file:text-gold file:text-xs">
+                <div class="flex items-center gap-3">
+                    <button onclick="uploadTransactionInvoice()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-1.5 text-sm hover:bg-gold/30 transition"><i class="fas fa-upload mr-1"></i>Joindre</button>
+                    <span id="transactionInvoiceStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+            <div id="modalTransactionInvoicesBody" class="space-y-2 max-h-72 overflow-y-auto text-sm text-light-gold/80">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Conteneur des notifications stylées (remplace window.alert natif) — voir adminAlert() -->
     <div id="adminToastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
@@ -6632,6 +6655,114 @@
                 if (!res.ok) throw new Error(json.error || 'Erreur');
                 await loadSupplierFiles();
                 await loadAllSupplierFiles();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        // ── Factures jointes à une transaction (Comptabilité > Recettes & dépenses) ──
+        // Même mécanique que les devis fournisseurs ci-dessus, avec une différence :
+        // bucket privé, donc pas d'URL directe stockée — downloadTransactionInvoice()
+        // demande une URL signée à la demande (courte durée de vie) plutôt que d'afficher
+        // un lien <a href> fixe comme pour les devis fournisseurs (bucket public, lui).
+        let currentTransactionInvoicesId = null;
+        async function viewTransactionInvoices(transactionId, description) {
+            currentTransactionInvoicesId = transactionId;
+            document.getElementById('modalTransactionInvoicesTitle').textContent = `Factures jointes — ${description}`;
+            document.getElementById('transactionInvoiceStatus').textContent = '';
+            document.getElementById('transactionInvoiceInput').value = '';
+            await loadTransactionInvoices();
+            document.getElementById('modalTransactionInvoices').classList.remove('hidden');
+            document.getElementById('modalTransactionInvoices').classList.add('flex');
+        }
+
+        function closeTransactionInvoicesModal() {
+            document.getElementById('modalTransactionInvoices').classList.add('hidden');
+            document.getElementById('modalTransactionInvoices').classList.remove('flex');
+            currentTransactionInvoicesId = null;
+        }
+
+        async function loadTransactionInvoices() {
+            const body = document.getElementById('modalTransactionInvoicesBody');
+            body.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res = await adminFetch(`/api/admin/data?section=transaction-invoices&transactionId=${encodeURIComponent(currentTransactionInvoicesId)}`);
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                const files = json.data || [];
+                if (!files.length) {
+                    body.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucune facture jointe pour l\'instant</p>';
+                    return;
+                }
+                body.innerHTML = files.map(f => `
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+                        <button onclick="downloadTransactionInvoice('${f.id}')" class="flex items-center gap-2 text-light-gold/80 hover:text-gold text-sm min-w-0 text-left">
+                            <i class="fas fa-file-pdf text-gold/50 shrink-0"></i>
+                            <span class="truncate">${escapeHtmlFront(f.file_name)}</span>
+                        </button>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-gold/30 text-xs">${fmtFileSize(f.file_size)} · ${f.uploaded_at ? new Date(f.uploaded_at).toLocaleDateString('fr-FR') : ''}</span>
+                            <button onclick="deleteTransactionInvoice('${f.id}')" class="text-red-400/50 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) {
+                body.innerHTML = `<p class="text-red-400/70 text-center py-4">${escapeHtmlFront(e.message)}</p>`;
+            }
+        }
+
+        function uploadTransactionInvoice() {
+            const input = document.getElementById('transactionInvoiceInput');
+            const status = document.getElementById('transactionInvoiceStatus');
+            const file = input.files?.[0];
+            if (!file) { status.className = 'text-xs text-red-400'; status.textContent = 'Choisis un fichier.'; return; }
+            if (file.size > 15 * 1024 * 1024) { status.className = 'text-xs text-red-400'; status.textContent = 'Fichier trop lourd (max 15 Mo).'; return; }
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Envoi…';
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const res = await adminFetch('/api/admin/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'upload-transaction-invoice', transactionId: currentTransactionInvoicesId, fileName: file.name, fileData: reader.result })
+                    });
+                    const json = await res.json();
+                    if (!res.ok) throw new Error(json.error || 'Erreur');
+                    input.value = '';
+                    status.textContent = '';
+                    await loadTransactionInvoices();
+                    await loadComptabilite();
+                } catch (e) {
+                    status.className = 'text-xs text-red-400';
+                    status.textContent = 'Erreur : ' + e.message;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function downloadTransactionInvoice(id) {
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get-transaction-invoice-url', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                window.open(json.url, '_blank', 'noopener');
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        async function deleteTransactionInvoice(id) {
+            if (!(await adminConfirm('Supprimer définitivement cette facture ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-transaction-invoice', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadTransactionInvoices();
+                await loadComptabilite();
             } catch (e) { adminAlert('Erreur : ' + e.message); }
         }
 
@@ -15996,6 +16127,9 @@
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         <span class="font-bold ${isRecette?'text-green-400':'text-red-400'}">${isRecette?'+':'-'}${fmt2(t.amount)}</span>
+                        <button onclick="viewTransactionInvoices('${t.id}','${escapeHtmlFront(t.description).replace(/'/g, "\\'")}')" title="Factures jointes" class="relative text-xs transition ${t.invoice_count > 0 ? 'text-gold/70 hover:text-gold' : 'text-gold/25 hover:text-gold/60'}">
+                            <i class="fas fa-paperclip"></i>${t.invoice_count > 0 ? `<span class="absolute -top-1.5 -right-2 bg-gold text-[#07112a] text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">${t.invoice_count}</span>` : ''}
+                        </button>
                         <button onclick="deleteTransaction('${t.id}')" class="text-red-400/40 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
