@@ -14021,8 +14021,12 @@
         // dans EXPORTABLE_TABLES pour contacts/fournisseurs/partenaires — logique client
         // partagée par les 4 catégories de contacts pour ne pas la dupliquer 4 fois).
         function downloadCsvRows(filenamePrefix, headers, rows) {
-            // "sep=," indique le séparateur à Excel (sinon tout part dans une colonne en français)
-            const csvRows = ['sep=,', headers.join(',')];
+            // Pas de ligne "sep=," (astuce Excel-only) : elle casse l'import dans tout
+            // autre outil (Google Contacts, Outlook…), qui la traite comme une ligne de
+            // données au lieu d'un indice de séparateur — chaque ligne du fichier se
+            // retrouve alors décalée et invalide. Le BOM UTF-8 ci-dessous suffit à Excel
+            // pour détecter la virgule et afficher correctement les accents.
+            const csvRows = [headers.join(',')];
             rows.forEach(r => {
                 csvRows.push(headers.map(h => {
                     const v = Array.isArray(r[h]) ? r[h].join('|') : (r[h] ?? '');
