@@ -4351,6 +4351,16 @@
 
         <section class="mb-10">
             <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Demandes d'accès bêta (app mobile)</h3>
+                <p class="text-light-gold/50 text-sm mt-1">La piste Google Play est en test fermé — <strong class="text-gold/70">ajoutez d'abord la personne au groupe testeurs dans Play Console</strong>, puis cliquez "Envoyer le lien" ici. Sans cette étape, le lien reçu ne fonctionnera pas pour elle.</p>
+            </div>
+            <div id="betaRequestsList" class="space-y-2">
+                <p class="text-light-gold/30 text-sm">Chargement…</p>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Mails du site</h3>
                 <p class="text-light-gold/50 text-sm mt-1">Envoie une version test de chaque email transactionnel à <span class="text-gold font-mono">contact@oradia.fr</span>. Aucun envoi aux vrais destinataires.</p>
             </div>
@@ -10730,6 +10740,56 @@
             }
         }
         document.addEventListener('DOMContentLoaded', pushRefreshDeviceCount);
+
+        async function loadBetaRequests() {
+            const el = document.getElementById('betaRequestsList');
+            if (!el) return;
+            try {
+                const res = await adminFetch('/api/admin/data?section=waitlist&tag=beta-app-en-attente&limit=200');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const rows = data.data || [];
+                if (rows.length === 0) {
+                    el.innerHTML = '<p class="text-light-gold/30 text-sm">Aucune demande en attente.</p>';
+                    return;
+                }
+                el.innerHTML = rows.map(c => `
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4" id="beta-row-${c.id}">
+                        <div class="min-w-0">
+                            <p class="text-gold font-semibold text-sm truncate">${escapeHtmlFront(c.full_name || c.email)}</p>
+                            ${c.full_name ? `<p class="text-gold/40 text-xs mt-0.5 truncate">${escapeHtmlFront(c.email)}</p>` : ''}
+                        </div>
+                        <button onclick="sendBetaAccess('${c.id}', this)" class="beta-send-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer le lien
+                        </button>
+                    </div>`).join('');
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400 text-sm">Erreur de chargement : ${e.message}</p>`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadBetaRequests);
+
+        async function sendBetaAccess(id, btn) {
+            if (!confirm("Avez-vous bien ajouté cette personne au groupe testeurs dans Play Console avant d'envoyer ?")) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i> Envoi…';
+            try {
+                const res = await adminFetch('/api/admin/data?action=send-beta-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const row = document.getElementById('beta-row-' + id);
+                if (row) row.remove();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
 
         async function pushSendNotification() {
             const title = document.getElementById('pushTitle').value.trim();

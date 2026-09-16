@@ -14,6 +14,7 @@ const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, send
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
+const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
@@ -2633,6 +2634,37 @@ async function handleData(req, res) {
           await syncContactToBrevo(supabase, BREVO_API_KEY, data);
         }
         return res.status(200).json({ success: true, emailChanged: !!oldEmail });
+      }
+
+      // ── Bêta app mobile : envoie le vrai lien Play Store et retire le tag "en attente" ──
+      // À utiliser SEULEMENT après avoir ajouté la personne à la main au groupe Google
+      // utilisé par la piste "Tests fermés" (voir lib/app-beta-access-email.js) — sinon
+      // elle atterrit sur "Élément introuvable" malgré l'email.
+      if (action === 'send-beta-access') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+
+        const { data: contact, error: fetchErr } = await supabase
+          .from('newsletter_contacts')
+          .select('id, email, full_name, tags')
+          .eq('id', id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
+
+        const sent = await sendAppBetaAccessEmail({ email: contact.email, name: contact.full_name });
+        if (!sent) return res.status(502).json({ error: "Échec de l'envoi de l'email (config Brevo ou erreur API)" });
+
+        const newTags = (contact.tags || [])
+          .filter(t => t !== 'beta-app-en-attente')
+          .concat('beta-app-envoye');
+        const { error: updErr } = await supabase
+          .from('newsletter_contacts')
+          .update({ tags: Array.from(new Set(newTags)) })
+          .eq('id', contact.id);
+        if (updErr) console.warn('[send-beta-access] tag update failed:', updErr.message);
+
+        return res.status(200).json({ success: true });
       }
 
       // ── Contacts newsletter : désinscription manuelle (garde le contact, le retire de la liste 5) ──
