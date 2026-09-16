@@ -14243,7 +14243,19 @@
         // multi-colonnes des contacts est illisible pour des outils qui n'attendent
         // qu'une adresse par ligne (ex. import de testeurs Google Play Console).
         function downloadEmailsOnly(filenamePrefix, rows) {
-            const emails = rows.map(r => r.email).filter(Boolean);
+            // Dédoublonnage insensible à la casse (ex. Salamandre37@... et
+            // salamandre37@... coexistent en base) : Google Play Console refuse
+            // d'enregistrer la liste de testeurs quand elle contient ces doublons.
+            const seen = new Set();
+            const emails = [];
+            rows.forEach(r => {
+                const email = (r.email || '').trim();
+                if (!email) return;
+                const key = email.toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                emails.push(email);
+            });
             const blob = new Blob([emails.join('\n')], { type: 'text/plain;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
