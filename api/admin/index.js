@@ -9905,7 +9905,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         // ── Version anglaise (/en/) : vues déjà filtrées anti-bot par ce même calcul,
         // donc ce chiffre hérite du filtrage BOT_PATTERN + validation origin/referer
         // appliqué à l'insertion dans page_views (voir POST /track ci-dessus).
-        const enRows = v.filter(r => r.path === '/en' || r.path === '/en/' || r.path.indexOf('/en/') === 0);
+        const enRows = v.filter(r => r.path && (r.path === '/en' || r.path === '/en/' || r.path.indexOf('/en/') === 0));
         const enTraffic = {
           views: enRows.length,
           unique_visitors: new Set(enRows.map(r => r.session_id)).size,
