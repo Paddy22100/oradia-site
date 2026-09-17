@@ -6275,8 +6275,7 @@ async function runParcoursIndividualCron(supabase) {
       details.push({ ordre, subject: finalSubject, sent: sentCount, targeted: emails.length });
     }
 
-    // Publication automatique du mercredi : avance de façon séquentielle et
-    // indépendante de qui a effectivement reçu quoi par email ce passage-ci — l'étape
+    // Publication automatique du mercredi : avance de façon séquentielle — l'étape
     // utilisée est celle dont l'ordre suit immédiatement la dernière étape déjà
     // utilisée pour une publication (9, puis 10, puis 11...), retrouvée via
     // social_posts.ordre (voir supabase-migration-social-posts-ordre.sql). Étape 1
@@ -6305,9 +6304,14 @@ async function runParcoursIndividualCron(supabase) {
     }
 
     // Publication Facebook + Instagram + LinkedIn pour l'étape ci-dessus — jamais si
-    // la prochaine étape de la séquence n'est pas encore validée.
+    // la prochaine étape de la séquence n'est pas encore validée, NI si aucun email de
+    // parcours n'est réellement parti à ce passage (totalSent === 0, ex. aucun contact
+    // pas encore dû cette semaine-là). Avant ce garde-fou (ajouté le 17/09/2026, suite
+    // à un post publié un mercredi où aucun email n'était parti), la publication
+    // avançait indépendamment des envois réels — ce qui pouvait promouvoir par les
+    // réseaux sociaux une "newsletter du jour" que personne n'avait reçue.
     let social = null;
-    if (mainStep) {
+    if (mainStep && totalSent > 0) {
       social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text, imageUrl: mainStep.imageUrl, ordre: mainStep.ordre });
     }
 
@@ -6320,9 +6324,11 @@ async function runParcoursIndividualCron(supabase) {
     // generateSocialImage — impossible à corréler après coup avec "pourquoi ce post-là".
     const socialNote = !mainStep
       ? ' — aucun post social (prochaine étape de la séquence pas encore validée)'
-      : social?.success
-        ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
-        : ` — ÉCHEC de la programmation du post social : ${social?.error}`;
+      : totalSent === 0
+        ? ' — aucun post social (aucun email de parcours envoyé à ce passage)'
+        : social?.success
+          ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
+          : ` — ÉCHEC de la programmation du post social : ${social?.error}`;
     await logSystemEvent(supabase, {
       level: social && !social.success ? 'warn' : (social?.usedFallbackImage ? 'warn' : 'info'),
       source: 'cron-send-parcours-individual',
