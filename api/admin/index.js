@@ -6173,8 +6173,13 @@ async function runParcoursIndividualCron(supabase) {
       .eq('pref_newsletter_mercredi', true);
     if (contactsErr) throw contactsErr;
 
-    // Dernier envoi de parcours par contact (le plus récent en premier) — sert à la
-    // fois à connaître la prochaine étape due et l'ancienneté de ce dernier envoi.
+    // Étape la plus avancée jamais reçue par contact — sert à la fois à connaître la
+    // prochaine étape due et l'ancienneté de ce dernier envoi. Basé sur l'ordre MAXIMAL
+    // jamais atteint, pas sur l'envoi le plus récent par date : un envoi isolé d'une
+    // étape antérieure (test manuel, resend...) est plus récent en date mais ne doit
+    // jamais faire régresser un contact déjà plus avancé. Cause identifiée le
+    // 17/09/2026 : un envoi de l'étape 1 hors cron, sans trace dans les logs, avait fait
+    // repartir 3 contacts déjà à l'étape 7 depuis le début de la séquence.
     const { data: sends, error: sendsErr } = await supabase
       .from('newsletter_sends')
       .select('contact_email, ordre, sent_at')
@@ -6183,7 +6188,8 @@ async function runParcoursIndividualCron(supabase) {
     if (sendsErr) throw sendsErr;
     const lastSendByEmail = new Map();
     for (const s of sends || []) {
-      if (!lastSendByEmail.has(s.contact_email)) lastSendByEmail.set(s.contact_email, s);
+      const current = lastSendByEmail.get(s.contact_email);
+      if (!current || Number(s.ordre) > Number(current.ordre)) lastSendByEmail.set(s.contact_email, s);
     }
 
     const now = Date.now();
