@@ -6290,7 +6290,7 @@ async function runParcoursIndividualCron(supabase) {
     // email du même passage et pouvaient se tromper d'étape si celui-ci échouait
     // partiellement (cause identifiée le 10/09/2026) ou en cas de désabonnements
     // massifs des membres avancés.
-    let mainStep = null; // { ordre, subject, text }
+    let mainStep = null; // { ordre, subject, text, imageUrl }
     const { data: usedOrdreRows } = await supabase.from('social_posts').select('ordre').not('ordre', 'is', null);
     const usedOrdres = new Set((usedOrdreRows || []).map(r => Number(r.ordre)));
     const nextStep = steps.find(s => {
@@ -6301,14 +6301,14 @@ async function runParcoursIndividualCron(supabase) {
       const rawSubject = nextStep.subject || 'Oradia';
       const finalSubject = rawSubject.startsWith("Rudy d'ORADIA - ") ? rawSubject : `Rudy d'ORADIA - ${rawSubject}`;
       const html = buildCommunicationEmailHtml({ ...nextStep, subject: finalSubject });
-      mainStep = { ordre: Number(nextStep.extra?.ordre) || 0, subject: finalSubject, text: nlEmailPlainText(html) };
+      mainStep = { ordre: Number(nextStep.extra?.ordre) || 0, subject: finalSubject, text: nlEmailPlainText(html), imageUrl: getNewsletterLeadImageUrl(nextStep) };
     }
 
     // Publication Facebook + Instagram + LinkedIn pour l'étape ci-dessus — jamais si
     // la prochaine étape de la séquence n'est pas encore validée.
     let social = null;
     if (mainStep) {
-      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text, ordre: mainStep.ordre });
+      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text, imageUrl: mainStep.imageUrl, ordre: mainStep.ordre });
     }
 
     // Journalisé pour de bon (contrairement à avant : ce cron ne laissait aucune trace
@@ -7734,7 +7734,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
                 ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
               });
               if (draft.type === 'promo') {
-                await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+                await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text, imageUrl: getNewsletterLeadImageUrl(draft) });
               }
               return res.status(200).json({
                 success: true,
@@ -7815,7 +7815,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           });
 
           if (draft.type === 'promo' && sentEmails.length > 0) {
-            await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+            await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text, imageUrl: getNewsletterLeadImageUrl(draft) });
           }
 
           return res.status(200).json({
@@ -7881,7 +7881,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           .eq('id', draft_id);
 
         if (draft.type === 'promo') {
-          await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+          await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text, imageUrl: getNewsletterLeadImageUrl(draft) });
         }
 
         return res.status(200).json({ success: true });
@@ -8040,6 +8040,27 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
   if (!linkedin_text) linkedin_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\noradia.fr`;
 
   return { facebook_text, instagram_text, linkedin_text };
+}
+
+// Retrouve l'image qui s'affiche en premier dans le corps de la newsletter (juste
+// sous le titre), pour que la publication automatique sur les réseaux sociaux
+// reprenne ce visuel plutôt qu'une image générée par IA ou, en dernier recours,
+// le logo générique. Réplique la règle de rendu de buildCommunicationEmailHtml :
+// une image positionnée explicitement (img.position, choisi dans l'éditeur du
+// dashboard) prime sur l'ordre du tableau ; sinon la première image du tableau
+// est la première à s'afficher (répartition automatique entre les paragraphes,
+// en partant du début). Cause identifiée le 17/09/2026 : aucun appelant de
+// scheduleAutoSocialPost ne passait jamais imageUrl, donc chaque post partait
+// soit avec une image générée par IA, soit — quand celle-ci échouait — avec le
+// logo, sans lien visuel avec le contenu de la newsletter du jour.
+function getNewsletterLeadImageUrl(draft) {
+  const images = draft?.images || [];
+  if (!images.length) return null;
+  const placed = images.filter(img => img.position !== undefined && img.position !== null && img.position >= 0);
+  const lead = placed.length > 0
+    ? [...placed].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]
+    : images[0];
+  return lead?.path ? nlAbsUrl(lead.path) : null;
 }
 
 // Programme une publication sur les 3 réseaux (Facebook + Instagram + LinkedIn) pour un
