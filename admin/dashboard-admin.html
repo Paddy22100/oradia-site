@@ -1574,6 +1574,7 @@
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Dernière newsletter</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Avancement parcours</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gold/20" id="nlTableBody"></tbody>
@@ -8152,7 +8153,11 @@
                 if (!data.brevoRestored) {
                     adminAlert("La réinscription Brevo n'a pas pu être confirmée" + (data.brevoDetail ? "\n(" + data.brevoDetail + ")" : "") + "\n\nVérifie manuellement dans Brevo. Le statut local n'a pas été modifié tant que ce n'est pas confirmé côté Brevo.");
                 }
+                // Deux tableaux affichent les mêmes contacts (onglet Contacts, et sous-onglet
+                // Contacts > Inscrits Newsletter) — rafraîchir les deux pour qu'ils restent
+                // synchronisés, quel que soit celui d'où l'action a été lancée.
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
+                if (document.getElementById('nlTableBody')) loadNlSubscribers(currentData.nlSubscribersPagination?.page || 1);
             } catch (e) {
                 adminAlert('Erreur : ' + e.message);
             }
@@ -8172,6 +8177,7 @@
                     adminAlert("Contact marqué comme désabonné dans le dashboard.\n\nAttention : la désinscription Brevo n'a pas pu être confirmée" + (data.brevoDetail ? "\n(" + data.brevoDetail + ")" : "") + "\n\nVérifie manuellement dans Brevo.");
                 }
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
+                if (document.getElementById('nlTableBody')) loadNlSubscribers(currentData.nlSubscribersPagination?.page || 1);
             } catch (e) {
                 adminAlert('Erreur : ' + e.message);
             }
@@ -12197,7 +12203,7 @@
             const tbody = document.getElementById('nlTableBody');
             if (!tbody) return;
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
                 document.getElementById('nlPagination').innerHTML = '';
                 return;
             }
@@ -12228,6 +12234,16 @@
                     <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Inscrit' : 'Désabonné'}</span></td>
                     <td class="px-6 py-3">${lastNl}</td>
                     <td class="px-6 py-3">${renderParcoursProgress(c)}</td>
+                    <td class="px-6 py-3">
+                        <div class="flex gap-2">
+                            ${c.status === 'unsubscribed' ? `<button onclick="resubscribeContact('${c.id}', this.dataset.email)" data-email="${escapeHtmlFront(c.email || '')}" class="text-teal-300/70 hover:text-teal-300 transition" title="Réinscrire à la newsletter">
+                                <i class="fas fa-envelope-circle-check"></i>
+                            </button>` : ''}
+                            <button onclick="unsubscribeContact('${c.id}', this.dataset.email)" data-email="${escapeHtmlFront(c.email || '')}" class="${c.status === 'unsubscribed' ? 'text-gold/40 hover:text-gold/70' : 'text-orange-300/70 hover:text-orange-300'} transition" title="${c.status === 'unsubscribed' ? 'Re-forcer la désinscription Brevo' : 'Désinscrire de la newsletter'}">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
             // Pagination serveur (héritée de l'ancien onglet "Abonnés newsletter")
