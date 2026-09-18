@@ -3070,7 +3070,7 @@
                                 class="flex-shrink-0 text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition">
                                 <i class="fas fa-file-pdf mr-1.5"></i>Exporter en PDF
                             </button>
-                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact individuellement selon sa propre date d'inscription/dernier envoi (cadence 7 jours), la prochaine étape du parcours qui lui est due (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
+                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact actif, la prochaine étape de SA propre séquence (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé) — tous avancent d'une étape, sans condition de délai (hors garde-fou anti-doublon le même jour). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
                                 class="flex-shrink-0 text-sm bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 hover:bg-purple-500/25 transition">
                                 <i class="fas fa-route mr-1.5"></i>Lancer l'envoi individualisé
                             </button>
@@ -11181,7 +11181,7 @@
         async function sendParcoursIndividualNow() {
             const status = document.getElementById('sendParcoursIndividualStatus');
             const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            if (!(await adminConfirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra, s'il est dû (7 jours depuis son inscription ou son dernier envoi), sa prochaine étape (ordre > 6)."))) return;
+            if (!(await adminConfirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra sa prochaine étape (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé), sauf s'il a déjà reçu un envoi aujourd'hui."))) return;
             show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours…', 'text-light-gold/60');
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=send-parcours-individual-now', { method: 'POST' });

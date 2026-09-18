@@ -6114,15 +6114,18 @@ async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, c
   }
 }
 
-// ── Parcours individualisé : chaque contact avance à son propre rythme depuis sa date
-// d'inscription (ou son dernier envoi), plutôt qu'une diffusion groupée qui fait
+// ── Parcours individualisé : chaque contact avance dans SA propre séquence (étape
+// suivante = sa dernière étape reçue + 1), plutôt qu'une diffusion groupée qui fait
 // recevoir "le dernier envoi du jour" à un nouvel inscrit au lieu de la toute première
 // étape. Un contact inscrit après la fin des campagnes groupées historiques (étapes
 // 1-6) démarre le parcours complet à l'étape 1 ; un contact déjà inscrit à cette
 // époque les a reçues par campagne et continue directement à partir de l'étape 7,
-// pour ne jamais les recevoir deux fois. Cadence hebdomadaire, calculée à partir du
-// dernier envoi RÉEL de ce contact (newsletter_sends), ou de sa date d'inscription
-// pour un tout nouveau contact n'ayant jamais rien reçu du parcours. Les étapes
+// pour ne jamais les recevoir deux fois. Individualisé sur la SÉQUENCE (quelle étape),
+// pas sur le RYTHME : tous les contacts actifs opt-in avancent d'une étape le même
+// mercredi soir, quelle que soit leur date d'inscription ou celle de leur dernier
+// envoi (règle produit explicite, 18/09/2026 — un ancien calcul basé sur "7 jours
+// depuis le dernier envoi de CE contact" faisait sauter des mercredis à quiconque
+// avait été servi hors cycle, ex. lors d'un rattrapage exceptionnel). Les étapes
 // utilisées ici restent des gabarits réutilisables : jamais marquées statut='envoyé'
 // (ce champ resterait un non-sens pour un envoi étalé dans le temps, contact par
 // contact) — seule newsletter_sends trace qui a reçu quoi et quand.
@@ -6142,7 +6145,6 @@ async function runParcoursIndividualCron(supabase) {
     return { success: true, sent: 0, skipped_reason: 'feature_disabled' };
   }
   try {
-    const CADENCE_DAYS = 7;
     const BREVO_API_KEY = process.env.BREVO_API_KEY;
     if (!BREVO_API_KEY) return { success: false, error: 'BREVO_API_KEY manquante' };
 
@@ -6192,28 +6194,35 @@ async function runParcoursIndividualCron(supabase) {
       if (!current || Number(s.ordre) > Number(current.ordre)) lastSendByEmail.set(s.contact_email, s);
     }
 
+    // Règle produit explicite (Rudy, 18/09/2026) : TOUS les contacts actifs opt-in
+    // reçoivent la prochaine étape de leur parcours chaque mercredi soir, une étape à
+    // la fois, quelle que soit leur date d'inscription ou la date de leur dernier
+    // envoi — pas d'attente minimale de 7 jours par contact. Avant ce changement, un
+    // contact fraîchement servi (même par un passage exceptionnel hors mercredi)
+    // pouvait se retrouver à sauter le(s) mercredi(s) suivant(s) tant que 7 jours
+    // pleins ne s'étaient pas écoulés depuis SON dernier envoi — ce qui n'était pas
+    // le comportement voulu. Le seul garde-fou qui reste : ne jamais renvoyer deux
+    // fois la même journée (double-clic sur le bouton manuel, relance du cron...).
     const now = Date.now();
+    const SAME_DAY_GUARD_MS = 20 * 3600000; // 20h, couvre un double-déclenchement le même jour
     const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
     for (const c of contacts || []) {
       const last = lastSendByEmail.get(c.email);
       const createdAt = new Date(c.created_at).getTime();
-      let nextOrdre, referenceDate;
+      let nextOrdre;
       if (last) {
+        if (now - new Date(last.sent_at).getTime() < SAME_DAY_GUARD_MS) continue;
         nextOrdre = Number(last.ordre) + 1;
-        referenceDate = new Date(last.sent_at);
       } else if (historicalCutoff && createdAt > historicalCutoff) {
         // Nouvel inscrit depuis l'arrêt des campagnes groupées 1-6 : démarre le
-        // parcours complet à l'étape 1, comme n'importe quel autre abonné.
+        // parcours complet à l'étape 1, comme n'importe quel autre abonné, dès le
+        // premier mercredi qui suit son inscription.
         nextOrdre = 1;
-        referenceDate = new Date(c.created_at);
       } else {
         // Inscrit avant la fin de l'historique groupé : a déjà reçu 1-6 par
         // campagne, ne rejoue jamais cet historique.
         nextOrdre = 7;
-        referenceDate = new Date(c.created_at);
       }
-      const daysSince = (now - referenceDate.getTime()) / 86400000;
-      if (daysSince < CADENCE_DAYS) continue;
       const step = steps.find(s => Number(s.extra?.ordre) === nextOrdre);
       if (!step) continue; // à jour (dernière étape disponible déjà reçue) ou étape suivante pas encore validée
       if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
