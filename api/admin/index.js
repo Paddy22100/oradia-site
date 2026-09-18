@@ -10468,7 +10468,13 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         }
       }
 
-      if (event === 'unsubscribed' || event === 'hardBounced') {
+      // "blocked" traité comme un désabonnement définitif au même titre que hardBounced :
+      // ça signifie que le contact est déjà sur la liste de blocage de Brevo (plainte
+      // spam ou rejets répétés côté destinataire) — Brevo n'essaiera plus jamais de lui
+      // délivrer un email, donc le garder "Inscrit" est trompeur et continuer à l'inclure
+      // dans les envois n'a plus aucun effet. "softBounced" reste volontairement exclu
+      // (souvent transitoire — boîte pleine, serveur indisponible un instant).
+      if (event === 'unsubscribed' || event === 'hardBounced' || event === 'blocked') {
         const updates = {
           status: 'unsubscribed',
           brevo_synced: false,
