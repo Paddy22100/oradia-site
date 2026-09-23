@@ -7572,11 +7572,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Détecter si un tirage est en cours ───────────────────────────
   function drawInProgress() {
-    // toreThrowIndex est déclaré dans le scope global de tore.html
-    if (typeof toreThrowIndex === 'undefined') return false;
+    // toreThrowIndex et toreHasStarted sont déclarés dans le scope global de tore.html.
+    // toreThrowIndex > 0 seul laissait la toute première carte (avant son retournement
+    // complet) sans aucune protection contre un retour accidentel — on protège dès que
+    // l'intention a été validée et le plateau affiché, pas seulement après la 1ère carte.
     const immersif = document.getElementById('tore-immersif');
     const visible = immersif && immersif.style.display !== 'none';
-    return visible && toreThrowIndex > 0;
+    if (!visible) return false;
+    if (typeof toreHasStarted !== 'undefined' && toreHasStarted) return true;
+    if (typeof toreThrowIndex !== 'undefined' && toreThrowIndex > 0) return true;
+    return false;
   }
 
   // ── Ouvrir / fermer le modal ──────────────────────────────────────
@@ -7645,7 +7650,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Intercepter bouton retour navigateur
+  // Intercepter bouton retour navigateur (web)
   history.pushState(null, '', location.href);
   window.addEventListener('popstate', function() {
     if (drawInProgress()) {
@@ -7653,6 +7658,28 @@ document.addEventListener("DOMContentLoaded", () => {
       openAbandonModal('index.html');
     }
   });
+
+  // Intercepter le bouton/geste retour natif Android (webview Capacitor) : le
+  // geste de balayage depuis le bord de l'écran (navigation "retour" native
+  // d'Android, notamment le "predictive back" d'Android 13+) peut court-circuiter
+  // le popstate web ci-dessus et faire disparaître tout le tirage en cours sans
+  // confirmation — signalé par une abonnée dont le doigt avait "dérapé" près du
+  // bord en tirage. L'API native @capacitor/app est le seul point d'interception
+  // fiable pour ce geste dans une webview.
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    window.Capacitor.Plugins.App.addListener('backButton', function() {
+      if (drawInProgress()) {
+        openAbandonModal('index.html');
+        return;
+      }
+      // Rien en cours : comportement par défaut (reculer dans l'historique, sinon quitter l'appli).
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.Capacitor.Plugins.App.exitApp();
+      }
+    });
+  }
 })();
 </script>
 
