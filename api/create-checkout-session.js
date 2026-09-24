@@ -4,6 +4,20 @@ function getStripeClient() {
   return require('stripe')(process.env.STRIPE_SECRET_KEY);
 }
 
+// Pays de livraison acceptés (domicile et point relais) et format de leur code
+// postal. La Belgique a des codes à 4 chiffres : l'ancienne validation "5 chiffres"
+// rendait toute livraison à domicile belge impossible. La Suisse (hors UE, douane)
+// n'est pas livrée pour l'instant — elle reste acceptée comme adresse de facturation.
+const SHIPPING_COUNTRIES = ['FR', 'BE'];
+const POSTAL_CODE_RULES = { FR: /^\d{5}$/, BE: /^\d{4}$/, CH: /^\d{4}$/ };
+const POSTAL_CODE_LABELS = { FR: '5 chiffres', BE: '4 chiffres', CH: '4 chiffres' };
+
+// Plafonds de quantité (identiques à MAX_QUANTITY de precommande-oracle.html) :
+// sans eux, une quantité décimale ou démesurée arrivait jusqu'à Stripe, et au-delà
+// de 25 kg les frais de port restaient bloqués au dernier palier de la grille.
+const MAX_QUANTITY_PER_OFFER = 10;
+const MAX_TOTAL_QUANTITY = 20; // 20 × 0,8 kg = 16 kg, dans la grille Mondial Relay
+
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxzetkdozynyutlbhxdx)
   const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
@@ -205,6 +219,17 @@ module.exports = async (req, res) => {
         const customerInfo = body.customerInfo || {};
         const delivery = body.delivery || {};
         const relayPoint = body.relayPoint || null;
+        // Adresse de facturation différente (case à cocher de livraison.html) : envoyée
+        // depuis toujours par le formulaire mais ignorée ici — la facture Stripe ne la
+        // portait donc jamais.
+        const rawBilling = body.billingInfo || customerInfo.billingInfo || null;
+        const billing = rawBilling && rawBilling.isDifferent ? {
+            address: String(rawBilling.address || '').trim(),
+            addressComplement: String(rawBilling.addressComplement || '').trim(),
+            postalCode: String(rawBilling.postalCode || '').trim(),
+            city: String(rawBilling.city || '').trim(),
+            country: String(rawBilling.country || 'FR').trim().toUpperCase()
+        } : null;
         
         // Création de l'objet normalisé unique
         const normalizedData = {
@@ -228,14 +253,25 @@ module.exports = async (req, res) => {
             errors.push('Panier vide invalide');
         } else {
             const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
+            const seenOffers = new Set();
+            let totalQuantity = 0;
             
             for (const item of normalizedData.items) {
                 if (!item.offer || !allowedOffers.includes(item.offer)) {
                     errors.push(`Offre invalide: ${item.offer}`);
+                } else if (seenOffers.has(item.offer)) {
+                    errors.push(`Offre en double dans le panier: ${item.offer}`);
+                } else {
+                    seenOffers.add(item.offer);
                 }
-                if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1) {
-                    errors.push(`Quantité invalide pour l'offre: ${item.offer}`);
+                if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > MAX_QUANTITY_PER_OFFER) {
+                    errors.push(`Quantité invalide pour l'offre ${item.offer} (entre 1 et ${MAX_QUANTITY_PER_OFFER})`);
+                } else {
+                    totalQuantity += item.quantity;
                 }
+            }
+            if (totalQuantity > MAX_TOTAL_QUANTITY) {
+                errors.push(`Commande limitée à ${MAX_TOTAL_QUANTITY} exemplaires — contactez-nous pour une commande plus importante`);
             }
         }
         
@@ -264,12 +300,21 @@ module.exports = async (req, res) => {
         
         // Validation de l'adresse selon le mode de livraison
         if (normalizedData.deliveryMethod === 'home') {
+            const country = String(normalizedData.country || 'FR').toUpperCase();
+            normalizedData.country = country;
+            if (!SHIPPING_COUNTRIES.includes(country)) {
+                errors.push('Livraison non disponible dans ce pays (France et Belgique uniquement) — contactez-nous');
+            }
+
             if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
                 errors.push('Adresse requise (min 5 caractères)');
             }
             
-            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
-                errors.push('Code postal invalide (5 chiffres requis)');
+            const postalRule = POSTAL_CODE_RULES[country] || POSTAL_CODE_RULES.FR;
+            const postalCode = String(normalizedData.postalCode || '').trim();
+            normalizedData.postalCode = postalCode;
+            if (!postalRule.test(postalCode)) {
+                errors.push(`Code postal invalide (${POSTAL_CODE_LABELS[country] || '5 chiffres'} requis)`);
             }
             
             if (!normalizedData.city || normalizedData.city.trim().length < 2) {
@@ -277,6 +322,16 @@ module.exports = async (req, res) => {
             }
         }
         
+        if (billing) {
+            if (billing.address.length < 5) errors.push('Adresse de facturation requise (min 5 caractères)');
+            if (!POSTAL_CODE_RULES[billing.country]) {
+                errors.push('Pays de facturation non pris en charge');
+            } else if (!POSTAL_CODE_RULES[billing.country].test(billing.postalCode)) {
+                errors.push(`Code postal de facturation invalide (${POSTAL_CODE_LABELS[billing.country]} requis)`);
+            }
+            if (billing.city.length < 2) errors.push('Ville de facturation requise (min 2 caractères)');
+        }
+
         // Validation du point relais si livraison en relay
         if (normalizedData.deliveryMethod === 'relay') {
             if (
@@ -291,6 +346,14 @@ module.exports = async (req, res) => {
                     success: false,
                     error: 'Validation failed',
                     message: 'Point relais requis pour la livraison en point relais'
+                });
+            }
+            relayPoint.country = String(relayPoint.country || 'FR').toUpperCase();
+            if (!SHIPPING_COUNTRIES.includes(relayPoint.country)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Validation failed',
+                    message: 'Point relais disponible en France et en Belgique uniquement'
                 });
             }
         }
@@ -326,7 +389,7 @@ module.exports = async (req, res) => {
         const PRODUCT_WEIGHT_KG = 0.8; // 800g par oracle
         
         // Configuration des tarifs Mondial Relay France (en euros) - IDENTIQUE AU FRONTEND
-        const MONDIAL_RELAY_RATES = {
+        const MONDIAL_RELAY_RATES_FR = {
             relay: [
                 { max_weight: 0.25, price: 4.10 },
                 { max_weight: 0.5, price: 4.10 },
@@ -355,6 +418,18 @@ module.exports = async (req, res) => {
                 { max_weight: Infinity, price: 0 } // Remise en main propre = gratuit
             ]
         };
+
+        // Grille par pays de destination. Belgique : grille France appliquée en attendant
+        // les tarifs Mondial Relay Belgique réels — À VÉRIFIER avant les premiers envois
+        // belges (livraison.html affiche la même grille).
+        const MONDIAL_RELAY_RATES_BY_COUNTRY = {
+            FR: MONDIAL_RELAY_RATES_FR,
+            BE: MONDIAL_RELAY_RATES_FR
+        };
+        const destinationCountry = normalizedData.deliveryMethod === 'relay'
+            ? relayPoint.country
+            : (normalizedData.country || 'FR');
+        const MONDIAL_RELAY_RATES = MONDIAL_RELAY_RATES_BY_COUNTRY[destinationCountry] || MONDIAL_RELAY_RATES_FR;
 
         // Calculer le poids total de la commande (identique au frontend)
         function calculateTotalWeight(items) {
@@ -449,6 +524,31 @@ module.exports = async (req, res) => {
             totalAmount += Math.round(deliveryPrice * 100);
         }
 
+        // Adresse qui figurera sur la facture Stripe : facturation si différente, sinon
+        // adresse de livraison à domicile. Stripe ne reprend une adresse sur la facture
+        // que si elle est portée par un objet Customer — d'où sa création ici. En cas
+        // d'échec, on retombe sur customer_email (comportement historique).
+        const invoiceAddress = billing
+            ? { line1: billing.address, line2: billing.addressComplement || undefined, postal_code: billing.postalCode, city: billing.city, country: billing.country }
+            : (normalizedData.deliveryMethod === 'home'
+                ? { line1: normalizedData.shippingAddress.trim(), line2: normalizedData.addressComplement?.trim() || undefined, postal_code: normalizedData.postalCode, city: normalizedData.city.trim(), country: normalizedData.country || 'FR' }
+                : null);
+        let stripeCustomerId = null;
+        if (invoiceAddress) {
+            try {
+                const customer = await stripe.customers.create({
+                    email: safeEmail,
+                    name: safeFullName,
+                    ...(safePhone ? { phone: safePhone } : {}),
+                    address: invoiceAddress,
+                    metadata: { source: 'oradia-precommande' }
+                });
+                stripeCustomerId = customer.id;
+            } catch (customerError) {
+                console.error('Création du client Stripe échouée (facture sans adresse):', customerError.message);
+            }
+        }
+
         // Créer la session Stripe Checkout
 
         const session = await stripe.checkout.sessions.create({
@@ -465,7 +565,7 @@ module.exports = async (req, res) => {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'
               }
             },
-            customer_email: safeEmail,
+            ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: safeEmail }),
             invoice_creation: {
                 enabled: true,
                 invoice_data: {
@@ -493,6 +593,13 @@ module.exports = async (req, res) => {
                 postal_code: normalizedData.postalCode?.trim() || '',
                 city: normalizedData.city?.trim() || '',
                 country: normalizedData.country || 'FR',
+                ...(billing && {
+                    billing_address: billing.address,
+                    billing_address_complement: billing.addressComplement,
+                    billing_postal_code: billing.postalCode,
+                    billing_city: billing.city,
+                    billing_country: billing.country
+                }),
                 // Métadonnées point relais si applicable
                 ...(relayPoint && {
                     relay_id: relayPoint.id || '',
@@ -535,6 +642,13 @@ module.exports = async (req, res) => {
                 relay_postal_code: relayPoint.postalCode,
                 relay_city: relayPoint.city,
                 relay_country: relayPoint.country || 'FR'
+            }),
+            ...(billing && {
+                billing_address: billing.address,
+                billing_address_complement: billing.addressComplement || null,
+                billing_postal_code: billing.postalCode,
+                billing_city: billing.city,
+                billing_country: billing.country
             }),
             total_weight: totalWeight,
             calculated_delivery_price_eur: calculatedDeliveryPrice,

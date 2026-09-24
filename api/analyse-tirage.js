@@ -2,15 +2,56 @@
 // Endpoint serverless pour analyse IA du tirage avec Claude
 // Génère une analyse personnalisée avec section Fenêtre d'observation
 
-const MODELS_FALLBACK = [
+// Dédoublonnée : ANTHROPIC_MODEL vaut en général déjà 'claude-haiku-4-5', qui était
+// alors essayé deux fois. claude-3-5-haiku-20241022 (retiré par Anthropic) a été
+// supprimé de la liste ; le dernier recours est un modèle actuel, plus cher mais
+// qui déclenche l'alerte email "modèle remplacé" pour corriger ANTHROPIC_MODEL.
+const MODELS_FALLBACK = [...new Set([
     process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5',
     'claude-haiku-4-5',
-    'claude-3-5-haiku-20241022',
-    'claude-sonnet-4-5',
-];
+    'claude-sonnet-5',
+])];
+
+// ── Limitation de débit persistante (voir lib/rate-limit.js) ────────────────
+// La limite des 2 tirages gratuits n'existe que dans le navigateur (localStorage) :
+// sans garde-fou serveur, un script pouvait appeler cette route en boucle, chaque
+// appel étant facturé par Anthropic. Fenêtre glissante de 24 h par IP, plus un
+// plafond global journalier qui sert de disjoncteur de coût.
+const ANON_DAILY_PER_IP       = 10;  // 2 tirages gratuits + bonus parrainage + rechargements
+const SUBSCRIBER_DAILY_PER_IP = 60;  // abonné actif (quota mensuel de 300 en plus)
+const GLOBAL_DAILY_CAP = parseInt(process.env.ANALYSE_DAILY_CAP || '500', 10);
+const DAY_SECONDS = 86400;
 
 // Importer le tracker d'utilisation (en ESM)
 import { logApiUsage } from '../lib/api-usage-tracker.js';
+import { getClientIP, hitRateLimit } from '../lib/rate-limit.js';
+
+async function sendDailyCapAlert(count) {
+    try {
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: {
+                'api-key': process.env.BREVO_API_KEY,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                sender: { name: 'Oradia Système', email: 'contact@oradia.fr' },
+                to: [{ email: 'contact@oradia.fr' }],
+                subject: '⚠️ Oradia — Plafond journalier des analyses IA atteint',
+                htmlContent: `
+                    <p>Le plafond de <strong>${count}</strong> analyses IA sur 24 h glissantes vient d'être atteint.</p>
+                    <p>Les nouvelles analyses sont suspendues jusqu'à ce que le volume redescende
+                    (les visiteurs voient un message d'indisponibilité temporaire).</p>
+                    <p>Si c'est un vrai pic de fréquentation, augmente la variable d'environnement
+                    <code>ANALYSE_DAILY_CAP</code> dans Vercel. Sinon, il peut s'agir d'un usage abusif :
+                    consulte la table <code>api_rate_limits</code> (colonne key = IP) dans Supabase.</p>
+                `
+            }),
+        });
+    } catch (e) {
+        console.warn('[analyse-tirage] Alerte plafond non envoyée:', e.message);
+    }
+}
 
 async function sendModelAlert(failedModel, usedModel) {
     try {
@@ -79,9 +120,10 @@ async function callAnthropicWithFallback(payload, userEmail, clientIP) {
                     console.warn('[analyse-tirage] Impossible d\'extraire les tokens:', e.message);
                 }
                 
-                // Logger l'utilisation en arrière-plan (non bloquant)
+                // Journalisation attendue : sur Vercel, une promesse laissée en arrière-plan
+                // peut être interrompue dès que la réponse HTTP est envoyée.
                 const status = model !== firstModel ? 'fallback' : 'success';
-                logApiUsage({
+                await logApiUsage({
                     apiName: 'anthropic-claude',
                     modelName: model,
                     requestTokens,
@@ -110,7 +152,7 @@ async function callAnthropicWithFallback(payload, userEmail, clientIP) {
             
             // Logger l'erreur
             const duration = Date.now() - startTime;
-            logApiUsage({
+            await logApiUsage({
                 apiName: 'anthropic-claude',
                 modelName: model,
                 requestTokens: null,
@@ -130,7 +172,7 @@ async function callAnthropicWithFallback(payload, userEmail, clientIP) {
             
             // Logger l'exception
             const duration = Date.now() - startTime;
-            logApiUsage({
+            await logApiUsage({
                 apiName: 'anthropic-claude',
                 modelName: model,
                 requestTokens: null,
@@ -233,7 +275,7 @@ async function checkAndIncrementDrawCount(email) {
       })
       .ilike('email', email);
 
-    return { allowed: true, count: currentCount + 1 };
+    return { allowed: true, subscriber: true, count: currentCount + 1 };
 
   } catch (err) {
     // En cas d'erreur Supabase : ne pas bloquer (fail-open pour expérience utilisateur)
@@ -251,7 +293,9 @@ export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
   // Rate limiting check
-  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || 'unknown';
+  const clientIP = getClientIP(req);
+  // Premier filet anti-rafale, local à l'instance (le vrai garde-fou est la limite
+  // persistante plus bas, après la vérification d'abonnement).
   if (!checkRateLimit(clientIP, 20, 60000)) { // 20 requests per minute per IP
     return res.status(429).json({ 
       error: 'Trop de requêtes. Veuillez réessayer dans une minute.' 
@@ -290,6 +334,56 @@ export default async function handler(req, res) {
       message,
       resetsAt: rateCheck.resetsAt,
     });
+  }
+
+  // ── Limitation persistante par IP + plafond global ──────────────────────
+  let sbLimit = null;
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    sbLimit = createClient(
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+  } catch (e) {
+    console.warn('[analyse-tirage] client Supabase indisponible, limitation désactivée:', e.message);
+  }
+  if (sbLimit) {
+    const ipCheck = await hitRateLimit(sbLimit, {
+      bucket: 'analyse-ip',
+      key: clientIP,
+      windowSeconds: DAY_SECONDS,
+      max: rateCheck.subscriber ? SUBSCRIBER_DAILY_PER_IP : ANON_DAILY_PER_IP,
+    });
+    if (!ipCheck.allowed) {
+      const resetsAt = new Date(Date.now() + DAY_SECONDS * 1000).toISOString();
+      return res.status(429).json({
+        error: 'daily_limit_reached',
+        message: lang === 'en'
+          ? 'Your draw space is taking a pause for today. Come back tomorrow for a new reading.'
+          : "Votre espace de tirage marque une pause pour aujourd'hui. Revenez demain pour une nouvelle lecture.",
+        resetsAt,
+      });
+    }
+    const globalCheck = await hitRateLimit(sbLimit, {
+      bucket: 'analyse-global',
+      key: 'all',
+      windowSeconds: DAY_SECONDS,
+      max: GLOBAL_DAILY_CAP,
+    });
+    if (!globalCheck.allowed) {
+      // Les appels refusés ne sont pas comptés : sans ce second compteur (1 alerte
+      // par 24 h), chaque visiteur refusé déclencherait un nouvel email.
+      const alertSlot = await hitRateLimit(sbLimit, {
+        bucket: 'analyse-cap-alert', key: 'all', windowSeconds: DAY_SECONDS, max: 1,
+      });
+      if (alertSlot.allowed && !alertSlot.degraded) await sendDailyCapAlert(GLOBAL_DAILY_CAP);
+      return res.status(503).json({
+        error: 'analysis_temporarily_unavailable',
+        message: lang === 'en'
+          ? 'The oracle is receiving many requests right now. Please try again in a few hours.'
+          : "L'oracle reçoit beaucoup de demandes en ce moment. Merci de réessayer dans quelques heures.",
+      });
+    }
   }
 
   // Prompt et nettoyage post-API partagés avec le runner des tirages programmés

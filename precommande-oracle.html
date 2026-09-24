@@ -550,17 +550,10 @@
                     <p>64 cartes et un livret d'accompagnement pour retrouver de la clarté dans vos moments de doute.</p>
                 </div>
 
-                <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) —
-                juste après la promesse, avant l'appel à l'action, pour asseoir la crédibilité. -->
-                <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
-                    <i class="fas fa-circle text-gold text-xs mr-2 align-middle"></i>
-                    Plus de 200 tirages réalisés en ligne ces trois dernières semaines : l'oracle existe déjà et vit au quotidien.
-                </p>
-
                 <!-- Info prix mobile : le bouton lui-même est redondant avec la barre sticky
                 #mobileStickyCta déjà présente en bas d'écran sur mobile. -->
                 <div class="md:hidden mb-6">
-                    <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ · Édition limitée</p>
+                    <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ (42€ à la sortie) · Édition limitée</p>
                 </div>
 
                 <!-- CTA direct immédiat -->
@@ -587,7 +580,7 @@
                 <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 inline-block">
                     <span class="text-gold font-bold cormorant text-base sm:text-lg">⏳ </span>
                     <span class="js-days-left text-gold font-bold">--</span>
-                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours pour précommander — clôture le 31 décembre 2026</span>
+                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours au prix de précommande — 4 € de moins qu'à la sortie</span>
                 </div>
                 
                 <!-- Section Expérience Concrète -->
@@ -1041,9 +1034,22 @@
                     Choisissez votre manière d'entrer dans l'univers Oradia
                 </h2>
                 
-                <p class="text-center text-light-gold/80 mb-12 max-w-3xl mx-auto">
+                <p class="text-center text-light-gold/80 mb-8 max-w-3xl mx-auto">
                     Choisissez l'offre qui vous correspond et réservez votre exemplaire avant la clôture des précommandes.
                 </p>
+
+                <!-- Hausse de prix annoncée à la sortie : récompense les précommandeurs et
+                     explique pourquoi agir avant le 31 décembre. Prix de sortie validés le
+                     24/09/2026 : Standard 42 €, Édition Signature 46 €, Guidance Offerte 52 €. -->
+                <div class="max-w-3xl mx-auto mb-12 rounded-2xl border border-gold/50 bg-[rgba(212,175,55,0.12)] px-6 py-5 text-center">
+                    <p class="text-gold font-bold text-lg mb-2"><i class="fas fa-tag mr-2"></i>Prix de précommande : économisez 4 €</p>
+                    <p class="text-light-gold/90 text-sm sm:text-base leading-relaxed">
+                        À sa sortie en février 2027, l'oracle sera vendu <strong class="text-light-gold">42 €</strong> (Standard),
+                        <strong class="text-light-gold">46 €</strong> (Édition Signature) et <strong class="text-light-gold">52 €</strong> (Guidance Offerte).
+                        Précommandez avant le 31 décembre 2026 pour bénéficier du prix de lancement.
+                    </p>
+                    <p class="js-countdown-container text-gold/90 text-sm mt-3"><i class="fas fa-hourglass-half mr-1"></i>Plus que <span class="js-days-left font-bold">--</span> jours au prix de précommande</p>
+                </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                     
@@ -1058,6 +1064,7 @@
                                 <span class="text-5xl font-bold text-gold">38</span>
                                 <span class="text-2xl text-gold">€</span>
                             </div>
+                            <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">42 € à la sortie</span></p>
                             <p class="text-light-gold/80 text-base">L'oracle complet</p>
                         </div>
                         
@@ -1113,6 +1120,7 @@
                                 <span class="text-4xl sm:text-6xl font-bold text-gold">48</span>
                                 <span class="text-3xl text-gold">€</span>
                             </div>
+                            <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">52 € à la sortie</span></p>
                             <p class="text-center text-gold/80 text-sm mb-4 font-medium">30min de guidance offerte (valeur réelle 30€)</p>
                             <p class="text-light-gold/70 text-sm mb-5">Nombre de places limité</p>
                             <ul class="space-y-3 text-left">
@@ -1159,6 +1167,7 @@
                                 <span class="text-5xl font-bold text-gold">42</span>
                                 <span class="text-2xl text-gold">€</span>
                             </div>
+                            <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">46 € à la sortie</span></p>
                         </div>
                         
                         <div class="flex-grow mb-6">
@@ -1592,67 +1601,6 @@ La production est lancée grâce aux premières commandes.</p>
         </div>
     </section>
 
-    <!-- Modal de Précommande -->
-    <div id="precommandeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden">
-        <div class="flex items-center justify-center min-h-screen p-4">
-            <div class="bg-gradient-to-br from-[rgba(26,54,93,0.9)] to-[rgba(5,20,40,0.95)] rounded-2xl p-8 max-w-md w-full border border-gold/30">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="cormorant text-2xl font-bold text-gold">Finaliser la Précommande</h3>
-                    <button id="closeModal" class="text-gold hover:text-light-gold">
-                        <i class="fas fa-times text-xl"></i>
-                    </button>
-                </div>
-                
-                <div id="selectedOffer" class="mb-6">
-                    <!-- Contenu dynamique -->
-                </div>
-                
-                <form id="precommandeForm" class="space-y-4">
-                    <div>
-                        <label for="precommande-email" class="block text-gold mb-2">Email</label>
-                        <input type="email" id="precommande-email" name="email" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
-                    </div>
-
-                    <div>
-                        <label for="precommande-name" class="block text-gold mb-2">Nom complet</label>
-                        <input type="text" id="precommande-name" name="name" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
-                    </div>
-                    
-                    <p class="text-light-gold/60 text-xs">L'adresse de livraison vous sera demandée lors de l'étape suivante, après réservation.</p>
-                    
-                    <div class="flex items-start">
-                        <input type="checkbox" id="terms" required class="mr-2 mt-1">
-                        <label for="terms" class="text-sm text-light-gold">
-                            J'accepte les <a href="cgu.html" target="_blank" class="text-gold hover:text-light-gold">Conditions Générales d'Utilisation</a>, 
-                            les <a href="cgv.html" target="_blank" class="text-gold hover:text-light-gold">Conditions Générales de Vente</a> 
-                            et la <a href="politique-confidentialite.html" target="_blank" class="text-gold hover:text-light-gold">politique de confidentialité</a> *
-                        </label>
-                    </div>
-                    
-                    <button type="submit" class="w-full bg-gold text-night-blue font-bold py-3 px-6 rounded-full hover:bg-light-gold transition-all">
-                        <i class="fas fa-lock mr-2"></i>
-                        Payer avec Stripe
-                    </button>
-
-                    <!-- Réassurance -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5 pt-5 border-t border-gold/15">
-                        <div class="flex items-center gap-2 text-light-gold/70 text-xs">
-                            <i class="fas fa-shield-halved text-gold"></i>
-                            <span>Paiement 100% sécurisé par Stripe</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-light-gold/70 text-xs">
-                            <i class="fas fa-gem text-gold"></i>
-                            <span>Édition limitée, première série</span>
-                        </div>
-                        <div class="flex items-center gap-2 text-light-gold/70 text-xs">
-                            <i class="fas fa-hand-holding-heart text-gold"></i>
-                            <span>Pièce artisanale, faite avec soin</span>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
     <!-- Footer -->
     <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
@@ -1721,7 +1669,6 @@ La production est lancée grâce aux premières commandes.</p>
                 window.gtag('event', eventName, payload);
             }
 
-            console.log('[tracking]', eventName, eventPayload);
         }
         
         // Initialisation
@@ -1733,7 +1680,6 @@ La production est lancée grâce aux premières commandes.</p>
                     e.preventDefault();
                     const offersSection = document.getElementById('offres');
                     if (offersSection) {
-                        console.log('Scroll vers section #offres');
                         offersSection.scrollIntoView({
                             behavior: 'smooth',
                             block: 'start'
@@ -1964,11 +1910,8 @@ La production est lancée grâce aux premières commandes.</p>
         
         // Fonction pour ajouter une offre au panier
         function addToCart(offerId) {
-            console.log('addToCart appelé avec offerId:', offerId);
             const offer = OFFER_CONFIG[offerId];
-            console.log('OFFER trouvée:', offer);
             if (!offer) {
-                console.log('Offre non trouvée, retour');
                 return;
             }
             
@@ -1976,9 +1919,7 @@ La production est lancée grâce aux premières commandes.</p>
                 // L'offre existe déjà, incrémenter la quantité
                 if (cart[offerId].quantity < MAX_QUANTITY) {
                     cart[offerId].quantity++;
-                    console.log('Quantité incrémentée pour', offerId, 'nouvelle quantité:', cart[offerId].quantity);
                 } else {
-                    console.log('Quantité maximale atteinte pour', offerId);
                 }
             } else {
                 // Nouvelle offre, ajouter avec quantité 1
@@ -1988,10 +1929,8 @@ La production est lancée grâce aux premières commandes.</p>
                     price: offer.priceEuros, // Utiliser le prix de la config
                     description: getDescriptionForOffer(offerId) // Ajouter description
                 };
-                console.log('Nouvelle offre ajoutée au panier:', offerId, cart[offerId]);
             }
             
-            console.log('Panier avant updateCartDisplay:', cart);
             updateCartDisplay();
             trackEvent('add_to_cart', {
                 offer_id: offerId,
@@ -2084,7 +2023,6 @@ La production est lancée grâce aux premières commandes.</p>
         
         // Fonction pour mettre à jour l'affichage du panier
         function updateCartDisplay() {
-            console.log('updateCartDisplay appelé, cart:', cart);
             
             const cartEmpty = document.getElementById('cart-empty');
             const cartItems = document.getElementById('cart-items');
@@ -2099,7 +2037,6 @@ La production est lancée grâce aux premières commandes.</p>
             }
             
             const cartItemsArray = Object.entries(cart);
-            console.log('cartItemsArray.length:', cartItemsArray.length);
             
             if (cartItemsArray.length === 0) {
                 // Panier vide
@@ -2110,7 +2047,6 @@ La production est lancée grâce aux premières commandes.</p>
                 
                 checkoutButton.disabled = true;
                 checkoutButtonText.textContent = 'Ajoutez une offre pour continuer';
-                console.log('Panier vide - bouton désactivé');
             } else {
                 // Panier avec des items
                 cartEmpty.classList.add('hidden');
@@ -2129,7 +2065,6 @@ La production est lancée grâce aux premières commandes.</p>
                     subtotal += item.price * item.quantity;
                 });
                 
-                console.log('Calcul sous-total - subtotal:', subtotal);
                 
                 // Mettre à jour les montants
                 document.getElementById('cart-subtotal').textContent = `${subtotal.toFixed(2)} €`;
@@ -2137,7 +2072,6 @@ La production est lancée grâce aux premières commandes.</p>
                 // Mettre à jour le bouton de paiement
                 checkoutButton.disabled = false;
                 checkoutButtonText.textContent = 'Passer à la livraison';
-                console.log('Panier avec items - bouton activé avec sous-total:', subtotal);
                 
                 // Attacher les événements aux nouveaux éléments
                 attachCartEvents();
@@ -2277,126 +2211,6 @@ La production est lancée grâce aux premières commandes.</p>
             window.location.href = 'livraison.html';
         });
         
-        // Formulaire de précommande (version robuste)
-        document.getElementById('precommandeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const form = e.target;
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalBtnText = submitBtn.innerHTML;
-            
-            // Protection contre les doubles soumissions
-            if (submitBtn.disabled) {
-                return;
-            }
-            
-            // Validation client minimale
-            const formData = new FormData(form);
-            const fullName = formData.get('name');
-            const email = formData.get('email');
-            const shippingAddress = formData.get('address');
-            const postalCode = formData.get('postal');
-            const city = formData.get('city');
-            
-            // Validation rapide
-            if (!fullName || fullName.trim().length < 2) {
-                showError('Veuillez entrer votre nom complet');
-                return;
-            }
-            
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('Veuillez entrer une adresse email valide');
-                return;
-            }
-            
-            if (!shippingAddress || shippingAddress.trim().length < 5) {
-                showError('Veuillez entrer une adresse complète');
-                return;
-            }
-            
-            if (!postalCode || !/^\d{5}$/.test(postalCode)) {
-                showError('Veuillez entrer un code postal valide (5 chiffres)');
-                return;
-            }
-            
-            if (!city || city.trim().length < 2) {
-                showError('Veuillez entrer une ville');
-                return;
-            }
-            
-            // Désactiver le bouton et montrer le chargement
-            submitBtn.disabled = true;
-            submitBtn.innerHTML = `
-                <div class="inline-flex items-center">
-                    <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
-                    Traitement en cours...
-                </div>
-            `;
-            
-            try {
-                // Utiliser les items du panier
-                const cartItems = getCartItems();
-                const orderData = {
-                    items: cartItems,
-                    fullName: fullName.trim(),
-                    email: email.trim(),
-                    shippingAddress: shippingAddress.trim(),
-                    postalCode: postalCode.trim(),
-                    city: city.trim()
-                };
-                
-                // Créer la session Stripe Checkout
-                const response = await fetch('/api/create-checkout-session', {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(orderData)
-                });
-                
-                // Vérifier le content-type avant de parser
-                const contentType = response.headers.get('content-type');
-                let session;
-                
-                if (!contentType || !contentType.includes('application/json')) {
-                    const rawText = await response.text();
-                    console.error('Non-JSON response:', rawText);
-                    throw new Error('Le serveur a renvoyé une réponse invalide. Veuillez réessayer.');
-                }
-                
-                try {
-                    session = await response.json();
-                } catch (parseError) {
-                    console.error('JSON parse error:', parseError);
-                    throw new Error('La réponse du serveur est corrompue. Veuillez réessayer.');
-                }
-                
-                if (!response.ok) {
-                    const errorMessage = session.details?.join(', ') || 
-                                     session.message || 
-                                     session.error || 
-                                     'Erreur lors de la création de la session';
-                    throw new Error(errorMessage);
-                }
-                
-                if (!session.success || !session.sessionId) {
-                    throw new Error(session.message || 'Session ID manquant ou invalide');
-                }
-                
-                await stripeInstance.redirectToCheckout({ sessionId: session.sessionId });
-                
-            } catch (error) {
-                console.error('Checkout session creation failed:', error);
-                
-                // Afficher une erreur propre
-                showError(error.message || 'Une erreur est survenue. Veuillez réessayer.');
-                
-                // Restaurer le bouton
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = originalBtnText;
-            }
-        });
-        
         // Fonction pour afficher les erreurs
         function showError(message) {
             // Créer ou mettre à jour une notification élégante
@@ -2440,54 +2254,9 @@ La production est lancée grâce aux premières commandes.</p>
             }, 5000);
         }
         
-        // Carrousel des cartes
-        let currentSlide = 0;
-        const slides = document.querySelectorAll('.carousel-slide');
-        const dots = document.querySelectorAll('#carouselDots div');
-        const prevBtn = document.getElementById('prevSlide');
-        const nextBtn = document.getElementById('nextSlide');
-        
-        function showSlide(index) {
-            // Cacher toutes les slides
-            slides.forEach(slide => slide.classList.add('opacity-0'));
-            dots.forEach(dot => dot.classList.remove('bg-gold'));
-            dots.forEach(dot => dot.classList.add('bg-gold/50'));
-            
-            // Afficher la slide actuelle
-            slides[index].classList.remove('opacity-0');
-            dots[index].classList.remove('bg-gold/50');
-            dots[index].classList.add('bg-gold');
-            
-            currentSlide = index;
-        }
-        
-        function nextSlide() {
-            const nextIndex = (currentSlide + 1) % slides.length;
-            showSlide(nextIndex);
-        }
-        
-        function prevSlide() {
-            const prevIndex = (currentSlide - 1 + slides.length) % slides.length;
-            showSlide(prevIndex);
-        }
-        
-        // Initialiser le carrousel
-        if (slides.length > 0) {
-            showSlide(0);
-            
-            // Boutons de navigation
-            if (prevBtn) prevBtn.addEventListener('click', prevSlide);
-            if (nextBtn) nextBtn.addEventListener('click', nextSlide);
-            
-            // Navigation par dots
-            dots.forEach((dot, index) => {
-                dot.addEventListener('click', () => showSlide(index));
-            });
-            
-            // Défilement automatique toutes les 4 secondes
-            setInterval(nextSlide, 4000);
-        }
-        
+        // (Carrousel des cartes : géré une seule fois dans le DOMContentLoaded plus haut —
+        // une seconde copie ici faisait tourner deux défilements concurrents, 4 s et 5 s.)
+
         // Flèche pour remonter en haut de page
         const backToTopButton = document.getElementById('backToTop');
         
@@ -2519,15 +2288,11 @@ La production est lancée grâce aux premières commandes.</p>
         });
 
         async function startCustomCheckout() {
-            console.log('🎁 === CONTRIBUTION LIBRE CHECKOUT START ===');
             
             const email = document.getElementById('contributionEmail').value.trim();
             const name = document.getElementById('contributionName').value.trim();
             const amount = document.getElementById('customAmount').value;
 
-            console.log('📧 Email:', email);
-            console.log('👤 Name:', name);
-            console.log('💰 Amount:', amount);
 
             // Validation email
             if (!email || !email.includes('@')) {
@@ -2548,7 +2313,6 @@ La production est lancée grâce aux premières commandes.</p>
                 fullName: name || 'Ami(e) d\'ORADIA'
             };
 
-            console.log('📦 Payload envoyé:', JSON.stringify(payload, null, 2));
 
             try {
                 const response = await fetch('/api/create-checkout-session', {
@@ -2559,12 +2323,9 @@ La production est lancée grâce aux premières commandes.</p>
                     body: JSON.stringify(payload)
                 });
 
-                console.log('📡 Response status:', response.status);
                 const data = await response.json();
-                console.log('📡 Response data:', data);
 
                 if (data.url) {
-                    console.log('✅ Redirection vers Stripe:', data.url);
                     window.location.href = data.url;
                 } else {
                     console.error('❌ Pas d\'URL de redirection');
@@ -2580,7 +2341,9 @@ La production est lancée grâce aux premières commandes.</p>
     <!-- Compteur temps restant précommande -->
     <script>
         function updateCountdown() {
-            const endDate = new Date('2026-12-31T23:59:59');
+            // Fuseau explicite (heure de Paris) : sans lui, la date était interprétée dans
+            // le fuseau du visiteur et le décompte variait selon le pays.
+            const endDate = new Date('2026-12-31T23:59:59+01:00');
             const now = new Date();
             const diff = endDate - now;
 
@@ -2608,7 +2371,6 @@ La production est lancée grâce aux premières commandes.</p>
 <script>
     // Gérer le scroll vers les ancres (#offres, #cart-section, etc.)
     document.addEventListener('DOMContentLoaded', () => {
-        console.log('URL hash:', window.location.hash);
 
         const mobileStickyCta = document.getElementById('mobileStickyCta');
         if (mobileStickyCta && window.matchMedia('(max-width: 768px)').matches) {
@@ -2621,13 +2383,11 @@ La production est lancée grâce aux premières commandes.</p>
         function scrollToAnchor(anchorId, delay = 500) {
             setTimeout(() => {
                 const targetElement = document.getElementById(anchorId);
-                console.log(`Tentative de scroll vers #${anchorId}`, targetElement);
                 
                 if (targetElement) {
                     // S'assurer que l'élément est visible
                     if (targetElement.classList.contains('hidden')) {
                         targetElement.classList.remove('hidden');
-                        console.log(`Element #${anchorId} rendu visible`);
                     }
                     
                     // Forcer le scroll avec plusieurs méthodes
@@ -2637,7 +2397,6 @@ La production est lancée grâce aux premières commandes.</p>
                             behavior: 'smooth',
                             block: 'start'
                         });
-                        console.log(`Scroll vers #${anchorId} avec scrollIntoView`);
                         
                         // Méthode 2 : fallback si scrollIntoView ne fonctionne pas
                         setTimeout(() => {
@@ -2647,7 +2406,6 @@ La production est lancée grâce aux premières commandes.</p>
                                     top: window.pageYOffset + rect.top - 100,
                                     behavior: 'smooth'
                                 });
-                                console.log(`Scroll fallback vers #${anchorId}`);
                             }
                         }, 100);
                         
@@ -2683,7 +2441,6 @@ La production est lancée grâce aux premières commandes.</p>
             
             if (anchorId && document.getElementById(anchorId)) {
                 e.preventDefault();
-                console.log(`Clic intercepté sur ${href}`);
                 
                 const targetElement = document.getElementById(anchorId);
                 if (targetElement) {
