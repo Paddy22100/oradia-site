@@ -4,6 +4,20 @@ function getStripeClient() {
   return require('stripe')(process.env.STRIPE_SECRET_KEY);
 }
 
+// Pays de livraison acceptés (domicile et point relais) et format de leur code
+// postal. La Belgique a des codes à 4 chiffres : l'ancienne validation "5 chiffres"
+// rendait toute livraison à domicile belge impossible. La Suisse (hors UE, douane)
+// n'est pas livrée pour l'instant — elle reste acceptée comme adresse de facturation.
+const SHIPPING_COUNTRIES = ['FR', 'BE'];
+const POSTAL_CODE_RULES = { FR: /^\d{5}$/, BE: /^\d{4}$/, CH: /^\d{4}$/ };
+const POSTAL_CODE_LABELS = { FR: '5 chiffres', BE: '4 chiffres', CH: '4 chiffres' };
+
+// Plafonds de quantité (identiques à MAX_QUANTITY de precommande-oracle.html) :
+// sans eux, une quantité décimale ou démesurée arrivait jusqu'à Stripe, et au-delà
+// de 25 kg les frais de port restaient bloqués au dernier palier de la grille.
+const MAX_QUANTITY_PER_OFFER = 10;
+const MAX_TOTAL_QUANTITY = 20; // 20 × 0,8 kg = 16 kg, dans la grille Mondial Relay
+
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxzetkdozynyutlbhxdx)
   const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
@@ -228,14 +242,25 @@ module.exports = async (req, res) => {
             errors.push('Panier vide invalide');
         } else {
             const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
+            const seenOffers = new Set();
+            let totalQuantity = 0;
             
             for (const item of normalizedData.items) {
                 if (!item.offer || !allowedOffers.includes(item.offer)) {
                     errors.push(`Offre invalide: ${item.offer}`);
+                } else if (seenOffers.has(item.offer)) {
+                    errors.push(`Offre en double dans le panier: ${item.offer}`);
+                } else {
+                    seenOffers.add(item.offer);
                 }
-                if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1) {
-                    errors.push(`Quantité invalide pour l'offre: ${item.offer}`);
+                if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > MAX_QUANTITY_PER_OFFER) {
+                    errors.push(`Quantité invalide pour l'offre ${item.offer} (entre 1 et ${MAX_QUANTITY_PER_OFFER})`);
+                } else {
+                    totalQuantity += item.quantity;
                 }
+            }
+            if (totalQuantity > MAX_TOTAL_QUANTITY) {
+                errors.push(`Commande limitée à ${MAX_TOTAL_QUANTITY} exemplaires — contactez-nous pour une commande plus importante`);
             }
         }
         
@@ -264,12 +289,21 @@ module.exports = async (req, res) => {
         
         // Validation de l'adresse selon le mode de livraison
         if (normalizedData.deliveryMethod === 'home') {
+            const country = String(normalizedData.country || 'FR').toUpperCase();
+            normalizedData.country = country;
+            if (!SHIPPING_COUNTRIES.includes(country)) {
+                errors.push('Livraison non disponible dans ce pays (France et Belgique uniquement) — contactez-nous');
+            }
+
             if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
                 errors.push('Adresse requise (min 5 caractères)');
             }
             
-            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
-                errors.push('Code postal invalide (5 chiffres requis)');
+            const postalRule = POSTAL_CODE_RULES[country] || POSTAL_CODE_RULES.FR;
+            const postalCode = String(normalizedData.postalCode || '').trim();
+            normalizedData.postalCode = postalCode;
+            if (!postalRule.test(postalCode)) {
+                errors.push(`Code postal invalide (${POSTAL_CODE_LABELS[country] || '5 chiffres'} requis)`);
             }
             
             if (!normalizedData.city || normalizedData.city.trim().length < 2) {
@@ -291,6 +325,14 @@ module.exports = async (req, res) => {
                     success: false,
                     error: 'Validation failed',
                     message: 'Point relais requis pour la livraison en point relais'
+                });
+            }
+            relayPoint.country = String(relayPoint.country || 'FR').toUpperCase();
+            if (!SHIPPING_COUNTRIES.includes(relayPoint.country)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Validation failed',
+                    message: 'Point relais disponible en France et en Belgique uniquement'
                 });
             }
         }
@@ -326,7 +368,7 @@ module.exports = async (req, res) => {
         const PRODUCT_WEIGHT_KG = 0.8; // 800g par oracle
         
         // Configuration des tarifs Mondial Relay France (en euros) - IDENTIQUE AU FRONTEND
-        const MONDIAL_RELAY_RATES = {
+        const MONDIAL_RELAY_RATES_FR = {
             relay: [
                 { max_weight: 0.25, price: 4.10 },
                 { max_weight: 0.5, price: 4.10 },
@@ -355,6 +397,18 @@ module.exports = async (req, res) => {
                 { max_weight: Infinity, price: 0 } // Remise en main propre = gratuit
             ]
         };
+
+        // Grille par pays de destination. Belgique : grille France appliquée en attendant
+        // les tarifs Mondial Relay Belgique réels — À VÉRIFIER avant les premiers envois
+        // belges (livraison.html affiche la même grille).
+        const MONDIAL_RELAY_RATES_BY_COUNTRY = {
+            FR: MONDIAL_RELAY_RATES_FR,
+            BE: MONDIAL_RELAY_RATES_FR
+        };
+        const destinationCountry = normalizedData.deliveryMethod === 'relay'
+            ? relayPoint.country
+            : (normalizedData.country || 'FR');
+        const MONDIAL_RELAY_RATES = MONDIAL_RELAY_RATES_BY_COUNTRY[destinationCountry] || MONDIAL_RELAY_RATES_FR;
 
         // Calculer le poids total de la commande (identique au frontend)
         function calculateTotalWeight(items) {

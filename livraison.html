@@ -406,9 +406,9 @@
                                                 <label class="block text-gold mb-2">Pays *</label>
                                                 <select name="country" required class="form-input">
                                                     <option value="FR">France</option>
-                                                    <option value="CH">Suisse</option>
                                                     <option value="BE">Belgique</option>
                                                 </select>
+                                                <p class="text-light-gold/50 text-xs mt-1">Suisse et autres pays : <a href="contact.html" class="underline hover:text-gold">nous contacter</a></p>
                                             </div>
                                         </div>
                                     </div>
@@ -578,7 +578,6 @@
                     <div class="relative flex gap-2">
                         <select id="relaySearchCountry" class="bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg px-2 py-2 text-light-gold focus:outline-none focus:border-gold/60">
                             <option value="FR">FR</option>
-                            <option value="CH">CH</option>
                             <option value="BE">BE</option>
                         </select>
                         <div class="relative flex-1">
@@ -642,6 +641,12 @@
             console.log('[tracking]', eventName, eventPayload);
         }
 
+        const POSTAL_CODE_RULES = {
+            FR: { pattern: /^\d{5}$/, label: '5 chiffres' },
+            BE: { pattern: /^\d{4}$/, label: '4 chiffres' },
+            CH: { pattern: /^\d{4}$/, label: '4 chiffres' }
+        };
+
         const fieldRules = {
             firstName: {
                 required: true,
@@ -663,8 +668,8 @@
             },
             postalCode: {
                 requiredWhen: () => selectedDelivery === 'home',
-                pattern: /^\d{5}$/,
-                message: 'Veuillez entrer un code postal valide (5 chiffres)'
+                countryField: 'country',
+                message: 'Veuillez entrer un code postal valide'
             },
             city: {
                 requiredWhen: () => selectedDelivery === 'home',
@@ -678,8 +683,8 @@
             },
             billingPostalCode: {
                 requiredWhen: () => document.getElementById('differentBillingAddress')?.checked,
-                pattern: /^\d{5}$/,
-                message: 'Veuillez entrer un code postal de facturation valide (5 chiffres)'
+                countryField: 'billingCountry',
+                message: 'Veuillez entrer un code postal de facturation valide'
             },
             billingCity: {
                 requiredWhen: () => document.getElementById('differentBillingAddress')?.checked,
@@ -749,11 +754,31 @@
                 return false;
             }
 
+            // Code postal : format selon le pays choisi (mêmes règles que
+            // api/create-checkout-session.js — la Belgique et la Suisse ont 4 chiffres).
+            if (rule.countryField) {
+                const country = getFieldElement(rule.countryField)?.value || 'FR';
+                const postal = POSTAL_CODE_RULES[country] || POSTAL_CODE_RULES.FR;
+                if (!postal.pattern.test(value)) {
+                    if (!silent) setFieldError(fieldName, `${rule.message} (${postal.label})`);
+                    return false;
+                }
+            }
+
             clearFieldError(fieldName);
             return true;
         }
 
+        function setupCountryRevalidation() {
+            [['country', 'postalCode'], ['billingCountry', 'billingPostalCode']].forEach(([countryField, postalField]) => {
+                getFieldElement(countryField)?.addEventListener('change', () => {
+                    if (getFieldElement(postalField)?.value) validateField(postalField, false);
+                });
+            });
+        }
+
         function setupInlineValidation() {
+            setupCountryRevalidation();
             Object.keys(fieldRules).forEach((fieldName) => {
                 const input = getFieldElement(fieldName);
                 if (!input) return;
@@ -1007,12 +1032,18 @@
             if (savedCart) {
                 cart = JSON.parse(savedCart);
                 
-                // Normaliser les prix selon la configuration officielle
+                // Normaliser les prix selon la configuration officielle, et les quantités
+                // (entier de 1 à 10, comme MAX_QUANTITY de precommande-oracle.html et le
+                // contrôle serveur) — un panier localStorage peut être ancien ou modifié.
                 Object.keys(cart).forEach(offerId => {
                     const officialConfig = OFFER_CONFIG[offerId];
-                    if (officialConfig && cart[offerId]) {
-                        cart[offerId].price = officialConfig.priceEuros;
+                    if (!officialConfig || !cart[offerId]) {
+                        delete cart[offerId];
+                        return;
                     }
+                    cart[offerId].price = officialConfig.priceEuros;
+                    const qty = Math.floor(Number(cart[offerId].quantity) || 1);
+                    cart[offerId].quantity = Math.min(10, Math.max(1, qty));
                 });
                 
                 updateOrderSummary();
@@ -1406,7 +1437,9 @@
             // pour un code postal suisse ou belge saisi ailleurs dans le formulaire.
             const mainCountry = document.querySelector('[name="country"]')?.value || 'FR';
             const relayCountrySelect = document.getElementById('relaySearchCountry');
-            if (relayCountrySelect) relayCountrySelect.value = mainCountry;
+            if (relayCountrySelect && relayCountrySelect.querySelector(`option[value="${mainCountry}"]`)) {
+                relayCountrySelect.value = mainCountry;
+            }
             document.getElementById('relaySearch').focus();
         }
 
