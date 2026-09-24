@@ -219,6 +219,17 @@ module.exports = async (req, res) => {
         const customerInfo = body.customerInfo || {};
         const delivery = body.delivery || {};
         const relayPoint = body.relayPoint || null;
+        // Adresse de facturation différente (case à cocher de livraison.html) : envoyée
+        // depuis toujours par le formulaire mais ignorée ici — la facture Stripe ne la
+        // portait donc jamais.
+        const rawBilling = body.billingInfo || customerInfo.billingInfo || null;
+        const billing = rawBilling && rawBilling.isDifferent ? {
+            address: String(rawBilling.address || '').trim(),
+            addressComplement: String(rawBilling.addressComplement || '').trim(),
+            postalCode: String(rawBilling.postalCode || '').trim(),
+            city: String(rawBilling.city || '').trim(),
+            country: String(rawBilling.country || 'FR').trim().toUpperCase()
+        } : null;
         
         // Création de l'objet normalisé unique
         const normalizedData = {
@@ -311,6 +322,16 @@ module.exports = async (req, res) => {
             }
         }
         
+        if (billing) {
+            if (billing.address.length < 5) errors.push('Adresse de facturation requise (min 5 caractères)');
+            if (!POSTAL_CODE_RULES[billing.country]) {
+                errors.push('Pays de facturation non pris en charge');
+            } else if (!POSTAL_CODE_RULES[billing.country].test(billing.postalCode)) {
+                errors.push(`Code postal de facturation invalide (${POSTAL_CODE_LABELS[billing.country]} requis)`);
+            }
+            if (billing.city.length < 2) errors.push('Ville de facturation requise (min 2 caractères)');
+        }
+
         // Validation du point relais si livraison en relay
         if (normalizedData.deliveryMethod === 'relay') {
             if (
@@ -503,6 +524,31 @@ module.exports = async (req, res) => {
             totalAmount += Math.round(deliveryPrice * 100);
         }
 
+        // Adresse qui figurera sur la facture Stripe : facturation si différente, sinon
+        // adresse de livraison à domicile. Stripe ne reprend une adresse sur la facture
+        // que si elle est portée par un objet Customer — d'où sa création ici. En cas
+        // d'échec, on retombe sur customer_email (comportement historique).
+        const invoiceAddress = billing
+            ? { line1: billing.address, line2: billing.addressComplement || undefined, postal_code: billing.postalCode, city: billing.city, country: billing.country }
+            : (normalizedData.deliveryMethod === 'home'
+                ? { line1: normalizedData.shippingAddress.trim(), line2: normalizedData.addressComplement?.trim() || undefined, postal_code: normalizedData.postalCode, city: normalizedData.city.trim(), country: normalizedData.country || 'FR' }
+                : null);
+        let stripeCustomerId = null;
+        if (invoiceAddress) {
+            try {
+                const customer = await stripe.customers.create({
+                    email: safeEmail,
+                    name: safeFullName,
+                    ...(safePhone ? { phone: safePhone } : {}),
+                    address: invoiceAddress,
+                    metadata: { source: 'oradia-precommande' }
+                });
+                stripeCustomerId = customer.id;
+            } catch (customerError) {
+                console.error('Création du client Stripe échouée (facture sans adresse):', customerError.message);
+            }
+        }
+
         // Créer la session Stripe Checkout
 
         const session = await stripe.checkout.sessions.create({
@@ -519,7 +565,7 @@ module.exports = async (req, res) => {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'
               }
             },
-            customer_email: safeEmail,
+            ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: safeEmail }),
             invoice_creation: {
                 enabled: true,
                 invoice_data: {
@@ -547,6 +593,13 @@ module.exports = async (req, res) => {
                 postal_code: normalizedData.postalCode?.trim() || '',
                 city: normalizedData.city?.trim() || '',
                 country: normalizedData.country || 'FR',
+                ...(billing && {
+                    billing_address: billing.address,
+                    billing_address_complement: billing.addressComplement,
+                    billing_postal_code: billing.postalCode,
+                    billing_city: billing.city,
+                    billing_country: billing.country
+                }),
                 // Métadonnées point relais si applicable
                 ...(relayPoint && {
                     relay_id: relayPoint.id || '',
@@ -589,6 +642,13 @@ module.exports = async (req, res) => {
                 relay_postal_code: relayPoint.postalCode,
                 relay_city: relayPoint.city,
                 relay_country: relayPoint.country || 'FR'
+            }),
+            ...(billing && {
+                billing_address: billing.address,
+                billing_address_complement: billing.addressComplement || null,
+                billing_postal_code: billing.postalCode,
+                billing_city: billing.city,
+                billing_country: billing.country
             }),
             total_weight: totalWeight,
             calculated_delivery_price_eur: calculatedDeliveryPrice,

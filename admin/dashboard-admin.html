@@ -16359,6 +16359,12 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
                     ${preorder.shipped_at ? `<p class="text-light-gold/40 text-xs">Expédiée le ${formatDate(preorder.shipped_at)}</p>` : ''}
                     ${preorder.delivered_at ? `<p class="text-teal-300/70 text-xs">Livrée le ${formatDate(preorder.delivered_at)}</p>` : ''}
                 </div>
+                ${preorder.billing_address ? `
+                <div class="mb-5 space-y-1">
+                    <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-2">Facturation (adresse différente)</p>
+                    <p class="text-light-gold/70 text-sm">${escapeHtmlFront(preorder.billing_address)}${preorder.billing_address_complement ? ', ' + escapeHtmlFront(preorder.billing_address_complement) : ''}</p>
+                    <p class="text-light-gold/70 text-sm">${escapeHtmlFront(preorder.billing_postal_code || '')} ${escapeHtmlFront(preorder.billing_city || '')} ${escapeHtmlFront(preorder.billing_country || '')}</p>
+                </div>` : ''}
                 <div class="text-xs text-light-gold/30 border-t border-gold/10 pt-3">
                     Créée le ${preorder.created_at ? formatDate(preorder.created_at) : '—'} · ID ${preorder.id || '—'}
                 </div>`;
