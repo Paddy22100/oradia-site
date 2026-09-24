@@ -553,7 +553,7 @@
                 <!-- Info prix mobile : le bouton lui-même est redondant avec la barre sticky
                 #mobileStickyCta déjà présente en bas d'écran sur mobile. -->
                 <div class="md:hidden mb-6">
-                    <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ · Édition limitée</p>
+                    <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ (42€ à la sortie) · Édition limitée</p>
                 </div>
 
                 <!-- CTA direct immédiat -->
@@ -580,7 +580,7 @@
                 <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 inline-block">
                     <span class="text-gold font-bold cormorant text-base sm:text-lg">⏳ </span>
                     <span class="js-days-left text-gold font-bold">--</span>
-                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours pour précommander — clôture le 31 décembre 2026</span>
+                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours au prix de précommande — 4 € de moins qu'à la sortie</span>
                 </div>
                 
                 <!-- Section Expérience Concrète -->
@@ -1034,9 +1034,22 @@
                     Choisissez votre manière d'entrer dans l'univers Oradia
                 </h2>
                 
-                <p class="text-center text-light-gold/80 mb-12 max-w-3xl mx-auto">
+                <p class="text-center text-light-gold/80 mb-8 max-w-3xl mx-auto">
                     Choisissez l'offre qui vous correspond et réservez votre exemplaire avant la clôture des précommandes.
                 </p>
+
+                <!-- Hausse de prix annoncée à la sortie : récompense les précommandeurs et
+                     explique pourquoi agir avant le 31 décembre. Prix de sortie validés le
+                     24/09/2026 : Standard 42 €, Édition Signature 46 €, Guidance Offerte 52 €. -->
+                <div class="max-w-3xl mx-auto mb-12 rounded-2xl border border-gold/50 bg-[rgba(212,175,55,0.12)] px-6 py-5 text-center">
+                    <p class="text-gold font-bold text-lg mb-2"><i class="fas fa-tag mr-2"></i>Prix de précommande : économisez 4 €</p>
+                    <p class="text-light-gold/90 text-sm sm:text-base leading-relaxed">
+                        À sa sortie en février 2027, l'oracle sera vendu <strong class="text-light-gold">42 €</strong> (Standard),
+                        <strong class="text-light-gold">46 €</strong> (Édition Signature) et <strong class="text-light-gold">52 €</strong> (Guidance Offerte).
+                        Précommandez avant le 31 décembre 2026 pour bénéficier du prix de lancement.
+                    </p>
+                    <p class="js-countdown-container text-gold/90 text-sm mt-3"><i class="fas fa-hourglass-half mr-1"></i>Plus que <span class="js-days-left font-bold">--</span> jours au prix de précommande</p>
+                </div>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                     
@@ -1051,6 +1064,7 @@
                                 <span class="text-5xl font-bold text-gold">38</span>
                                 <span class="text-2xl text-gold">€</span>
                             </div>
+                            <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">42 € à la sortie</span></p>
                             <p class="text-light-gold/80 text-base">L'oracle complet</p>
                         </div>
                         
@@ -1106,6 +1120,7 @@
                                 <span class="text-4xl sm:text-6xl font-bold text-gold">48</span>
                                 <span class="text-3xl text-gold">€</span>
                             </div>
+                            <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">52 € à la sortie</span></p>
                             <p class="text-center text-gold/80 text-sm mb-4 font-medium">30min de guidance offerte (valeur réelle 30€)</p>
                             <p class="text-light-gold/70 text-sm mb-5">Nombre de places limité</p>
                             <ul class="space-y-3 text-left">
@@ -1152,6 +1167,7 @@
                                 <span class="text-5xl font-bold text-gold">42</span>
                                 <span class="text-2xl text-gold">€</span>
                             </div>
+                            <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">46 € à la sortie</span></p>
                         </div>
                         
                         <div class="flex-grow mb-6">
