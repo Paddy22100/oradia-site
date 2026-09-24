@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
-const { sendBrevoEmail } = require('../lib/brevo-order-email.js');
+const { sendBrevoEmail, shippingFromOrder } = require('../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail } = require('../lib/tore-subscription-email.js');
 const { sendGuidanceConfirmationEmail } = require('../lib/guidance-email.js');
 const { hitRateLimit } = require('../lib/rate-limit.js');
@@ -951,7 +951,10 @@ async function processEvent(event) {
                         toName: upsertData.full_name || 'Ami(e) d\'ORADIA',
                         offer: upsertData.offer,
                         amountTotal: Number(upsertData.amount_total).toFixed(2),
-                        invoiceUrl: invoiceUrl
+                        invoiceUrl: invoiceUrl,
+                        // Panier détaillé (enregistré à la création de la session Stripe)
+                        items: upsertData.items,
+                        shipping: shippingFromOrder(upsertData)
                     });
                     
                     if (emailSent) {

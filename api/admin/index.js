@@ -10,7 +10,7 @@ const xml2js = require('xml2js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail } = require('../../lib/brevo-order-email.js');
+const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
@@ -2439,7 +2439,9 @@ async function handleData(req, res) {
             toEmail: order.email,
             toName: order.full_name || 'Ami(e) d\'ORADIA',
             offer: order.offer,
-            amountTotal: Number(order.amount_total || 0).toFixed(2)
+            amountTotal: Number(order.amount_total || 0).toFixed(2),
+            items: order.items,
+            shipping: shippingFromOrder(order)
           });
           if (emailSent) {
             await supabase.from('preorders')
@@ -3323,8 +3325,16 @@ async function handleData(req, res) {
           const emailSentPre = await sendBrevoEmail({
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
-            offer: 'Standard - Oracle Oradia',
-            amountTotal: '38.00'
+            offer: 'standard',
+            // Panier d'exemple à 2 offres + point relais : montre le récapitulatif
+            // détaillé tel que le client le reçoit (même fonction que le webhook).
+            items: [{ offer: 'standard', quantity: 2 }, { offer: 'guidance-incluse', quantity: 1 }],
+            shipping: {
+              method: 'relay', priceCents: 799,
+              relayName: 'Relais exemple — Tabac Presse',
+              relayAddress: '12 rue de la Paix', relayPostalCode: '22100', relayCity: 'Dinan'
+            },
+            amountTotal: '131.99'
           });
           if (!emailSentPre) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
