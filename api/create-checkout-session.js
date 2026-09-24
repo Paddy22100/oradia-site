@@ -4,19 +4,14 @@ function getStripeClient() {
   return require('stripe')(process.env.STRIPE_SECRET_KEY);
 }
 
-// Pays de livraison acceptés (domicile et point relais) et format de leur code
-// postal. La Belgique a des codes à 4 chiffres : l'ancienne validation "5 chiffres"
-// rendait toute livraison à domicile belge impossible. La Suisse (hors UE, douane)
-// n'est pas livrée pour l'instant — elle reste acceptée comme adresse de facturation.
-const SHIPPING_COUNTRIES = ['FR', 'BE'];
-const POSTAL_CODE_RULES = { FR: /^\d{5}$/, BE: /^\d{4}$/, CH: /^\d{4}$/ };
-const POSTAL_CODE_LABELS = { FR: '5 chiffres', BE: '4 chiffres', CH: '4 chiffres' };
-
-// Plafonds de quantité (identiques à MAX_QUANTITY de precommande-oracle.html) :
-// sans eux, une quantité décimale ou démesurée arrivait jusqu'à Stripe, et au-delà
-// de 25 kg les frais de port restaient bloqués au dernier palier de la grille.
-const MAX_QUANTITY_PER_OFFER = 10;
-const MAX_TOTAL_QUANTITY = 20; // 20 × 0,8 kg = 16 kg, dans la grille Mondial Relay
+// Offres, prix, stock, pays livrés, formats de code postal et grilles de port :
+// source unique partagée avec l'affichage (voir lib/shop-config.js).
+const shopConfig = require('../lib/shop-config.js');
+const { getShopMode, countSoldByOffer } = require('../lib/shop-mode.js');
+const {
+    OFFERS, SHIPPING_COUNTRIES, POSTAL_CODE_RULES, POSTAL_CODE_LABELS,
+    MAX_QUANTITY_PER_OFFER, MAX_TOTAL_QUANTITY
+} = shopConfig;
 
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxzetkdozynyutlbhxdx)
@@ -252,7 +247,7 @@ module.exports = async (req, res) => {
         if (!normalizedData.items || !Array.isArray(normalizedData.items) || normalizedData.items.length === 0) {
             errors.push('Panier vide invalide');
         } else {
-            const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
+            const allowedOffers = Object.keys(OFFERS);
             const seenOffers = new Set();
             let totalQuantity = 0;
             
@@ -369,105 +364,58 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Configuration unique officielle des offres (prix en centimes)
-        const OFFER_CONFIG = {
-            standard: {
-                name: 'Standard - Oracle Oradia',
-                priceCents: 3800
-            },
-            'guidance-incluse': {
-                name: 'Guidance Offerte - Oracle Oradia',
-                priceCents: 4800
-            },
-            'edition-signature': {
-                name: 'Édition Signature - Oracle Oradia',
-                priceCents: 4200
+        // ── Mode de vente : précommande ou vente ferme ─────────────────────────
+        // Piloté par les interrupteurs Boutique du dashboard : un mode fermé est refusé
+        // ici, même si une ancienne page restée ouverte envoie encore la demande.
+        const saleMode = shopConfig.isValidSaleMode(body.saleMode) ? body.saleMode : 'preorder';
+        const shopMode = await getShopMode(supabase);
+        if (!shopMode[saleMode]) {
+            return res.status(403).json({
+                success: false,
+                error: 'sale_mode_closed',
+                message: saleMode === 'order'
+                    ? "La vente en ligne de l'oracle n'est pas encore ouverte."
+                    : "Les précommandes sont closes. Rendez-vous sur la page Commande pour acheter l'oracle."
+            });
+        }
+
+        // ── Stock limité (Édition Signature : 100 exemplaires tous modes confondus) ──
+        const limitedOffers = normalizedData.items.filter(it => OFFERS[it.offer]?.stockMax != null);
+        if (limitedOffers.length > 0) {
+            const { data: paidRows, error: stockError } = await supabase
+                .from('preorders')
+                .select('items, offer')
+                .eq('paid_status', 'completed');
+            if (stockError) {
+                console.error('Lecture du stock impossible:', stockError.message);
+                return res.status(503).json({
+                    success: false,
+                    error: 'stock_unavailable',
+                    message: 'Impossible de vérifier le stock pour le moment. Merci de réessayer dans quelques minutes.'
+                });
             }
-        };
+            const sold = countSoldByOffer(paidRows);
+            for (const it of limitedOffers) {
+                const remaining = OFFERS[it.offer].stockMax - (sold[it.offer] || 0);
+                if (it.quantity > remaining) {
+                    return res.status(409).json({
+                        success: false,
+                        error: 'out_of_stock',
+                        message: remaining > 0
+                            ? `Il ne reste que ${remaining} exemplaire(s) de l'offre ${OFFERS[it.offer].label}.`
+                            : `L'offre ${OFFERS[it.offer].label} est épuisée.`
+                    });
+                }
+            }
+        }
 
-        // Configuration des produits et poids (identique au frontend)
-        const PRODUCT_WEIGHT_KG = 0.8; // 800g par oracle
-        
-        // Configuration des tarifs Mondial Relay France (en euros) - IDENTIQUE AU FRONTEND
-        const MONDIAL_RELAY_RATES_FR = {
-            relay: [
-                { max_weight: 0.25, price: 4.10 },
-                { max_weight: 0.5, price: 4.10 },
-                { max_weight: 1.0, price: 5.99 },
-                { max_weight: 2.0, price: 7.99 },
-                { max_weight: 4.0, price: 7.99 },
-                { max_weight: 5.0, price: 15.99 },
-                { max_weight: 7.0, price: 15.99 },
-                { max_weight: 10.0, price: 15.99 },
-                { max_weight: 15.0, price: 25.99 },
-                { max_weight: 25.0, price: 25.99 }
-            ],
-            home: [
-                { max_weight: 0.25, price: 4.99 },
-                { max_weight: 0.5, price: 7.49 },
-                { max_weight: 1.0, price: 9.49 },
-                { max_weight: 2.0, price: 10.99 },
-                { max_weight: 4.0, price: 16.39 },
-                { max_weight: 5.0, price: 16.39 },
-                { max_weight: 7.0, price: 24.99 },
-                { max_weight: 10.0, price: 24.99 },
-                { max_weight: 15.0, price: 31.49 },
-                { max_weight: 25.0, price: 42.99 }
-            ],
-            hand_delivery: [
-                { max_weight: Infinity, price: 0 } // Remise en main propre = gratuit
-            ]
-        };
-
-        // Grille par pays de destination. Belgique : grille France appliquée en attendant
-        // les tarifs Mondial Relay Belgique réels — À VÉRIFIER avant les premiers envois
-        // belges (livraison.html affiche la même grille).
-        const MONDIAL_RELAY_RATES_BY_COUNTRY = {
-            FR: MONDIAL_RELAY_RATES_FR,
-            BE: MONDIAL_RELAY_RATES_FR
-        };
         const destinationCountry = normalizedData.deliveryMethod === 'relay'
             ? relayPoint.country
             : (normalizedData.country || 'FR');
-        const MONDIAL_RELAY_RATES = MONDIAL_RELAY_RATES_BY_COUNTRY[destinationCountry] || MONDIAL_RELAY_RATES_FR;
-
-        // Calculer le poids total de la commande (identique au frontend)
-        function calculateTotalWeight(items) {
-            let totalWeight = 0;
-            
-            items.forEach(item => {
-                totalWeight += item.quantity * PRODUCT_WEIGHT_KG;
-            });
-            
-            return totalWeight;
-        }
-
-        // Calculer le tarif de livraison selon le poids et le mode (identique au frontend)
-        function calculateDeliveryPrice(weight, deliveryMethod) {
-            if (deliveryMethod === 'hand_delivery') {
-                return 0;
-            }
-            
-            const rates = MONDIAL_RELAY_RATES[deliveryMethod];
-            if (!rates) {
-                console.error('Mode de livraison non trouvé:', deliveryMethod);
-                return 0;
-            }
-            
-            // Trouver la tranche applicable
-            for (const rate of rates) {
-                if (weight <= rate.max_weight) {
-                    return rate.price;
-                }
-            }
-            
-            // Si aucune tranche ne correspond (poids trop élevé)
-            return rates[rates.length - 1].price;
-        }
 
         // Calculer le poids total et le prix de livraison selon la logique exacte du frontend
-        const totalWeight = calculateTotalWeight(normalizedData.items);
-        const calculatedDeliveryPrice = calculateDeliveryPrice(totalWeight, normalizedData.deliveryMethod);
+        const totalWeight = shopConfig.totalWeightKg(normalizedData.items);
+        const calculatedDeliveryPrice = shopConfig.calculateShippingEuros(totalWeight, normalizedData.deliveryMethod, destinationCountry);
         
         // Utiliser le prix calculé par le serveur, ignorer totalement le prix frontend
         const deliveryPrice = calculatedDeliveryPrice;
@@ -481,8 +429,9 @@ module.exports = async (req, res) => {
         const lineItems = [];
         
         for (const item of normalizedData.items) {
-            const offerConfig = OFFER_CONFIG[item.offer];
-            if (!offerConfig) {
+            const offerConfig = OFFERS[item.offer];
+            const unitPriceCents = shopConfig.getOfferPriceCents(item.offer, saleMode);
+            if (!offerConfig || !unitPriceCents) {
                 console.error('Validation failed: unknown offer');
                 return res.status(400).json({ 
                     success: false,
@@ -495,17 +444,17 @@ module.exports = async (req, res) => {
                 price_data: {
                     currency: 'eur',
                     product_data: {
-                        name: offerConfig.name,
+                        name: offerConfig.stripeName,
                         description: `Quantité: ${item.quantity}`,
                         images: ['https://oradia.fr/images/medias/apercu_stripe.jpg']
                     },
-                    unit_amount: offerConfig.priceCents,
+                    unit_amount: unitPriceCents,
                 },
                 quantity: item.quantity,
             };
             
             lineItems.push(lineItem);
-            totalAmount += offerConfig.priceCents * item.quantity;
+            totalAmount += unitPriceCents * item.quantity;
         }
         
         // Ajouter les frais de livraison si applicable
@@ -558,8 +507,8 @@ module.exports = async (req, res) => {
             // value en clair dans l'URL (pas une donnée sensible, juste un montant) : évite un
             // aller-retour serveur depuis success-precommande.html pour retrouver le montant payé
             // au moment de déclencher la conversion Google Ads (voir js/gtag-init.js).
-            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}&value=${(totalAmount / 100).toFixed(2)}`,
-            cancel_url: `${frontendUrl}/livraison.html?checkout=cancelled`,
+            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}&value=${(totalAmount / 100).toFixed(2)}${saleMode === 'order' ? '&mode=order' : ''}`,
+            cancel_url: `${frontendUrl}/livraison.html?checkout=cancelled${saleMode === 'order' ? '&mode=order' : ''}`,
             custom_text: {
               submit: {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'
@@ -569,11 +518,11 @@ module.exports = async (req, res) => {
             invoice_creation: {
                 enabled: true,
                 invoice_data: {
-                    description: `Précommande Oracle Oradia - ${primaryOffer || 'Standard'}`,
+                    description: `${saleMode === 'order' ? 'Commande' : 'Précommande'} Oracle Oradia - ${OFFERS[primaryOffer]?.label || 'Standard'}`,
                     custom_fields: [
                         {
                             name: 'Type',
-                            value: 'Précommande'
+                            value: saleMode === 'order' ? 'Commande' : 'Précommande'
                         }
                     ],
                     footer: 'ORADIA - Rudy Boucheron - Micro-entreprise - SIRET: 82130800400034 - APE: 9609Z - contact@oradia.fr'
@@ -581,6 +530,7 @@ module.exports = async (req, res) => {
             },
             metadata: {
                 offer: primaryOfferForStripe,
+                sale_mode: saleMode,
                 delivery_method: normalizedData.deliveryMethod || '',
                 delivery_price_cents: String(Math.round(deliveryPrice * 100)),
                 total_amount_cents: String(totalAmount),
@@ -653,7 +603,8 @@ module.exports = async (req, res) => {
             total_weight: totalWeight,
             calculated_delivery_price_eur: calculatedDeliveryPrice,
             paid_status: 'pending',
-            source: 'oradia-livraison'
+            source: 'oradia-livraison',
+            order_type: saleMode
         };
 
         const { error: insertError } = await supabase

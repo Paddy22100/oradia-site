@@ -14520,7 +14520,11 @@
         }
 
         // ── Registre de fonctionnalités ──
-        const FEATURE_CATEGORY_LABELS = { acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        const FEATURE_CATEGORY_LABELS = { boutique: 'Boutique — vente de l\'oracle', acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        // Ordre d'affichage des catégories : la Boutique en premier (bascule précommande →
+        // vente ferme), les autres dans l'ordre de FEATURE_CATEGORY_LABELS.
+        const FEATURE_CATEGORY_ORDER = Object.keys(FEATURE_CATEGORY_LABELS);
+        let _featureFlagsCache = [];
         async function loadFeatureFlags() {
             const el = document.getElementById('feature-flags-list');
             if (!el) return;
@@ -14536,10 +14540,20 @@
                     </div>`;
                     return;
                 }
+                _featureFlagsCache = features;
                 const byCategory = {};
                 features.forEach(f => { (byCategory[f.category || 'general'] ??= []).push(f); });
-                el.innerHTML = Object.entries(byCategory).map(([cat, items]) => `
+                const rank = c => { const i = FEATURE_CATEGORY_ORDER.indexOf(c); return i === -1 ? 99 : i; };
+                const flagOn = k => features.find(f => f.key === k)?.enabled === true;
+                const shopWarning = (byCategory.boutique && flagOn('shop_preorder_enabled') === flagOn('shop_order_enabled'))
+                    ? `<div class="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-amber-200 text-xs mb-2">
+                          ${flagOn('shop_preorder_enabled')
+                            ? '⚠️ Précommandes <b>et</b> commandes sont ouvertes en même temps : les visiteurs voient les deux pages, avec deux prix différents.'
+                            : '⚠️ Précommandes <b>et</b> commandes sont fermées : les pages de vente affichent « L\'oracle revient bientôt ».'}
+                       </div>` : '';
+                el.innerHTML = Object.entries(byCategory).sort(([a], [b]) => rank(a) - rank(b)).map(([cat, items]) => `
                     <p class="text-gold/60 text-xs uppercase tracking-widest mt-4 mb-2 first:mt-0">${FEATURE_CATEGORY_LABELS[cat] || cat}</p>
+                    ${cat === 'boutique' ? shopWarning : ''}
                     ${items.map(f => `
                         <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                             <div class="min-w-0">
@@ -14556,6 +14570,16 @@
             }
         }
         async function toggleFeatureFlag(key, enabled) {
+            // Interrupteurs Boutique : effet immédiat sur les pages de vente publiques.
+            const SHOP_CONFIRM = {
+                shop_preorder_enabled: enabled
+                    ? 'Rouvrir les précommandes ? Les visiteurs pourront à nouveau précommander au prix de précommande.'
+                    : 'Fermer les précommandes ? La page /precommande redirigera vers /commander si la vente en ligne est ouverte, sinon affichera « bientôt disponible ». Les paiements de précommande seront refusés.',
+                shop_order_enabled: enabled
+                    ? 'Ouvrir la vente en ligne ? La page /commander devient accessible et le menu du site pointera vers elle si les précommandes sont fermées. Vérifiez que le stock est bien arrivé.'
+                    : 'Fermer la vente en ligne ? Les paiements de commande seront refusés.'
+            };
+            if (SHOP_CONFIRM[key] && !confirm(SHOP_CONFIRM[key] + '\n\nLe changement est visible sur le site en moins d\'une minute.')) return;
             try {
                 const res = await adminFetch('/api/admin/features', {
                     method: 'POST',
