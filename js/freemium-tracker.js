@@ -484,11 +484,36 @@ class FreemiumTracker {
             if (sessStr) knownEmail = JSON.parse(sessStr).email || '';
         } catch (_) {}
 
+        // Charge la modale de renonciation au droit de rétractation (RGPD/consommation :
+        // requiert une case à cocher dédiée, distincte des CGV) si elle n'est pas déjà
+        // présente sur la page — ce modal étant injecté dynamiquement sur des pages variées.
+        const ensureWithdrawalConsent = () => {
+            if (window.OradiaWithdrawalConsent) return Promise.resolve(window.OradiaWithdrawalConsent);
+            return new Promise((resolve, reject) => {
+                const s = document.createElement('script');
+                s.src = '/js/withdrawal-consent.js';
+                s.onload = () => resolve(window.OradiaWithdrawalConsent);
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        };
+
         // Handler checkout commun aux deux boutons
         const handleCheckout = async (type) => {
             const email = knownEmail || '';
 
             const btnC = document.getElementById('tlm-btn-complet');
+
+            let consent;
+            try {
+                consent = await ensureWithdrawalConsent();
+            } catch (_) {
+                alert('Une erreur est survenue. Réessayez.');
+                return;
+            }
+            const consented = await consent.confirm({ label: "L'abonnement Tore" });
+            if (!consented) return;
+
             if (btnC) { btnC.disabled = true; btnC.textContent = 'Chargement…'; btnC.style.opacity = '0.6'; btnC.style.cursor = 'default'; }
 
             try {

@@ -417,6 +417,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="../js/freemium-tracker.js"></script>
+    <script src="../js/withdrawal-consent.js"></script>
     <script>
         function toggleGatePassword() {
             const input = document.getElementById('gate-password');
@@ -723,6 +724,11 @@
             }
 
             // Utilisateur connecté → redirection Stripe
+            if (window.OradiaWithdrawalConsent) {
+                const consented = await window.OradiaWithdrawalConsent.confirm({ label: "L'abonnement Tore" });
+                if (!consented) return;
+            }
+
             const email = sess.email;
             const fullName = sess.name || email.split('@')[0];
             const original = btn.textContent;
