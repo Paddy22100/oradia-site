@@ -3916,36 +3916,6 @@ async function handleData(req, res) {
       });
     }
 
-    // ── Section tirages ponctuels (single draws 3,90€) ──
-    if (section === 'single-draws') {
-      const page  = parseInt(req.query?.page  || '1', 10);
-      const limit = parseInt(req.query?.limit || '20', 10);
-      const offset = (page - 1) * limit;
-
-      const { data, count, error } = await supabase
-        .from('tore_subscriptions')
-        .select('id, email, full_name, single_draw_credits, status, created_at', { count: 'exact' })
-        .or('status.eq.single_draw,single_draw_credits.gt.0')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (error) throw error;
-
-      const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';
-      const rows = (data || []).map(r => ({
-        ...r,
-        created_at_fr: fmt(r.created_at),
-        single_draw_credits: r.single_draw_credits || 0,
-        total_spent_eur: ((r.single_draw_credits || 0) * 3.90).toFixed(2).replace('.', ',') + ' €'
-      }));
-
-      return res.status(200).json({
-        success: true,
-        data: rows,
-        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
-      });
-    }
-
     // ── Section support / témoignages / suggestions ──
     if (section === 'support') {
       const page   = parseInt(req.query?.page   || '1',  10);
@@ -4604,11 +4574,10 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes, ululeRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes, ululeRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
-      supabase.from('tore_subscriptions').select('email, single_draw_credits, status').or('status.eq.single_draw,single_draw_credits.gt.0'),
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
@@ -4628,7 +4597,6 @@ async function handleData(req, res) {
     // car cet argent ne transite pas par Stripe/le compte pro et n'est pas déclaré.
     const stripeDonorRows = donorRows.filter(r => r.source !== 'don-especes');
     const cashDonorRows   = donorRows.filter(r => r.source === 'don-especes');
-    const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
     const kickstarterRows = kickstarterRes.data || [];
@@ -4638,10 +4606,6 @@ async function handleData(req, res) {
     const syncAvg         = syncRows.length > 0
       ? (syncRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / syncRows.length).toFixed(1)
       : null;
-
-    // Calcul tirages ponctuels
-    const singleDrawCount  = singleDrawRows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
-    const singleDrawTotal  = singleDrawCount * 3.90;
 
     // Calcul abonnements Tore (revenus totaux = chaque abonnement × son prix mensuel)
     const subscriptionRows = subscriptionsRes.data || [];
@@ -4695,7 +4659,7 @@ async function handleData(req, res) {
     const kickstarterTotal = kickstarterRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
     // Ulule : même règle que Kickstarter (voir import-transactions pour la même règle côté comptabilité).
     const ululeTotal       = ululeRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal + ululeTotal;
+    const globalTotal     = preordersTotal + donorsTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal + ululeTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
@@ -4714,7 +4678,6 @@ async function handleData(req, res) {
     // les dons nets (Stripe ET espèces — cet argent est réellement disponible pour financer
     // la fabrication, même s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions).
     const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
-    const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
     // Frais Kickstarter (commission + traitement paiement) : estimation distincte des frais
@@ -4722,7 +4685,7 @@ async function handleData(req, res) {
     const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
     // Frais Ulule : même logique d'approximation que Kickstarter (voir ULULE_FEE_RATE).
     const ululeNet           = ululeTotal * (1 - ULULE_FEE_RATE);
-    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet + ululeNet;
+    const globalNet          = preordersNet + donorsNet + guidancesNet + subscriptionsNet + kickstarterNet + ululeNet;
 
     const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
@@ -4770,11 +4733,6 @@ async function handleData(req, res) {
           count:      waitlistRows.length,
           notSynced:  waitlistRows.filter(r => !r.brevo_synced).length,
           newThisWeek: waitlistRows.filter(r => now - new Date(r.created_at).getTime() < day7).length
-        },
-        singleDraws: {
-          count:      singleDrawCount,
-          total:      singleDrawTotal,
-          customers:  singleDrawRows.length
         },
         guidances: {
           count:     guidanceRows.length,
@@ -4974,7 +4932,7 @@ const PRODUIT_FACTS = [
   `Le Tore — La Boussole Intérieure : un oracle de 64 cartes (80x120mm), illustrations originales.`,
   `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
   `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
-  `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages) ou tirages ponctuels à 3,90€.`,
+  `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages).`,
   `Offres de lancement précommande : STANDARD à 38€ (coffret complet), ÉDITION SIGNATURE à 42€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 48€ (coffret + dédicace + séance de guidance en visio de 30 min).`
 ].join('\n');
 
@@ -8918,8 +8876,10 @@ Réponds en français, sans tiret long, format markdown compact.`
         const body = await parseBody(req);
         const key = String(body.key || '').trim();
         if (!key || typeof body.enabled !== 'boolean') return res.status(400).json({ error: 'key et enabled (boolean) requis' });
-        const { error } = await sbFeat.from('feature_flags').update({ enabled: body.enabled, updated_at: new Date().toISOString() }).eq('key', key);
+        const { data: updated, error } = await sbFeat.from('feature_flags').update({ enabled: body.enabled, updated_at: new Date().toISOString() }).eq('key', key).select('key');
         if (error) return res.status(500).json({ error: error.message });
+        // Sans ce contrôle, une clé absente de la table renvoyait "succès" sans rien changer.
+        if (!updated || updated.length === 0) return res.status(404).json({ error: `Fonctionnalité inconnue : ${key}` });
         return res.status(200).json({ success: true });
       }
       return res.status(405).json({ error: 'Method not allowed' });
