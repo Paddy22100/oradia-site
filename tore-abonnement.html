@@ -442,6 +442,7 @@
 <!-- Footer du site -->
 <div id="footer-placeholder"></div>
 <script src="components/footer-manager.js" defer></script>
+<script src="js/withdrawal-consent.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
@@ -506,6 +507,11 @@
             email = await askEmailModal();
         }
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+
+        if (window.OradiaWithdrawalConsent) {
+            const consented = await window.OradiaWithdrawalConsent.confirm({ label: "L'abonnement Tore" });
+            if (!consented) return;
+        }
 
         const origC = btnC.innerHTML;
         btnC.disabled = true;
