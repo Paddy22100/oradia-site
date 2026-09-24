@@ -3,6 +3,55 @@ const crypto = require('crypto');
 const { sendBrevoEmail } = require('../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail } = require('../lib/tore-subscription-email.js');
 const { sendGuidanceConfirmationEmail } = require('../lib/guidance-email.js');
+const { hitRateLimit } = require('../lib/rate-limit.js');
+
+// Échec d'écriture en base pendant le traitement d'un paiement : l'erreur remonte
+// jusqu'au handler, qui répond 500 pour que Stripe relivre l'événement (il réessaie
+// automatiquement pendant 3 jours). Chaque branche est idempotente à la relivraison
+// (upsert sur stripe_session_id, email_sent_at, contrainte unique transactions.source_ref).
+function fail(message) {
+    return new Error(`[webhook] ${message}`);
+}
+
+// Doublon sur transactions.source_ref (contrainte unique) : attendu quand Stripe relivre
+// un événement déjà comptabilisé — pas une erreur à journaliser.
+const isDuplicateKey = (error) => error?.code === '23505';
+
+// Alerte admin quand un événement Stripe n'a pas pu être traité. Dédoublonnée par
+// événement (Stripe relivre jusqu'à ~15 fois) grâce à la table api_rate_limits ;
+// si la table n'existe pas encore, on préfère plusieurs emails qu'aucun.
+async function sendWebhookFailureAlert(supabase, event, err) {
+    try {
+        const slot = await hitRateLimit(supabase, {
+            bucket: 'webhook-alert', key: event.id, windowSeconds: 4 * 86400, max: 1
+        });
+        if (!slot.allowed) return;
+        if (!process.env.BREVO_API_KEY) return;
+        const obj = event.data?.object || {};
+        const email = obj.customer_details?.email || obj.customer_email || obj.metadata?.email || '—';
+        await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                sender: { name: 'Oradia Système', email: 'contact@oradia.fr' },
+                to: [{ email: 'contact@oradia.fr' }],
+                subject: '⚠️ Oradia — Paiement Stripe non traité (nouvelle tentative en cours)',
+                htmlContent: `
+                    <p>Le webhook Stripe n'a pas pu traiter l'événement <strong>${event.type}</strong>
+                    (<code>${event.id}</code>).</p>
+                    <p>Client : <strong>${String(email).replace(/[<>&"]/g, '')}</strong><br>
+                    Objet Stripe : <code>${obj.id || '—'}</code></p>
+                    <p>Erreur : <code>${String(err?.message || err).replace(/[<>&]/g, '').slice(0, 500)}</code></p>
+                    <p>Stripe va relivrer l'événement automatiquement pendant 3 jours. Si l'erreur
+                    persiste, vérifie Supabase puis relance l'événement depuis le dashboard Stripe
+                    (Développeurs › Webhooks › événement › Renvoyer).</p>
+                `
+            })
+        });
+    } catch (e) {
+        console.error('[webhook] Alerte échec non envoyée:', e.message);
+    }
+}
 
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
 const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
@@ -100,8 +149,11 @@ const handler = async (req, res) => {
             await processEvent(event);
         } catch (err) {
             console.error('[webhook] Processing error:', err);
-            // On répond quand même 200 pour éviter les relivraisons Stripe en boucle.
-            // L'erreur est journalisée dans les logs Vercel.
+            // 500 → Stripe relivre l'événement (backoff exponentiel, 3 jours). Avant, on
+            // répondait 200 même en cas d'échec : un raté ponctuel de Supabase laissait un
+            // client débité sans commande enregistrée ni email, sans aucune nouvelle tentative.
+            await sendWebhookFailureAlert(supabase, event, err);
+            return res.status(500).json({ received: false, error: 'processing_failed' });
         }
 
         return res.status(200).json({ received: true });
@@ -388,7 +440,7 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         ? await supabase.from('tore_subscriptions').update(subPayload).eq('id', existingRow.id).select('id').single()
         : await supabase.from('tore_subscriptions').upsert(subPayload, { onConflict: 'email' }).select('id').single();
 
-    if (subError) console.error('[webhook] tore_subscriptions upsert error:', subError.message);
+    if (subError) throw fail(`tore_subscriptions upsert error: ${subError.message}`);
 
     // Séparé de l'upsert principal (colonne ajoutée par une migration facultative) :
     // si elle n'a pas encore été appliquée, on ne veut pas faire échouer la création
@@ -413,7 +465,7 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
             // Rattachement direct des frais Stripe réels pour ce tout premier paiement
             // (Checkout Session) — voir supabase-migration-transactions-stripe-fees.sql.
             payment_intent_id: paymentIntentId || null
-        }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
+        }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (abonnement):', error.message); });
     }
 
     // Contact Brevo créé/mis à jour AVANT l'écriture Supabase, pour pouvoir refléter le
@@ -534,7 +586,7 @@ async function processEvent(event) {
                 .eq('email', row.email);
 
             if (renewError) {
-                console.error('[webhook] Échec prolongation abonnement Tore:', renewError.message);
+                throw fail(`Échec prolongation abonnement Tore: ${renewError.message}`);
             } else {
                 console.log(`[webhook] Abonnement Tore prolongé jusqu'au ${newExpireAt.toISOString()} pour ${row.email}`);
                 // Enregistrement automatique de la recette (renouvellement mensuel)
@@ -547,7 +599,7 @@ async function processEvent(event) {
                     amount: (invoice.amount_paid || 0) / 100,
                     source: 'abonnement',
                     source_ref: invoice.id
-                }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (renouvellement):', error.message); });
+                }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (renouvellement):', error.message); });
             }
             break;
         }
@@ -592,10 +644,11 @@ async function processEvent(event) {
                 .eq('email', row.email);
 
             if (failError) {
-                console.error('[webhook] Échec mise à jour statut payment_failed:', failError.message);
+                throw fail(`Échec mise à jour statut payment_failed: ${failError.message}`);
             } else {
                 console.log(`[webhook] Échec de paiement signalé pour l'abonnement Tore de ${row.email}`);
-                sendSubscriptionEmail(row.email, row.full_name, isFirstPayment ? 'payment_failed_first' : 'payment_failed').catch(e => console.error('[webhook] Email échec paiement:', e.message));
+                // Attendu : Vercel interrompt la fonction dès la réponse envoyée.
+                await sendSubscriptionEmail(row.email, row.full_name, isFirstPayment ? 'payment_failed_first' : 'payment_failed').catch(e => console.error('[webhook] Email échec paiement:', e.message));
             }
             break;
         }
@@ -619,10 +672,11 @@ async function processEvent(event) {
                 .eq('email', row.email);
 
             if (cancelError) {
-                console.error('[webhook] Échec mise à jour statut cancelled:', cancelError.message);
+                throw fail(`Échec mise à jour statut cancelled: ${cancelError.message}`);
             } else {
                 console.log(`[webhook] Abonnement Tore annulé pour ${row.email}`);
-                sendSubscriptionEmail(row.email, row.full_name, 'cancelled').catch(e => console.error('[webhook] Email annulation:', e.message));
+                // Attendu : Vercel interrompt la fonction dès la réponse envoyée.
+                await sendSubscriptionEmail(row.email, row.full_name, 'cancelled').catch(e => console.error('[webhook] Email annulation:', e.message));
             }
             break;
         }
@@ -762,11 +816,7 @@ async function processEvent(event) {
                         .single();
                     
                     if (donorError) {
-                        // La réponse HTTP a déjà été envoyée à Stripe (200 immédiat,
-                        // traitement en fire-and-forget) : on ne peut plus renvoyer
-                        // d'erreur HTTP ici. On journalise et on arrête ce traitement.
-                        console.error('[webhook] Insertion donors échouée:', donorError.message);
-                        return;
+                        throw fail(`Insertion donors échouée: ${donorError.message}`);
                     }
                     
                     // Vérifier si email déjà envoyé
@@ -797,7 +847,7 @@ async function processEvent(event) {
                         amount: amountInEuros,
                         source: 'don',
                         source_ref: sessionId
-                    }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (don):', error.message); });
+                    }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (don):', error.message); });
                     }
 
                     console.log(`[webhook] Don traité: ${sessionId} | Email:${emailSent ? 'OK' : 'Skipped'}`);
@@ -818,8 +868,7 @@ async function processEvent(event) {
                     .maybeSingle();
 
                 if (existingOrderError) {
-                    console.error('[webhook] Lecture preorders échouée:', existingOrderError.message);
-                    return;
+                    throw fail(`Lecture preorders échouée: ${existingOrderError.message}`);
                 }
 
                 // Fusion intelligente du mode de livraison
@@ -880,8 +929,7 @@ async function processEvent(event) {
                     .single();
                 
                 if (upsertError) {
-                    console.error('[webhook] Upsert Supabase échoué:', upsertError.message);
-                    return;
+                    throw fail(`Upsert preorders échoué: ${upsertError.message}`);
                 }
 
                 // Vérifier si email déjà envoyé
@@ -927,13 +975,30 @@ async function processEvent(event) {
                     amount: parseFloat(upsertData.amount_total) || 0,
                     source: 'precommande',
                     source_ref: sessionId
-                }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (precommande):', error.message); });
+                }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (precommande):', error.message); });
                 }
 
                 console.log(`[webhook] Précommande traitée: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
                 return;
             }
             
+            // ── Session de paiement abandonnée (expire 24 h après sa création) ──
+            // Marque la précommande "pending" correspondante sans changer son statut :
+            // la relance panier abandonné (cron-relance, fenêtre 24-48 h) continue de la
+            // cibler via paid_status = 'pending'.
+            case 'checkout.session.expired': {
+                const supabase = getSupabaseClient();
+                const session = event.data.object;
+                const { error: expError } = await supabase
+                    .from('preorders')
+                    .update({ checkout_expired_at: new Date().toISOString() })
+                    .eq('stripe_session_id', session.id)
+                    .eq('paid_status', 'pending');
+                // Colonne absente (migration non exécutée) : sans importance, pas de relivraison.
+                if (expError) console.warn('[webhook] checkout.session.expired:', expError.message);
+                return;
+            }
+
             default:
                 console.log(`Event not handled: ${event.type}`);
                 break;
@@ -1022,7 +1087,7 @@ async function handleCalWebhook(req, res) {
             amount: (amount || 0) / 100,
             source: 'guidance',
             source_ref: bookingUid
-        }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (guidance):', error.message); });
+        }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (guidance):', error.message); });
         }
 
         const dateStr = scheduledAt
