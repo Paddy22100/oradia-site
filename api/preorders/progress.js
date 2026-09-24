@@ -92,6 +92,10 @@ module.exports = async (req, res) => {
     let stripeDonorsCount = 0;
     let cashDonorsTotal = 0;
     let kickstarterTotal = 0;
+    // Nombre total de tirages lancés en ligne (funnel_events, une ligne par tirage) :
+    // alimente la preuve d'activité de precommande-oracle.html, qui affichait un
+    // chiffre codé en dur devenu faux avec le temps.
+    let tiragesTotal = null;
 
     if (hasSupabaseConfig) {
       try {
@@ -104,7 +108,8 @@ module.exports = async (req, res) => {
         const [
           { data, error },
           { data: donorRows, error: donorsError },
-          { data: ksRows, error: ksError }
+          { data: ksRows, error: ksError },
+          { count: tiragesCount, error: tiragesError }
         ] = await Promise.all([
           supabase
             .from('preorders')
@@ -128,8 +133,14 @@ module.exports = async (req, res) => {
           // devises. La table peut ne pas encore exister si la migration
           // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
           // ignore l'erreur plutôt que de casser le compteur public de précommandes.
-          supabase.from('kickstarter_backers').select('id, pledge_amount, currency')
+          supabase.from('kickstarter_backers').select('id, pledge_amount, currency'),
+          supabase
+            .from('funnel_events')
+            .select('id', { count: 'exact', head: true })
+            .eq('event_name', 'tirage_lance')
         ]);
+
+        if (!tiragesError && Number.isFinite(tiragesCount)) tiragesTotal = tiragesCount;
 
         if (error) {
           console.error('Progress query failed:', error.message);
@@ -223,7 +234,8 @@ module.exports = async (req, res) => {
       percent,
       cagnotte,
       paliers,
-      allPaliersReached
+      allPaliersReached,
+      tiragesTotal
     });
   } catch (error) {
     console.error('Preorder progress failed:', error.message);

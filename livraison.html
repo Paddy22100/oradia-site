@@ -638,7 +638,6 @@
                 window.gtag('event', eventName, payload);
             }
 
-            console.log('[tracking]', eventName, eventPayload);
         }
 
         const POSTAL_CODE_RULES = {
@@ -1347,7 +1346,6 @@
                     billingInfo
                 };
 
-                console.log('Données envoyées au backend:', orderData);
 
                 // Créer la session Stripe
                 const response = await fetch('/api/create-checkout-session', {
