@@ -233,14 +233,6 @@
                 
                 const data = await response.json();
                 
-                // Preuve d'activité : chiffre réel (arrondi à la cinquantaine inférieure)
-                // au lieu d'un nombre codé en dur qui vieillissait mal.
-                const socialProofText = document.getElementById('heroSocialProofText');
-                if (socialProofText && Number(data.tiragesTotal) >= 100) {
-                    const rounded = Math.floor(Number(data.tiragesTotal) / 50) * 50;
-                    socialProofText.textContent = `Plus de ${rounded} tirages déjà réalisés en ligne : l'oracle existe déjà et vit au quotidien.`;
-                }
-
                 const rarityText = document.getElementById('rarityText');
                 const paliersList = document.getElementById('paliersList');
                 const palierBanner = document.getElementById('palierBanner');
@@ -557,13 +549,6 @@
                     <p>Comprendre. Choisir. Avancer.</p>
                     <p>64 cartes et un livret d'accompagnement pour retrouver de la clarté dans vos moments de doute.</p>
                 </div>
-
-                <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) —
-                juste après la promesse, avant l'appel à l'action, pour asseoir la crédibilité. -->
-                <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
-                    <i class="fas fa-circle text-gold text-xs mr-2 align-middle"></i>
-                    <span id="heroSocialProofText">Des centaines de tirages déjà réalisés en ligne : l'oracle existe déjà et vit au quotidien.</span>
-                </p>
 
                 <!-- Info prix mobile : le bouton lui-même est redondant avec la barre sticky
                 #mobileStickyCta déjà présente en bas d'écran sur mobile. -->
