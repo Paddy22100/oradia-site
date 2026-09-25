@@ -1769,6 +1769,11 @@ function getParisNow() {
 // lib/tore-analysis-prompt.js pour l'implémentation (modèle, retries, logging).
 const { generateAnalysisViaClaude: generateScheduledAnalysis } = require('../../lib/tore-analysis-prompt.js');
 
+// Délai max avant de répondre au cron externe (cron-job.org coupe à 30s, non
+// configurable sur le compte gratuit) : marge de ~10s pour le démarrage à froid
+// de la fonction et le réseau.
+const CRON_ACK_DEADLINE_MS = 20000;
+
 async function handleRunScheduledDraws(req, res) {
   const secret = req.query.cron_secret || '';
   if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
@@ -1787,12 +1792,46 @@ async function handleRunScheduledDraws(req, res) {
     );
 
     const now = getParisNow();
-    const { data: due, error } = await withGatewayTimeoutRetry(() => supabase
+    const duePromise = withGatewayTimeoutRetry(() => supabase
       .from('tore_scheduled_draws')
       .select('*')
       .eq('active', true)
       .eq('hour', now.hour));
 
+    // Même cette requête triviale peut rester bloquée côté Supabase : le
+    // 2026-09-24 à 22:45 GMT, PostgREST a mis 46s à renvoyer un résultat vide
+    // (« Thread killed by timeout manager » dans ses logs), et cron-job.org a
+    // abandonné à 30s → échec « Timeout ». Au-delà de CRON_ACK_DEADLINE_MS, on
+    // répond donc quand même au cron et on poursuit (requête + tirages) en
+    // arrière-plan via waitUntil, dans la limite du maxDuration de la fonction.
+    const TIMED_OUT = Symbol('timeout');
+    let ackTimer;
+    const first = await Promise.race([
+      duePromise,
+      new Promise(r => { ackTimer = setTimeout(() => r(TIMED_OUT), CRON_ACK_DEADLINE_MS); })
+    ]);
+    clearTimeout(ackTimer);
+
+    if (first === TIMED_OUT) {
+      console.warn(`[run-scheduled-draws] Supabase lent (>${CRON_ACK_DEADLINE_MS}ms) — réponse anticipée, suite en arrière-plan`);
+      res.status(200).json({ success: true, queued: 'pending', reason: 'supabase_slow' });
+      const { waitUntil } = require('@vercel/functions');
+      waitUntil((async () => {
+        try {
+          const { data: lateDue, error: lateError } = await duePromise;
+          if (lateError) {
+            console.error('[run-scheduled-draws] fetch error (late):', lateError.message);
+            return;
+          }
+          await runScheduledDrawsBackground(supabase, lateDue || [], now);
+        } catch (e) {
+          console.error('[run-scheduled-draws] Unexpected error (late):', e.message);
+        }
+      })());
+      return;
+    }
+
+    const { data: due, error } = first;
     if (error) {
       console.error('[run-scheduled-draws] fetch error:', error.message);
       return res.status(500).json({ error: error.message });
