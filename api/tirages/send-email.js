@@ -43,6 +43,43 @@ async function withGatewayTimeoutRetry(queryFn, maxRetries = 2, delaysMs = [1500
   return result;
 }
 
+// Délai max avant de répondre au cron externe (cron-job.org coupe à 30s, non
+// configurable sur le compte gratuit) : marge de ~10s pour le démarrage à froid
+// de la fonction et le réseau.
+const CRON_ACK_DEADLINE_MS = 20000;
+
+// Même une requête triviale peut rester bloquée côté Supabase : le 2026-09-24 à
+// 22:45 GMT, PostgREST a mis 46s à renvoyer un résultat vide pour
+// run-scheduled-draws (« Thread killed by timeout manager » dans ses logs), et
+// cron-job.org a abandonné à 30s → échec « Timeout ». Les crons attendent donc
+// leur phase de préparation (`preparePromise` : requêtes Supabase avant la
+// réponse) au plus CRON_ACK_DEADLINE_MS :
+//   - terminée à temps → renvoie { value } et le handler répond normalement ;
+//   - sinon → répond 200 au cron, poursuit `onLate(résultat)` en arrière-plan via
+//     waitUntil (dans la limite du maxDuration de la fonction) et renvoie null.
+async function awaitBeforeCronTimeout(res, label, preparePromise, onLate) {
+  const TIMED_OUT = Symbol('timeout');
+  let ackTimer;
+  const first = await Promise.race([
+    preparePromise,
+    new Promise(r => { ackTimer = setTimeout(() => r(TIMED_OUT), CRON_ACK_DEADLINE_MS); })
+  ]);
+  clearTimeout(ackTimer);
+  if (first !== TIMED_OUT) return { value: first };
+
+  console.warn(`[${label}] Supabase lent (>${CRON_ACK_DEADLINE_MS}ms) — réponse anticipée, suite en arrière-plan`);
+  res.status(200).json({ success: true, queued: 'pending', reason: 'supabase_slow' });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil((async () => {
+    try {
+      await onLate(await preparePromise);
+    } catch (e) {
+      console.error(`[${label}] Unexpected error (late):`, e.message);
+    }
+  })());
+  return null;
+}
+
 // Consulte le registre de fonctionnalités (dashboard admin). Fail-open si la
 // table n'existe pas encore ou si le flag n'est pas défini, pour ne jamais
 // casser une fonctionnalité existante par défaut.
@@ -1036,64 +1073,87 @@ async function handleCronCheckin(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    if (!(await isFeatureEnabled(supabase, 'checkin_email_j3'))) {
-      return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason: 'feature_disabled' });
+    // Préparation (requêtes Supabase) bornée par awaitBeforeCronTimeout : voir ce helper.
+    const prepared = await awaitBeforeCronTimeout(res, 'cron-checkin', prepareCheckinTargets(supabase), async (late) => {
+      if (late.skipped_reason) return;
+      if (late.error) {
+        console.error('[cron-checkin] Supabase error (late):', late.error.message);
+        return;
+      }
+      await sendCheckinBatch(late.targets);
+    });
+    if (!prepared) return;
+
+    const { skipped_reason, error, targets } = prepared.value;
+    if (skipped_reason) {
+      return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason });
     }
-
-    // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
-    const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
-    const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: rawTargets, error } = await withGatewayTimeoutRetry(() => supabase
-      .from('tore_emails')
-      .select('email')
-      .is('checkin_sent_at', null)
-      .gte('created_at', from)
-      .lt('created_at', to)
-      .limit(50));
-
     if (error) {
       console.error('[cron-checkin] Supabase error:', error.message);
       return res.status(500).json({ error: error.message });
     }
 
-    // Qui a activé une fenêtre d'observation pour ce même tirage (créée dans la même
-    // fenêtre J+3/J+4, donc juste après le tirage) reçoit déjà, à la clôture, un email
-    // posant essentiellement la même question ("qu'avez-vous perçu ?") — plus, depuis
-    // peu, un rappel natif sur l'app. Le check-in générique deviendrait un troisième
-    // message redondant pour ces personnes-là ; on les exclut ici.
-    let targets = rawTargets || [];
-    if (targets.length > 0) {
-      const { data: activeWindows } = await supabase
-        .from('observation_windows')
-        .select('email')
-        .gte('created_at', from)
-        .lt('created_at', to);
-      const emailsWithWindow = new Set((activeWindows || []).map(w => w.email));
-      targets = targets.filter(t => !emailsWithWindow.has(t.email));
-    }
-
     // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
     // configurable — pendant que les envois Brevo continuent en arrière-plan via
     // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
-    res.status(200).json({ success: true, queued: (targets || []).length });
+    res.status(200).json({ success: true, queued: targets.length });
     const { waitUntil } = require('@vercel/functions');
-    waitUntil((async () => {
-      let sent = 0, failed = 0;
-      await runWithConcurrency(targets || [], 5, async (row) => {
-        try {
-          await sendCheckinEmail(row.email);
-          sent++;
-        } catch (e) {
-          console.error('[cron-checkin] Failed for', row.email, e.message);
-          failed++;
-        }
-      });
-      console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
-    })());
+    waitUntil(sendCheckinBatch(targets));
   } catch (e) {
     console.error('[cron-checkin] Unexpected error:', e.message);
     if (!res.headersSent) res.status(500).json({ error: e.message });
   }
+}
+
+// Requêtes Supabase préalables au check-in J+3 : { skipped_reason } | { error } | { targets }.
+async function prepareCheckinTargets(supabase) {
+  if (!(await isFeatureEnabled(supabase, 'checkin_email_j3'))) {
+    return { skipped_reason: 'feature_disabled' };
+  }
+
+  // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
+  const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+  const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: rawTargets, error } = await withGatewayTimeoutRetry(() => supabase
+    .from('tore_emails')
+    .select('email')
+    .is('checkin_sent_at', null)
+    .gte('created_at', from)
+    .lt('created_at', to)
+    .limit(50));
+
+  if (error) return { error };
+
+  // Qui a activé une fenêtre d'observation pour ce même tirage (créée dans la même
+  // fenêtre J+3/J+4, donc juste après le tirage) reçoit déjà, à la clôture, un email
+  // posant essentiellement la même question ("qu'avez-vous perçu ?") — plus, depuis
+  // peu, un rappel natif sur l'app. Le check-in générique deviendrait un troisième
+  // message redondant pour ces personnes-là ; on les exclut ici.
+  let targets = rawTargets || [];
+  if (targets.length > 0) {
+    const { data: activeWindows } = await supabase
+      .from('observation_windows')
+      .select('email')
+      .gte('created_at', from)
+      .lt('created_at', to);
+    const emailsWithWindow = new Set((activeWindows || []).map(w => w.email));
+    targets = targets.filter(t => !emailsWithWindow.has(t.email));
+  }
+  return { targets };
+}
+
+async function sendCheckinBatch(targets) {
+  let sent = 0, failed = 0;
+  await runWithConcurrency(targets || [], 5, async (row) => {
+    try {
+      await sendCheckinEmail(row.email);
+      sent++;
+    } catch (e) {
+      console.error('[cron-checkin] Failed for', row.email, e.message);
+      failed++;
+    }
+  });
+  console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
 }
 
 // ============ EMAIL RELANCE ABONNÉS TORE INACTIFS (30j) ============
@@ -1592,21 +1652,21 @@ async function handleCronPromoTirage(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    if (!(await isFeatureEnabled(supabase, 'promo_email_j7'))) {
-      return res.status(200).json({ success: true, sent: 0, skipped: 0, failed: 0, skipped_reason: 'feature_disabled' });
+    // Préparation (requêtes Supabase) bornée par awaitBeforeCronTimeout : voir ce helper.
+    const prepared = await awaitBeforeCronTimeout(res, 'cron-promo-tirage', preparePromoTargets(supabase), async (late) => {
+      if (late.skipped_reason) return;
+      if (late.error) {
+        console.error('[cron-promo-tirage] Supabase error (late):', late.error.message);
+        return;
+      }
+      await sendPromoBatch(late.targets);
+    });
+    if (!prepared) return;
+
+    const { skipped_reason, error, targets } = prepared.value;
+    if (skipped_reason) {
+      return res.status(200).json({ success: true, sent: 0, skipped: 0, failed: 0, skipped_reason });
     }
-
-    // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
-    // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
-    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: targets, error } = await withGatewayTimeoutRetry(() => supabase
-      .from('tore_emails')
-      .select('email')
-      .is('promo_sent_at', null)
-      .or('promo_skipped.is.null,promo_skipped.eq.false')
-      .lt('created_at', cutoff)
-      .limit(50));
-
     if (error) {
       console.error('[cron-promo-tirage] Supabase error:', error.message);
       return res.status(500).json({ error: error.message });
@@ -1615,26 +1675,49 @@ async function handleCronPromoTirage(req, res) {
     // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
     // configurable — pendant que les envois Brevo continuent en arrière-plan via
     // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
-    res.status(200).json({ success: true, queued: (targets || []).length });
+    res.status(200).json({ success: true, queued: targets.length });
     const { waitUntil } = require('@vercel/functions');
-    waitUntil((async () => {
-      let sent = 0, skipped = 0, failed = 0;
-      await runWithConcurrency(targets || [], 5, async (row) => {
-        try {
-          const result = await sendPromoTirageEmail(row.email);
-          if (result.skipped) skipped++;
-          else sent++;
-        } catch (e) {
-          console.error('[cron-promo-tirage] Failed for', row.email, e.message);
-          failed++;
-        }
-      });
-      console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
-    })());
+    waitUntil(sendPromoBatch(targets));
   } catch (e) {
     console.error('[cron-promo-tirage] Unexpected error:', e.message);
     if (!res.headersSent) res.status(500).json({ error: e.message });
   }
+}
+
+// Requêtes Supabase préalables à la promo J+7 : { skipped_reason } | { error } | { targets }.
+async function preparePromoTargets(supabase) {
+  if (!(await isFeatureEnabled(supabase, 'promo_email_j7'))) {
+    return { skipped_reason: 'feature_disabled' };
+  }
+
+  // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
+  // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: targets, error } = await withGatewayTimeoutRetry(() => supabase
+    .from('tore_emails')
+    .select('email')
+    .is('promo_sent_at', null)
+    .or('promo_skipped.is.null,promo_skipped.eq.false')
+    .lt('created_at', cutoff)
+    .limit(50));
+
+  if (error) return { error };
+  return { targets: targets || [] };
+}
+
+async function sendPromoBatch(targets) {
+  let sent = 0, skipped = 0, failed = 0;
+  await runWithConcurrency(targets || [], 5, async (row) => {
+    try {
+      const result = await sendPromoTirageEmail(row.email);
+      if (result.skipped) skipped++;
+      else sent++;
+    } catch (e) {
+      console.error('[cron-promo-tirage] Failed for', row.email, e.message);
+      failed++;
+    }
+  });
+  console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
 }
 
 // ============ TIRAGES PROGRAMMÉS (réservés aux abonnés) ============
@@ -1769,11 +1852,6 @@ function getParisNow() {
 // lib/tore-analysis-prompt.js pour l'implémentation (modèle, retries, logging).
 const { generateAnalysisViaClaude: generateScheduledAnalysis } = require('../../lib/tore-analysis-prompt.js');
 
-// Délai max avant de répondre au cron externe (cron-job.org coupe à 30s, non
-// configurable sur le compte gratuit) : marge de ~10s pour le démarrage à froid
-// de la fonction et le réseau.
-const CRON_ACK_DEADLINE_MS = 20000;
-
 async function handleRunScheduledDraws(req, res) {
   const secret = req.query.cron_secret || '';
   if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
@@ -1798,40 +1876,16 @@ async function handleRunScheduledDraws(req, res) {
       .eq('active', true)
       .eq('hour', now.hour));
 
-    // Même cette requête triviale peut rester bloquée côté Supabase : le
-    // 2026-09-24 à 22:45 GMT, PostgREST a mis 46s à renvoyer un résultat vide
-    // (« Thread killed by timeout manager » dans ses logs), et cron-job.org a
-    // abandonné à 30s → échec « Timeout ». Au-delà de CRON_ACK_DEADLINE_MS, on
-    // répond donc quand même au cron et on poursuit (requête + tirages) en
-    // arrière-plan via waitUntil, dans la limite du maxDuration de la fonction.
-    const TIMED_OUT = Symbol('timeout');
-    let ackTimer;
-    const first = await Promise.race([
-      duePromise,
-      new Promise(r => { ackTimer = setTimeout(() => r(TIMED_OUT), CRON_ACK_DEADLINE_MS); })
-    ]);
-    clearTimeout(ackTimer);
+    const ready = await awaitBeforeCronTimeout(res, 'run-scheduled-draws', duePromise, async ({ data: lateDue, error: lateError }) => {
+      if (lateError) {
+        console.error('[run-scheduled-draws] fetch error (late):', lateError.message);
+        return;
+      }
+      await runScheduledDrawsBackground(supabase, lateDue || [], now);
+    });
+    if (!ready) return;
 
-    if (first === TIMED_OUT) {
-      console.warn(`[run-scheduled-draws] Supabase lent (>${CRON_ACK_DEADLINE_MS}ms) — réponse anticipée, suite en arrière-plan`);
-      res.status(200).json({ success: true, queued: 'pending', reason: 'supabase_slow' });
-      const { waitUntil } = require('@vercel/functions');
-      waitUntil((async () => {
-        try {
-          const { data: lateDue, error: lateError } = await duePromise;
-          if (lateError) {
-            console.error('[run-scheduled-draws] fetch error (late):', lateError.message);
-            return;
-          }
-          await runScheduledDrawsBackground(supabase, lateDue || [], now);
-        } catch (e) {
-          console.error('[run-scheduled-draws] Unexpected error (late):', e.message);
-        }
-      })());
-      return;
-    }
-
-    const { data: due, error } = first;
+    const { data: due, error } = ready.value;
     if (error) {
       console.error('[run-scheduled-draws] fetch error:', error.message);
       return res.status(500).json({ error: error.message });
