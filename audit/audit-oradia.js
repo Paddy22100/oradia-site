@@ -535,7 +535,7 @@ async function auditAPI(browser) {
       // qui empêche 'networkidle' d'être jamais atteint — même repli que §7a/§7b.
       await stripePage.goto(offrePage, { waitUntil: 'load', timeout: 20000 });
     }
-    const stripeEl = await stripePage.$('[data-testid*="stripe"], button:has-text("Abonner"), button:has-text("Acheter"), button:has-text("Payer"), button:has-text("Commander"), button:has-text("Précommander")');
+    const stripeEl = await stripePage.$('[data-testid*="stripe"], #checkout-button, .add-to-cart-btn, button:has-text("Abonner"), button:has-text("Acheter"), button:has-text("Payer"), button:has-text("Commander"), button:has-text("Précommander")');
     if (stripeEl) {
       addIssue('api', 'ok', 'Bouton de paiement Stripe trouvé sur /precommande-oracle');
     } else {
