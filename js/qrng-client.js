@@ -103,6 +103,18 @@ const QRNG = {
   markFallback() {
     this._drawHadFallback = true;
   },
+  // État de pureté du tirage en cours, sérialisable : tore.html le sauvegarde avec le
+  // tirage en cours pour qu'un tirage repris (après fermeture accidentelle de la page)
+  // garde la bonne source — un tirage contaminé ne redevient jamais "pur".
+  snapshotDraw() {
+    return { hadFallback: !!this._drawHadFallback, quantumSource: this._drawQuantumSource || null, lastByte: this.lastByte };
+  },
+  restoreDraw(snapshot) {
+    this.beginDraw();
+    if (snapshot && snapshot.hadFallback) this._drawHadFallback = true;
+    if (snapshot && snapshot.quantumSource) this._drawQuantumSource = snapshot.quantumSource;
+    if (snapshot && snapshot.lastByte != null) this.lastByte = snapshot.lastByte;
+  },
   // Clôt le tirage et retourne 'anu' | 'outshift' (100% quantique) ou 'fallback'.
   endDraw() {
     this.lastDrawSource = this._drawHadFallback ? 'fallback' : (this._drawQuantumSource || 'fallback');
