@@ -7110,6 +7110,8 @@ function maybePromptToreReconnect() {
   buildBoardTore();
   enterImmersiveTore();
   toreHasStarted = true;
+  // Appelé ici, dans le geste de l'utilisateur (validation de l'intention) : voir armToreBackGuard.
+  if (typeof window.armToreBackGuard === 'function') window.armToreBackGuard();
   results.classList.add('hidden');
   // (le funnel 'tirage_lance' est déclenché une seule fois par session dans buildBoardTore())
 
@@ -7621,11 +7623,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Carte agrandie (zoom au toucher d'une carte retournée) : un toucher imprécis
+  // pendant la phase pièce l'ouvre par erreur, et le réflexe pour la refermer est
+  // "retour" — qui faisait quitter la page et perdre tout le tirage (signalé par une
+  // abonnée, 2026-09-27). Échap et retour referment désormais d'abord ce zoom.
+  function closeCardPreviewIfOpen() {
+    const overlay = document.getElementById('card-preview-overlay');
+    if (!overlay || !overlay.classList.contains('card-preview-visible')) return false;
+    overlay.classList.remove('card-preview-visible');
+    const img = document.getElementById('card-preview-img');
+    if (img) img.style.backgroundImage = '';
+    return true;
+  }
+
   // Fermer sur Échap
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       const modal = document.getElementById('abandon-tirage-modal');
       if (modal && modal.style.display === 'flex') { closeAbandonModal(); return; }
+      if (closeCardPreviewIfOpen()) return;
     }
     // Intercepter F5 / Ctrl+R / Cmd+R pendant un tirage
     const isRefresh = e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key === 'r');
@@ -7657,13 +7673,24 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Intercepter bouton retour navigateur (web)
-  history.pushState(null, '', location.href);
+  // Intercepter bouton retour navigateur (web), y compris Alt+← / Cmd+[ au clavier.
+  // L'entrée d'historique "garde" était auparavant ajoutée au chargement de la page,
+  // hors de tout geste utilisateur : Chrome (et Edge, Safari) marquent une telle entrée
+  // comme "sautable" et le bouton retour la traverse sans déclencher popstate — la page
+  // était quittée directement, sans le modal de confirmation (tirage perdu, signalé par
+  // une abonnée le 2026-09-27). On l'ajoute donc au lancement du tirage, pendant le
+  // clic de validation de l'intention (appel depuis le handler de démarrage).
+  let _backGuardArmed = false;
+  window.armToreBackGuard = function() {
+    if (_backGuardArmed) return;
+    _backGuardArmed = true;
+    history.pushState({ toreGuard: true }, '', location.href);
+  };
   window.addEventListener('popstate', function() {
-    if (drawInProgress()) {
-      history.pushState(null, '', location.href); // re-push pour rester
-      openAbandonModal('index.html');
-    }
+    if (!drawInProgress()) return;
+    history.pushState({ toreGuard: true }, '', location.href); // re-push pour rester
+    if (closeCardPreviewIfOpen()) return; // "retour" referme d'abord la carte agrandie
+    openAbandonModal('index.html');
   });
 
   // Intercepter le bouton/geste retour natif Android (webview Capacitor) : le
@@ -7676,6 +7703,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
     window.Capacitor.Plugins.App.addListener('backButton', function() {
       if (drawInProgress()) {
+        if (closeCardPreviewIfOpen()) return;
         openAbandonModal('index.html');
         return;
       }
