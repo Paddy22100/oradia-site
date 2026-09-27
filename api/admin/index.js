@@ -4284,6 +4284,13 @@ async function handleData(req, res) {
         count: anuRows.filter(r => r.score_synchronicites === i + 1).length
       }));
 
+      // Part des retours de questionnaire rapportant avoir vécu une synchronicité : le
+      // questionnaire (synchronicite.html, Q1) définit explicitement le score 1 comme
+      // "Aucune" sur l'échelle 1-10 — tout score > 1 compte donc comme une synchronicité
+      // vécue. Calculé sur anuRows, comme le reste des stats de cette section.
+      const experiencedCount = anuRows.filter(r => (r.score_synchronicites || 0) > 1).length;
+      const experiencedPct = anuRows.length > 0 ? Math.round((experiencedCount / anuRows.length) * 100) : null;
+
       // Fréquence des types — quantiques purs uniquement
       const typeCounts = {};
       anuRows.forEach(r => (r.types_synchronicites || []).forEach(t => {
@@ -4311,6 +4318,8 @@ async function handleData(req, res) {
           totalAll: rows.length,   // total brut tous tirages confondus (info)
           avgScore,
           avgScoreAnu,
+          experiencedCount,
+          experiencedPct,
           qrngBreakdown,
           scoreDistrib,
           typeCounts,
