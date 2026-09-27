@@ -1,5 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const { estimateStripeFees } = require('../../lib/stripe-fees.js');
+const { getPublicCatalog } = require('../../lib/shop-config.js');
+const { getShopMode, countSoldByOffer, SHOP_FLAG_DEFAULTS } = require('../../lib/shop-mode.js');
 
 // Même taux que côté dashboard admin (api/admin/index.js) — commission +
 // traitement paiement Kickstarter, distincte des frais Stripe classiques.
@@ -92,19 +94,60 @@ module.exports = async (req, res) => {
     let stripeDonorsCount = 0;
     let cashDonorsTotal = 0;
     let kickstarterTotal = 0;
+    // Mode boutique (interrupteurs du dashboard) et ventes par offre (stock limité),
+    // exposés aux pages publiques via cette route déjà publique : aucune nouvelle
+    // fonction serverless (12/12 sur Vercel Hobby).
+    let shopMode = { preorder: SHOP_FLAG_DEFAULTS.shop_preorder_enabled, order: SHOP_FLAG_DEFAULTS.shop_order_enabled };
+    let soldByOffer = {};
 
     if (hasSupabaseConfig) {
       try {
         const supabase = getSupabaseClient();
-        const { data, error } = await supabase
-          .from('preorders')
-          .select('id, items, paid_status, amount_total, shipping_price_cents')
-          .eq('paid_status', 'completed');
+        // Les 3 requêtes sont indépendantes : les lancer en parallèle plutôt qu'en
+        // série divise par ~3 la latence cumulée de cet endpoint (chaque await
+        // séquentiel ajoutait un aller-retour Supabase complet, ce qui pouvait faire
+        // dépasser le timeout côté client sur un cold start Vercel — voir l'audit du
+        // 14/09/2026, "API Précommandes inaccessible : timeout of 10000ms exceeded").
+        const [
+          { data, error },
+          { data: donorRows, error: donorsError },
+          { data: ksRows, error: ksError }
+        ] = await Promise.all([
+          supabase
+            .from('preorders')
+            .select('id, items, offer, order_type, paid_status, amount_total, shipping_price_cents')
+            .eq('paid_status', 'completed'),
+          // amount_total sur donors est aussi en euros depuis la correction
+          // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
+          // Dons Stripe et espèces comptent tous les deux dans la cagnotte
+          // fabrication (même règle que le dashboard admin) — seuls les frais
+          // Stripe, qui ne s'appliquent qu'aux dons Stripe, les distinguent.
+          supabase
+            .from('donors')
+            .select('amount_total, paid_status, source')
+            .eq('paid_status', 'completed'),
+          // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au
+          // même titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau
+          // d'estimation que le reste de ce compteur), et leur pledge entre dans la
+          // cagnotte au même titre qu'une précommande ou un don. Seuls les pledges en
+          // EUR sont sommés — même règle que côté dashboard admin (lib/stripe-fees.js,
+          // import-transactions) : pas de taux de change inventé pour les autres
+          // devises. La table peut ne pas encore exister si la migration
+          // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
+          // ignore l'erreur plutôt que de casser le compteur public de précommandes.
+          supabase.from('kickstarter_backers').select('id, pledge_amount, currency')
+        ]);
+
+        shopMode = await getShopMode(supabase);
 
         if (error) {
           console.error('Progress query failed:', error.message);
         } else {
-          for (const row of data || []) {
+          // Stock : toutes ventes confondues (précommandes + vente ferme).
+          soldByOffer = countSoldByOffer(data);
+          // Cagnotte et compteur de précommandes : précommandes uniquement — la vente
+          // ferme finance le stock suivant, pas la fabrication de la 1re édition.
+          for (const row of (data || []).filter(r => (r.order_type || 'preorder') === 'preorder')) {
             if (Array.isArray(row.items) && row.items.length > 0) {
               const qty = row.items.reduce((sum, item) => {
                 const q = Number(item?.quantity);
@@ -121,16 +164,6 @@ module.exports = async (req, res) => {
           }
         }
 
-        // amount_total sur donors est aussi en euros depuis la correction
-        // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
-        // Dons Stripe et espèces comptent tous les deux dans la cagnotte
-        // fabrication (même règle que le dashboard admin) — seuls les frais
-        // Stripe, qui ne s'appliquent qu'aux dons Stripe, les distinguent.
-        const { data: donorRows, error: donorsError } = await supabase
-          .from('donors')
-          .select('amount_total, paid_status, source')
-          .eq('paid_status', 'completed');
-
         if (donorsError) {
           console.error('Donors query failed:', donorsError.message);
         } else {
@@ -145,17 +178,6 @@ module.exports = async (req, res) => {
           }
         }
 
-        // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au même
-        // titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau d'estimation
-        // que le reste de ce compteur), et leur pledge entre dans la cagnotte au même titre
-        // qu'une précommande ou un don. Seuls les pledges en EUR sont sommés — même règle que
-        // côté dashboard admin (lib/stripe-fees.js, import-transactions) : pas de taux de
-        // change inventé pour les autres devises. La table peut ne pas encore exister si la
-        // migration supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
-        // ignore l'erreur plutôt que de casser le compteur public de précommandes.
-        const { data: ksRows, error: ksError } = await supabase
-          .from('kickstarter_backers')
-          .select('id, pledge_amount, currency');
         if (!ksError && Array.isArray(ksRows)) {
           sold += ksRows.length;
           for (const row of ksRows) {
@@ -206,6 +228,9 @@ module.exports = async (req, res) => {
     });
     const allPaliersReached = paliers.every((p) => p.status === 'atteint');
 
+    // Cache CDN court : les interrupteurs Boutique du dashboard sont visibles en
+    // moins d'une minute, sans refaire les requêtes Supabase à chaque visite.
+    res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=60');
     return res.status(200).json({
       success: true,
       sold,
@@ -214,7 +239,12 @@ module.exports = async (req, res) => {
       percent,
       cagnotte,
       paliers,
-      allPaliersReached
+      allPaliersReached,
+      shop: {
+        preorder: shopMode.preorder,
+        order: shopMode.order,
+        catalog: getPublicCatalog(soldByOffer)
+      }
     });
   } catch (error) {
     console.error('Preorder progress failed:', error.message);

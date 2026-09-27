@@ -68,6 +68,11 @@
         localStorage.setItem('oradia_referred_by', ref);
         if (window.freemiumTracker) window.freemiumTracker.addBonusDraws(1);
         showBonusToast('🎁 Un tirage gratuit vous a été offert !');
+        // Événement funnel (voir js/page-tracker.js) : seule trace côté serveur de
+        // "combien de liens de parrainage ont réellement été utilisés" — sans ça,
+        // impossible de distinguer un lien jamais ouvert d'un lien ouvert mais dont
+        // le filleul n'est jamais allé au bout d'un tirage (voir referral_conversions).
+        if (window.oradiaTrackEvent) window.oradiaTrackEvent('parrainage_lien_utilise');
       }
     } catch (e) {}
   }

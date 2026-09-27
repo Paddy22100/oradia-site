@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Video Guidance — Oradia</title>
+  <meta name="description" content="Book a video guidance session with Rudy — 30 minutes or 1 hour to go deeper into your draw or your inner questioning." />
+  <link rel="canonical" href="https://oradia.fr/en/guidance.html" />
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/guidance" />
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/guidance.html" />
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/guidance" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://oradia.fr/en/guidance.html" />
+  <meta property="og:title" content="Video Guidance — Oradia" />
+  <meta property="og:description" content="A space for listening and in-depth guidance, based on your draw or your own questioning." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:site_name" content="Oradia" />
+  <meta property="og:locale" content="en_US" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#040d1c',
+            'gold': '#d4af37',
+            'light-gold': '#f0c75e',
+          },
+          fontFamily: {
+            cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background: #040d1c url('/images/oradia-hero-4k.webp') center top / cover fixed;
+      color: #c8c0a8;
+    }
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(4,13,28,0.72);
+      z-index: 0;
+      pointer-events: none;
+    }
+    body > * { position: relative; z-index: 1; }
+    .hero-bg { background: transparent; }
+    .gold-gradient {
+      background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      border-radius: 50px;
+      border: 1px solid rgba(212,175,55,0.35);
+      background: rgba(212,175,55,0.07);
+      color: #f0c75e;
+      font-family: Georgia, serif;
+      font-size: 15px;
+      font-weight: 500;
+    }
+    .step-card {
+      background: rgba(10,22,40,0.6);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 12px;
+      padding: 28px 24px;
+    }
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #d4af37, #f5e7a1);
+      color: #0a1628;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 17px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #d4af37;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 20px;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-bottom: 16px;
+    }
+    #cal-booking-wrapper {
+      background: rgba(6,16,34,0.85);
+      border: 1px solid rgba(212,175,55,0.18);
+      border-radius: 14px;
+      overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    #cal-booking-placeholder iframe { border-radius: 0; }
+  </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+  <div id="header-placeholder"></div>
+
+  <!-- Hero -->
+  <section class="hero-bg pt-28 pb-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="text-gold/60 text-xs uppercase tracking-widest mb-4" style="letter-spacing:0.35em;">One-on-one session</p>
+      <h1 class="cormorant text-4xl md:text-6xl font-light gold-gradient mb-6 leading-tight">
+        Video Guidance<br>with Rudy
+      </h1>
+      <p class="text-light-gold/70 text-lg md:text-xl leading-relaxed mb-10 max-w-xl mx-auto" style="font-family:Georgia,serif;">
+        A space for listening and in-depth guidance,<br>
+        based on your draw or your own questioning.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <button class="cta-btn" onclick="selectCalEvent('rudy-boucheron-azhech/30min')">
+          <i class="fas fa-clock"></i> 30 min &middot; &euro;30
+        </button>
+        <button class="cta-btn" onclick="selectCalEvent('rudy-boucheron-azhech/15min')">
+          <i class="fas fa-clock"></i> 1h &middot; &euro;60
+        </button>
+      </div>
+      <p class="text-light-gold/35 text-xs mt-6">The booking calendar below may still display some text in French.</p>
+    </div>
+  </section>
+
+  <!-- Cal.com widget -->
+  <section class="max-w-5xl mx-auto px-4 py-12" id="cal-section" style="display:none;">
+    <div id="cal-booking-wrapper">
+      <div id="cal-booking-placeholder" style="width:100%;"></div>
+    </div>
+  </section>
+
+  <!-- How it works -->
+  <section class="max-w-4xl mx-auto px-4 pb-20">
+    <div class="text-center mb-12">
+      <p class="text-gold/50 text-xs uppercase tracking-widest mb-3" style="letter-spacing:0.3em;">How it works</p>
+      <h2 class="cormorant text-3xl md:text-4xl font-light gold-gradient">How it works</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3 class="text-gold font-medium mb-2" style="font-family:Georgia,serif;">Choose your time slot</h3>
+        <p class="text-light-gold/55 text-sm leading-relaxed" style="font-family:Georgia,serif;">Select the duration and time that suits you, then pay online when you book.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3 class="text-gold font-medium mb-2" style="font-family:Georgia,serif;">Receive your link</h3>
+        <p class="text-light-gold/55 text-sm leading-relaxed" style="font-family:Georgia,serif;">You'll get an email with your personal link to join the video call. No installation needed.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3 class="text-gold font-medium mb-2" style="font-family:Georgia,serif;">We meet by video</h3>
+        <p class="text-light-gold/55 text-sm leading-relaxed" style="font-family:Georgia,serif;">At the agreed time, click the link and join the guidance session. Take the time to note what comes up for you.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script>
+    function selectCalEvent(slug) {
+      const el = document.getElementById('cal-booking-placeholder');
+      const section = document.getElementById('cal-section');
+      if (!el) return;
+      el.innerHTML = '';
+      if (section) section.style.display = '';
+      setTimeout(() => section && section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      Cal("inline", {
+        elementOrSelector: "#cal-booking-placeholder",
+        calLink: slug,
+        config: { theme: "dark", brandColor: "#d4af37", layout: "month_view" }
+      });
+    }
+  </script>
+  <script src="/components/header-manager-en.js" defer></script>
+  <script src="/components/footer-manager-en.js" defer></script>
+
+  <!-- Cal.com embed -->
+  <script type="text/javascript">
+    (function (C, A, L) {
+      let p = function (a, ar) { a.q.push(ar); };
+      let d = C.document;
+      C.Cal = C.Cal || function () {
+        let cal = C.Cal;
+        let ar = arguments;
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q || [];
+          d.head.appendChild(d.createElement("script")).src = A;
+          cal.loaded = true;
+        }
+        if (ar[0] === L) {
+          const api = function () { p(api, arguments); };
+          const namespace = ar[1];
+          api.q = api.q || [];
+          if (typeof namespace === "string") {
+            cal.ns[namespace] = cal.ns[namespace] || api;
+            p(cal.ns[namespace], ar);
+            p(cal, ["-init", namespace, window.location.href]);
+          } else {
+            p(cal, ar);
+            p(cal, ["-init", namespace, window.location.href]);
+          }
+          return;
+        }
+        p(cal, ar);
+      };
+    })(window, "https://app.cal.com/embed/embed.js", "init");
+
+    Cal("init", { origin: "https://cal.com" });
+    Cal("ui", {
+      theme: "dark",
+      styles: { branding: { brandColor: "#d4af37" } },
+      hideEventTypeDetails: false,
+      layout: "month_view"
+    });
+  </script>
+<script defer src="/_vercel/insights/script.js"></script>
+<script src="/js/page-tracker.js" defer></script>
+</body>
+</html>

@@ -9,8 +9,11 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
     <script src="../js/member-header-fix.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <!-- Hébergées localement (pas de CDN) : évite un point de défaillance supplémentaire
+         pour le PDF quand le réseau mobile est faible — cause probable de "le tirage
+         plante" côté app, en plus du blocage connu des liens <a download> en WebView. -->
+    <script src="../vendor/html2canvas.min.js" defer></script>
+    <script src="../vendor/jspdf.umd.min.js" defer></script>
 
     <script>
         tailwind.config = {
@@ -198,6 +201,49 @@
             color: #f4e4c1;
             line-height: 1.3;
         }
+
+        /* Bilan de parcours : même traitement que la carte dorée "Faire un
+           tirage" de l'accueil app (halo + balayage lumineux), pour qu'elle
+           ne se perde plus au milieu du reste de l'historique. */
+        #bilanParcoursCard.bilan-highlight {
+            position: relative; overflow: hidden;
+            border-color: rgba(212,175,55,0.7);
+            background: linear-gradient(150deg, #2a2410 0%, rgba(90,74,26,0.97) 30%, rgba(26,54,93,0.97) 75%);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.15);
+            animation: bilanGlow 3.2s ease-in-out infinite;
+        }
+        @keyframes bilanGlow {
+            0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.18), 0 0 22px rgba(212,175,55,0.08); }
+            50%      { box-shadow: 0 10px 30px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.4), 0 0 32px rgba(212,175,55,0.25); }
+        }
+        #bilanParcoursCard.bilan-highlight::before {
+            content: ''; position: absolute; left: -30px; top: 50%; transform: translateY(-50%);
+            width: 180px; height: 180px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(245,231,161,0.3), transparent 70%);
+            pointer-events: none;
+        }
+        #bilanParcoursCard.bilan-highlight::after {
+            content: ''; position: absolute; inset: 0; pointer-events: none;
+            background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.12) 45%, transparent 60%);
+            background-size: 250% 100%; background-position: 150% 0;
+            animation: bilanShimmer 5s ease-in-out infinite;
+        }
+        @keyframes bilanShimmer {
+            0%, 40% { background-position: 150% 0; }
+            100%    { background-position: -50% 0; }
+        }
+        #bilanParcoursCard.bilan-highlight h3,
+        #bilanParcoursCard.bilan-highlight #bilanParcoursIntro > div > p,
+        #bilanParcoursCard.bilan-highlight #bilanParcoursBtn { position: relative; }
+        #bilanParcoursCard.bilan-highlight h3 {
+            font-size: 22px;
+            background: linear-gradient(135deg, var(--gold, #d4af37), var(--light-gold, #f5e7a1));
+            -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+        }
+        #bilanParcoursCard.bilan-highlight #bilanParcoursBtn {
+            background: radial-gradient(circle at 35% 30%, #f5e7a1, #d4af37 70%);
+            box-shadow: 0 0 20px rgba(212,175,55,0.5);
+        }
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
@@ -280,6 +326,20 @@
                 <a href="../tore.html" class="bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-5 rounded-lg transition-colors">
                     <i class="fas fa-infinity mr-2"></i>Nouveau tirage
                 </a>
+            </div>
+
+            <!-- Bilan de parcours -->
+            <div id="bilanParcoursCard" class="hidden bilan-highlight border rounded-2xl p-6 mb-6">
+                <div id="bilanParcoursIntro" class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    <div>
+                        <h3 class="cormorant mb-1"><i class="fas fa-sparkles mr-2"></i>Bilan de parcours</h3>
+                        <p class="text-light-gold/80 text-sm">Ce que révèlent vos tirages pris ensemble, sur la durée.</p>
+                    </div>
+                    <button id="bilanParcoursBtn" onclick="genererBilanParcours()" class="flex-shrink-0 text-night-blue font-bold py-2.5 px-6 rounded-lg transition-colors text-sm whitespace-nowrap">
+                        Générer mon bilan
+                    </button>
+                </div>
+                <div id="bilanParcoursResult" class="hidden mt-5 pt-5 border-t border-gold/25 space-y-5"></div>
             </div>
 
             <!-- Catégories -->
@@ -494,6 +554,12 @@
             const n = tirages.length;
             if(info) info.textContent = n === 0 ? 'Aucun tirage enregistré' : `${n} tirage${n > 1 ? 's' : ''} enregistré${n > 1 ? 's' : ''}`;
 
+            // Bilan de parcours : n'a de sens qu'avec un minimum d'historique et un
+            // compte connecté (le seuil réel est revérifié côté serveur, voir
+            // MIN_TIRAGES_FOR_BILAN dans lib/parcours-bilan-prompt.js).
+            const bilanCard = document.getElementById('bilanParcoursCard');
+            if (bilanCard) bilanCard.classList.toggle('hidden', !(window.OradiaTirageStorage?.isAuthenticated?.() && n >= 3));
+
             if (n === 0) {
                 // Diagnostic temporaire : distingue "vraiment aucun tirage" de "session
                 // sans token valide" (repli silencieux vers l'historique invité local,
@@ -569,24 +635,23 @@
                         overflow:hidden;
                         margin-bottom:20px;
                     ">
-                        <div style="background:rgba(5,20,40,0.6);padding:18px 24px;border-bottom:1px solid rgba(212,175,55,0.2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                            <div>
-                                <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 2px;">${t.type || 'Tirage Tore'}</p>
+                        <div onclick="toggleTirageDetails('${tirageId}')" style="cursor:pointer;background:rgba(5,20,40,0.6);padding:18px 24px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                            <div style="min-width:0;flex:1;">
+                                <p style="font-family:'Cormorant Garamond',serif;font-size:17px;font-style:italic;color:rgba(245,231,161,0.9);margin:0 0 4px;">${t.intention ? t.intention : (t.type || 'Tirage Tore')}</p>
                                 <p style="color:rgba(245,231,161,0.45);font-size:12px;margin:0;text-transform:capitalize;">${date}</p>
                                 ${sourceBadge}
                             </div>
-                            <button onclick="downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
-                                style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
-                                onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
-                                <i class="fas fa-file-pdf"></i> Télécharger PDF
-                            </button>
+                            <i id="${tirageId}-chevron" class="fas fa-chevron-down" style="color:#d4af37;opacity:0.6;transition:transform .25s;flex-shrink:0;"></i>
                         </div>
-                        <div style="padding:20px 24px;">
-                            ${t.intention ? `
-                            <div style="margin-bottom:16px;padding:12px 16px;background:rgba(212,175,55,0.06);border-radius:0 8px 8px 0;border-left:3px solid rgba(212,175,55,0.5);">
-                                <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Intention</p>
-                                <p style="color:rgba(245,231,161,0.9);font-size:14px;font-style:italic;">${t.intention}</p>
-                            </div>` : ''}
+                        <div id="${tirageId}-details" style="display:none;padding:20px 24px;border-top:1px solid rgba(212,175,55,0.2);">
+                            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:16px;">
+                                <p style="font-family:'Cormorant Garamond',serif;font-size:18px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0;">${t.type || 'Tirage Tore'}</p>
+                                <button onclick="event.stopPropagation(); downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
+                                    style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
+                                    onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
+                                    <i class="fas fa-file-pdf"></i> Télécharger PDF
+                                </button>
+                            </div>
                             ${cartesBadges ? `
                             <div style="margin-bottom:14px;">
                                 <p style="color:rgba(212,175,55,0.55);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Cartes tirées</p>
@@ -666,6 +731,17 @@
                 preview.classList.remove('visible');
             });
         })();
+
+        // Replie/déplie les détails d'un tirage — seule l'intention + la date restent
+        // visibles par défaut, pour alléger l'affichage d'un historique de 20 tirages.
+        function toggleTirageDetails(tirageId) {
+            const details = document.getElementById(tirageId + '-details');
+            const chevron = document.getElementById(tirageId + '-chevron');
+            if (!details) return;
+            const isOpen = details.style.display !== 'none';
+            details.style.display = isOpen ? 'none' : 'block';
+            if (chevron) chevron.style.transform = isOpen ? 'rotate(0deg)' : 'rotate(180deg)';
+        }
 
         // Téléchargement PDF élégant — Palier 3 #22 : design aligné sur le mail d'analyse,
         // ajout de la fenêtre d'observation et amélioration visuelle globale.
@@ -1009,6 +1085,59 @@
         });
 
         // ============ Filtre ponctuel / programmé ============
+        // ============ Bilan de parcours ============
+        async function genererBilanParcours() {
+            const btn = document.getElementById('bilanParcoursBtn');
+            const resultEl = document.getElementById('bilanParcoursResult');
+            if (!btn || !resultEl) return;
+
+            btn.disabled = true;
+            const originalLabel = btn.textContent;
+            btn.innerHTML = '<i class="fas fa-circle-notch fa-spin mr-1"></i>Génération...';
+
+            try {
+                const res = await window.OradiaTirageStorage.bilanParcours();
+                if (!res || !res.success) {
+                    resultEl.innerHTML = `<p class="text-light-gold/60 text-sm text-center py-2">${(res && res.message) || "Le bilan n'a pas pu être généré, réessayez dans un instant."}</p>`;
+                    resultEl.classList.remove('hidden');
+                    return;
+                }
+
+                const { recurrent, evolution, question, suggestedIntention } = res.bilan;
+                const section = (title, icon, text) => text ? `
+                    <div>
+                        <p class="text-gold text-xs uppercase tracking-wider mb-2"><i class="fas ${icon} mr-1.5"></i>${title}</p>
+                        <p class="text-light-gold/85 text-sm leading-relaxed">${text.replace(/\n+/g, ' ')}</p>
+                    </div>` : '';
+
+                // suggestedIntention est une question courte et propre (validée côté serveur,
+                // voir lib/parcours-bilan-prompt.js), distincte du paragraphe narratif "question"
+                // ci-dessus — c'est elle qui part dans le champ intention de tore.html, jamais le
+                // paragraphe complet (qui ne passerait pas la checklist de validation du tirage).
+                const questionCta = suggestedIntention ? `
+                    <div class="text-center pt-1">
+                        <a href="../tore.html?intention=${encodeURIComponent(suggestedIntention)}" class="inline-flex items-center gap-2 bg-gold/15 text-gold border border-gold/40 rounded-lg px-5 py-2.5 text-sm hover:bg-gold/25 transition-colors">
+                            <i class="fas fa-infinity"></i> Faire un tirage sur cette question
+                        </a>
+                    </div>` : '';
+
+                resultEl.innerHTML = [
+                    section('Ce qui revient', 'fa-repeat', recurrent),
+                    section('Ce qui a bougé', 'fa-arrow-trend-up', evolution),
+                    section('Une question pour la suite', 'fa-compass', question),
+                    questionCta
+                ].join('');
+                resultEl.classList.remove('hidden');
+                document.getElementById('bilanParcoursIntro')?.classList.add('hidden');
+            } catch (e) {
+                resultEl.innerHTML = `<p class="text-light-gold/60 text-sm text-center py-2">Erreur réseau, réessayez dans un instant.</p>`;
+                resultEl.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = originalLabel;
+            }
+        }
+
         function setSourceFilter(filter) {
             document.querySelectorAll('#sourceFilters .filter-btn').forEach(b => {
                 b.classList.toggle('active', b.dataset.filter === filter);

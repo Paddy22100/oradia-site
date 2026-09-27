@@ -10,7 +10,7 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - **Front** : HTML/CSS/JS vanilla (pas de framework)
 - **Hébergement** : Vercel (Hobby plan — limite de 12 fonctions serverless)
 - **Base de données** : Supabase (PostgreSQL)
-- **Paiement** : Stripe (single-draw à 3,90€)
+- **Paiement** : Stripe (abonnement Tore 8€/mois, précommandes de l'oracle physique, dons libres)
 - **Emails** : Brevo (transactionnel + newsletter, list ID 5)
 - **IA** : Anthropic API (claude-haiku-4-5, streaming)
 - **QRNG** : Outshift QRNG/Cisco (source principale), ANU Quantum Random Numbers API (source de secours, plan gratuit limité), repli crypto local en dernier recours
@@ -84,7 +84,7 @@ Quand je te demande de faire un audit ou de "tout vérifier", exécute les véri
 ### 2. STRIPE — Flux de paiement
 
 - [ ] Localiser le fichier qui crée la session Stripe (`checkout.session.create` ou `paymentIntent`)
-- [ ] Vérifier que le montant est bien `390` (centimes = 3,90€) et la devise `eur`
+- [ ] Vérifier que les montants des offres de précommande (`OFFER_CONFIG` dans `api/create-checkout-session.js`) correspondent à la page de vente et que la devise est `eur` (le tirage unique à 3,90€ n'existe plus)
 - [ ] Vérifier que le webhook Stripe est bien vérifié avec `stripe.webhooks.constructEvent` et la signature `STRIPE_WEBHOOK_SECRET`
 - [ ] Vérifier que les cas d'erreur du webhook (`payment_intent.payment_failed`, etc.) sont gérés
 - [ ] Vérifier la cohérence entre les events Stripe écoutés et ceux déclarés dans le dashboard (à confirmer manuellement)

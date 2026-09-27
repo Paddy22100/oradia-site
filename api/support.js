@@ -206,8 +206,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'Message et email requis' });
   }
 
-  // Stocker en BDD (non-bloquant — ne fait pas échouer la requête si ça plante)
-  saveToSupabase({ type, email, name, sujet, categorie, publication, message });
+  // Stocker en BDD. Attendu (pas "fire and forget") : sur Vercel, une fonction serverless
+  // peut être arrêtée dès que la réponse part, ce qui coupait cet appel en plein vol avant
+  // qu'il n'atteigne Supabase — le message arrivait par email (lui attendu plus bas) mais
+  // jamais dans le dashboard. saveToSupabase() reste tolérante aux erreurs (try/catch
+  // interne), donc ça ne fait toujours pas échouer la requête si Supabase est indisponible.
+  await saveToSupabase({ type, email, name, sujet, categorie, publication, message });
 
   if (!BREVO_API_KEY) {
     // Pas d'email possible mais le message est déjà en BDD

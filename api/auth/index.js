@@ -10,9 +10,9 @@ const corsHeaders = {
 // Simple in-memory rate limiter
 const rateLimitStore = new Map();
 
-function checkRateLimit(ip, limit = 5, windowMs = 60000) { // 5 requests per minute
+function checkRateLimit(ip, limit = 5, windowMs = 60000, bucket = 'login') {
   const now = Date.now();
-  const key = `login:${ip}`;
+  const key = `${bucket}:${ip}`;
   
   if (!rateLimitStore.has(key)) {
     rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
@@ -680,6 +680,18 @@ async function handleMarkPasswordChanged(req, res) {
 
 // ============ FORGOT PASSWORD ============
 async function handleForgotPassword(req, res) {
+  // Sans limite, n'importe qui peut spammer un email arbitraire de demandes de
+  // réinitialisation (repéré via plusieurs mails Supabase reçus coup sur coup sur
+  // contact@oradia.fr) — plus stricte que le login (3/10min plutôt que 5/min) car
+  // chaque tentative envoie un vrai email, contrairement à un login qui échoue en silence.
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIP, 3, 600000, 'forgot-password')) {
+    res.writeHead(429, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({
+      success: false,
+      error: 'Trop de demandes de réinitialisation. Veuillez réessayer dans quelques minutes.'
+    }));
+  }
   const body = await new Promise((resolve, reject) => {
     let data = '';
     req.on('data', chunk => data += chunk);

@@ -35,13 +35,29 @@
 
     var isApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
 
+    // Origine payante (ex: Google Ads), first-party et sans cookie tiers : lue une fois
+    // depuis ?utm_source=... (ou déduite de gclid, ajouté automatiquement par Google Ads
+    // aux URLs de ses annonces) au moment où le visiteur arrive, puis mémorisée pour le
+    // reste de la session afin que les pages suivantes restent rattachées à cette source
+    // même si le paramètre n'est plus dans l'URL.
+    var UTM_KEY = 'oradia_utm_source';
+    var utmSource = sessionStorage.getItem(UTM_KEY);
+    if (!utmSource) {
+      try {
+        var qs = new URLSearchParams(location.search);
+        utmSource = qs.get('utm_source') || (qs.has('gclid') ? 'google_ads' : '');
+        if (utmSource) sessionStorage.setItem(UTM_KEY, utmSource);
+      } catch (e) {}
+    }
+
     var payload = JSON.stringify({
       path: location.pathname,
       referrer: document.referrer || '',
       session_id: sessionId,
       user_agent: navigator.userAgent || '',
       is_new_visitor: isNew,
-      is_app: isApp
+      is_app: isApp,
+      utm_source: utmSource || undefined
     });
     var url = '/api/admin/track';
     if (navigator.sendBeacon) {

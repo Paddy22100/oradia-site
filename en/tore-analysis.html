@@ -1,0 +1,2584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<style>body{opacity:0;transition:opacity 0.4s ease;}body.page-ready{opacity:1;}</style>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+
+  <!-- SEO Meta Tags -->
+  <title>Your Draw Analysis - Oracle Oradia</title>
+  <meta name="description" content="Personalized analysis of your draw with the Oradia Oracle. Discover the messages of your cards and get clear guidance." />
+  <meta name="keywords" content="oracle, analysis, draw, guidance, clarity, introspection, Oradia, cards" />
+  <meta name="author" content="Rudy Boucheron — Oradia" />
+  <meta name="robots" content="noindex, follow" />
+  <meta name="language" content="en" />
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://oradia.fr/en/tore-analysis.html" />
+  <meta property="og:title" content="Your Draw Analysis - Oracle Oradia" />
+  <meta property="og:description" content="Personalized analysis of your draw with the Oradia Oracle." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Oradia" />
+  <meta property="og:locale" content="en_US" />
+
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://oradia.fr/en/tore-analysis.html" />
+  <meta property="twitter:title" content="Your Draw Analysis - Oracle Oradia" />
+  <meta property="twitter:description" content="Personalized analysis of your draw with the Oradia Oracle." />
+  <meta property="twitter:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://oradia.fr/en/tore-analysis.html" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/responsive.css">
+  <link rel="stylesheet" href="/production-mode.css">
+  <script src="/security.js"></script>
+  <script src="/js/tirages-storage.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'cinzel': ['Cinzel', 'serif'],
+            'lora': ['Lora', 'serif']
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s ease-in-out infinite',
+            'shimmer': 'shimmer 3s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+    
+    .font-cormorant {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    
+    .font-lora {
+      font-family: 'Lora', serif;
+    }
+    
+    .gold-gradient {
+      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 50%, #d4af37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-section {
+      background: linear-gradient(135deg, #0a192f 0%, #051428 100%);
+      min-height: 60vh;
+      position: relative;
+      background-image: url("/images/oradia-hero-4k.webp");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    
+    .hero-overlay {
+      background: radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                  linear-gradient(135deg, rgba(10, 25, 47, 0.3) 0%, rgba(5, 20, 40, 0.4) 100%);
+      position: absolute;
+      inset: 0;
+    }
+    
+    .analysis-section {
+      background: linear-gradient(135deg, #0a192f 0%, #051428 100%);
+      position: relative;
+    }
+    
+    .analysis-overlay {
+      background: radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+                  linear-gradient(135deg, rgba(10, 25, 47, 0.2) 0%, rgba(5, 20, 40, 0.3) 100%);
+      position: absolute;
+      inset: 0;
+    }
+    
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+    
+    .analysis-card {
+      background: rgba(5, 20, 40, 0.9);
+      border: 1px solid #d4af37;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .pro-offer {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid #d4af37;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .btn-gold {
+      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 100%);
+      color: #020817;
+      padding: 1rem 2rem;
+      border-radius: 18px;
+      border: none;
+      font-family: "Cinzel", serif;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4);
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(212, 175, 55, 0.3);
+    }
+    
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    /* Amélioration du contraste pour la lisibilité */
+    .text-light-gold {
+      color: #f5e7a1 !important;
+    }
+    
+    .text-gold {
+      color: #d4af37 !important;
+    }
+    
+    /* Textes par défaut sur fond sombre */
+    body {
+      color: #e9e7df;
+      background: #0a192f;
+    }
+
+    .analysis-card p,
+    .analysis-card li,
+    .pro-offer p,
+    .pro-offer li {
+      color: #e9e7df !important;
+      line-height: 1.8;
+    }
+
+    .analysis-card h1,
+    .analysis-card h2,
+    .analysis-card h3,
+    .pro-offer h1,
+    .pro-offer h2,
+    .pro-offer h3 {
+      color: #d4af37 !important;
+    }
+
+    /* Section cartes : fond plus contrasté */
+    .analysis-section {
+      background: linear-gradient(180deg, #051428 0%, #0a192f 50%, #051428 100%);
+    }
+
+    /* Titres de section */
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.15rem, 5vw, 2.5rem);
+      font-weight: 700;
+      color: #d4af37;
+      letter-spacing: 0.05em;
+      text-wrap: balance;
+    }
+
+    /* Grille cartes */
+    #cardsDisplay {
+      align-items: start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* Groupe carte + passerelle */
+    .card-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      width: 200px;
+      padding: 4px;
+    }
+    @media (max-width: 640px) {
+      .card-group { width: 140px; }
+    }
+
+    /* Carte individuelle */
+    .card-grid-item {
+      width: 100%;
+      background: rgba(5, 20, 40, 0.85);
+      border: 1px solid rgba(212,175,55,0.35);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card-grid-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(212,175,55,0.3);
+      border-color: rgba(212,175,55,0.7);
+    }
+    .card-grid-item.bridge {
+      border-color: rgba(212,175,55,0.8);
+      border-radius: 8px;
+      box-shadow: 0 0 18px rgba(212,175,55,0.2), 0 0 6px rgba(245,231,161,0.1);
+      transform: scale(1.03);
+    }
+    .card-grid-item.bridge:hover {
+      box-shadow: 0 12px 28px rgba(212,175,55,0.4), 0 0 22px rgba(245,231,161,0.2);
+      border-color: rgba(245,231,161,0.95);
+      transform: scale(1.06) translateY(-2px);
+    }
+    .card-grid-item > img {
+      width: 100%;
+      aspect-ratio: 64 / 90;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      border-radius: 9px 9px 0 0;
+      cursor: zoom-in;
+    }
+
+    /* Agrandissement au clic/tactile des cartes de l'analyse (meme mecanisme
+       que sur le plateau de tirage dans tore.html). */
+    #analysis-card-preview-overlay {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0);
+      z-index: 9999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s ease, background 0.3s ease;
+    }
+    #analysis-card-preview-overlay.visible {
+      opacity: 1;
+      background: rgba(0,0,0,0.8);
+      pointer-events: auto;
+    }
+    #analysis-card-preview-overlay img {
+      width: min(500px, 90vw);
+      max-height: 80vh;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(212,175,55,0.4);
+      border: 2px solid rgba(212,175,55,0.8);
+      object-fit: contain;
+      transform: scale(0.85);
+      opacity: 0;
+      transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    #analysis-card-preview-overlay.visible img {
+      transform: scale(1);
+      opacity: 1;
+    }
+    .card-grid-label {
+      padding: 4px 6px 2px;
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #d4af37;
+      font-family: 'Cinzel', serif;
+      text-align: center;
+      line-height: 1.3;
+      background: rgba(5,20,40,0.95);
+    }
+    .card-grid-label.bridge-label {
+      color: #f5e7a1;
+    }
+    .card-grid-name {
+      padding: 2px 6px 6px;
+      font-size: 0.75rem;
+      color: #f5e7a1;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.3;
+      background: rgba(5,20,40,0.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-grid-name.bridge-name {
+      color: #f5e7a1;
+    }
+
+    /* Connecteur entre carte et passerelle */
+    .bridge-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3px 0;
+      gap: 2px;
+    }
+    .bridge-connector::before {
+      content: '';
+      width: 1px;
+      height: 8px;
+      background: linear-gradient(180deg, rgba(212,175,55,0.8), rgba(245,231,161,0.5));
+    }
+    .bridge-connector i {
+      color: #d4af37;
+      font-size: 0.7rem;
+      animation: spin 3s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .bridge-connector::after {
+      content: '';
+      width: 1px;
+      height: 8px;
+      background: rgba(212,175,55,0.5);
+    }
+
+    /* Badge passerelle */
+    .bridge-badge {
+      background: rgba(180,140,30,0.85);
+      padding: 2px 6px;
+      font-size: 0.5rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff8e1;
+      text-align: center;
+    }
+
+    /* Sections analyse */
+    .analysis-card {
+      background: rgba(5, 20, 40, 0.9);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+    }
+    .analysis-card .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+    }
+    .analysis-card .card-header i {
+      color: #d4af37;
+      font-size: 1.1rem;
+    }
+    .analysis-card .card-header h3 {
+      color: #d4af37 !important;
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1rem, 4vw, 1.2rem);
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-wrap: balance;
+    }
+    .analysis-card .card-body {
+      color: #f0ead6;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: clamp(1.15rem, 2.6vw, 1.3rem);
+      line-height: 1.85;
+      letter-spacing: 0.01em;
+    }
+    .analysis-card .card-body strong { color: #f0c75e; font-weight: 700; }
+    .mutating-tag {
+      display: inline-block;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.4);
+      color: #c4b5fd;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* Séparateur doré */
+    .gold-divider {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      margin: 1rem auto;
+    }
+    
+    .text-purple-300 {
+      color: #c4b5fd !important;
+    }
+    
+    .text-purple-400 {
+      color: #a78bfa !important;
+    }
+    
+    .text-purple-200 {
+      color: #ddd6fe !important;
+    }
+
+    /* === FENÊTRE D'OBSERVATION === */
+    .obs-window-wrap {
+      background: linear-gradient(155deg, rgba(10, 26, 48, 0.92), rgba(5, 16, 32, 0.95));
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 22px;
+      padding: 2.5rem 2.25rem;
+      margin: 0 0 2rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.35), 0 0 50px rgba(212,175,55,0.06), inset 0 1px 0 rgba(255,255,255,0.03);
+    }
+    .obs-window-wrap::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(212,175,55,0.7), transparent);
+    }
+    .obs-window-wrap::after {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 180px; height: 180px;
+      background: radial-gradient(circle, rgba(212,175,55,0.08), transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+    .obs-window-title {
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: #d4af37;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      margin: 0 0 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+    }
+    .obs-window-title i {
+      font-size: 0.95rem;
+      width: 32px; height: 32px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 50%;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.25);
+    }
+    .obs-window-text {
+      font-family: 'Lora', Georgia, serif;
+      font-size: 0.95rem;
+      line-height: 1.9;
+      color: #e9e7df;
+      margin-bottom: 1.75rem;
+      padding-bottom: 1.75rem;
+      border-bottom: 1px solid rgba(212,175,55,0.1);
+    }
+    .obs-window-text strong {
+      color: #f5e7a1;
+      font-weight: 600;
+    }
+    .obs-window-text em {
+      color: rgba(245,231,161,0.85);
+      font-style: italic;
+    }
+    .obs-duration-group {
+      display: flex;
+      gap: 0.85rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .obs-duration-btn {
+      flex: 1;
+      min-width: 80px;
+      padding: 0.85rem 0.5rem;
+      border: 1px solid rgba(212,175,55,0.25);
+      border-radius: 14px;
+      background: rgba(212,175,55,0.03);
+      color: rgba(212,175,55,0.7);
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: center;
+    }
+    .obs-duration-btn:hover {
+      background: rgba(212,175,55,0.08);
+      border-color: rgba(212,175,55,0.5);
+      transform: translateY(-2px);
+    }
+    .obs-duration-btn.active {
+      background: rgba(212,175,55,0.14);
+      border-color: rgba(212,175,55,0.7);
+      color: #d4af37;
+      box-shadow: 0 6px 20px rgba(212,175,55,0.12);
+    }
+    .obs-duration-btn .obs-days {
+      display: block;
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: #d4af37;
+      margin-bottom: 3px;
+    }
+    .obs-email-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+    .obs-email-input {
+      flex: 1;
+      padding: 0.85rem 1.2rem;
+      border-radius: 50px;
+      border: 1px solid rgba(212,175,55,0.3);
+      background: rgba(5,20,40,0.7);
+      color: #f5e7a1;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .obs-email-input:focus {
+      border-color: rgba(212,175,55,0.7);
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.08);
+    }
+    .obs-submit-btn {
+      padding: 0.85rem 1.5rem;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37);
+      background-size: 200%;
+      color: #051428;
+      font-family: 'Cinzel', serif;
+      font-size: 0.78rem;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      white-space: nowrap;
+      letter-spacing: 0.04em;
+      transition: background-position 0.4s, transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 6px 18px rgba(212,175,55,0.18);
+    }
+    .obs-submit-btn:hover {
+      background-position: right center;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 26px rgba(212,175,55,0.28);
+    }
+    .obs-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+    .obs-success {
+      display: none;
+      text-align: center;
+      padding: 1.5rem 0 0.5rem;
+    }
+    .obs-success-icon {
+      font-size: 2.2rem;
+      margin-bottom: 0.75rem;
+      color: #d4af37;
+      animation: obsGlow 2s ease-in-out infinite;
+    }
+    @keyframes obsGlow {
+      0%, 100% { opacity: 0.7; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+    .obs-success p { color: rgba(212,175,55,0.85); font-size: 0.9rem; line-height: 1.7; margin: 0; }
+    .obs-error { color: #e07070; font-size: 0.8rem; margin-top: 0.5rem; display: none; }
+    @media (max-width: 640px) {
+      .obs-window-wrap { padding: 1.75rem 1.35rem; }
+      .obs-email-row { flex-direction: column; }
+      .obs-submit-btn { width: 100%; }
+    }
+  </style>
+</head>
+
+<body class="relative">
+  <!-- Scroll to top button -->
+  <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 pointer-events-none transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up text-sm"></i>
+  </button>
+
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+<!-- Hero Section -->
+<section class="hero-section relative overflow-hidden">
+    <!-- Voile pour lisibilité -->
+    <div class="hero-overlay"></div>
+    
+    <!-- Particules animées -->
+    <div class="absolute inset-0 opacity-20">
+        <div class="absolute top-10 left-10 w-2 h-2 bg-gold rounded-full animate-pulse"></div>
+        <div class="absolute top-20 right-20 w-3 h-3 bg-gold rounded-full animate-pulse" style="animation-delay: 0.5s"></div>
+        <div class="absolute bottom-20 left-1/4 w-2 h-2 bg-gold rounded-full animate-pulse" style="animation-delay: 1s"></div>
+        <div class="absolute bottom-10 right-1/3 w-3 h-3 bg-gold rounded-full animate-pulse" style="animation-delay: 1.5s"></div>
+    </div>
+    
+    <!-- Contenu texte -->
+    <div class="relative z-10 w-full px-4 sm:px-6 pb-12 sm:pb-16 md:pb-24 pt-8">
+        <div class="max-w-5xl mx-auto text-center">
+            <!-- H1 -->
+            <h1 class="font-cinzel text-4xl sm:text-5xl md:text-6xl font-bold gold-gradient mb-4 leading-tight animate-fade-in-up" style="animation-delay: 0.2s">
+                Your Guidance
+            </h1>
+            
+            <!-- Sous-titre -->
+            <p class="font-cormorant text-xl sm:text-2xl md:text-3xl mb-8 leading-relaxed drop-shadow-lg animate-fade-in-up" style="animation-delay: 0.4s; color: #f5e7a1;">
+                The Oracle's messages for you
+            </p>
+            
+            <!-- Séparateur doré -->
+            <div class="w-32 h-1 bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mb-8 animate-fade-in-up" style="animation-delay: 0.6s"></div>
+            
+            <!-- Intention Card - Plus impactante -->
+            <div class="max-w-3xl mx-auto mb-10 animate-fade-in-up" style="animation-delay: 0.8s">
+                <div class="bg-gradient-to-br from-gold/20 via-gold/10 to-transparent border-2 border-gold/40 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-center mb-4">
+                            <i class="fas fa-compass text-gold text-3xl mr-4"></i>
+                            <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-gold">Your Intention</h2>
+                        </div>
+                        <div class="w-24 h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto mb-6"></div>
+                        <p id="userIntention" class="text-xl md:text-2xl italic leading-relaxed text-light-gold font-lora"></p>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </div>
+</section>
+
+<!-- Section Analyse -->
+<section class="analysis-section py-16 px-4 sm:px-6 lg:px-8 relative">
+    <!-- Background pattern -->
+    <div class="analysis-overlay"></div>
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-6xl relative z-10">
+        <!-- Cartes tirées -->
+        <div class="mb-16">
+            <div class="text-center mb-10 fade-in-up">
+                <h2 class="section-title mb-2" id="cardsSectionTitle">Your Draw</h2>
+                <div class="gold-divider"></div>
+            </div>
+            <div id="cardsDisplay" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
+                <!-- Les cartes seront insérées ici dynamiquement -->
+            </div>
+        </div>
+        
+        <!-- Analyse -->
+        <div class="mb-10">
+            <div class="text-center mb-10 fade-in-up">
+                <h2 class="section-title mb-2">Your Analysis</h2>
+                <div class="gold-divider"></div>
+            </div>
+            <div id="analysisContent" style="text-align: justify; text-justify: inter-word;">
+                <!-- Le contenu sera généré dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Résonance immédiate : note à chaud, distincte de l'étude des synchronicités
+             (qui elle se mesure dans les jours suivants via le questionnaire post-fenêtre). -->
+        <div id="resonance-block" class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:28px 24px;background:rgba(5,20,40,0.55);border:1px solid rgba(212,175,55,0.25);border-radius:18px;">
+            <div id="resonance-form">
+                <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 6px;">Does this reading resonate with you?</p>
+                <p style="color:rgba(212,175,55,0.55);font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;margin:0 0 20px;">From 1 (not at all) to 10 (completely).</p>
+                <div style="display:flex;align-items:center;gap:14px;max-width:380px;margin:0 auto 8px;">
+                    <span style="color:rgba(212,175,55,0.4);font-family:Georgia,serif;font-size:12px;">1</span>
+                    <input id="resonance-slider" type="range" min="1" max="10" value="7" step="1"
+                        style="flex:1;accent-color:#d4af37;height:6px;cursor:pointer;">
+                    <span style="color:rgba(212,175,55,0.4);font-family:Georgia,serif;font-size:12px;">10</span>
+                </div>
+                <p style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:34px;font-weight:700;margin:8px 0 18px;" id="resonance-value">7</p>
+                <button id="resonance-submit-btn" onclick="submitResonanceImmediate()"
+                    style="background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:50px;padding:11px 32px;font-family:Georgia,serif;font-size:13.5px;font-weight:700;cursor:pointer;letter-spacing:0.03em;">
+                    Send my rating
+                </button>
+            </div>
+            <div id="resonance-success" style="display:none;">
+                <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:600;margin:0;">
+                    <i class="fas fa-check-circle" style="margin-right:6px;"></i>Thank you, your response has been recorded.
+                </p>
+            </div>
+        </div>
+
+        <!-- Pastille "N tirages gratuits restants" — Palier 3 #19
+             Affichée quand remaining >= 2, pour que l'utilisateur sache combien
+             de tirages gratuits il lui reste sans attendre d'en être au dernier. -->
+        <div id="tore-free-remaining" class="mb-6 fade-in-up" style="display:none;text-align:center;animation-delay:0.05s">
+          <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(10,25,47,0.8);border:1px solid rgba(212,175,55,0.3);border-radius:50px;padding:8px 18px;">
+            <i class="fas fa-gift" style="color:rgba(212,175,55,0.75);font-size:13px;"></i>
+            <span id="tore-free-remaining-text" style="color:rgba(245,231,161,0.85);font-family:'Lora',Georgia,serif;font-size:13px;letter-spacing:0.02em;"></span>
+          </span>
+        </div>
+
+        <!-- Bandeau "1 tirage restant" — affiché AVANT les boutons pour visibilité maximale -->
+        <div id="tore-conv-last" class="mb-8 fade-in-up" style="display:none; animation-delay:0.1s">
+            <div class="relative overflow-hidden rounded-2xl" style="background:linear-gradient(135deg,rgba(5,20,40,0.95),rgba(10,25,47,0.95));border:1px solid rgba(212,175,55,0.25)">
+              <div class="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(212,175,55,0.07) 0%,transparent 70%)"></div>
+              <div class="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-5">
+                <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25)">
+                  <i class="fas fa-hourglass-half text-gold text-lg"></i>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                  <p class="font-cinzel font-bold text-xs mb-1" style="color:rgba(212,175,55,0.7);letter-spacing:0.08em">YOU HAVE 1 FREE DRAW LEFT</p>
+                  <h4 class="font-cormorant font-bold text-xl md:text-2xl mb-0.5" style="color:#f5e7a1">Keep going without interruption with the Torus subscription</h4>
+                  <p class="font-lora text-sm" style="color:rgba(245,231,161,0.5)">€8 / month · Full access to the experience · Cancel anytime</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <a href="/tore-abonnement.html?discount=email24h" class="inline-flex items-center gap-2 font-bold rounded-full px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg whitespace-nowrap" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:0.05em;box-shadow:0 4px 16px rgba(212,175,55,0.2)">
+                    <i class="fas fa-moon text-sm"></i>
+                    Discover the subscription
+                  </a>
+                </div>
+              </div>
+            </div>
+        </div>
+
+        <!-- Boutons d'action après la synthèse -->
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-16 fade-in-up">
+            <a id="btn-nouveau-tirage" href="/en/tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 text-center flex items-center justify-center gap-3 hover:scale-105 touch-target font-cinzel">
+                <i class="fas fa-redo"></i>
+                <span>New Draw</span>
+            </a>
+            <button id="mainEmailBtn" onclick="sendAnalysisByEmail(this)" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                <i class="fas fa-envelope"></i>
+                <span class="text-sm sm:text-base">Receive the full analysis by email</span>
+            </button>
+        </div>
+
+        <!-- Parrainage : offrir un tirage à un proche -->
+        <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="position:relative;overflow:hidden;padding:44px 24px 28px;background:linear-gradient(160deg,rgba(10,25,47,0.85),rgba(5,20,40,0.6));border:1px solid rgba(212,175,55,0.28);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+            <!-- lueur décorative -->
+            <div aria-hidden="true" style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(240,199,94,0.18),transparent 70%);pointer-events:none;"></div>
+
+            <!-- badge cadeau -->
+            <div style="position:relative;width:78px;height:78px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle,rgba(240,199,94,0.16),rgba(212,175,55,0.04));border:1px solid rgba(212,175,55,0.3);box-shadow:0 0 26px rgba(240,199,94,0.15);">
+                <svg width="44" height="44" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="oradiaGiftGrad" x1="12" y1="20" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#f6d783"/>
+                            <stop offset="1" stop-color="#c9982e"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="14" y="30" width="36" height="22" rx="3" fill="url(#oradiaGiftGrad)"/>
+                    <rect x="10" y="24" width="44" height="9" rx="2.5" fill="#f6d783"/>
+                    <rect x="29" y="24" width="6" height="28" fill="#051428" opacity="0.5"/>
+                    <path d="M32 24 C 22 24 15 13 22 11 C 29 9 32 20 32 24 Z" fill="url(#oradiaGiftGrad)"/>
+                    <path d="M32 24 C 42 24 49 13 42 11 C 35 9 32 20 32 24 Z" fill="url(#oradiaGiftGrad)"/>
+                    <circle cx="32" cy="23" r="3.4" fill="#c9982e"/>
+                </svg>
+            </div>
+
+            <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:700;letter-spacing:0.3px;margin:0 0 8px;">Give a draw to someone close to you</p>
+            <p style="color:rgba(212,175,55,0.65);font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;line-height:1.6;margin:0 auto 16px;max-width:340px;">Share your link. Whoever uses it gets a free draw — and so do you.</p>
+
+            <!-- réciprocité -->
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.22);border-radius:999px;padding:5px 12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;font-weight:600;"><i class="fas fa-gift" style="color:#f0c75e;font-size:11px;"></i> +1 for them</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.22);border-radius:999px;padding:5px 12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;font-weight:600;"><i class="fas fa-star" style="color:#f0c75e;font-size:11px;"></i> +1 for you</span>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
+                <input id="referral-link-input" type="text" readonly
+                    style="flex:1 1 180px;min-width:0;width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:11px 12px;outline:none;box-sizing:border-box;text-align:center;">
+                <button id="referral-copy-btn"
+                    style="flex:1 1 auto;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;transition:transform 0.15s;box-shadow:0 3px 12px rgba(212,175,55,0.25);" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-copy" style="margin-right:6px;font-size:12px;"></i>Copy
+                </button>
+                <button id="referral-share-btn" style="display:none;flex:1 1 auto;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;">
+                    <i class="fas fa-share-nodes" style="margin-right:6px;font-size:12px;"></i>Share
+                </button>
+            </div>
+        </div>
+
+        <!-- Lien vers les études (synchronicités + rétrocausalité) -->
+        <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:20px 20px;">
+            <p style="color:rgba(212,175,55,0.7);font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.7;margin:0 0 12px;">Curious what others observe in the days following a draw, or whether the past and future have a link to it?</p>
+            <a href="/etudes.html" style="display:inline-flex;align-items:center;gap:8px;color:#d4af37;text-decoration:none;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:600;border-bottom:1px solid rgba(212,175,55,0.35);padding-bottom:2px;">
+                Discover the studies <i class="fas fa-arrow-right" style="font-size:12px;"></i>
+            </a>
+        </div>
+
+        <!-- Bloc conversion Tore "tirages épuisés" — affiché dynamiquement -->
+        <div id="tore-conversion-block" class="mb-16 fade-in-up" style="display:none; animation-delay:0.15s">
+
+          <!-- ── Version : tirages épuisés ── -->
+          <div id="tore-conv-empty" style="display:none">
+            <div class="relative overflow-hidden rounded-3xl">
+              <!-- Fond et lumières -->
+              <div class="absolute inset-0" style="background:linear-gradient(135deg,rgba(5,20,40,0.97) 0%,rgba(10,25,47,0.97) 100%)"></div>
+              <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)"></div>
+              <div class="absolute bottom-0 right-1/4 w-64 h-64 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(120,80,200,0.08) 0%,transparent 70%)"></div>
+
+              <div class="relative z-10 border border-gold/30 rounded-3xl p-8 md:p-12" style="backdrop-filter:blur(8px)">
+
+                <!-- Icône et titre -->
+                <div class="text-center mb-8">
+                  <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.4)">
+                    <i class="fas fa-infinity text-gold text-2xl"></i>
+                  </div>
+                  <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 text-xs font-bold tracking-widest" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-family:'Cinzel',serif">
+                    YOUR FREE DRAWS ARE USED UP
+                  </div>
+                  <h3 class="font-cormorant text-3xl md:text-4xl font-bold mb-3 leading-tight" style="background:linear-gradient(135deg,#d4af37,#f5e7a1,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+                    This draw touched you.<br>The guidance continues.
+                  </h3>
+                  <p class="font-lora text-base md:text-lg leading-relaxed max-w-xl mx-auto" style="color:rgba(245,231,161,0.75)">
+                    To come back to the Oracle whenever you need it, choose what suits you.
+                  </p>
+                </div>
+
+                <!-- Séparateur doré -->
+                <div class="w-24 h-px mx-auto mb-8" style="background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)"></div>
+
+                <!-- Deux offres côte à côte -->
+                <div class="max-w-sm mx-auto mb-6">
+
+                  <!-- Offre Abonnement -->
+                  <div class="relative overflow-hidden rounded-2xl flex flex-col" style="background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.45)">
+                    <!-- Badge populaire -->
+                    <div class="absolute top-0 inset-x-0 flex justify-center">
+                      <span class="rounded-b-xl px-4 py-1 text-xs font-bold tracking-wider" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif">RECOMMENDED</span>
+                    </div>
+                    <div class="pt-8 p-6 flex flex-col flex-1 text-center">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3)">
+                        <i class="fas fa-moon text-gold text-lg"></i>
+                      </div>
+                      <p class="font-cinzel font-bold text-gold text-sm mb-1 tracking-wide">TORUS SUBSCRIPTION</p>
+                      <div class="flex items-baseline justify-center gap-1 mb-3">
+                        <span class="font-cormorant font-bold text-4xl" style="color:#f5e7a1">8</span>
+                        <span class="text-gold font-semibold text-lg">€</span>
+                        <span class="text-xs ml-1" style="color:rgba(245,231,161,0.5)">/month</span>
+                      </div>
+                      <ul class="text-left space-y-2 mb-5 flex-1">
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.8)"><i class="fas fa-check-circle text-gold text-xs flex-shrink-0"></i>Full access to the experience every month</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.8)"><i class="fas fa-check-circle text-gold text-xs flex-shrink-0"></i>Personalized AI analysis</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.8)"><i class="fas fa-check-circle text-gold text-xs flex-shrink-0"></i>Active observation window</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.5)"><i class="fas fa-check-circle text-xs flex-shrink-0" style="color:rgba(212,175,55,0.4)"></i>Cancel anytime</li>
+                      </ul>
+                      <a href="/tore-abonnement.html?discount=email24h" class="block w-full text-center font-bold rounded-full py-3 transition-all duration-300 hover:shadow-lg hover:scale-105" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(212,175,55,0.25)">
+                        Start the subscription →
+                      </a>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Note discrète -->
+                <p class="text-center text-xs" style="color:rgba(245,231,161,0.3);font-family:'Lora',serif;font-style:italic">
+                  Secure payment via Stripe · Your data stays private
+                </p>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- /Bloc conversion Tore -->
+
+        <!-- Message de conversion - Oracle Physique - VERSION PREMIUM -->
+        <div class="mb-16 fade-in-up" style="animation-delay: 0.3s">
+            <div class="relative overflow-hidden rounded-3xl">
+                <!-- Background avec dégradé premium -->
+                <div class="absolute inset-0 bg-gradient-to-br from-gold/20 via-gold/10 to-purple-500/10"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent animate-shimmer"></div>
+                
+                <!-- Cercles décoratifs -->
+                <div class="absolute top-0 left-0 w-64 h-64 bg-gold/10 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+                
+                <div class="relative z-10 border-2 border-gold/40 rounded-3xl p-8 md:p-16 backdrop-blur-sm">
+                    <!-- Badge Premium -->
+                    <div class="inline-flex items-center gap-2 bg-gold/30 border border-gold/50 rounded-full px-4 py-2 mb-6">
+                        <i class="fas fa-star text-gold"></i>
+                        <span class="text-gold font-bold text-sm">THE COMPLETE EXPERIENCE</span>
+                    </div>
+                    
+                    <h3 class="cormorant text-4xl md:text-5xl lg:text-6xl font-bold text-gold mb-6 leading-tight">
+                        Did this guidance touch you?
+                    </h3>
+                    
+                    <p class="text-xl md:text-2xl text-light-gold mb-8 max-w-3xl mx-auto leading-relaxed font-lora">
+                        Imagine holding the physical Oradia Oracle in your hands. 
+                        <span class="text-gold font-semibold">64 cards</span>, 
+                        a transformation tool to use whenever you need it, 
+                        <span class="text-gold font-semibold">without limit</span>.
+                    </p>
+                    
+                    <!-- Aperçu visuel -->
+                    <div class="mb-10 max-w-sm mx-auto">
+                        <img src="/images/medias/apercu_stripe.webp"
+                             alt="Preview of the Oradia Oracle"
+                             class="w-full rounded-2xl shadow-2xl shadow-gold/20 border border-gold/20 hover:scale-[1.02] transition-transform duration-500">
+                    </div>
+                    
+                    <!-- CTA Principal -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                        <a href="/precommande-oracle.html" class="bg-gradient-to-r from-gold via-light-gold to-gold text-night-blue font-bold py-5 px-10 md:px-12 rounded-full hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center gap-3 hover:scale-110 text-lg group relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-light-gold to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <i class="fas fa-box-open text-2xl relative z-10"></i>
+                            <span class="relative z-10">Preorder the Physical Oracle</span>
+                        </a>
+                        
+                    </div>
+                    
+                    <!-- Témoignage / Social Proof -->
+                    <div class="max-w-2xl mx-auto bg-gold/5 border border-gold/20 rounded-xl p-6 mb-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-quote-left text-gold"></i>
+                            <span class="text-gold font-semibold text-sm">What users say</span>
+                        </div>
+                        <p class="text-light-gold/90 italic text-sm leading-relaxed">
+                            "The Oradia Oracle accompanies me in my moments of doubt. The draws resonate
+                            with an accuracy that surprises me every time, it has become my appointment with myself."
+                        </p>
+                    </div>
+                    
+                    <div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Invitation consultation personnelle -->
+        <div class="pro-offer mb-16 fade-in-up">
+            <div class="analysis-card overflow-hidden" style="padding:0;">
+                <div class="flex flex-col md:flex-row">
+
+                    <!-- Photo -->
+                    <div class="flex-shrink-0 flex items-center justify-center p-6 md:p-8">
+                        <img src="/images/medias/photo_a_propos.webp"
+                             alt="Rudy — Oracle Oradia"
+                             style="width:180px; height:auto; display:block; border-radius:12px;">
+                    </div>
+
+                    <!-- Texte personnel -->
+                    <div class="md:w-3/5 p-8 md:p-10 flex flex-col justify-center">
+
+                        <p style="font-family:'Cinzel',serif; font-size:0.7rem; font-weight:700; color:#d4af37; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;">
+                            <i class="fas fa-hand-holding-heart" style="margin-right:6px;"></i>A word from me
+                        </p>
+
+                        <h2 class="cormorant text-2xl sm:text-3xl font-bold gold-gradient mb-5 leading-tight">
+                            What the cards revealed deserves to be explored further.
+                        </h2>
+
+                        <p style="color:#c8c0a8; font-size:0.95rem; line-height:1.8; margin-bottom:1rem; font-family:'Lora',serif; font-style:italic;">
+                            "This draw is only a first glimpse. If something resonated with you, a card, a sentence, a silence, I would be sincerely glad to go further with you."
+                        </p>
+
+                        <p style="color:#e9e7df; font-size:0.9rem; line-height:1.75; margin-bottom:1.8rem;">
+                            In a consultation, I take the time to read your draw with you, 
+                            to understand what brought you here, and to offer you concrete keys 
+                            to move forward. This isn't a generic session, it's a genuine conversation, 
+                            at your own pace.
+                        </p>
+
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:1.8rem;">
+                            <a href="/guidance" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0.9rem 1.2rem; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:12px; text-decoration:none; transition:background 0.2s, border-color 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.12)';this.style.borderColor='rgba(212,175,55,0.5)'" onmouseout="this.style.background='rgba(212,175,55,0.06)';this.style.borderColor='rgba(212,175,55,0.25)'">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <i class="fas fa-clock" style="color:#d4af37; font-size:1.1rem; flex-shrink:0;"></i>
+                                    <div>
+                                        <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; margin:0 0 2px;">30 minutes · Video call</p>
+                                        <p style="color:rgba(212,175,55,0.55); font-size:0.75rem; margin:0; font-family:Georgia,serif;">€30</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color:rgba(212,175,55,0.5); font-size:0.8rem;"></i>
+                            </a>
+                            <a href="/guidance" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0.9rem 1.2rem; background:rgba(212,175,55,0.04); border:1px solid rgba(212,175,55,0.18); border-radius:12px; text-decoration:none; transition:background 0.2s, border-color 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)';this.style.borderColor='rgba(212,175,55,0.4)'" onmouseout="this.style.background='rgba(212,175,55,0.04)';this.style.borderColor='rgba(212,175,55,0.18)'">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <i class="fas fa-clock" style="color:#d4af37; font-size:1.1rem; flex-shrink:0;"></i>
+                                    <div>
+                                        <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; margin:0 0 2px;">1 hour · Video call</p>
+                                        <p style="color:rgba(212,175,55,0.55); font-size:0.75rem; margin:0; font-family:Georgia,serif;">€60</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color:rgba(212,175,55,0.5); font-size:0.8rem;"></i>
+                            </a>
+                        </div>
+
+                        <a href="/guidance"
+                           style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a1224;padding:0.7rem 1.5rem;border-radius:9999px;font-family:'Cinzel',serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-decoration:none;transition:opacity 0.2s, transform 0.2s;"
+                           onmouseover="this.style.opacity='0.88';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">
+                            <i class="fas fa-video"></i>
+                            Book a guidance session
+                        </a>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<div id="footer-placeholder"></div>
+
+<!-- Scripts -->
+<script>
+    // Système d'analyse intelligent
+    class ToreAnalyzer {
+            constructor() {
+                this.cardMeanings = {
+                    emotions: {
+                        joie: "La joie qui vous anime est le signe que vous êtes aligné avec votre véritable nature. C'est une énergie pure qui vous guide vers les bonnes décisions.",
+                        tristesse: "Votre tristesse est un messager précieux qui vous invite à accueillir vos émotions pour les transformer. Elle contient la sagesse de votre cœur.",
+                        colere: "Votre colère est une force de transformation qui vous pousse à poser vos limites et à réclamer ce qui est juste pour vous.",
+                        peur: "Votre peur vous protège et vous invite à développer votre courage. Elle est le gardien de votre croissance personnelle.",
+                        surprise: "La surprise dans votre vie ouvre des portes inattendues et vous invite à accueillir l'inattendu avec confiance.",
+                        degout: "Votre dégoût vous signale ce qui n'est plus aligné avec votre vérité, vous invitant à faire le ménage dans votre vie.",
+                        fierte: "Votre fierté est le reflet de vos accomplissements et de votre valeur personnelle. Elle vous rappelle votre force intérieure.",
+                        honte: "Votre honte est une invitation à la compassion envers vous-même et à l'intégration de toutes vos parts.",
+                        confusion: "La confusion que vous traversez n'est pas un échec. C'est souvent le signe qu'un ancien cadre se défait pour laisser place à quelque chose de plus juste.",
+                        desespoir: "Votre désespoir touche quelque chose de profond. Il vous invite à ne plus porter seul ce poids et à chercher un soutien véritable.",
+                        enthousiasme: "L'enthousiasme qui vous anime est un signal clair : vous êtes sur le bon chemin. Faites confiance à cet élan.",
+                        gratitude: "La gratitude que vous portez ouvre les portes de l'abondance. Ce que vous reconnaissez comme précieux se multiplie.",
+                        solitude: "La solitude ressentie est une invitation à aller à la rencontre de vous-même, avant d'aller vers les autres.",
+                        esperance: "L'espérance que vous portez est une force réelle. Elle vous maintient en mouvement même dans les moments difficiles."
+                    },
+                    besoins: {
+                        reconnaissance: "Le besoin de reconnaissance révèle votre désir d'être vu et valorisé pour qui vous êtes vraiment.",
+                        securite: "Le besoin de sécurité vous invite à construire des fondations solides dans votre vie, tant matérielles qu'émotionnelles.",
+                        amour: "Le besoin d'amour est le moteur le plus profond de votre existence, vous connectant à votre essence même.",
+                        liberte: "Le besoin de liberté vous pousse à vous affranchir des limitations et à exprimer votre authenticité.",
+                        croissance: "Le besoin de croissance est l'élan de votre âme qui cherche constamment à évoluer et à s'épanouir.",
+                        appartenance: "Le besoin d'appartenance vous connecte aux autres et vous rappelle que vous n'êtes jamais seul.",
+                        expression: "Le besoin d'expression vous invite à partager votre vérité unique avec le monde.",
+                        paix: "Le besoin de paix vous guide vers l'harmonie intérieure et la sérénité de l'esprit.",
+                        clarte: "Le besoin de clarté qui se manifeste vous dit que vous êtes prêt à voir les choses telles qu'elles sont vraiment, sans filtre.",
+                        connexion: "Votre besoin de connexion authentique est légitime. Cherchez les liens qui vous nourrissent vraiment.",
+                        sens: "Le besoin de sens est au cœur de ce que vous traversez. Il vous pousse à aller au-delà des apparences.",
+                        respect: "Le besoin de respect, envers vous-même et envers les autres, se rappelle à vous. Honorez ce que vous valez."
+                    },
+                    transmutation: {
+                        transformation: "La transformation est en cours dans votre vie. Ce qui doit changer se révèle clairement maintenant.",
+                        liberation: "La libération s'opère. Vous vous libérez d'anciens schémas pour accueillir le nouveau.",
+                        alchimie: "L'alchimie intérieure transforme vos expériences en sagesse et vos épreuves en force.",
+                        renaissance: "La renaissance vous invite à laisser mourir l'ancien pour accueillir une version nouvelle de vous-même.",
+                        evolution: "L'évolution est votre chemin naturel. Chaque étape vous rapproche de votre véritable essence.",
+                        metamorphose: "La métamorphose vous transforme en profondeur, modifiant votre perception et votre réalité.",
+                        transfiguration: "La transfiguration vous élève vers un état de conscience supérieur, illuminant votre chemin.",
+                        actualisation: "L'actualisation vous permet de concrétiser vos potentiels et de manifester vos rêves.",
+                        acceptation: "L'acceptation n'est pas la résignation. C'est la porte d'entrée vers un changement véritable et durable.",
+                        lacherprise: "Le lâcher-prise que cette carte évoque n'est pas une perte. C'est une libération qui crée de l'espace pour ce qui vient.",
+                        integration: "L'intégration de vos expériences passées est en cours. Ce que vous avez vécu devient une ressource.",
+                        renouveau: "Un renouveau profond s'amorce. Faites confiance au cycle qui se met en place."
+                    },
+                    memoire_cosmos: {
+                        sagesse_ancienne: "La sagesse ancienne se réveille en vous, connectant votre conscience à la mémoire collective.",
+                        heritage: "Votre héritage personnel riche se manifeste, vous rappelant vos racines profondes.",
+                        intuition: "Votre intuition s'éveille, vous guidant avec précision sur votre chemin de vie.",
+                        guidance: "La guidance intérieure vous accompagne, vous montrant la voie même dans l'obscurité.",
+                        protection: "La protection naturelle vous entoure, vous gardant dans votre évolution personnelle.",
+                        grace: "La grâce circule dans votre vie, apportant des synchronicités et des rencontres signifiantes.",
+                        illumination: "La clarté progressive éclaire votre compréhension et élargit votre conscience.",
+                        harmonie: "L'harmonie s'installe en vous, alignant toutes les parties de votre être.",
+                        tissage_cosmique: "Cette carte évoque le fil invisible qui relie tous les événements de votre vie. Rien n'est isolé, tout se tisse.",
+                        memoire: "Votre mémoire profonde, celle de l'âme, se réveille. Elle porte des réponses que votre mental n'a pas encore trouvées.",
+                        ancrage: "L'ancrage est le fondement de tout mouvement juste. Plus vous êtes enraciné, plus vous pouvez vous élever.",
+                        ouverture: "Une ouverture intérieure se produit. Restez disponible à ce qui cherche à entrer dans votre vie."
+                    },
+                    revelation: {
+                        recevoir: "Recevoir, vraiment recevoir, est un acte courageux. Cette carte vous invite à cesser de refuser ce qui vous est offert.",
+                        voir: "La capacité à voir clairement se développe en vous. Ce que vous n'osiez pas regarder en face devient maintenant accessible.",
+                        comprendre: "Une compréhension plus profonde émerge. Les pièces du puzzle commencent à s'assembler.",
+                        reconnaitre: "Reconnaître ce qui est vrai pour vous est un acte de courage. Cette carte vous y invite.",
+                        observer: "L'observation sans jugement est une forme de sagesse. Regardez ce qui est, sans vouloir le changer immédiatement."
+                    },
+                    archetypes: {
+                        le_voyageur: "Le Voyageur en vous est en route vers quelque chose de nouveau. Ce déplacement est nécessaire, même si la destination n'est pas encore claire.",
+                        le_guerisseur: "Le Guérisseur se réveille, en vous d'abord. La guérison que vous cherchez commence par vous accorder de la bienveillance.",
+                        le_gardien: "Le Gardien vous rappelle vos responsabilités envers ce qui vous est confié. Protégez ce qui a de la valeur pour vous.",
+                        le_createur: "Le Créateur en vous réclame de l'espace. Donnez vie à ce qui sommeille en vous depuis trop longtemps.",
+                        le_sage: "Le Sage vous invite à prendre du recul. La réponse que vous cherchez nécessite de la distance et de la perspective.",
+                        le_guide: "Le Guide intérieur se manifeste. Faites confiance à ce que vous savez déjà, même si vous ne l'avez pas encore formulé."
+                    },
+                    portail: {
+                        porte: "Une porte se présente à vous. Elle représente un passage entre ce que vous étiez et ce que vous devenez. Serez-vous prêt à franchir ce seuil ?",
+                        seuil: "Vous êtes au seuil d'un nouveau chapitre. Ce passage peut être inconfortable, mais il est nécessaire à votre évolution.",
+                        passage: "Le passage que vous traversez est temporaire. Gardez foi : il y a une sortie, et elle mène vers quelque chose de meilleur."
+                    },
+                    // Cartes passerelles (lignes mutantes du Yi King)
+                    bridge_cards: {
+                        patienter: "Ligne mutante : Le temps de l'attente fertile. La patience n'est pas passive, mais une préparation active à la transformation imminente.",
+                        reconcilier: "Ligne mutante : La réconciliation des opposés. Ce qui semblait séparé trouve maintenant son unité dans une compréhension supérieure.",
+                        lacher: "Ligne mutante : Le lâcher-prise. Vous êtes invité à vous détacher de l'ancien pour accueillir le nouveau avec confiance.",
+                        accueillir: "Ligne mutante : L'accueil de l'inattendu. Ce qui arrive n'est pas hasard, mais une réponse naturelle à votre intention.",
+                        ecouter: "Ligne mutante : L'écoute profonde. Au-delà des mots, vous entendez maintenant le murmure de votre sagesse intérieure.",
+                        agir: "Ligne mutante : L'action juste. Le moment est venu de passer de la contemplation à l'action alignée avec votre vérité.",
+                        choisir: "Ligne mutante : Le choix important. Votre décision actuelle façonne votre réalité future et révèle votre véritable pouvoir.",
+                        transformer: "Ligne mutante : La transmutation profonde. Les énergies se transforment à un niveau profond, changeant votre réalité fondamentale.",
+                        integrer: "Ligne mutante : L'intégration des contraires. Différentes parties de vous s'unissent pour créer une nouvelle synthèse.",
+                        creer: "Ligne mutante : La créativité personnelle. Vous devenez le canal par lequel votre potentiel se manifeste et se crée à travers vous.",
+                        guider: "Ligne mutante : La guidance intérieure. Votre sagesse intérieure prend le relais, vous guidant avec une certitude absolue.",
+                        proteger: "Ligne mutante : La protection naturelle. Vous êtes protégé non pas par l'isolement, mais par votre connexion à votre entourage.",
+                        celebrer: "Ligne mutante : La célébration de la vie. Chaque instant devient une célébration de votre existence et de votre croissance.",
+                        pardonner: "Ligne mutante : Le pardon libérateur. Le pardon n'est pas pour l'autre, mais pour vous libérer du poids du passé.",
+                        partager: "Ligne mutante : Le partage généreux. Ce que vous donnez revient multiplié, créant un cercle vertueux d'abondance.",
+                        aimer: "Ligne mutante : L'amour inconditionnel. Vous accédez à une dimension de l'amour qui transcende les conditions et les attentes."
+                    }
+                };
+                
+                this.intentionPatterns = {
+                    amour: ['joie', 'amour', 'appartenance', 'sagesse_ancienne', 'grace'],
+                    travail: ['fierte', 'croissance', 'actualisation', 'guidance', 'transformation'],
+                    sante: ['paix', 'securite', 'liberation', 'protection', 'harmonie'],
+                    famille: ['reconnaissance', 'appartenance', 'heritage', 'securite', 'amour'],
+                    personnel: ['intuition', 'illumination', 'sagesse_ancienne', 'transfiguration', 'grace'],
+                    argent: ['securite', 'actualisation', 'croissance', 'abondance', 'liberte'],
+                    relation: ['amour', 'reconnaissance', 'communication', 'harmonie', 'appartenance'],
+                    decision: ['guidance', 'intuition', 'clarte', 'courage', 'liberte']
+                };
+            }
+            
+            analyzeCards(cards, intention) {
+                const analysis = {
+                    intention: intention,
+                    cards: cards,
+                    themes: this.identifyThemes(cards, intention),
+                    message: this.generateMessage(cards, intention),
+                    advice: this.generateAdvice(cards, intention),
+                    synthesis: this.generateSynthesis(cards, intention)
+                };
+                
+                return analysis;
+            }
+            
+            identifyThemes(cards, intention) {
+                const themes = [];
+                const intentionLower = intention.toLowerCase();
+                
+                // Identifier le thème principal basé sur l'intention
+                let mainTheme = 'general';
+                for (const [theme, keywords] of Object.entries(this.intentionPatterns)) {
+                    if (keywords.some(keyword => intentionLower.includes(keyword))) {
+                        mainTheme = theme;
+                        break;
+                    }
+                }
+                
+                // Analyser chaque carte
+                cards.forEach(card => {
+                    let meaning = this.cardMeanings[card.family]?.[card.name];
+                    let isMutating = false;
+                    
+                    // Vérifier si c'est une carte avec ligne mutante (carte passerelle)
+                    if (card.bridgeCard) {
+                        const bridgeMeaning = this.cardMeanings.bridge_cards?.[card.bridgeCard.name];
+                        if (bridgeMeaning) {
+                            const cleanBridge = bridgeMeaning.replace(/^Ligne mutante\s*:\s*/i, '');
+                            meaning = (meaning || '') + ' Une invitation se dessine : ' + cleanBridge;
+                            isMutating = true;
+                        }
+                    }
+                    if (!meaning) {
+                        meaning = 'This card brings an energy of transformation and awakening to your draw.';
+                    }
+                    
+                    if (meaning) {
+                        themes.push({
+                            card: card,
+                            meaning: meaning,
+                            relevance: this.calculateRelevance(card, mainTheme),
+                            isMutating: isMutating,
+                            bridgeCard: card.bridgeCard
+                        });
+                    }
+                });
+                
+                return themes.sort((a, b) => b.relevance - a.relevance);
+            }
+            
+            calculateRelevance(card, theme) {
+                const intentionKeywords = this.intentionPatterns[theme] || [];
+                const cardName = card.name.toLowerCase();
+                const cardFamily = card.family;
+                
+                let relevance = 1;
+                
+                // Points de pertinence basés sur les mots-clés
+                intentionKeywords.forEach(keyword => {
+                    if (cardName.includes(keyword)) relevance += 2;
+                });
+                
+                // Points bonus selon la famille
+                const familyBonus = {
+                    emotions: theme === 'amour' || theme === 'relation' ? 2 : 1,
+                    besoins: theme === 'travail' || theme === 'famille' ? 2 : 1,
+                    transmutation: theme === 'sante' || theme === 'personnel' ? 2 : 1,
+                    memoire_cosmos: theme === 'personnel' || theme === 'decision' ? 2 : 1
+                };
+                
+                relevance += familyBonus[cardFamily] || 0;
+                
+                return relevance;
+            }
+            
+            // Utilitaire : seed pseudo-aléatoire basé sur les cartes tirées
+            _seed(cards) {
+                return cards.reduce((acc, c) => acc + (c.name || '').split('').reduce((s, ch) => s + ch.charCodeAt(0), 0), 0);
+            }
+            _pick(arr, seed, offset = 0) {
+                return arr[(seed + offset) % arr.length];
+            }
+
+            generateMessage(cards, intention) {
+                const themes = this.identifyThemes(cards, intention);
+                const mainCards = themes.slice(0, 3);
+                const seed = this._seed(cards);
+
+                const intros = [
+                    `This draw answers your intention: "${intention}". The cards chose to speak to you clearly. `,
+                    `Your intention "${intention}" guided the cards that presented themselves to you. Here is what they reveal. `,
+                    `By holding the intention "${intention}", you called these energies. They have something important to tell you. `,
+                    `The cards heard your intention: "${intention}". What they show you deserves your attention. `
+                ];
+                let message = this._pick(intros, seed);
+
+                const mutatingCards = themes.filter(theme => theme.isMutating);
+                const hasMutatingLines = mutatingCards.length > 0;
+
+                const familyNames = { emotions: 'Emotion', besoins: 'Need', transmutation: 'Transmutation', memoire_cosmos: 'Cosmic Memory', revelation: 'Revelation', portail: 'Portal', archetypes: 'Archetypes', actions: 'Actions' };
+                const cardIntroTemplates = [
+                    (name, family, meaning) => `The "${name}" card (${family}) tells you: ${meaning}. `,
+                    (name, family, meaning) => `"${name}" (${family}) brings this message: ${meaning}. `,
+                    (name, family, meaning) => `In the ${family} register, the "${name}" card sheds light on your situation: ${meaning}. `
+                ];
+                const bridgeTemplates = [
+                    (name, family, bridge) => `The "${name}" card (${family}) is in motion. Its bridge "${bridge}" announces a transformation underway. `,
+                    (name, family, bridge) => `"${name}" (${family}) is transforming. The bridge "${bridge}" signals that something is changing deeply. `
+                ];
+
+                const FALLBACK = "this card brings an energy of transformation and awakening to your draw";
+                // Limiter à 2 cartes les plus pertinentes pour ne pas surcharger
+                mainCards.slice(0, 2).forEach((theme, i) => {
+                    const cardName = theme.card.name.replace(/_/g, ' ');
+                    const familyLabel = familyNames[theme.card.family] || theme.card.family;
+                    if (theme.isMutating) {
+                        const bridgeName = theme.bridgeCard.name.replace(/_/g, ' ');
+                        const tpl = this._pick(bridgeTemplates, seed, i + 2);
+                        message += tpl(cardName, familyLabel, bridgeName);
+                    } else {
+                        const shortMeaning = theme.meaning.split('.')[0].toLowerCase();
+                        if (shortMeaning.includes('energy of transformation and awakening')) return;
+                        const tpl = this._pick(cardIntroTemplates, seed, i + 2);
+                        message += tpl(cardName, familyLabel, shortMeaning);
+                    }
+                });
+
+                const closings = [
+                    "These messages converge to offer you valuable insight into what you're going through.",
+                    "Together, these cards trace a clear direction for you right now.",
+                    "It's not by chance that these cards presented themselves. They speak of you, for you.",
+                    "Let these messages resonate within you. Understanding will come at the right time."
+                ];
+                const bridgeClosings = [
+                    " The bridges present invite you not to resist the change that is taking place.",
+                    " The bridge cards remind you that clarity emerges through movement."
+                ];
+
+                message += this._pick(closings, seed, 5);
+                if (hasMutatingLines) message += this._pick(bridgeClosings, seed, 6);
+
+                return message;
+            }
+            
+            generateAdvice(cards, intention) {
+                const themes = this.identifyThemes(cards, intention);
+                const hasBridge = themes.some(t => t.isMutating);
+
+                const adviceByFamily = {
+                    emotions: [
+                        'Take the time to welcome what you feel without judgment. Your emotions are compasses, not obstacles.',
+                        'What you are living inside deserves your full attention. Listen to yourself before acting.'
+                    ],
+                    besoins: [
+                        'Identify what you truly need right now, beyond appearances. This need is legitimate.',
+                        'Nourishing your deep needs isn\'t a luxury, it\'s a necessity for moving forward with clarity.'
+                    ],
+                    transmutation: [
+                        'Something is seeking to transform within you. Resist less, let this movement unfold naturally.',
+                        'Periods of change can feel destabilizing, but they carry within them the seeds of renewal.'
+                    ],
+                    memoire_cosmos: [
+                        'Trust what you already know deep down. This inner wisdom does not mislead you.',
+                        'Step back, observe your path from a wider perspective. The answer is already within you.'
+                    ],
+                    revelation: [
+                        'A truth is seeking to reveal itself. Stay open to what could change your view of the situation.',
+                    ],
+                    archetypes: [
+                        'Observe which roles or patterns keep repeating in your life. It may be time to inhabit a new one.'
+                    ]
+                };
+
+                const adviceIntros = [
+                    `In light of your intention "${intention}", here is what this draw invites you to explore: `,
+                    `This draw, carried by your intention "${intention}", sends you these invitations: `,
+                    `To answer "${intention}", your cards suggest this: `,
+                    `Your intention "${intention}" opens up these concrete paths: `
+                ];
+                const seed = this._seed(cards);
+                const seen = new Set();
+                let advice = this._pick(adviceIntros, seed);
+
+                // Max 2 familles pour ne pas surcharger
+                themes.forEach((theme, i) => {
+                    if (seen.size >= 2) return;
+                    const family = theme.card.family;
+                    if (!seen.has(family) && adviceByFamily[family]) {
+                        const options = adviceByFamily[family];
+                        advice += this._pick(options, seed, i + 1) + ' ';
+                        seen.add(family);
+                    }
+                });
+
+                const bridgeAdvices = [
+                    'The bridge cards invite you not to force things. Let the movement unfold at its own pace.',
+                    'Wherever a bridge appears, there is an invitation to cross a threshold. Trust the passage.',
+                    'The bridges in this draw signal that you are exactly where you need to be for something to change.'
+                ];
+                if (hasBridge) advice += this._pick(bridgeAdvices, seed, 7);
+
+                return advice;
+            }
+            
+            generateSynthesis(cards, intention) {
+                const themes = this.identifyThemes(cards, intention);
+                const hasBridge = themes.some(t => t.isMutating);
+                const seed = this._seed(cards);
+                const families = [...new Set(themes.map(t => t.card.family))];
+
+                const openings = [
+                    `This draw traces an accurate, nuanced portrait of what you're living around "${intention}". `,
+                    `The cards drawn for "${intention}" form a coherent whole that speaks to you directly. `,
+                    `What this draw reveals around "${intention}" is both precise and deep. `,
+                    `Your draw around "${intention}" paints a clear picture of your present moment. `
+                ];
+
+                const middles = [
+                    'You are going through a period where several dimensions of your life are seeking to align. This is not a coincidence, it is a natural movement toward more coherence. ',
+                    'The energies present in this draw indicate that you are at a turning point. Something is quietly ending, and something else is taking shape. ',
+                    'This draw shows that you are not at a dead end, you are in a passage. The difference matters: a passage leads somewhere. ',
+                    'The cards speak of a moment of inner reconfiguration. Nothing is lost, everything transforms, and this draw reflects that. '
+                ];
+
+                const familyInsights = {
+                    emotions: [
+                        'Your emotions play a central role in what you are living: they are not background noise, they are the signal. ',
+                        'The emotional register is especially active right now. What you feel deserves to be heard, not set aside. '
+                    ],
+                    besoins: [
+                        'Your deep needs are calling for your attention. Naming them clearly is already the start of honoring them. ',
+                        'Something within you needs to be nourished. This draw invites you to identify that gap without minimizing it. '
+                    ],
+                    transmutation: [
+                        'A transformation is underway. It may seem slow, but it is real. ',
+                        'Something is shifting within you. This movement is positive, even if it is uncomfortable. '
+                    ],
+                    memoire_cosmos: [
+                        'Your inner wisdom is more accessible than it seems. This draw invites you to trust it. ',
+                        'The deep memory of who you are is there, available. You know more than you think. '
+                    ]
+                };
+
+                const closings = [
+                    'The answer you\'re looking for is already on its way. This draw is the sign of it.',
+                    'These cards don\'t predict, they reveal. And what they reveal here is encouraging.',
+                    'Trust what is presenting itself. The movement is already underway.',
+                    'You have more resources within you than you imagine. This draw confirms it.'
+                ];
+
+                const bridgeClosings = [
+                    ' The bridges in this draw are a sign that the change is not coming, it is already here.',
+                    ' Wherever a bridge appears, a door opens. All you have to do is cross the threshold.'
+                ];
+
+                let synthesis = this._pick(openings, seed);
+                synthesis += this._pick(middles, seed, 1);
+
+                // 1 seul insight famille pour garder la synthèse courte
+                const firstFamWithInsight = families.find(fam => familyInsights[fam]);
+                if (firstFamWithInsight) {
+                    synthesis += this._pick(familyInsights[firstFamWithInsight], seed, 2);
+                }
+
+                synthesis += this._pick(closings, seed, 5);
+                if (hasBridge) synthesis += this._pick(bridgeClosings, seed, 6);
+
+                return synthesis;
+            }
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lire depuis sessionStorage en priorité, fallback URL params
+            let intention = sessionStorage.getItem('tore_intention') || '';
+            let cardsRaw = sessionStorage.getItem('tore_cards');
+
+            // Fallback : paramètres URL (ancien système)
+            if (!cardsRaw) {
+                const urlParams = new URLSearchParams(window.location.search);
+                intention = intention || urlParams.get('intention') || '';
+                cardsRaw = urlParams.get('cards') ? decodeURIComponent(urlParams.get('cards')) : null;
+            }
+
+            if (!cardsRaw) {
+                window.location.href = '/en/tore.html';
+                return;
+            }
+
+            try {
+                const cards = JSON.parse(cardsRaw);
+                if (!Array.isArray(cards) || cards.length === 0) {
+                    window.location.href = '/en/tore.html';
+                    return;
+                }
+                displayAnalysis(cards, intention || 'personal question');
+            } catch (e) {
+                window.location.href = '/en/tore.html';
+            }
+        });
+        
+        async function displayAnalysis(cards, intention) {
+            // Afficher l'intention
+            document.getElementById('userIntention').textContent = intention;
+            
+            // Afficher les cartes
+            displayCards(cards);
+
+            const aiSuccess = await generateAIAnalysis(cards, intention);
+            if (!aiSuccess) {
+                const analyzer = new ToreAnalyzer();
+                const analysis = analyzer.analyzeCards(cards, intention);
+                displayDetailedAnalysis(analysis);
+                displaySynthesis(analysis.synthesis);
+            }
+            window.oradiaTrackEvent?.('analyse_affichee');
+        }
+
+        async function generateAIAnalysis(cards, intention) {
+            const container = document.getElementById('analysisContent');
+            if (!container) return false;
+
+            container.innerHTML = `
+                <div class="analysis-card fade-in-up">
+                    <div class="card-header">
+                        <i class="fas fa-spinner fa-spin"></i>
+                        <h3>The Oracle is analyzing</h3>
+                    </div>
+                    <div class="card-body" style="margin-bottom:0;">Give the Oracle a few moments to connect your cards to your intention.</div>
+                </div>
+            `;
+
+            try {
+                // Récupération : si l'analyse a déjà été générée et stockée lors d'une
+                // visite précédente de cette page (onglet fermé/rechargé pendant ou après
+                // l'attente), on la réutilise directement au lieu de refaire un appel IA
+                // (coûteux et qui produirait un texte différent à chaque tentative).
+                const cachedRaw = sessionStorage.getItem('tore_analysis_data');
+                if (cachedRaw) {
+                    try {
+                        const cached = JSON.parse(cachedRaw);
+                        if (cached && cached.analysis) {
+                            const fullText = cached.analysis;
+                            const obsData = parseObservationSection(fullText);
+                            const mainText = obsData ? fullText.slice(0, fullText.toLowerCase().indexOf('## observation window')).trim() : fullText;
+                            displayAIAnalysisText(mainText);
+                            if (obsData) injectObservationWindow(obsData.text, obsData.days, obsData.points);
+                            return true;
+                        }
+                    } catch (_) { /* cache invalide, on refait un appel normal */ }
+                }
+
+                // Vérifier d'abord si une analyse a été préchargée
+                const preloadedData = sessionStorage.getItem('preloaded_analysis');
+                let data;
+
+                if (preloadedData) {
+                    try {
+                        data = JSON.parse(preloadedData);
+                        // Nettoyer le préchargement pour éviter les réutilisations
+                        sessionStorage.removeItem('preloaded_analysis');
+
+                        // Cas : rate limit abonné atteint
+                        if (data.rateLimited) {
+                            analysisContent.innerHTML = `
+                              <div style="text-align:center;padding:2.5rem 1.5rem;color:#d4af37;">
+                                <p style="font-size:2rem;margin-bottom:1rem;">&#9790;</p>
+                                <p style="font-size:1.1rem;font-weight:600;margin-bottom:0.75rem;color:#f5e7a1;">Your draw space is taking a pause</p>
+                                <p style="color:rgba(212,175,55,0.75);font-size:0.9rem;line-height:1.7;max-width:420px;margin:0 auto;">
+                                  ${data.message || 'You have reached the monthly draw threshold. Your count will reset automatically next month.'}
+                                </p>
+                                ${data.resetsAt ? '<p style="margin-top:1rem;color:rgba(212,175,55,0.45);font-size:0.8rem;font-style:italic;">Automatic renewal on ' + new Date(data.resetsAt).toLocaleDateString('en-US',{day:'numeric',month:'long'}) + '</p>' : ''}
+                              </div>`;
+                            spinner.classList.add('hidden');
+                            analysisContent.classList.remove('hidden');
+                            return;
+                        }
+
+                        if (!data.success || !data.analysis) {
+                            throw new Error('Données préchargées invalides');
+                        }
+
+                        // Stocker les données préchargées dans tore_analysis_data pour l'email
+                        const analysisData = {
+                            analysis: data.analysis,
+                            synthesis: data.synthesis || '',
+                            advice: data.advice || '',
+                            timestamp: Date.now()
+                        };
+                        sessionStorage.setItem('tore_analysis_data', JSON.stringify(analysisData));
+                        console.log('[Préchargement] Données stockées dans tore_analysis_data');
+                    } catch (e) {
+                        // Si les données préchargées sont invalides, faire un appel normal
+                        data = null;
+                    }
+                }
+
+                // Si pas de données préchargées valides, faire l'appel API
+                if (!data) {
+                    const resp = await fetch('/api/analyse-tirage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ intention, cards, gender: sessionStorage.getItem('tore_gender') || 'neutre', lang: 'en' })
+                    });
+                    data = await resp.json();
+                    if (!resp.ok || !data.success || !data.analysis) throw new Error(data.error || 'Analyse indisponible');
+                    // Sauvegarde pour récupération : si l'onglet est fermé/rechargé après
+                    // ce point, la prochaine visite réutilisera ce résultat au lieu de
+                    // relancer un appel IA (voir le cache en haut de cette fonction).
+                    try {
+                        sessionStorage.setItem('tore_analysis_data', JSON.stringify({
+                            analysis: data.analysis,
+                            synthesis: data.synthesis || '',
+                            advice: data.advice || '',
+                            timestamp: Date.now()
+                        }));
+                    } catch (_) {}
+                }
+
+                const fullText = data.analysis;
+                const obsData = parseObservationSection(fullText);
+                const mainText = obsData ? fullText.slice(0, fullText.toLowerCase().indexOf('## observation window')).trim() : fullText;
+                displayAIAnalysisText(mainText);
+
+                if (obsData) {
+                    injectObservationWindow(obsData.text, obsData.days, obsData.points);
+                }
+
+                return true;
+            } catch (err) {
+                return false;
+            }
+        }
+
+        function displayAIAnalysisText(fullText) {
+            const sections = splitAISections(fullText);
+            displayDetailedAnalysis({
+                message: sections.cards || fullText,
+                advice: sections.explore || '',
+                synthesis: sections.synthesis || ''
+            });
+        }
+
+        function splitAISections(fullText) {
+            const result = { cards: '', explore: '', synthesis: '' };
+            const normalized = fullText || '';
+            const matches = [...normalized.matchAll(/^##\s+(.+)$/gmi)];
+            if (!matches.length) return result;
+
+            matches.forEach((match, index) => {
+                const title = match[1].trim().toLowerCase();
+                const start = match.index + match[0].length;
+                const end = matches[index + 1] ? matches[index + 1].index : normalized.length;
+                const content = renderMarkdown(normalized.slice(start, end).trim());
+                if (title.includes('cards')) result.cards = content;
+                if (title.includes('explore')) result.explore = content;
+                if (title.includes('synthesis')) result.synthesis = content;
+            });
+
+            return result;
+        }
+
+        window._obsWindowText = '';
+        window._obsAttentionPoints = [];
+        window._obsSuggestedDays = null;
+        window._obsWindowActivated = false;
+        window._emailSent = false;
+
+        function parseObservationSection(fullText) {
+            const lower = fullText.toLowerCase();
+            const trigger = '## observation window';
+            const start = lower.indexOf(trigger);
+            if (start === -1) return null;
+
+            const raw = fullText.slice(start + trigger.length).trim();
+            const daysMatch = raw.match(/\b(\d+)\s*day/i);
+            const days = daysMatch ? parseInt(daysMatch[1]) : 14;
+            const points = extractObservationPoints(raw);
+
+            return { text: raw, days, points };
+        }
+
+        function extractObservationPoints(text) {
+            const explicit = text
+                .split('\n')
+                .filter(l => l.trim())
+                .filter(l => /^[-•*\d]/.test(l.trim()))
+                .map(l => l.replace(/^[-•*\d.]\s*/, '').trim())
+                .filter(l => l.length > 15)
+                .slice(0, 3);
+
+            if (explicit.length) return explicit;
+
+            let points = text
+                .split(/(?<=[.!?])\s+/)
+                .map(s => s.trim())
+                .filter(s => /(body|relationship|dream|resistance|synchronicity|emotion|need|sign|conversation|decision|silence|tension|momentum)/i.test(s))
+                .filter(s => s.length > 25);
+
+            // Éliminer les doublons et phrases similaires
+            points = points.filter((point, index) => {
+                const pointLower = point.toLowerCase();
+                return !points.slice(0, index).some(prevPoint => {
+                    const prevLower = prevPoint.toLowerCase();
+                    // Si plus de 70% des mots sont identiques, considérer comme doublon
+                    const pointWords = pointLower.split(' ').filter(w => w.length > 3);
+                    const prevWords = prevLower.split(' ').filter(w => w.length > 3);
+                    const commonWords = pointWords.filter(w => prevWords.includes(w));
+                    return commonWords.length > Math.min(pointWords.length, prevWords.length) * 0.7;
+                });
+            });
+
+            return points.slice(0, 3);
+        }
+
+        function renderMarkdown(text) {
+            // Échapper le HTML d'abord pour éviter l'injection, puis appliquer le markdown
+            const escaped = escapeClientHtml(text);
+            return escaped
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function injectObservationWindow(text, days, points) {
+            if (document.getElementById('obs-window-section')) return;
+
+            window._obsWindowText = text;
+            window._obsAttentionPoints = points;
+            // Initialiser avec la durée préconisée par l'IA, ramenée à l'option la plus proche parmi 7/14/28
+            // (les boutons ne proposent plus de durées inférieures à 7 jours)
+            const roundedDays = !days ? 7 : days <= 7 ? 7 : days <= 14 ? 14 : 28;
+            window._obsSuggestedDays = roundedDays;
+
+            // Stocker les données d'observation dans tore_analysis_data
+            try {
+                const existingData = JSON.parse(sessionStorage.getItem('tore_analysis_data') || '{}');
+                existingData.observationDays = window._obsSuggestedDays; // Utiliser la durée choisie
+                existingData.observationText = text;
+                existingData.attentionPoints = points;
+                sessionStorage.setItem('tore_analysis_data', JSON.stringify(existingData));
+                console.log('[injectObservationWindow] Données d\'observation stockées:', {
+                    suggestedDays: days,
+                    chosenDays: window._obsSuggestedDays,
+                    textLength: text.length
+                });
+            } catch(e) {
+                console.error('[injectObservationWindow] Erreur stockage:', e);
+            }
+
+            syncObservationWindowToHistory();
+
+            // Récupérer l'email de l'utilisateur connecté
+            const sessionData = sessionStorage.getItem('oradia_member_session')
+                || localStorage.getItem('oradia_member_session')
+                || sessionStorage.getItem('oradia_session') 
+                || sessionStorage.getItem('userData')
+                || localStorage.getItem('userEmail');
+            let userEmail = null;
+            try {
+                if (sessionData && sessionData.startsWith('{')) {
+                    userEmail = JSON.parse(sessionData).email || null;
+                } else if (sessionData) {
+                    userEmail = sessionData;
+                }
+            } catch(e) {}
+
+            const section = document.createElement('div');
+            section.id = 'obs-window-section';
+            section.className = 'obs-window-wrap fade-in-up';
+
+            section.innerHTML = `
+                <p class="obs-window-title">
+                    <i class="fas fa-eye"></i>Observation Window
+                    <span style="font-family:'Lora',Georgia,serif;font-size:0.65rem;font-weight:normal;text-transform:none;letter-spacing:normal;color:rgba(212,175,55,0.45);font-style:italic;">(optional)</span>
+                    <button onclick="const t=this.nextElementSibling;t.style.display=t.style.display==='none'?'block':'none';" title="Learn more"
+                            style="background:none;border:none;cursor:pointer;color:rgba(212,175,55,0.5);font-size:0.75rem;margin-left:6px;padding:0;vertical-align:middle;">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                    <span style="display:none;width:100%;flex-basis:100%;box-sizing:border-box;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);border-radius:8px;padding:10px 14px;margin-top:0.6rem;font-size:0.78rem;color:rgba(200,192,168,0.6);font-style:italic;font-weight:normal;font-family:'Lora',Georgia,serif;letter-spacing:normal;text-transform:none;">
+                        The observation window is a period during which you stay attentive to the resonances of your draw in daily life. It is entirely optional: activating it anonymously contributes to a study on synchronicities.
+                    </span>
+                </p>
+                <div class="obs-window-text">${renderMarkdown(text)}</div>
+
+                <p style="font-family:'Lora',Georgia,serif;font-size:0.8rem;color:rgba(212,175,55,0.55);margin:0.75rem 0 0;text-align:center;font-style:italic;">
+                    You may also, if you wish, ask the universe for a synchronicity in the days that follow.
+                </p>
+
+                <div style="border-top:1px solid rgba(212,175,55,0.15);padding-top:1.25rem;margin-top:1.25rem;">
+                    <p style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(212,175,55,0.6);
+                       text-transform:uppercase;letter-spacing:0.07em;margin:0 0 0.75rem;">
+                        Activate My Observation Window
+                    </p>
+                    <p style="font-size:0.85rem;color:rgba(200,192,168,0.7);margin:0 0 0.5rem;text-align:center;font-style:italic;">
+                        Choose the duration based on your intuition
+                    </p>
+                    <p style="font-size:0.78rem;color:rgba(212,175,55,0.55);margin:0 0 1rem;text-align:center;font-style:italic;">
+                        <i class="fas fa-flask" style="font-size:0.7rem;margin-right:4px;opacity:0.7;"></i>By activating it, you anonymously contribute to a study on synchronicities.
+                    </p>
+
+                    <div class="obs-duration-group" id="obs-duration-group">
+                        <button class="obs-duration-btn ${(!days || days <= 7) ? 'active' : ''}"
+                                onclick="selectObsDuration(7, this)">
+                            <span class="obs-days">7</span>days
+                        </button>
+                        <button class="obs-duration-btn ${(days > 7 && days <= 14) ? 'active' : ''}"
+                                onclick="selectObsDuration(14, this)">
+                            <span class="obs-days">14</span>days
+                        </button>
+                        <button class="obs-duration-btn ${days > 14 ? 'active' : ''}"
+                                onclick="selectObsDuration(28, this)">
+                            <span class="obs-days">28</span><span style="font-size:0.7rem;display:block;margin-top:-2px;opacity:0.7;">lunar cycle</span>
+                        </button>
+                    </div>
+
+                    <div id="obs-form-wrap">
+                        ${userEmail ? `
+                            <div class="obs-email-row">
+                                <div style="flex:1;color:rgba(212,175,55,0.8);font-size:0.85rem;padding:0.5rem 0;">
+                                    Activation for <strong>${escapeClientHtml(userEmail)}</strong>
+                                </div>
+                                <button class="obs-submit-btn" id="obs-submit-btn"
+                                        onclick="activateObsWindow()">
+                                    <i class="fas fa-bell"></i> Activate
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="obs-email-row">
+                                <input type="email" id="obs-email-input"
+                                       class="obs-email-input"
+                                       placeholder="Your email address"
+                                       autocomplete="email" />
+                                <button class="obs-submit-btn" id="obs-submit-btn"
+                                        onclick="activateObsWindow()">
+                                    <i class="fas fa-bell"></i> Activate
+                                </button>
+                            </div>
+                        `}
+                        <p class="obs-error" id="obs-error"></p>
+                    </div>
+
+                    <div class="obs-success" id="obs-success">
+                        <div class="obs-success-icon">✦</div>
+                        <p>Observation window activated.<br>
+                           Your points of attention are ready.<br>
+                           You will receive a follow-up email at the end of the period.</p>
+                    </div>
+                </div>`;
+
+            const analysisContent = document.getElementById('analysisContent');
+            if (analysisContent && analysisContent.parentNode) {
+                analysisContent.parentNode.insertBefore(section, analysisContent.nextSibling);
+            }
+        }
+
+        function selectObsDuration(days, btn) {
+            window._obsSuggestedDays = days;
+            document.querySelectorAll('.obs-duration-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // Mettre à jour sessionStorage pour que doSendEmail récupère la bonne durée
+            try {
+                const d = JSON.parse(sessionStorage.getItem('tore_analysis_data') || '{}');
+                d.observationDays = days;
+                sessionStorage.setItem('tore_analysis_data', JSON.stringify(d));
+            } catch(_) {}
+            
+            // Mettre à jour l'affichage de la durée dans le message
+            const durationDisplay = document.getElementById('obs-duration-display');
+            if (durationDisplay) {
+                durationDisplay.textContent = days;
+            }
+
+            syncObservationWindowToHistory();
+        }
+
+        // Construit l'objet fenêtre d'observation (durée choisie, texte, points d'attention,
+        // date de clôture) et le synchronise avec le tirage déjà enregistré dans l'historique.
+        function syncObservationWindowToHistory() {
+            const days = window._obsSuggestedDays;
+            if (!days) return;
+            syncTirageToHistory({
+                observationWindow: {
+                    durationDays: days,
+                    observationText: window._obsWindowText || '',
+                    attentionPoints: window._obsAttentionPoints || [],
+                    closesAt: new Date(Date.now() + days * 86400000).toISOString()
+                }
+            });
+        }
+
+        async function activateObsWindow() {
+            // Récupérer l'email depuis le champ ou la session
+            let email = document.getElementById('obs-email-input')?.value?.trim();
+            
+            // Si pas de champ email, essayer de récupérer depuis la session
+            if (!email) {
+                const sessionData = sessionStorage.getItem('oradia_member_session')
+                    || localStorage.getItem('oradia_member_session')
+                    || sessionStorage.getItem('oradia_session') 
+                    || sessionStorage.getItem('userData')
+                    || localStorage.getItem('userEmail');
+                try {
+                    if (sessionData && sessionData.startsWith('{')) {
+                        email = JSON.parse(sessionData).email || null;
+                    } else if (sessionData) {
+                        email = sessionData;
+                    }
+                } catch(e) {}
+            }
+            
+            const errEl = document.getElementById('obs-error');
+            const btn = document.getElementById('obs-submit-btn');
+
+            errEl.style.display = 'none';
+
+            if (!email || !email.includes('@')) {
+                errEl.textContent = 'Please enter a valid email address.';
+                errEl.style.display = 'block';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Activating…';
+
+            const intention = sessionStorage.getItem('tore_intention') || '';
+            const cardsRaw = sessionStorage.getItem('tore_cards');
+            const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
+            // Synthèse (3e paragraphe de l'analyse) — reprise dans le mail de clôture pour
+            // rappeler le contenu du tirage plusieurs jours après, quand l'utilisateur ne
+            // s'en souvient souvent plus.
+            let synthese = '';
+            try {
+                const rawSynthese = JSON.parse(sessionStorage.getItem('tore_analysis_data') || '{}').synthesis || '';
+                // stocké en HTML (markdown déjà rendu) — le mail de clôture l'affiche en
+                // texte brut, donc on retire les balises avant l'envoi.
+                const tmpDiv = document.createElement('div');
+                tmpDiv.innerHTML = rawSynthese;
+                synthese = (tmpDiv.textContent || tmpDiv.innerText || '').trim();
+            } catch (e) {}
+
+            try {
+                const resp = await fetch('/api/fenetre/activation', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        intention,
+                        cards,
+                        attentionPoints: window._obsAttentionPoints,
+                        durationDays: window._obsSuggestedDays,
+                        observationText: window._obsWindowText,
+                        synthese,
+                        // Source du tirage : 'anu' | 'outshift' (quantique pur) ou 'fallback'.
+                        // Seuls les tirages quantiques purs comptent pour l'étude scientifique.
+                        qrngSource: sessionStorage.getItem('tore_qrng_source') || 'unknown',
+                    }),
+                });
+
+                const data = await resp.json();
+
+                if (data.success) {
+                    document.getElementById('obs-form-wrap').style.display = 'none';
+                    document.getElementById('obs-success').style.display = 'block';
+                    // La fenêtre est déjà activée côté serveur avec la durée choisie —
+                    // les boutons 7/14/28 jours restaient cliquables après coup (ils sont
+                    // en dehors de #obs-form-wrap), ce qui laissait croire à tort qu'on
+                    // pouvait encore changer la durée alors que ça n'avait plus aucun effet.
+                    const durGroup = document.getElementById('obs-duration-group');
+                    if (durGroup) {
+                        durGroup.style.pointerEvents = 'none';
+                        durGroup.style.opacity = '0.5';
+                    }
+                    window._obsWindowActivated = true;
+                    // Réglage local (member/parametres.html > Notifications), pas de flag =
+                    // activé par défaut, cohérent avec le comportement d'avant l'ajout de cette case.
+                    let notifFenetreEnabled = true;
+                    try {
+                        const prefs = JSON.parse(localStorage.getItem('oradia_prefs') || '{}');
+                        notifFenetreEnabled = prefs.notif_fenetre_observation !== false;
+                    } catch (e) {}
+                    if (notifFenetreEnabled) {
+                        window.oradiaNotifications?.scheduleObservationClosing(data.closesAt, intention);
+                    }
+                } else {
+                    throw new Error(data.message || 'Erreur inconnue');
+                }
+            } catch (err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bell"></i> Activate';
+                errEl.textContent = "Activation failed. Please try again.";
+                errEl.style.display = 'block';
+            }
+        }
+
+        // ── Résonance immédiate ──
+        (function initResonanceSlider() {
+            const slider = document.getElementById('resonance-slider');
+            const valueEl = document.getElementById('resonance-value');
+            if (slider && valueEl) {
+                slider.addEventListener('input', () => { valueEl.textContent = slider.value; });
+            }
+        })();
+
+        async function submitResonanceImmediate() {
+            const slider = document.getElementById('resonance-slider');
+            const btn = document.getElementById('resonance-submit-btn');
+            const score = parseInt(slider.value, 10);
+            btn.disabled = true;
+            btn.textContent = 'Sending…';
+
+            let userEmail = null;
+            try {
+                const sessStr = sessionStorage.getItem('oradia_session') || localStorage.getItem('oradia_session');
+                if (sessStr) { const s = JSON.parse(sessStr); userEmail = s.email || null; }
+            } catch (_) {}
+
+            const intention = sessionStorage.getItem('tore_intention') || '';
+            const cardsRaw = sessionStorage.getItem('tore_cards');
+            const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
+
+            try {
+                await fetch('/api/fenetre/resonance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        score, intention, cards,
+                        qrngSource: sessionStorage.getItem('tore_qrng_source') || 'unknown',
+                        email: userEmail
+                    })
+                });
+            } catch (_) { /* silencieux, ne bloque pas l'expérience */ }
+
+            document.getElementById('resonance-form').style.display = 'none';
+            document.getElementById('resonance-success').style.display = 'block';
+        }
+
+        function escapeClientHtml(text) {
+            return String(text || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        
+        function displayCards(cards) {
+            const container = document.getElementById('cardsDisplay');
+            container.innerHTML = '';
+
+            // Trier les cartes selon l'ordre canonique du Tore
+            const FAMILY_ORDER = ['emotions', 'besoins', 'transmutation', 'archetypes', 'revelation', 'actions', 'memoire_cosmos'];
+            cards = [...cards].sort((a, b) => {
+                const ia = FAMILY_ORDER.indexOf(a.family);
+                const ib = FAMILY_ORDER.indexOf(b.family);
+                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            });
+
+            // Titre dynamique : compter uniquement les cartes principales (hors passerelles)
+            const mainCount = cards.length;
+            const bridgeCount = cards.filter(c => c.bridgeCard).length;
+            const titleEl = document.getElementById('cardsSectionTitle');
+            if (titleEl) {
+                const num = mainCount === 7 ? '7' : String(mainCount);
+                const numWords = { 1: 'one', 2: 'two', 3: 'three', 4: 'four', 5: 'five', 6: 'six', 7: 'seven' };
+                const label = bridgeCount > 0
+                    ? `Your Cards (${bridgeCount} bridge${bridgeCount > 1 ? 's' : ''})`
+                    : 'Your Cards';
+                titleEl.textContent = label;
+            }
+
+            // Adapter les colonnes de grille selon le nombre de cartes
+            const colMap = { 1: 'lg:grid-cols-1', 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4', 5: 'lg:grid-cols-5', 6: 'lg:grid-cols-6', 7: 'lg:grid-cols-7' };
+            const lgCol = colMap[mainCount] || 'lg:grid-cols-7';
+            container.className = `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 ${lgCol} gap-4 md:gap-5`;
+            
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-hover text-center fade-in-up';
+                cardElement.style.animationDelay = `${index * 0.1}s`;
+                
+                const isMutating = card.isMutating || card.bridgeCard;
+                
+                const familyLabel = card.family === 'emotions' ? 'Emotion' :
+                                    card.family === 'besoins' ? 'Need' :
+                                    card.family === 'transmutation' ? 'Transmutation' :
+                                    card.family === 'memoire_cosmos' ? 'Memory' :
+                                    card.family === 'revelation' ? 'Revelation' :
+                                    card.family === 'portail' ? 'Portal' :
+                                    card.family.replace(/_/g, ' ');
+
+                // Groupe : carte principale + éventuellement passerelle
+                cardElement.innerHTML = `
+                    <div class="card-group fade-in-up" style="animation-delay:${index * 0.1}s">
+
+                        <!-- Carte principale -->
+                        <div class="card-grid-item">
+                            <img src="${(card.imgSrc || ('/images/' + card.family + '/' + card.name + '.png')).replace(/\.png$/i,'.webp')}"
+                                 alt="${card.name}"
+                                 onerror="if(this.src.endsWith('.webp')){this.src=this.src.replace('.webp','.png')}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+                            <div style="display:none; aspect-ratio:64/90; background:rgba(5,20,40,0.9); align-items:center; justify-content:center; padding:8px;">
+                                <span style="color:#d4af37; font-size:0.6rem; text-align:center; font-family:'Cinzel',serif;">${card.name}</span>
+                            </div>
+                            <div class="card-grid-label">${familyLabel}</div>
+                            <div class="card-grid-name">${card.name.replace(/_/g, ' ')}</div>
+                        </div>
+
+                        ${isMutating && card.bridgeCard ? `
+                        <!-- Connecteur visuel -->
+                        <div class="bridge-connector">
+                            <i class="fas fa-rotate"></i>
+                        </div>
+
+                        <!-- Carte passerelle -->
+                        <div class="card-grid-item bridge">
+                            <img src="${(card.bridgeCard.imgSrc || ('/images/' + card.bridgeCard.family + '/' + card.bridgeCard.name + '.png')).replace(/\.png$/i,'.webp')}"
+                                 alt="${card.bridgeCard.name}"
+                                 onerror="if(this.src.endsWith('.webp')){this.src=this.src.replace('.webp','.png')}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
+                            <div style="display:none; aspect-ratio:64/90; background:rgba(5,20,40,0.9); align-items:center; justify-content:center; padding:8px;">
+                                <span style="color:#c4b5fd; font-size:0.6rem; text-align:center; font-family:'Cinzel',serif;">${card.bridgeCard.name}</span>
+                            </div>
+                            <div class="bridge-badge"><i class="fas fa-rotate"></i> Bridge</div>
+                            <div class="card-grid-label bridge-label">Actions</div>
+                            <div class="card-grid-name bridge-name">${card.bridgeCard.name.replace(/_/g, ' ').toUpperCase()}</div>
+                        </div>
+                        ` : ''}
+
+                    </div>
+                `;
+                container.appendChild(cardElement);
+
+                // Ecouteurs directs sur chaque image (plutot qu'une delegation sur
+                // le conteneur) : dans la webview de l'appli mobile, le tap sur la
+                // carte passerelle ne declenchait pas le clic delegue.
+                cardElement.querySelectorAll('.card-grid-item img').forEach(img => {
+                    img.addEventListener('click', () => {
+                        if (typeof openAnalysisCardZoom === 'function') openAnalysisCardZoom(img.currentSrc || img.src);
+                    });
+                });
+            });
+        }
+        
+        function displayDetailedAnalysis(analysis) {
+            const container = document.getElementById('analysisContent');
+            container.innerHTML = '';
+
+            const oracleCard = document.createElement('div');
+            oracleCard.className = 'analysis-card fade-in-up';
+            oracleCard.innerHTML = `
+                <div class="card-header">
+                    <i class="fas fa-scroll"></i>
+                    <h3>Message from the Oracle</h3>
+                </div>
+                <div class="card-body" style="margin-bottom:0;">${analysis.message}</div>
+
+                <div style="border-top:1px solid rgba(212,175,55,0.15); margin-top:1.4rem; padding-top:1.2rem;">
+                    <p style="font-family:'Cinzel',serif; font-size:0.7rem; font-weight:700; color:#d4af37; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 0.7rem; display:flex; align-items:center; gap:6px;"><i class="fas fa-compass"></i>Paths to Explore</p>
+                    <div class="card-body" style="font-style:italic; color:#c8c0a8;">${analysis.advice}</div>
+                </div>
+
+                <div style="border-top:1px solid rgba(212,175,55,0.15); margin-top:1.4rem; padding-top:1.2rem;">
+                    <p style="font-family:'Cinzel',serif; font-size:0.7rem; font-weight:700; color:#d4af37; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 0.7rem; display:flex; align-items:center; gap:6px;"><i class="fas fa-feather"></i>Synthesis</p>
+                    <div class="card-body" id="synthesisContent" style="color:#e9e7df; text-align: justify; text-justify: inter-word;">${analysis.synthesis}</div>
+                </div>
+            `;
+            container.appendChild(oracleCard);
+
+            // Stocker les données d'analyse pour l'email
+            try {
+                const analysisData = {
+                    analysis: analysis.message,
+                    synthesis: analysis.synthesis,
+                    advice: analysis.advice,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('tore_analysis_data', JSON.stringify(analysisData));
+                console.log('[displayDetailedAnalysis] Données stockées dans tore_analysis_data');
+            } catch(e) {
+                console.error('[displayDetailedAnalysis] Erreur stockage:', e);
+            }
+
+            // Compléter le tirage enregistré dans l'historique avec l'analyse, les pistes et la synthèse
+            syncTirageToHistory({ analysis: analysis.message, pistes: analysis.advice, synthesis: analysis.synthesis });
+        }
+
+        // Complète le tirage déjà enregistré dans l'historique (Supabase, membre connecté)
+        // avec l'analyse IA / synthèse / fenêtre d'observation, dès qu'elles sont disponibles.
+        function syncTirageToHistory(fields) {
+            try {
+                const id = sessionStorage.getItem('tore_tirage_id');
+                if (!id || !window.OradiaTirageStorage || !window.OradiaTirageStorage.isAuthenticated()) return;
+                window.OradiaTirageStorage.updateTirage(id, fields).catch(() => {});
+            } catch (e) { reportSyncIssue('exception: ' + (e && e.message)); }
+        }
+
+        function displaySynthesis(synthesis) {
+            const el = document.getElementById('synthesisContent');
+            if (el) el.innerHTML = synthesis;
+        }
+
+        async function sendAnalysisByEmail(btn) {
+            if (btn.dataset.sending === '1') return;
+
+            // Email pré-rempli depuis la session si disponible
+            let knownEmail = '';
+            try {
+                const sessStr = sessionStorage.getItem('oradia_member_session')
+                              || localStorage.getItem('oradia_member_session');
+                if (sessStr) knownEmail = JSON.parse(sessStr).email || '';
+            } catch(_) {}
+
+            const container = btn.parentElement;
+            if (container.querySelector('#toa-email-panel')) return;
+
+            let _isBrevoSubscribed = false;
+
+            // Si email connu : checker Brevo AVANT d'insérer le panel pour éviter le flash checkbox
+            if (knownEmail) {
+                const loader = document.createElement('div');
+                loader.id = 'toa-email-panel';
+                loader.style.cssText = 'margin-top:12px;color:rgba(212,175,55,0.5);font-size:12px;text-align:center;padding:8px 0;';
+                loader.textContent = 'Loading…';
+                container.appendChild(loader);
+                try {
+                    const r = await fetch('/api/tirages/send-email?action=check-brevo&email=' + encodeURIComponent(knownEmail));
+                    const d = await r.json();
+                    _isBrevoSubscribed = !!d.subscribed;
+                } catch (_) {}
+                loader.remove();
+                // Si re-cliqué pendant le check, ne pas ouvrir un second panel
+                if (container.querySelector('#toa-email-panel')) return;
+            }
+
+            const panel = document.createElement('div');
+            panel.id = 'toa-email-panel';
+            panel.style.cssText = 'margin-top:12px;animation:fadeInUp 0.3s ease both;';
+            panel.innerHTML =
+                '<input id="toa-email-input" type="email" autocomplete="email"' +
+                ' placeholder="your@email.com"' +
+                ' style="width:100%;box-sizing:border-box;background:rgba(5,15,35,0.8);' +
+                'border:1px solid rgba(212,175,55,0.4);border-radius:8px;' +
+                'padding:10px 14px;color:#e8dfc8;font-size:14px;outline:none;margin-bottom:10px;">' +
+                '<div id="toa-consent-wrapper">' +
+                '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;' +
+                'color:rgba(232,223,200,0.65);font-size:12px;line-height:1.5;' +
+                'margin-bottom:12px;text-align:left;">' +
+                '<input id="toa-consent-checkbox" type="checkbox"' +
+                ' style="margin-top:2px;accent-color:#d4af37;flex-shrink:0;">' +
+                'I agree to receive advice and offers from Oradia by email' +
+                '</label>' +
+                '</div>' +
+                '<button id="toa-send-confirm"' +
+                ' style="width:100%;background:linear-gradient(135deg,#d4af37,#b8962e);' +
+                'color:#06101f;border:none;border-radius:8px;padding:11px 16px;' +
+                'cursor:pointer;font-size:13px;font-weight:600;">' +
+                'Send my result' +
+                '</button>';
+            container.appendChild(panel);
+
+            // Appliquer le résultat du check si email connu
+            if (_isBrevoSubscribed) {
+                const wrapper = panel.querySelector('#toa-consent-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
+            }
+
+            if (knownEmail) panel.querySelector('#toa-email-input').value = knownEmail;
+            panel.querySelector('#toa-email-input').focus();
+
+            // Check Brevo sur blur pour email saisi manuellement (pas de setTimeout : déjà checké si knownEmail)
+            const checkBrevoSubscription = async () => {
+                const v = panel.querySelector('#toa-email-input')?.value.trim() || '';
+                if (!v || !v.includes('@') || !v.includes('.')) return;
+                try {
+                    const r = await fetch('/api/tirages/send-email?action=check-brevo&email=' + encodeURIComponent(v));
+                    const d = await r.json();
+                    _isBrevoSubscribed = !!d.subscribed;
+                    const wrapper = panel.querySelector('#toa-consent-wrapper');
+                    if (wrapper) wrapper.style.display = _isBrevoSubscribed ? 'none' : '';
+                } catch (_) {}
+            };
+            if (!knownEmail) {
+                panel.querySelector('#toa-email-input').addEventListener('blur', checkBrevoSubscription);
+            }
+
+            panel.querySelector('#toa-send-confirm').addEventListener('click', () => {
+                const emailVal = panel.querySelector('#toa-email-input').value.trim();
+                if (!emailVal || !emailVal.includes('@')) {
+                    panel.querySelector('#toa-email-input').style.borderColor = 'rgba(231,76,60,0.6)';
+                    return;
+                }
+                const consent = _isBrevoSubscribed ? false : (panel.querySelector('#toa-consent-checkbox')?.checked || false);
+                panel.remove();
+                doSendEmail(btn, emailVal, consent);
+            });
+        }
+
+        async function doSendEmail(btn, email, consentMarketing) {
+            // Verrouiller et afficher le spinner
+            btn.dataset.sending = '1';
+            const originalHTML = btn.innerHTML;
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.85';
+            btn.innerHTML =
+                '<span style="display:inline-flex;align-items:center;gap:8px;">' +
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"' +
+                ' style="animation:spin 0.8s linear infinite;">' +
+                '<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"' +
+                ' stroke-dasharray="28" stroke-dashoffset="10" stroke-linecap="round"/>' +
+                '</svg>Sending…</span>';
+
+            // Ajouter le keyframe spin si absent
+            if (!document.getElementById('_spin_kf')) {
+                const s = document.createElement('style');
+                s.id = '_spin_kf';
+                s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+                document.head.appendChild(s);
+            }
+
+            try {
+                // Lire toutes les clés possibles pour reconstituer les données
+                const intention = sessionStorage.getItem('tore_intention') || '';
+
+                // Chercher l'analyse dans toutes les clés connues
+                let analysis = '';
+                let synthesis = '';
+                let pistes = '';
+                let cards = [];
+
+                // Essayer tore_analysis_data en premier
+                const rawData = sessionStorage.getItem('tore_analysis_data');
+                if (rawData) {
+                    try {
+                        const d = JSON.parse(rawData);
+                        analysis = d.analysis || d.message || '';
+                        synthesis = d.synthesis || '';
+                        pistes = d.advice || '';
+                        cards = d.cards || [];
+                    } catch(_) {}
+                }
+
+                // Si pas trouvé, chercher dans tore_last_analysis ou analyse_result
+                if (!analysis) {
+                    const altKeys = ['tore_last_analysis', 'analyse_result', 'tore_analysis',
+                                     'analysis_result', 'tirage_analysis', 'oradia_analysis'];
+                    for (const k of altKeys) {
+                        const v = sessionStorage.getItem(k);
+                        if (v) {
+                            try {
+                                const d = JSON.parse(v);
+                                if (typeof d === 'string') { analysis = d; break; }
+                                analysis = d.analysis || d.message || d.text || '';
+                                synthesis = d.synthesis || synthesis;
+                                pistes = d.advice || pistes;
+                                if (Array.isArray(d.cards)) cards = d.cards;
+                                if (analysis) break;
+                            } catch(_) {
+                                if (typeof v === 'string' && v.length > 50) { analysis = v; break; }
+                            }
+                        }
+                    }
+                }
+
+                // Chercher les cartes séparément si toujours vide
+                if (!cards.length) {
+                    const cardKeys = ['tore_cards', 'tirage_cards', 'cards_data', 'tore_tirage_cards'];
+                    for (const k of cardKeys) {
+                        const v = sessionStorage.getItem(k);
+                        if (v) {
+                            try {
+                                const d = JSON.parse(v);
+                                if (Array.isArray(d)) { cards = d; break; }
+                                if (Array.isArray(d.cards)) { cards = d.cards; break; }
+                            } catch(_) {}
+                        }
+                    }
+                }
+
+                // Fenêtre d'observation : uniquement si l'utilisateur a explicitement cliqué "Activer"
+                const observationDays = (window._obsWindowActivated && window._obsSuggestedDays > 0)
+                    ? window._obsSuggestedDays : null;
+                const observationText = window._obsWindowActivated ? (window._obsWindowText || '') : '';
+                const attentionPoints = window._obsWindowActivated ? (window._obsAttentionPoints || []) : [];
+
+                const resp = await fetch('/api/tirages/send-email?action=collect-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        email,
+                        intention,
+                        cards,
+                        analysis,
+                        pistes,
+                        synthesis,
+                        observationDays,
+                        observationText,
+                        attentionPoints,
+                        consentMarketing: !!consentMarketing,
+                        lang: 'en',
+                    }),
+                });
+
+                if (resp.ok) {
+                    // Succès : état final non-cliquable
+                    btn.innerHTML =
+                        '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+                        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none">' +
+                        '<path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2"' +
+                        ' stroke-linecap="round" stroke-linejoin="round"/>' +
+                        '</svg>Sent ✓</span>';
+                    btn.style.background = 'linear-gradient(135deg,rgba(46,125,50,0.8),rgba(27,94,32,0.9))';
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'default';
+                    btn.style.pointerEvents = 'none';
+                    window.oradiaTrackEvent?.('email_laisse');
+
+                    // Filet de sécurité : si la synchronisation de l'historique avait
+                    // échoué au moment de l'affichage (syncTirageToHistory), on a ici
+                    // les mêmes données sous la main (analysis/synthesis) — on retente,
+                    // pour que ce qui part par email soit aussi retrouvable dans
+                    // l'espace membre, pas seulement dans la boîte mail.
+                    if (analysis || synthesis) syncTirageToHistory({ analysis, pistes, synthesis });
+                } else {
+                    throw new Error('Server error');
+                }
+            } catch(err) {
+                // Erreur : restaurer le bouton
+                btn.innerHTML = originalHTML;
+                btn.style.pointerEvents = 'auto';
+                btn.style.opacity = '1';
+                btn.dataset.sending = '0';
+
+                // Message d'erreur discret sous le bouton
+                const container = btn.parentElement;
+                let errMsg = container.querySelector('#email-error-msg');
+                if (!errMsg) {
+                    errMsg = document.createElement('p');
+                    errMsg.id = 'email-error-msg';
+                    errMsg.style.cssText =
+                        'margin:6px 0 0;font-size:12px;color:rgba(231,76,60,0.8);text-align:center;';
+                    container.appendChild(errMsg);
+                }
+                errMsg.textContent = 'Error sending. Please try again.';
+                setTimeout(() => errMsg?.remove(), 3000);
+            }
+        }
+    </script>
+    
+    <!-- Scripts pour header/footer -->
+    <script src="/components/header-manager-en.js" defer></script>
+    <script src="/components/footer-manager-en.js" defer></script>
+    
+    <!-- Scroll to top functionality -->
+    <script>
+        // Scroll to top functionality
+        const backToTopBtn = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.remove('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.add('opacity-100', 'pointer-events-auto');
+            } else {
+                backToTopBtn.classList.add('opacity-0', 'pointer-events-none');
+                backToTopBtn.classList.remove('opacity-100', 'pointer-events-auto');
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
+            // Ensure header is visible by scrolling to top after a brief delay
+            setTimeout(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        });
+    </script>
+<script>document.addEventListener('DOMContentLoaded', () => { requestAnimationFrame(() => { document.body.classList.add('page-ready'); }); });</script>
+
+
+<script>
+// ── Bloc conversion Tore ──────────────────────────────────────────────────
+(function initToreConversionBlock() {
+  const block   = document.getElementById('tore-conversion-block');
+  const vEmpty  = document.getElementById('tore-conv-empty');
+  const vLast   = document.getElementById('tore-conv-last'); // bandeau au-dessus des boutons
+  if (!block || !vEmpty) return;
+
+  // Attendre que freemiumTracker soit chargé (script defer)
+  function isSubscribed() {
+    try {
+      const sub = localStorage.getItem('oradia_subscription');
+      if (sub) { const { expiry } = JSON.parse(sub); if (expiry && new Date(expiry) > new Date()) return true; }
+      const sess = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+      if (sess) { const { email, subscribed } = JSON.parse(sess); if (email && subscribed) return true; }
+    } catch (e) {}
+    return false;
+  }
+
+  function getRemainingToreDraws() {
+    const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
+    return Math.max(0, 2 - used);
+  }
+
+  function run() {
+    if (isSubscribed()) return;
+    const remaining = getRemainingToreDraws();
+    if (remaining === 0) {
+      block.style.display  = 'block';
+      vEmpty.style.display = 'block';
+      // Masquer "Nouveau Tirage" — inutile et mène à une modale moins soignée
+      const btnNouveau = document.getElementById('btn-nouveau-tirage');
+      if (btnNouveau) btnNouveau.style.display = 'none';
+    } else if (remaining === 1 && vLast) {
+      vLast.style.display = 'block';
+    } else if (remaining >= 2) {
+      // Palier 3 #19 — afficher le compteur de tirages gratuits restants
+      const pill = document.getElementById('tore-free-remaining');
+      const txt  = document.getElementById('tore-free-remaining-text');
+      if (pill && txt) {
+        txt.textContent = `You have ${remaining} free draw${remaining > 1 ? 's' : ''} left`;
+        pill.style.display = 'block';
+      }
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+
+})();
+</script>
+
+<script src="/js/referral.js" defer></script>
+<script src="/js/local-notifications.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.oradiaReferral) return;
+        window.oradiaReferral.wireShareUI(
+            document.getElementById('referral-link-input'),
+            document.getElementById('referral-copy-btn'),
+            document.getElementById('referral-share-btn')
+        );
+        window.oradiaReferral.claimPendingBonuses();
+    });
+</script>
+<div id="analysis-card-preview-overlay"><img id="analysis-card-preview-img" alt="Card preview"></div>
+<script>
+(function () {
+  const overlay = document.getElementById('analysis-card-preview-overlay');
+  const previewImg = document.getElementById('analysis-card-preview-img');
+  if (!overlay || !previewImg) return;
+
+  // Expose globalement : les cartes sont injectees dynamiquement par
+  // displayCards() (plus haut dans la page), qui attache un ecouteur de
+  // clic direct sur chaque image et appelle cette fonction. Une delegation
+  // sur le conteneur #cardsDisplay ne declenchait pas le clic dans la
+  // webview de l'appli mobile pour la carte passerelle - un ecouteur direct
+  // sur l'image, comme sur tore.html, est le pattern qui fonctionne partout.
+  window.openAnalysisCardZoom = function (src) {
+    if (!src) return;
+    previewImg.src = src;
+    overlay.classList.add('visible');
+  };
+  overlay.addEventListener('click', () => {
+    overlay.classList.remove('visible');
+    previewImg.src = '';
+  });
+})();
+</script>
+<script src="/js/page-tracker.js" defer></script>
+</body>
+</html>

@@ -4,6 +4,15 @@ function getStripeClient() {
   return require('stripe')(process.env.STRIPE_SECRET_KEY);
 }
 
+// Offres, prix, stock, pays livrés, formats de code postal et grilles de port :
+// source unique partagée avec l'affichage (voir lib/shop-config.js).
+const shopConfig = require('../lib/shop-config.js');
+const { getShopMode, countSoldByOffer } = require('../lib/shop-mode.js');
+const {
+    OFFERS, SHIPPING_COUNTRIES, POSTAL_CODE_RULES, POSTAL_CODE_LABELS,
+    MAX_QUANTITY_PER_OFFER, MAX_TOTAL_QUANTITY
+} = shopConfig;
+
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxzetkdozynyutlbhxdx)
   const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
@@ -205,6 +214,17 @@ module.exports = async (req, res) => {
         const customerInfo = body.customerInfo || {};
         const delivery = body.delivery || {};
         const relayPoint = body.relayPoint || null;
+        // Adresse de facturation différente (case à cocher de livraison.html) : envoyée
+        // depuis toujours par le formulaire mais ignorée ici — la facture Stripe ne la
+        // portait donc jamais.
+        const rawBilling = body.billingInfo || customerInfo.billingInfo || null;
+        const billing = rawBilling && rawBilling.isDifferent ? {
+            address: String(rawBilling.address || '').trim(),
+            addressComplement: String(rawBilling.addressComplement || '').trim(),
+            postalCode: String(rawBilling.postalCode || '').trim(),
+            city: String(rawBilling.city || '').trim(),
+            country: String(rawBilling.country || 'FR').trim().toUpperCase()
+        } : null;
         
         // Création de l'objet normalisé unique
         const normalizedData = {
@@ -227,15 +247,26 @@ module.exports = async (req, res) => {
         if (!normalizedData.items || !Array.isArray(normalizedData.items) || normalizedData.items.length === 0) {
             errors.push('Panier vide invalide');
         } else {
-            const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
+            const allowedOffers = Object.keys(OFFERS);
+            const seenOffers = new Set();
+            let totalQuantity = 0;
             
             for (const item of normalizedData.items) {
                 if (!item.offer || !allowedOffers.includes(item.offer)) {
                     errors.push(`Offre invalide: ${item.offer}`);
+                } else if (seenOffers.has(item.offer)) {
+                    errors.push(`Offre en double dans le panier: ${item.offer}`);
+                } else {
+                    seenOffers.add(item.offer);
                 }
-                if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1) {
-                    errors.push(`Quantité invalide pour l'offre: ${item.offer}`);
+                if (!Number.isInteger(item.quantity) || item.quantity < 1 || item.quantity > MAX_QUANTITY_PER_OFFER) {
+                    errors.push(`Quantité invalide pour l'offre ${item.offer} (entre 1 et ${MAX_QUANTITY_PER_OFFER})`);
+                } else {
+                    totalQuantity += item.quantity;
                 }
+            }
+            if (totalQuantity > MAX_TOTAL_QUANTITY) {
+                errors.push(`Commande limitée à ${MAX_TOTAL_QUANTITY} exemplaires — contactez-nous pour une commande plus importante`);
             }
         }
         
@@ -264,12 +295,21 @@ module.exports = async (req, res) => {
         
         // Validation de l'adresse selon le mode de livraison
         if (normalizedData.deliveryMethod === 'home') {
+            const country = String(normalizedData.country || 'FR').toUpperCase();
+            normalizedData.country = country;
+            if (!SHIPPING_COUNTRIES.includes(country)) {
+                errors.push('Livraison non disponible dans ce pays (France et Belgique uniquement) — contactez-nous');
+            }
+
             if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
                 errors.push('Adresse requise (min 5 caractères)');
             }
             
-            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
-                errors.push('Code postal invalide (5 chiffres requis)');
+            const postalRule = POSTAL_CODE_RULES[country] || POSTAL_CODE_RULES.FR;
+            const postalCode = String(normalizedData.postalCode || '').trim();
+            normalizedData.postalCode = postalCode;
+            if (!postalRule.test(postalCode)) {
+                errors.push(`Code postal invalide (${POSTAL_CODE_LABELS[country] || '5 chiffres'} requis)`);
             }
             
             if (!normalizedData.city || normalizedData.city.trim().length < 2) {
@@ -277,6 +317,16 @@ module.exports = async (req, res) => {
             }
         }
         
+        if (billing) {
+            if (billing.address.length < 5) errors.push('Adresse de facturation requise (min 5 caractères)');
+            if (!POSTAL_CODE_RULES[billing.country]) {
+                errors.push('Pays de facturation non pris en charge');
+            } else if (!POSTAL_CODE_RULES[billing.country].test(billing.postalCode)) {
+                errors.push(`Code postal de facturation invalide (${POSTAL_CODE_LABELS[billing.country]} requis)`);
+            }
+            if (billing.city.length < 2) errors.push('Ville de facturation requise (min 2 caractères)');
+        }
+
         // Validation du point relais si livraison en relay
         if (normalizedData.deliveryMethod === 'relay') {
             if (
@@ -293,6 +343,14 @@ module.exports = async (req, res) => {
                     message: 'Point relais requis pour la livraison en point relais'
                 });
             }
+            relayPoint.country = String(relayPoint.country || 'FR').toUpperCase();
+            if (!SHIPPING_COUNTRIES.includes(relayPoint.country)) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Validation failed',
+                    message: 'Point relais disponible en France et en Belgique uniquement'
+                });
+            }
         }
         
         // Validation des erreurs restantes
@@ -306,93 +364,58 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Configuration unique officielle des offres (prix en centimes)
-        const OFFER_CONFIG = {
-            standard: {
-                name: 'Standard - Oracle Oradia',
-                priceCents: 3800
-            },
-            'guidance-incluse': {
-                name: 'Guidance Offerte - Oracle Oradia',
-                priceCents: 4800
-            },
-            'edition-signature': {
-                name: 'Édition Signature - Oracle Oradia',
-                priceCents: 4200
-            }
-        };
-
-        // Configuration des produits et poids (identique au frontend)
-        const PRODUCT_WEIGHT_KG = 0.8; // 800g par oracle
-        
-        // Configuration des tarifs Mondial Relay France (en euros) - IDENTIQUE AU FRONTEND
-        const MONDIAL_RELAY_RATES = {
-            relay: [
-                { max_weight: 0.25, price: 4.10 },
-                { max_weight: 0.5, price: 4.10 },
-                { max_weight: 1.0, price: 5.99 },
-                { max_weight: 2.0, price: 7.99 },
-                { max_weight: 4.0, price: 7.99 },
-                { max_weight: 5.0, price: 15.99 },
-                { max_weight: 7.0, price: 15.99 },
-                { max_weight: 10.0, price: 15.99 },
-                { max_weight: 15.0, price: 25.99 },
-                { max_weight: 25.0, price: 25.99 }
-            ],
-            home: [
-                { max_weight: 0.25, price: 4.99 },
-                { max_weight: 0.5, price: 7.49 },
-                { max_weight: 1.0, price: 9.49 },
-                { max_weight: 2.0, price: 10.99 },
-                { max_weight: 4.0, price: 16.39 },
-                { max_weight: 5.0, price: 16.39 },
-                { max_weight: 7.0, price: 24.99 },
-                { max_weight: 10.0, price: 24.99 },
-                { max_weight: 15.0, price: 31.49 },
-                { max_weight: 25.0, price: 42.99 }
-            ],
-            hand_delivery: [
-                { max_weight: Infinity, price: 0 } // Remise en main propre = gratuit
-            ]
-        };
-
-        // Calculer le poids total de la commande (identique au frontend)
-        function calculateTotalWeight(items) {
-            let totalWeight = 0;
-            
-            items.forEach(item => {
-                totalWeight += item.quantity * PRODUCT_WEIGHT_KG;
+        // ── Mode de vente : précommande ou vente ferme ─────────────────────────
+        // Piloté par les interrupteurs Boutique du dashboard : un mode fermé est refusé
+        // ici, même si une ancienne page restée ouverte envoie encore la demande.
+        const saleMode = shopConfig.isValidSaleMode(body.saleMode) ? body.saleMode : 'preorder';
+        const shopMode = await getShopMode(supabase);
+        if (!shopMode[saleMode]) {
+            return res.status(403).json({
+                success: false,
+                error: 'sale_mode_closed',
+                message: saleMode === 'order'
+                    ? "La vente en ligne de l'oracle n'est pas encore ouverte."
+                    : "Les précommandes sont closes. Rendez-vous sur la page Commande pour acheter l'oracle."
             });
-            
-            return totalWeight;
         }
 
-        // Calculer le tarif de livraison selon le poids et le mode (identique au frontend)
-        function calculateDeliveryPrice(weight, deliveryMethod) {
-            if (deliveryMethod === 'hand_delivery') {
-                return 0;
+        // ── Stock limité (Édition Signature : 100 exemplaires tous modes confondus) ──
+        const limitedOffers = normalizedData.items.filter(it => OFFERS[it.offer]?.stockMax != null);
+        if (limitedOffers.length > 0) {
+            const { data: paidRows, error: stockError } = await supabase
+                .from('preorders')
+                .select('items, offer')
+                .eq('paid_status', 'completed');
+            if (stockError) {
+                console.error('Lecture du stock impossible:', stockError.message);
+                return res.status(503).json({
+                    success: false,
+                    error: 'stock_unavailable',
+                    message: 'Impossible de vérifier le stock pour le moment. Merci de réessayer dans quelques minutes.'
+                });
             }
-            
-            const rates = MONDIAL_RELAY_RATES[deliveryMethod];
-            if (!rates) {
-                console.error('Mode de livraison non trouvé:', deliveryMethod);
-                return 0;
-            }
-            
-            // Trouver la tranche applicable
-            for (const rate of rates) {
-                if (weight <= rate.max_weight) {
-                    return rate.price;
+            const sold = countSoldByOffer(paidRows);
+            for (const it of limitedOffers) {
+                const remaining = OFFERS[it.offer].stockMax - (sold[it.offer] || 0);
+                if (it.quantity > remaining) {
+                    return res.status(409).json({
+                        success: false,
+                        error: 'out_of_stock',
+                        message: remaining > 0
+                            ? `Il ne reste que ${remaining} exemplaire(s) de l'offre ${OFFERS[it.offer].label}.`
+                            : `L'offre ${OFFERS[it.offer].label} est épuisée.`
+                    });
                 }
             }
-            
-            // Si aucune tranche ne correspond (poids trop élevé)
-            return rates[rates.length - 1].price;
         }
 
+        const destinationCountry = normalizedData.deliveryMethod === 'relay'
+            ? relayPoint.country
+            : (normalizedData.country || 'FR');
+
         // Calculer le poids total et le prix de livraison selon la logique exacte du frontend
-        const totalWeight = calculateTotalWeight(normalizedData.items);
-        const calculatedDeliveryPrice = calculateDeliveryPrice(totalWeight, normalizedData.deliveryMethod);
+        const totalWeight = shopConfig.totalWeightKg(normalizedData.items);
+        const calculatedDeliveryPrice = shopConfig.calculateShippingEuros(totalWeight, normalizedData.deliveryMethod, destinationCountry);
         
         // Utiliser le prix calculé par le serveur, ignorer totalement le prix frontend
         const deliveryPrice = calculatedDeliveryPrice;
@@ -406,8 +429,9 @@ module.exports = async (req, res) => {
         const lineItems = [];
         
         for (const item of normalizedData.items) {
-            const offerConfig = OFFER_CONFIG[item.offer];
-            if (!offerConfig) {
+            const offerConfig = OFFERS[item.offer];
+            const unitPriceCents = shopConfig.getOfferPriceCents(item.offer, saleMode);
+            if (!offerConfig || !unitPriceCents) {
                 console.error('Validation failed: unknown offer');
                 return res.status(400).json({ 
                     success: false,
@@ -420,17 +444,17 @@ module.exports = async (req, res) => {
                 price_data: {
                     currency: 'eur',
                     product_data: {
-                        name: offerConfig.name,
+                        name: offerConfig.stripeName,
                         description: `Quantité: ${item.quantity}`,
                         images: ['https://oradia.fr/images/medias/apercu_stripe.jpg']
                     },
-                    unit_amount: offerConfig.priceCents,
+                    unit_amount: unitPriceCents,
                 },
                 quantity: item.quantity,
             };
             
             lineItems.push(lineItem);
-            totalAmount += offerConfig.priceCents * item.quantity;
+            totalAmount += unitPriceCents * item.quantity;
         }
         
         // Ajouter les frais de livraison si applicable
@@ -449,28 +473,56 @@ module.exports = async (req, res) => {
             totalAmount += Math.round(deliveryPrice * 100);
         }
 
+        // Adresse qui figurera sur la facture Stripe : facturation si différente, sinon
+        // adresse de livraison à domicile. Stripe ne reprend une adresse sur la facture
+        // que si elle est portée par un objet Customer — d'où sa création ici. En cas
+        // d'échec, on retombe sur customer_email (comportement historique).
+        const invoiceAddress = billing
+            ? { line1: billing.address, line2: billing.addressComplement || undefined, postal_code: billing.postalCode, city: billing.city, country: billing.country }
+            : (normalizedData.deliveryMethod === 'home'
+                ? { line1: normalizedData.shippingAddress.trim(), line2: normalizedData.addressComplement?.trim() || undefined, postal_code: normalizedData.postalCode, city: normalizedData.city.trim(), country: normalizedData.country || 'FR' }
+                : null);
+        let stripeCustomerId = null;
+        if (invoiceAddress) {
+            try {
+                const customer = await stripe.customers.create({
+                    email: safeEmail,
+                    name: safeFullName,
+                    ...(safePhone ? { phone: safePhone } : {}),
+                    address: invoiceAddress,
+                    metadata: { source: 'oradia-precommande' }
+                });
+                stripeCustomerId = customer.id;
+            } catch (customerError) {
+                console.error('Création du client Stripe échouée (facture sans adresse):', customerError.message);
+            }
+        }
+
         // Créer la session Stripe Checkout
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: lineItems,
             mode: 'payment',
-            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${frontendUrl}/livraison.html?checkout=cancelled`,
+            // value en clair dans l'URL (pas une donnée sensible, juste un montant) : évite un
+            // aller-retour serveur depuis success-precommande.html pour retrouver le montant payé
+            // au moment de déclencher la conversion Google Ads (voir js/gtag-init.js).
+            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}&value=${(totalAmount / 100).toFixed(2)}${saleMode === 'order' ? '&mode=order' : ''}`,
+            cancel_url: `${frontendUrl}/livraison.html?checkout=cancelled${saleMode === 'order' ? '&mode=order' : ''}`,
             custom_text: {
               submit: {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'
               }
             },
-            customer_email: safeEmail,
+            ...(stripeCustomerId ? { customer: stripeCustomerId } : { customer_email: safeEmail }),
             invoice_creation: {
                 enabled: true,
                 invoice_data: {
-                    description: `Précommande Oracle Oradia - ${primaryOffer || 'Standard'}`,
+                    description: `${saleMode === 'order' ? 'Commande' : 'Précommande'} Oracle Oradia - ${OFFERS[primaryOffer]?.label || 'Standard'}`,
                     custom_fields: [
                         {
                             name: 'Type',
-                            value: 'Précommande'
+                            value: saleMode === 'order' ? 'Commande' : 'Précommande'
                         }
                     ],
                     footer: 'ORADIA - Rudy Boucheron - Micro-entreprise - SIRET: 82130800400034 - APE: 9609Z - contact@oradia.fr'
@@ -478,6 +530,7 @@ module.exports = async (req, res) => {
             },
             metadata: {
                 offer: primaryOfferForStripe,
+                sale_mode: saleMode,
                 delivery_method: normalizedData.deliveryMethod || '',
                 delivery_price_cents: String(Math.round(deliveryPrice * 100)),
                 total_amount_cents: String(totalAmount),
@@ -490,6 +543,13 @@ module.exports = async (req, res) => {
                 postal_code: normalizedData.postalCode?.trim() || '',
                 city: normalizedData.city?.trim() || '',
                 country: normalizedData.country || 'FR',
+                ...(billing && {
+                    billing_address: billing.address,
+                    billing_address_complement: billing.addressComplement,
+                    billing_postal_code: billing.postalCode,
+                    billing_city: billing.city,
+                    billing_country: billing.country
+                }),
                 // Métadonnées point relais si applicable
                 ...(relayPoint && {
                     relay_id: relayPoint.id || '',
@@ -533,10 +593,18 @@ module.exports = async (req, res) => {
                 relay_city: relayPoint.city,
                 relay_country: relayPoint.country || 'FR'
             }),
+            ...(billing && {
+                billing_address: billing.address,
+                billing_address_complement: billing.addressComplement || null,
+                billing_postal_code: billing.postalCode,
+                billing_city: billing.city,
+                billing_country: billing.country
+            }),
             total_weight: totalWeight,
             calculated_delivery_price_eur: calculatedDeliveryPrice,
             paid_status: 'pending',
-            source: 'oradia-livraison'
+            source: 'oradia-livraison',
+            order_type: saleMode
         };
 
         const { error: insertError } = await supabase

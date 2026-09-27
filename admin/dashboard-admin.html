@@ -360,11 +360,6 @@
                 <i class="fas fa-address-book w-4 text-center"></i>
                 <span>Contacts</span>
             </div>
-            <div class="nav-item" onclick="showTab('nl-subscribers')" id="nav-nl-subscribers" title="Qui est inscrit/désabonné de la newsletter, et depuis quand">
-                <i class="fas fa-envelope-open-text w-4 text-center"></i>
-                <span>Abonnés newsletter</span>
-                <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-nl-subscribers"></span>
-            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Commerce</p>
             <div class="nav-item" onclick="showTab('preorders')" id="nav-preorders">
@@ -798,6 +793,29 @@
                 </div>
             </div>
             <div id="modalSupplierFilesBody" class="space-y-2 max-h-72 overflow-y-auto text-sm text-light-gold/80">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Factures jointes à une transaction (Comptabilité > Recettes & dépenses) — même
+         mécanique que le modal "Devis joints" ci-dessus, bucket Storage privé (voir
+         api/admin/index.js, action upload/delete/get-transaction-invoice-url). -->
+    <div id="modalTransactionInvoices" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closeTransactionInvoicesModal()">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="cormorant text-xl font-bold text-gold" id="modalTransactionInvoicesTitle">Factures jointes</h4>
+                <button onclick="closeTransactionInvoicesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-4 bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg p-3 space-y-2">
+                <input type="file" id="transactionInvoiceInput" accept="application/pdf,image/*"
+                    class="w-full text-xs text-light-gold/70 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gold/30 file:bg-gold/10 file:text-gold file:text-xs">
+                <div class="flex items-center gap-3">
+                    <button onclick="uploadTransactionInvoice()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-1.5 text-sm hover:bg-gold/30 transition"><i class="fas fa-upload mr-1"></i>Joindre</button>
+                    <span id="transactionInvoiceStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+            <div id="modalTransactionInvoicesBody" class="space-y-2 max-h-72 overflow-y-auto text-sm text-light-gold/80">
                 <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
             </div>
         </div>
@@ -1501,16 +1519,40 @@
                 </div>
             </div>
 
-            <!-- ── Sous-onglet Inscrits Newsletter ── -->
+            <!-- ── Sous-onglet Inscrits Newsletter ──
+                 Fusion de l'ancien onglet séparé "Abonnés newsletter" (nl-subscribers, retiré de
+                 la nav) et de ce sous-onglet : garde le suivi statut/désinscriptions du premier
+                 (KPI, filtre, colonne "Désabonné le", sync désinscriptions) et le suivi contenu
+                 du second (dernière newsletter reçue, avancement parcours, renvoi ciblé). -->
             <div id="contacts-subtab-newsletter" class="hidden">
                 <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
-                    <div class="flex items-center gap-3">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <div class="flex gap-3">
+                            <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
+                                <div class="text-xl font-bold text-emerald-400" id="nl-active-count">-</div>
+                                <div class="text-xs text-emerald-300/70">Inscrits</div>
+                            </div>
+                            <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
+                                <div class="text-xl font-bold text-red-400" id="nl-unsub-count">-</div>
+                                <div class="text-xs text-red-300/70">Désabonnés</div>
+                            </div>
+                        </div>
+                        <select id="nlStatusFilter" onchange="loadNlSubscribers(1)"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <option value="active">Inscrits actifs</option>
+                            <option value="unsubscribed">Désabonnés</option>
+                            <option value="all">Tous</option>
+                        </select>
                         <input id="nlSearch" type="text" placeholder="Rechercher…"
                             oninput="filterNlLocal()"
-                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
-                        <span class="text-gold/50 text-sm">Abonnés actifs Brevo liste #5</span>
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-44">
                     </div>
-                    <div class="flex items-center gap-2">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="syncBrevoUnsubscribes()" id="syncUnsubBtn"
+                            class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold"
+                            title="Interroge Brevo pour détecter les désabonnements récents">
+                            <i class="fas fa-sync-alt"></i> Sync désinscriptions
+                        </button>
                         <button onclick="resendLastNewsletter()" id="resendLastNlBtn" class="flex items-center gap-2 bg-gold/15 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/25 transition text-sm">
                             <i class="fas fa-paper-plane"></i> Envoyer la dernière newsletter aux nouveaux inscrits
                         </button>
@@ -1528,9 +1570,11 @@
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Date inscription</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Désabonné le</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Dernière newsletter</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Avancement parcours</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gold/20" id="nlTableBody"></tbody>
@@ -1756,65 +1800,6 @@
 
         </section>
         </div><!-- /tab-waitlist -->
-
-        <!-- ══ ONGLET : NEWSLETTER ══ -->
-        <div id="tab-nl-subscribers" class="tab-panel">
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-8 gap-3 flex-wrap">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Abonnés Newsletter</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Personnes inscrites à la newsletter ORADIA (synchronisées avec Brevo)</p>
-                </div>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <!-- KPI chips -->
-                    <div class="flex gap-3">
-                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
-                            <div class="text-xl font-bold text-emerald-400" id="nl-active-count">-</div>
-                            <div class="text-xs text-emerald-300/70">Inscrits</div>
-                        </div>
-                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
-                            <div class="text-xl font-bold text-red-400" id="nl-unsub-count">-</div>
-                            <div class="text-xs text-red-300/70">Désabonnés</div>
-                        </div>
-                    </div>
-                    <!-- Filtre statut -->
-                    <select id="nlSubscribersFilter" onchange="loadNlSubscribersLegacy(1)"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                        <option value="active">Inscrits actifs</option>
-                        <option value="unsubscribed">Désabonnés</option>
-                        <option value="all">Tous</option>
-                    </select>
-                    <input id="nlSubscribersSearch" type="text" placeholder="Rechercher…"
-                        oninput="filterNlSubscribersLocal()"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-44">
-                    <button onclick="syncBrevoUnsubscribes()" id="syncUnsubBtn"
-                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold"
-                        title="Interroge Brevo pour détecter les désabonnements récents">
-                        <i class="fas fa-sync-alt"></i> Sync désinscriptions
-                    </button>
-                </div>
-            </div>
-
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="nlSubscribersTable">
-                        <thead class="bg-[rgba(5,20,40,0.8)]">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Inscrit le</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Désabonné le</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gold/20">
-                        </tbody>
-                    </table>
-                </div>
-                <div id="nlSubscribersPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
-            </div>
-        </section>
-        </div><!-- /tab-nl-subscribers -->
 
         <!-- ══ ONGLET : ABONNEMENTS ══ -->
         <div id="tab-subscriptions" class="tab-panel">
@@ -3086,7 +3071,7 @@
                                 class="flex-shrink-0 text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition">
                                 <i class="fas fa-file-pdf mr-1.5"></i>Exporter en PDF
                             </button>
-                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact individuellement selon sa propre date d'inscription/dernier envoi (cadence 7 jours), la prochaine étape du parcours qui lui est due (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
+                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact actif, la prochaine étape de SA propre séquence (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé) — tous avancent d'une étape, sans condition de délai (hors garde-fou anti-doublon le même jour). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
                                 class="flex-shrink-0 text-sm bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 hover:bg-purple-500/25 transition">
                                 <i class="fas fa-route mr-1.5"></i>Lancer l'envoi individualisé
                             </button>
@@ -3729,6 +3714,26 @@
                 <div id="analytics-daily-chart" class="h-40"></div>
             </div>
 
+            <!-- Version anglaise (/en/) -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-language text-gold/60"></i> Version anglaise (/en/)</h4>
+                <p class="text-light-gold/35 text-xs mb-3 -mt-2">Vues déjà filtrées des robots (même logique que le reste de ces statistiques).</p>
+                <div class="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                        <div class="text-2xl font-bold text-teal-300" id="ana-en-views">—</div>
+                        <p class="text-gold/50 text-xs mt-1">Pages vues</p>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-gold" id="ana-en-visitors">—</div>
+                        <p class="text-gold/50 text-xs mt-1">Visiteurs uniques</p>
+                    </div>
+                    <div>
+                        <div class="text-2xl font-bold text-light-gold" id="ana-en-share">—</div>
+                        <p class="text-gold/50 text-xs mt-1">% du trafic total</p>
+                    </div>
+                </div>
+            </div>
+
             <!-- Nouveaux vs anciens visiteurs + Pages et provenance -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center">
@@ -3781,6 +3786,16 @@
                     <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-gold/60"></i> Pages consultées (app)</h4>
                     <div id="ana-app-top-pages" class="space-y-2 text-sm"><p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p></div>
                 </div>
+            </div>
+            <!-- Vues app par jour -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-gold/60"></i> Vues app par jour</h4>
+                <div id="analytics-app-daily-chart" class="h-40"></div>
+            </div>
+            <!-- Type de visiteurs (app) -->
+            <div class="stat-card rounded-2xl p-6 mb-6 flex flex-col items-center justify-center">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2 self-start"><i class="fas fa-users text-gold/60"></i> Type de visiteurs (app)</h4>
+                <div id="analytics-app-visitor-type-chart" class="w-full flex flex-col items-center"></div>
             </div>
             <div class="grid grid-cols-1 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6">
@@ -3850,6 +3865,21 @@
                 <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-box text-gold/60"></i> Funnel de conversion — Précommande</h4>
                 <p class="text-gold/40 text-xs mb-4">Étapes du parcours sur la période sélectionnée. Mesuré en interne (pas de cookie tiers) — les précommandes payées ne sont pas strictement chaînées aux visites (redirection Stripe).</p>
                 <div id="analytics-funnel-precommande" class="space-y-3">
+                    <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
+                </div>
+            </div>
+
+            <!-- Funnel de conversion — Parrainage -->
+            <div class="stat-card rounded-2xl p-6 mt-6">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-gift text-gold/60"></i> Funnel de conversion — Parrainage</h4>
+                    <div class="flex items-center gap-4 text-xs">
+                        <span class="text-light-gold/50">Taux de conversion : <strong class="text-gold" id="ana-referral-rate">—</strong></span>
+                        <span class="text-light-gold/50">Parrains actifs : <strong class="text-gold" id="ana-referral-active">—</strong></span>
+                    </div>
+                </div>
+                <p class="text-gold/40 text-xs mb-4">Combien de liens de parrainage ("offrir un tirage à un proche") ont été utilisés sur la période, et combien ont réellement abouti (le filleul est allé au bout d'un 1er tirage) — sert à repérer si le programme perd des gens en route ou manque simplement de visibilité.</p>
+                <div id="analytics-funnel-referral" class="space-y-3">
                     <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
                 </div>
             </div>
@@ -4350,6 +4380,16 @@
 
         <section class="mb-10">
             <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Demandes d'accès bêta (app mobile)</h3>
+                <p class="text-light-gold/50 text-sm mt-1">La piste Google Play est en test fermé — <strong class="text-gold/70">ajoutez d'abord la personne au groupe testeurs dans Play Console</strong>, puis cliquez "Envoyer le lien" ici. Sans cette étape, le lien reçu ne fonctionnera pas pour elle.</p>
+            </div>
+            <div id="betaRequestsList" class="space-y-2">
+                <p class="text-light-gold/30 text-sm">Chargement…</p>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Mails du site</h3>
                 <p class="text-light-gold/50 text-sm mt-1">Envoie une version test de chaque email transactionnel à <span class="text-gold font-mono">contact@oradia.fr</span>. Aucun envoi aux vrais destinataires.</p>
             </div>
@@ -4609,7 +4649,11 @@
                             <button onclick="exportPdf('contacts')" class="w-full bg-[rgba(26,54,93,0.8)] text-gold/80 border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-[rgba(26,54,93,1)] transition flex items-center justify-center gap-1.5">
                                 <i class="fas fa-file-pdf"></i> PDF
                             </button>
+                            <button onclick="exportCsv('contacts-emails')" title="Liste brute d'e-mails, un par ligne, sans en-tête ni guillemets — pratique pour un import de testeurs Play Console ou tout outil qui n'accepte qu'une adresse par ligne." class="w-full bg-blue-500/10 text-blue-300/80 border border-blue-500/25 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/20 transition flex items-center justify-center gap-1.5">
+                                <i class="fas fa-at"></i> E-mails seuls
+                            </button>
                             <p id="export-status-contacts" class="text-xs text-center text-light-gold/40 hidden"></p>
+                            <p id="export-status-contacts-emails" class="text-xs text-center text-light-gold/40 hidden"></p>
                         </div>
                         <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-lg p-3 flex flex-col gap-2">
                             <p class="text-light-gold/70 text-xs font-semibold">Abonnés newsletter</p>
@@ -4617,7 +4661,11 @@
                             <button onclick="exportCsv('contacts-newsletter')" class="w-full bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/30 transition flex items-center justify-center gap-1.5">
                                 <i class="fas fa-file-csv"></i> CSV
                             </button>
+                            <button onclick="exportCsv('contacts-newsletter-emails')" title="Liste brute d'e-mails, un par ligne, sans en-tête ni guillemets — le format attendu par l'import de testeurs de Google Play Console (le CSV complet ci-dessus a trop de colonnes pour lui)." class="w-full bg-blue-500/10 text-blue-300/80 border border-blue-500/25 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/20 transition flex items-center justify-center gap-1.5">
+                                <i class="fas fa-at"></i> E-mails seuls (testeurs Play Console)
+                            </button>
                             <p id="export-status-contacts-newsletter" class="text-xs text-center text-light-gold/40 hidden"></p>
+                            <p id="export-status-contacts-newsletter-emails" class="text-xs text-center text-light-gold/40 hidden"></p>
                         </div>
                         <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-lg p-3 flex flex-col gap-2">
                             <p class="text-light-gold/70 text-xs font-semibold">Fournisseurs</p>
@@ -4748,7 +4796,6 @@
             donors:             'Dons',
             quotes:             'Devis & Coûts',
             waitlist:           'Contacts',
-            'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
             newsletter:         'Newsletter & Réseaux',
             mails:              'Mails du site',
@@ -4781,7 +4828,6 @@
             document.getElementById('sidebar').classList.remove('open');
             if (name !== 'newsletter') nlShowFloatingBar(false);
             if (name === 'newsletter')    nlLoadDrafts();
-            if (name === 'nl-subscribers') { loadNlSubscribersLegacy(1); syncBrevoUnsubscribes(); }
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'quotes')      { initCostCalculator(); loadQuotes().then(initPlan); }
@@ -6626,6 +6672,114 @@
             } catch (e) { adminAlert('Erreur : ' + e.message); }
         }
 
+        // ── Factures jointes à une transaction (Comptabilité > Recettes & dépenses) ──
+        // Même mécanique que les devis fournisseurs ci-dessus, avec une différence :
+        // bucket privé, donc pas d'URL directe stockée — downloadTransactionInvoice()
+        // demande une URL signée à la demande (courte durée de vie) plutôt que d'afficher
+        // un lien <a href> fixe comme pour les devis fournisseurs (bucket public, lui).
+        let currentTransactionInvoicesId = null;
+        async function viewTransactionInvoices(transactionId, description) {
+            currentTransactionInvoicesId = transactionId;
+            document.getElementById('modalTransactionInvoicesTitle').textContent = `Factures jointes — ${description}`;
+            document.getElementById('transactionInvoiceStatus').textContent = '';
+            document.getElementById('transactionInvoiceInput').value = '';
+            await loadTransactionInvoices();
+            document.getElementById('modalTransactionInvoices').classList.remove('hidden');
+            document.getElementById('modalTransactionInvoices').classList.add('flex');
+        }
+
+        function closeTransactionInvoicesModal() {
+            document.getElementById('modalTransactionInvoices').classList.add('hidden');
+            document.getElementById('modalTransactionInvoices').classList.remove('flex');
+            currentTransactionInvoicesId = null;
+        }
+
+        async function loadTransactionInvoices() {
+            const body = document.getElementById('modalTransactionInvoicesBody');
+            body.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res = await adminFetch(`/api/admin/data?section=transaction-invoices&transactionId=${encodeURIComponent(currentTransactionInvoicesId)}`);
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                const files = json.data || [];
+                if (!files.length) {
+                    body.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucune facture jointe pour l\'instant</p>';
+                    return;
+                }
+                body.innerHTML = files.map(f => `
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+                        <button onclick="downloadTransactionInvoice('${f.id}')" class="flex items-center gap-2 text-light-gold/80 hover:text-gold text-sm min-w-0 text-left">
+                            <i class="fas fa-file-pdf text-gold/50 shrink-0"></i>
+                            <span class="truncate">${escapeHtmlFront(f.file_name)}</span>
+                        </button>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-gold/30 text-xs">${fmtFileSize(f.file_size)} · ${f.uploaded_at ? new Date(f.uploaded_at).toLocaleDateString('fr-FR') : ''}</span>
+                            <button onclick="deleteTransactionInvoice('${f.id}')" class="text-red-400/50 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) {
+                body.innerHTML = `<p class="text-red-400/70 text-center py-4">${escapeHtmlFront(e.message)}</p>`;
+            }
+        }
+
+        function uploadTransactionInvoice() {
+            const input = document.getElementById('transactionInvoiceInput');
+            const status = document.getElementById('transactionInvoiceStatus');
+            const file = input.files?.[0];
+            if (!file) { status.className = 'text-xs text-red-400'; status.textContent = 'Choisis un fichier.'; return; }
+            if (file.size > 15 * 1024 * 1024) { status.className = 'text-xs text-red-400'; status.textContent = 'Fichier trop lourd (max 15 Mo).'; return; }
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Envoi…';
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const res = await adminFetch('/api/admin/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'upload-transaction-invoice', transactionId: currentTransactionInvoicesId, fileName: file.name, fileData: reader.result })
+                    });
+                    const json = await res.json();
+                    if (!res.ok) throw new Error(json.error || 'Erreur');
+                    input.value = '';
+                    status.textContent = '';
+                    await loadTransactionInvoices();
+                    await loadComptabilite();
+                } catch (e) {
+                    status.className = 'text-xs text-red-400';
+                    status.textContent = 'Erreur : ' + e.message;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function downloadTransactionInvoice(id) {
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'get-transaction-invoice-url', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                window.open(json.url, '_blank', 'noopener');
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        async function deleteTransactionInvoice(id) {
+            if (!(await adminConfirm('Supprimer définitivement cette facture ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-transaction-invoice', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadTransactionInvoices();
+                await loadComptabilite();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
         // Vue consolidée : tous les devis joints, toutes fiches fournisseur confondues
         let currentAllSupplierFiles = [];
         async function loadAllSupplierFiles() {
@@ -7185,38 +7339,37 @@
             }
         }
 
-        // ── Newsletter subscribers ──
-
-        // Ancien onglet "Newsletter — Abonnés" (nl-subscribers), conservé mais plus dans la nav.
-        // Renommée pour ne plus entrer en collision avec loadNlSubscribers() du sous-onglet Contacts.
-        async function loadNlSubscribersLegacy(page = 1, limit = 20) {
+        // ── Newsletter subscribers (sous-onglet Contacts > Inscrits Newsletter) ──
+        // Fusionne l'ancien onglet séparé "Abonnés newsletter" (statut, désinscriptions,
+        // pagination serveur) avec ce sous-onglet (dernière newsletter reçue, avancement
+        // parcours) — voir renderNlTable et resendLastNewsletter plus bas dans le fichier.
+        async function loadNlSubscribers(page = 1, limit = 20) {
             try {
-                const status = document.getElementById('nlSubscribersFilter')?.value || 'active';
+                const status = document.getElementById('nlStatusFilter')?.value || 'active';
                 let url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}`;
                 if (status === 'active')            url += '&newsletter=newsletter';
                 else if (status === 'unsubscribed') url += '&nl_status=unsubscribed';
                 // "all" = pas de filtre
 
-                // Charger la liste ET les compteurs KPI en parallèle (seulement page 1)
-                const promises = [adminFetch(url).then(r => r.json())];
+                // Charger la liste, les compteurs KPI (seulement page 1) et l'avancement du
+                // parcours en parallèle.
+                const promises = [adminFetch(url).then(r => r.json()), loadParcoursStepsForProgress()];
                 if (page === 1) {
                     promises.push(
                         adminFetch('/api/admin/data?section=waitlist&page=1&limit=1&newsletter=newsletter').then(r => r.json()),
                         adminFetch('/api/admin/data?section=waitlist&page=1&limit=1&nl_status=unsubscribed').then(r => r.json())
                     );
                 }
-                const [data, activeData, unsubData] = await Promise.all(promises);
+                const [data, , activeData, unsubData] = await Promise.all(promises);
 
                 if (data.success) {
                     currentData.nlSubscribers = data.data;
                     currentData.nlSubscribersPagination = data.pagination;
-                    updateNlSubscribersTable(data.data, data.pagination);
+                    renderNlTable(data.data, data.pagination);
                 }
                 if (activeData?.success) {
                     const el = document.getElementById('nl-active-count');
                     if (el) el.textContent = activeData.pagination?.total ?? '-';
-                    const badge = document.getElementById('nav-badge-nl-subscribers');
-                    if (badge) badge.textContent = activeData.pagination?.total || '';
                 }
                 if (unsubData?.success) {
                     const el = document.getElementById('nl-unsub-count');
@@ -7224,45 +7377,6 @@
                 }
             } catch (e) {
                 console.error('[Admin] Error loading nl-subscribers:', e);
-            }
-        }
-
-        function updateNlSubscribersTable(rows, pagination) {
-            const tbody = document.querySelector('#nlSubscribersTable tbody');
-            if (!tbody) return;
-            if (!rows || rows.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gold/40 text-sm">Aucun abonné trouvé</td></tr>';
-                document.getElementById('nlSubscribersPagination').innerHTML = '';
-                return;
-            }
-            const fmt = iso => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
-            tbody.innerHTML = rows.map(item => `
-                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.email || '-')}</td>
-                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.full_name || '-')}</td>
-                    <td class="px-6 py-4 text-light-gold/70 text-sm">${fmt(item.subscribed_at || item.created_at)}</td>
-                    <td class="px-6 py-4 text-sm">${item.unsubscribed_at ? `<span class="text-red-400">${fmt(item.unsubscribed_at)}</span>` : '<span class="text-gold/30">-</span>'}</td>
-                    <td class="px-6 py-4">
-                        ${item.status === 'unsubscribed'
-                            ? '<span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">Désabonné</span>'
-                            : '<span class="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400">Inscrit</span>'
-                        }
-                    </td>
-                </tr>
-            `).join('');
-            // Pagination
-            const pag = pagination || {};
-            const pagEl = document.getElementById('nlSubscribersPagination');
-            if (pagEl && pag.pages > 1) {
-                pagEl.innerHTML = `<div class="flex items-center justify-between">
-                    <span class="text-sm text-light-gold">${((pag.page-1)*pag.limit)+1} à ${Math.min(pag.page*pag.limit, pag.total)} sur ${pag.total}</span>
-                    <div class="flex gap-2">
-                        ${pag.page > 1 ? `<button onclick="loadNlSubscribersLegacy(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
-                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribersLegacy(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
-                    </div>
-                </div>`;
-            } else if (pagEl) {
-                pagEl.innerHTML = '';
             }
         }
 
@@ -7295,7 +7409,7 @@
                 const data = await res.json();
                 if (data.success) {
                     btn.innerHTML = `<i class="fas fa-check mr-2"></i>${data.unsubscribed} désabonnement(s) détecté(s)`;
-                    if (data.unsubscribed > 0) loadNlSubscribersLegacy(1);
+                    if (data.unsubscribed > 0) loadNlSubscribers(1);
                 } else {
                     btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Erreur';
                 }
@@ -7305,14 +7419,6 @@
             setTimeout(() => {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync désinscriptions'; }
             }, 4000);
-        }
-
-        function filterNlSubscribersLocal() {
-            const q = (document.getElementById('nlSubscribersSearch')?.value || '').toLowerCase().trim();
-            const source = currentData.nlSubscribers || [];
-            if (!q) { updateNlSubscribersTable(source, currentData.nlSubscribersPagination); return; }
-            const filtered = source.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q));
-            updateNlSubscribersTable(filtered, { page:1, limit:filtered.length, total:filtered.length, pages:1 });
         }
 
         // Catégories de contacts connues (rafraîchies depuis l'API à chaque chargement)
@@ -7378,7 +7484,6 @@
             const bd  = document.getElementById('nav-badge-donors');
             const bw  = document.getElementById('nav-badge-waitlist');
             const bs  = document.getElementById('nav-badge-subscriptions');
-            const bnl = document.getElementById('nav-badge-nl-subscribers');
             const bg  = document.getElementById('nav-badge-guidances');
             if (bp)  bp.textContent  = data.preorders.count || '';
             if (bd)  bd.textContent  = data.donors.count || '';
@@ -8053,7 +8158,11 @@
                 if (!data.brevoRestored) {
                     adminAlert("La réinscription Brevo n'a pas pu être confirmée" + (data.brevoDetail ? "\n(" + data.brevoDetail + ")" : "") + "\n\nVérifie manuellement dans Brevo. Le statut local n'a pas été modifié tant que ce n'est pas confirmé côté Brevo.");
                 }
+                // Deux tableaux affichent les mêmes contacts (onglet Contacts, et sous-onglet
+                // Contacts > Inscrits Newsletter) — rafraîchir les deux pour qu'ils restent
+                // synchronisés, quel que soit celui d'où l'action a été lancée.
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
+                if (document.getElementById('nlTableBody')) loadNlSubscribers(currentData.nlSubscribersPagination?.page || 1);
             } catch (e) {
                 adminAlert('Erreur : ' + e.message);
             }
@@ -8073,6 +8182,7 @@
                     adminAlert("Contact marqué comme désabonné dans le dashboard.\n\nAttention : la désinscription Brevo n'a pas pu être confirmée" + (data.brevoDetail ? "\n(" + data.brevoDetail + ")" : "") + "\n\nVérifie manuellement dans Brevo.");
                 }
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
+                if (document.getElementById('nlTableBody')) loadNlSubscribers(currentData.nlSubscribersPagination?.page || 1);
             } catch (e) {
                 adminAlert('Erreur : ' + e.message);
             }
@@ -10781,6 +10891,56 @@
         }
         document.addEventListener('DOMContentLoaded', pushRefreshDeviceCount);
 
+        async function loadBetaRequests() {
+            const el = document.getElementById('betaRequestsList');
+            if (!el) return;
+            try {
+                const res = await adminFetch('/api/admin/data?section=waitlist&tag=beta-app-en-attente&limit=200');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const rows = data.data || [];
+                if (rows.length === 0) {
+                    el.innerHTML = '<p class="text-light-gold/30 text-sm">Aucune demande en attente.</p>';
+                    return;
+                }
+                el.innerHTML = rows.map(c => `
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4" id="beta-row-${c.id}">
+                        <div class="min-w-0">
+                            <p class="text-gold font-semibold text-sm truncate">${escapeHtmlFront(c.full_name || c.email)}</p>
+                            ${c.full_name ? `<p class="text-gold/40 text-xs mt-0.5 truncate">${escapeHtmlFront(c.email)}</p>` : ''}
+                        </div>
+                        <button onclick="sendBetaAccess('${c.id}', this)" class="beta-send-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer le lien
+                        </button>
+                    </div>`).join('');
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400 text-sm">Erreur de chargement : ${e.message}</p>`;
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadBetaRequests);
+
+        async function sendBetaAccess(id, btn) {
+            if (!confirm("Avez-vous bien ajouté cette personne au groupe testeurs dans Play Console avant d'envoyer ?")) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i> Envoi…';
+            try {
+                const res = await adminFetch('/api/admin/data?action=send-beta-access', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const row = document.getElementById('beta-row-' + id);
+                if (row) row.remove();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
         async function pushSendNotification() {
             const title = document.getElementById('pushTitle').value.trim();
             const body  = document.getElementById('pushBody').value.trim();
@@ -11032,7 +11192,7 @@
         async function sendParcoursIndividualNow() {
             const status = document.getElementById('sendParcoursIndividualStatus');
             const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            if (!(await adminConfirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra, s'il est dû (7 jours depuis son inscription ou son dernier envoi), sa prochaine étape (ordre > 6)."))) return;
+            if (!(await adminConfirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra sa prochaine étape (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé), sauf s'il a déjà reçu un envoi aujourd'hui."))) return;
             show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours…', 'text-light-gold/60');
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=send-parcours-individual-now', { method: 'POST' });
@@ -11954,10 +12114,6 @@
             }
         }
 
-        // Conservé pour compatibilité avec l'ancien code (tab nl-subscribers)
-        async function syncBrevo() { await triggerSyncAll(true); }
-        async function importFromBrevo() { await triggerSyncAll(true); }
-
         // ── Sous-onglets Contacts ──────────────────────────────────────────────────
         let _currentContactsSubTab = 'repertoire';
         function showContactsSubTab(name) {
@@ -11981,7 +12137,8 @@
         }
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
-        let _nlData = [];
+        // Le chargement (loadNlSubscribers, pagination serveur + KPI + filtre statut) vit
+        // plus haut dans ce fichier, fusionné avec l'ancien onglet "Abonnés newsletter".
         // Dernier ordre de parcours réellement reçu, par email — vient de
         // newsletter_sends (action=parcours-contact-progress), la même table et la
         // même logique que le cron d'envoi réel (runParcoursIndividualCron). Remplace
@@ -12019,21 +12176,6 @@
             } catch (_) { /* silencieux — l'avancement s'affiche juste en "—" */ }
         }
 
-        async function loadNlSubscribers() {
-            try {
-                const [res] = await Promise.all([
-                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter'),
-                    loadParcoursStepsForProgress()
-                ]);
-                const json = await res.json();
-                if (!json.success) return;
-                _nlData = json.data || [];
-                renderNlTable(_nlData);
-                const badge = document.getElementById('nl-count-badge');
-                if (badge) badge.textContent = _nlData.length || '';
-            } catch(e) { /* silencieux */ }
-        }
-
         // Rend l'avancement réel dans le parcours d'un contact, à partir de
         // newsletter_sends (voir _parcoursLastOrdreByEmail) — pas d'une estimation par
         // sujet. Un contact absent de cette table n'a reçu aucune étape du parcours,
@@ -12062,11 +12204,12 @@
                 </div>`;
         }
 
-        function renderNlTable(rows) {
+        function renderNlTable(rows, pagination) {
             const tbody = document.getElementById('nlTableBody');
             if (!tbody) return;
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                document.getElementById('nlPagination').innerHTML = '';
                 return;
             }
             tbody.innerHTML = rows.map(c => {
@@ -12091,12 +12234,37 @@
                 <tr class="hover:bg-gold/5 transition">
                     <td class="px-6 py-3 text-light-gold text-sm font-mono">${c.email || ''}</td>
                     <td class="px-6 py-3 text-light-gold/70 text-sm">${c.full_name || c.name || '—'}</td>
-                    <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
-                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Actif' : c.status || '—'}</span></td>
+                    <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at || c.subscribed_at ? new Date(c.created_at || c.subscribed_at).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td class="px-6 py-3 text-sm">${c.unsubscribed_at ? `<span class="text-red-400">${new Date(c.unsubscribed_at).toLocaleDateString('fr-FR')}</span>` : '<span class="text-gold/30">—</span>'}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Inscrit' : 'Désabonné'}</span></td>
                     <td class="px-6 py-3">${lastNl}</td>
                     <td class="px-6 py-3">${renderParcoursProgress(c)}</td>
+                    <td class="px-6 py-3">
+                        <div class="flex gap-2">
+                            ${c.status === 'unsubscribed' ? `<button onclick="resubscribeContact('${c.id}', this.dataset.email)" data-email="${escapeHtmlFront(c.email || '')}" class="text-teal-300/70 hover:text-teal-300 transition" title="Réinscrire à la newsletter">
+                                <i class="fas fa-envelope-circle-check"></i>
+                            </button>` : ''}
+                            <button onclick="unsubscribeContact('${c.id}', this.dataset.email)" data-email="${escapeHtmlFront(c.email || '')}" class="${c.status === 'unsubscribed' ? 'text-gold/40 hover:text-gold/70' : 'text-orange-300/70 hover:text-orange-300'} transition" title="${c.status === 'unsubscribed' ? 'Re-forcer la désinscription Brevo' : 'Désinscrire de la newsletter'}">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>`;
             }).join('');
+            // Pagination serveur (héritée de l'ancien onglet "Abonnés newsletter")
+            const pag = pagination || {};
+            const pagEl = document.getElementById('nlPagination');
+            if (pagEl && pag.pages > 1) {
+                pagEl.innerHTML = `<div class="flex items-center justify-between">
+                    <span class="text-sm text-light-gold">${((pag.page-1)*pag.limit)+1} à ${Math.min(pag.page*pag.limit, pag.total)} sur ${pag.total}</span>
+                    <div class="flex gap-2">
+                        ${pag.page > 1 ? `<button onclick="loadNlSubscribers(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
+                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribers(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
+                    </div>
+                </div>`;
+            } else if (pagEl) {
+                pagEl.innerHTML = '';
+            }
         }
 
         // ── Renvoi de la dernière newsletter aux inscrits qui ne l'ont pas reçue ──
@@ -12140,8 +12308,14 @@
         }
 
         function filterNlLocal() {
-            const q = (document.getElementById('nlSearch')?.value || '').toLowerCase();
-            renderNlTable(q ? _nlData.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q)) : _nlData);
+            // Filtre local sur la page actuellement chargée (pas d'appel serveur) — comme
+            // le reste est paginé côté serveur, ça ne cherche que parmi les lignes déjà
+            // affichées, pas l'ensemble des inscrits.
+            const q = (document.getElementById('nlSearch')?.value || '').toLowerCase().trim();
+            const source = currentData.nlSubscribers || [];
+            if (!q) { renderNlTable(source, currentData.nlSubscribersPagination); return; }
+            const filtered = source.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q));
+            renderNlTable(filtered, { page:1, limit:filtered.length, total:filtered.length, pages:1 });
         }
 
         // ── Emails Tirages ─────────────────────────────────────────────────────────
@@ -12373,8 +12547,15 @@
         // sans rien publier — pour vérifier ce qui partirait avant l'envoi réel du mercredi.
         async function nlPreviewSocialFromParcours(id) {
             await nlOpenDraft(id);
-            const alreadyFilled = document.getElementById('nl-social-fb-text')?.value?.trim();
-            if (!alreadyFilled) await nlPreviewSocial();
+            // Les 3 réseaux doivent être remplis pour sauter la régénération — un aperçu
+            // créé avant l'ajout du LinkedIn à ce flux (ou dont la génération avait
+            // partiellement échoué) n'avait que Facebook/Instagram : ne vérifier que
+            // Facebook laissait alors le LinkedIn manquant indéfiniment, "Revoir"
+            // affichant un aperçu à deux réseaux sans jamais le compléter.
+            const fbFilled = document.getElementById('nl-social-fb-text')?.value?.trim();
+            const igFilled = document.getElementById('nl-social-ig-text')?.value?.trim();
+            const liFilled = document.getElementById('nl-social-li-text')?.value?.trim();
+            if (!fbFilled || !igFilled || !liFilled) await nlPreviewSocial();
             document.getElementById('nl-social-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -13312,6 +13493,53 @@
             el.innerHTML = buildFunnelStepsHtml(steps);
         }
 
+        function renderReferralFunnel(referral) {
+            const el = document.getElementById('analytics-funnel-referral');
+            const rateEl = document.getElementById('ana-referral-rate');
+            const activeEl = document.getElementById('ana-referral-active');
+            if (!el) return;
+            if (!referral) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Migration en attente (supabase-migration-referrals.sql / supabase-migration-funnel-events.sql) — apparaîtra une fois exécutée dans Supabase.</p>';
+                if (rateEl) rateEl.textContent = '—';
+                if (activeEl) activeEl.textContent = '—';
+                return;
+            }
+            if (rateEl) rateEl.textContent = referral.taux_conversion_pct != null ? referral.taux_conversion_pct + '%' : '—';
+            if (activeEl) activeEl.textContent = referral.parrains_actifs;
+            const steps = [
+                { label: 'Liens utilisés (bonus filleul crédité)', value: referral.liens_utilises,      color: '#d4af37', icon: 'fa-link' },
+                { label: '1er tirage terminé (conversion)',        value: referral.conversions_abouties, color: '#a78bfa', icon: 'fa-circle-check' },
+                { label: 'Bonus parrain réclamé',                  value: referral.bonus_reclames,       color: '#4ade80', icon: 'fa-gift' }
+            ];
+            if (steps.every(s => s.value === 0)) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune activité de parrainage pour cette période.</p>';
+                return;
+            }
+            // "Liens utilisés" est un événement introduit après coup (voir js/referral.js) :
+            // sur une période remontant avant son déploiement, il peut rester à 0 alors que
+            // des conversions plus anciennes existent déjà — buildFunnelStepsHtml suppose la
+            // 1re étape comme référence à 100%, ce qui casserait l'échelle dans ce cas précis.
+            // On cale donc l'échelle sur le max réel des trois valeurs plutôt que sur la 1re.
+            const max = Math.max(...steps.map(s => s.value), 1);
+            let note = '';
+            if (referral.liens_utilises === 0 && referral.conversions_abouties > 0) {
+                note = '<p class="text-amber-300/70 text-xs italic mb-3"><i class="fas fa-circle-info mr-1"></i>"Liens utilisés" est une mesure ajoutée récemment : les conversions ci-dessous sont antérieures à sa mise en place, d\'où l\'absence de liens comptés pour cette période.</p>';
+            }
+            el.innerHTML = note + steps.map((s, i) => {
+                const pct = Math.round((s.value / max) * 100);
+                const prevPct = i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                return `<div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                        <span class="font-semibold" style="color:${s.color}">${s.value}${prevPct != null ? `<span class="text-light-gold/30 font-normal ml-1">(${prevPct}% de l'étape préc.)</span>` : ''}</span>
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
             const funnel = document.getElementById('obsFunnel');
             if (funnel) {
@@ -14021,8 +14249,12 @@
         // dans EXPORTABLE_TABLES pour contacts/fournisseurs/partenaires — logique client
         // partagée par les 4 catégories de contacts pour ne pas la dupliquer 4 fois).
         function downloadCsvRows(filenamePrefix, headers, rows) {
-            // "sep=," indique le séparateur à Excel (sinon tout part dans une colonne en français)
-            const csvRows = ['sep=,', headers.join(',')];
+            // Pas de ligne "sep=," (astuce Excel-only) : elle casse l'import dans tout
+            // autre outil (Google Contacts, Outlook…), qui la traite comme une ligne de
+            // données au lieu d'un indice de séparateur — chaque ligne du fichier se
+            // retrouve alors décalée et invalide. Le BOM UTF-8 ci-dessous suffit à Excel
+            // pour détecter la virgule et afficher correctement les accents.
+            const csvRows = [headers.join(',')];
             rows.forEach(r => {
                 csvRows.push(headers.map(h => {
                     const v = Array.isArray(r[h]) ? r[h].join('|') : (r[h] ?? '');
@@ -14034,6 +14266,31 @@
             const a = document.createElement('a');
             a.href = url; a.download = `${filenamePrefix}-${new Date().toISOString().slice(0,10)}.csv`;
             document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        }
+
+        // Liste brute d'e-mails (un par ligne, sans en-tête ni guillemets) : le CSV
+        // multi-colonnes des contacts est illisible pour des outils qui n'attendent
+        // qu'une adresse par ligne (ex. import de testeurs Google Play Console).
+        function downloadEmailsOnly(filenamePrefix, rows) {
+            // Dédoublonnage insensible à la casse (ex. Salamandre37@... et
+            // salamandre37@... coexistent en base) : Google Play Console refuse
+            // d'enregistrer la liste de testeurs quand elle contient ces doublons.
+            const seen = new Set();
+            const emails = [];
+            rows.forEach(r => {
+                const email = (r.email || '').trim();
+                if (!email) return;
+                const key = email.toLowerCase();
+                if (seen.has(key)) return;
+                seen.add(key);
+                emails.push(email);
+            });
+            const blob = new Blob([emails.join('\n')], { type: 'text/plain;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = `${filenamePrefix}-emails-${new Date().toISOString().slice(0,10)}.csv`;
+            document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+            return emails.length;
         }
 
         async function exportCsv(type) {
@@ -14051,6 +14308,13 @@
                     if (rows.length === 0) { show('Aucun contact à exporter', 'text-orange-400/80'); return; }
                     downloadCsvRows('contacts', ['email','prenom','nom','telephone','tags','status','newsletter','created_at'], rows);
                     show(`${rows.length} contacts exportés ✓`, 'text-green-400/80');
+                } else if (type === 'contacts-emails') {
+                    show('Récupération des contacts…');
+                    const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000');
+                    const rows = (await res.json()).data || [];
+                    if (rows.length === 0) { show('Aucun contact à exporter', 'text-orange-400/80'); return; }
+                    const n = downloadEmailsOnly('contacts', rows);
+                    show(`${n} e-mails exportés ✓`, 'text-green-400/80');
                 } else if (type === 'contacts-newsletter') {
                     show('Récupération des abonnés…');
                     const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000&newsletter=newsletter');
@@ -14058,6 +14322,13 @@
                     if (rows.length === 0) { show('Aucun abonné à exporter', 'text-orange-400/80'); return; }
                     downloadCsvRows('abonnes-newsletter', ['email','prenom','nom','telephone','tags','status','created_at'], rows);
                     show(`${rows.length} abonnés exportés ✓`, 'text-green-400/80');
+                } else if (type === 'contacts-newsletter-emails') {
+                    show('Récupération des abonnés…');
+                    const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000&newsletter=newsletter');
+                    const rows = (await res.json()).data || [];
+                    if (rows.length === 0) { show('Aucun abonné à exporter', 'text-orange-400/80'); return; }
+                    const n = downloadEmailsOnly('abonnes-newsletter', rows);
+                    show(`${n} e-mails exportés ✓`, 'text-green-400/80');
                 } else if (type === 'suppliers') {
                     show('Récupération des fournisseurs…');
                     const res = await adminFetch('/api/admin/data?section=suppliers');
@@ -14262,7 +14533,11 @@
         }
 
         // ── Registre de fonctionnalités ──
-        const FEATURE_CATEGORY_LABELS = { acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        const FEATURE_CATEGORY_LABELS = { boutique: 'Boutique — vente de l\'oracle', acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        // Ordre d'affichage des catégories : la Boutique en premier (bascule précommande →
+        // vente ferme), les autres dans l'ordre de FEATURE_CATEGORY_LABELS.
+        const FEATURE_CATEGORY_ORDER = Object.keys(FEATURE_CATEGORY_LABELS);
+        let _featureFlagsCache = [];
         async function loadFeatureFlags() {
             const el = document.getElementById('feature-flags-list');
             if (!el) return;
@@ -14278,10 +14553,20 @@
                     </div>`;
                     return;
                 }
+                _featureFlagsCache = features;
                 const byCategory = {};
                 features.forEach(f => { (byCategory[f.category || 'general'] ??= []).push(f); });
-                el.innerHTML = Object.entries(byCategory).map(([cat, items]) => `
+                const rank = c => { const i = FEATURE_CATEGORY_ORDER.indexOf(c); return i === -1 ? 99 : i; };
+                const flagOn = k => features.find(f => f.key === k)?.enabled === true;
+                const shopWarning = (byCategory.boutique && flagOn('shop_preorder_enabled') === flagOn('shop_order_enabled'))
+                    ? `<div class="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-amber-200 text-xs mb-2">
+                          ${flagOn('shop_preorder_enabled')
+                            ? '⚠️ Précommandes <b>et</b> commandes sont ouvertes en même temps : les visiteurs voient les deux pages, avec deux prix différents.'
+                            : '⚠️ Précommandes <b>et</b> commandes sont fermées : les pages de vente affichent « L\'oracle revient bientôt ».'}
+                       </div>` : '';
+                el.innerHTML = Object.entries(byCategory).sort(([a], [b]) => rank(a) - rank(b)).map(([cat, items]) => `
                     <p class="text-gold/60 text-xs uppercase tracking-widest mt-4 mb-2 first:mt-0">${FEATURE_CATEGORY_LABELS[cat] || cat}</p>
+                    ${cat === 'boutique' ? shopWarning : ''}
                     ${items.map(f => `
                         <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                             <div class="min-w-0">
@@ -14298,6 +14583,16 @@
             }
         }
         async function toggleFeatureFlag(key, enabled) {
+            // Interrupteurs Boutique : effet immédiat sur les pages de vente publiques.
+            const SHOP_CONFIRM = {
+                shop_preorder_enabled: enabled
+                    ? 'Rouvrir les précommandes ? Les visiteurs pourront à nouveau précommander au prix de précommande.'
+                    : 'Fermer les précommandes ? La page /precommande redirigera vers /commander si la vente en ligne est ouverte, sinon affichera « bientôt disponible ». Les paiements de précommande seront refusés.',
+                shop_order_enabled: enabled
+                    ? 'Ouvrir la vente en ligne ? La page /commander devient accessible et le menu du site pointera vers elle si les précommandes sont fermées. Vérifiez que le stock est bien arrivé.'
+                    : 'Fermer la vente en ligne ? Les paiements de commande seront refusés.'
+            };
+            if (SHOP_CONFIRM[key] && !confirm(SHOP_CONFIRM[key] + '\n\nLe changement est visible sur le site en moins d\'une minute.')) return;
             try {
                 const res = await adminFetch('/api/admin/features', {
                     method: 'POST',
@@ -14781,16 +15076,16 @@
         const NL_BANNER_PRESETS = {
             precommande: {
                 title: 'Pré-commandez l\'Oracle Oradia',
-                desc: 'Livraison prévue automne 2025 · Édition limitée · 3,90€',
+                desc: 'Livraison estimée mi-février 2027 · Édition limitée · à partir de 38 €',
                 cta_text: 'Je pré-commande',
                 cta_url: 'https://oradia.fr/precommande-oracle',
                 image: 'https://oradia.fr/images/medias/banniere-facebook.webp'
             },
             app_mobile: {
                 title: 'Découvrez l\'application Oradia en avant-première',
-                desc: 'Tirages guidés, synchronicités et exploration intérieure — testez la bêta sur Google Play.',
-                cta_text: 'Tester la bêta sur Google Play',
-                cta_url: 'https://play.google.com/store/apps/details?id=fr.oradia.app',
+                desc: 'Tirages guidés, synchronicités et exploration intérieure — testez la bêta sur Google Play, ou en téléchargement direct (sans compte Google).',
+                cta_text: 'Rejoindre la liste d\'attente',
+                cta_url: 'https://oradia.fr/app-beta-inscription.html',
                 image: 'https://oradia.fr/images/medias/banniere_pub_app_mobile.webp'
             }
         };
@@ -15113,8 +15408,8 @@
             nlSyncEditor();
         }
 
-        function renderVisitorTypeChart(newV, returning) {
-            const el = document.getElementById('analytics-visitor-type-chart');
+        function renderVisitorTypeChart(newV, returning, elementId = 'analytics-visitor-type-chart') {
+            const el = document.getElementById(elementId);
             if (!el) return;
             const total = newV + returning;
             if (total === 0) {
@@ -15154,8 +15449,9 @@
                 </div>`;
         }
 
-        function renderDailyViewsChart(days) {
-            const chartEl = document.getElementById('analytics-daily-chart');
+        function renderDailyViewsChart(days, opts = {}) {
+            const { elementId = 'analytics-daily-chart', color = '#2dd4bf', gradientId = 'dailyViewsGradient' } = opts;
+            const chartEl = document.getElementById(elementId);
             if (!chartEl) return;
             if (!days.length) { chartEl.innerHTML = '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'; return; }
 
@@ -15184,21 +15480,21 @@
                 return `<text x="${x(i).toFixed(1)}" y="${H-4}" font-size="10" fill="rgba(212,175,55,0.35)" text-anchor="middle">${d.date.slice(8,10)}/${d.date.slice(5,7)}</text>`;
             }).join('');
 
-            const dots = points.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="#2dd4bf">
+            const dots = points.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="${color}">
                 <title>${days[i].date} : ${days[i].count} vue(s)</title>
             </circle>`).join('');
 
             chartEl.innerHTML = `
                 <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
                     <defs>
-                        <linearGradient id="dailyViewsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.35"/>
-                            <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+                        <linearGradient id="${gradientId}" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="${color}" stop-opacity="0.35"/>
+                            <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
                         </linearGradient>
                     </defs>
                     ${gridLines}
-                    <path d="${areaPath}" fill="url(#dailyViewsGradient)" stroke="none"/>
-                    <path d="${linePath}" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    <path d="${areaPath}" fill="url(#${gradientId})" stroke="none"/>
+                    <path d="${linePath}" fill="none" stroke="${color}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
                     ${dots}
                     ${xLabels}
                 </svg>`;
@@ -15555,6 +15851,9 @@
                 setEl('ana-bounce', t.bounce_rate != null ? t.bounce_rate.toFixed(0) + '%' : '—');
                 setEl('ana-pages-per-visit', t.pages_per_visit != null ? t.pages_per_visit.toFixed(1) : '—');
                 setEl('ana-top-page', (t.top_pages && t.top_pages[0]) ? t.top_pages[0].path : '—');
+                setEl('ana-en-views', t.en_traffic ? t.en_traffic.views : 0);
+                setEl('ana-en-visitors', t.en_traffic ? t.en_traffic.unique_visitors : 0);
+                setEl('ana-en-share', (t.en_traffic ? t.en_traffic.share_pct : 0) + '%');
 
                 const rangeLabels = { '1d': 'hier', '7d': '7j préc.', '30d': 'mois préc.', '365d': 'an préc.' };
                 const rangeLabel = rangeLabels[range] || 'période préc.';
@@ -15574,6 +15873,7 @@
 
                 renderFunnel(data.funnel);
                 renderPrecommandeFunnel(data.funnel_precommande);
+                renderReferralFunnel(data.referral);
 
                 // Graphique donut nouveaux vs anciens visiteurs
                 renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);
@@ -15600,6 +15900,8 @@
                     const app = t.app_usage || {};
                     setEl('ana-app-sessions', app.unique_sessions ?? 0);
                     setEl('ana-app-views', app.total_views ?? 0);
+                    renderDailyViewsChart(app.by_day || [], { elementId: 'analytics-app-daily-chart', color: '#d4af37', gradientId: 'dailyViewsGradientApp' });
+                    renderVisitorTypeChart(app.new_visitors || 0, app.returning_visitors || 0, 'analytics-app-visitor-type-chart');
                     const lastSeenEl = document.getElementById('ana-app-last-seen');
                     if (lastSeenEl) {
                         lastSeenEl.textContent = app.last_seen
@@ -15925,6 +16227,9 @@
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         <span class="font-bold ${isRecette?'text-green-400':'text-red-400'}">${isRecette?'+':'-'}${fmt2(t.amount)}</span>
+                        <button onclick="viewTransactionInvoices('${t.id}','${escapeHtmlFront(t.description).replace(/'/g, "\\'")}')" title="Factures jointes" class="relative text-xs transition ${t.invoice_count > 0 ? 'text-gold/70 hover:text-gold' : 'text-gold/25 hover:text-gold/60'}">
+                            <i class="fas fa-paperclip"></i>${t.invoice_count > 0 ? `<span class="absolute -top-1.5 -right-2 bg-gold text-[#07112a] text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">${t.invoice_count}</span>` : ''}
+                        </button>
                         <button onclick="deleteTransaction('${t.id}')" class="text-red-400/40 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
@@ -16091,6 +16396,12 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
                     ${preorder.shipped_at ? `<p class="text-light-gold/40 text-xs">Expédiée le ${formatDate(preorder.shipped_at)}</p>` : ''}
                     ${preorder.delivered_at ? `<p class="text-teal-300/70 text-xs">Livrée le ${formatDate(preorder.delivered_at)}</p>` : ''}
                 </div>
+                ${preorder.billing_address ? `
+                <div class="mb-5 space-y-1">
+                    <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-2">Facturation (adresse différente)</p>
+                    <p class="text-light-gold/70 text-sm">${escapeHtmlFront(preorder.billing_address)}${preorder.billing_address_complement ? ', ' + escapeHtmlFront(preorder.billing_address_complement) : ''}</p>
+                    <p class="text-light-gold/70 text-sm">${escapeHtmlFront(preorder.billing_postal_code || '')} ${escapeHtmlFront(preorder.billing_city || '')} ${escapeHtmlFront(preorder.billing_country || '')}</p>
+                </div>` : ''}
                 <div class="text-xs text-light-gold/30 border-t border-gold/10 pt-3">
                     Créée le ${preorder.created_at ? formatDate(preorder.created_at) : '—'} · ID ${preorder.id || '—'}
                 </div>`;

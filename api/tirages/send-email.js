@@ -24,6 +24,62 @@ async function runWithConcurrency(items, limit, fn) {
   return results;
 }
 
+// Un "Gateway Timeout" de Supabase (observé en prod sur run-scheduled-draws et
+// fenetre/close, 2026-09-12, de façon récurrente — probablement plusieurs crons qui
+// tapent Supabase à quelques secondes d'intervalle) est transitoire mais peut durer
+// plus qu'un seul court délai : une unique retentative après 1,5s s'est révélée
+// insuffisante lors d'un incident où le Gateway Timeout a persisté plus longtemps.
+// Jusqu'à 2 retentatives avec un délai croissant (1,5s puis 3s) — sans changer le
+// comportement si l'erreur persiste malgré tout (elle remonte telle quelle après
+// la dernière tentative).
+async function withGatewayTimeoutRetry(queryFn, maxRetries = 2, delaysMs = [1500, 3000]) {
+  let result = await queryFn();
+  let attempt = 0;
+  while (result.error && /gateway timeout/i.test(result.error.message || '') && attempt < maxRetries) {
+    await new Promise(r => setTimeout(r, delaysMs[attempt] ?? delaysMs[delaysMs.length - 1]));
+    result = await queryFn();
+    attempt++;
+  }
+  return result;
+}
+
+// Délai max avant de répondre au cron externe (cron-job.org coupe à 30s, non
+// configurable sur le compte gratuit) : marge de ~10s pour le démarrage à froid
+// de la fonction et le réseau.
+const CRON_ACK_DEADLINE_MS = 20000;
+
+// Même une requête triviale peut rester bloquée côté Supabase : le 2026-09-24 à
+// 22:45 GMT, PostgREST a mis 46s à renvoyer un résultat vide pour
+// run-scheduled-draws (« Thread killed by timeout manager » dans ses logs), et
+// cron-job.org a abandonné à 30s → échec « Timeout ». Les crons attendent donc
+// leur phase de préparation (`preparePromise` : requêtes Supabase avant la
+// réponse) au plus CRON_ACK_DEADLINE_MS :
+//   - terminée à temps → renvoie { value } et le handler répond normalement ;
+//   - sinon → répond 200 au cron, poursuit `onLate(résultat)` en arrière-plan via
+//     waitUntil (dans la limite du maxDuration de la fonction) et renvoie null.
+async function awaitBeforeCronTimeout(res, label, preparePromise, onLate) {
+  const TIMED_OUT = Symbol('timeout');
+  let ackTimer;
+  const first = await Promise.race([
+    preparePromise,
+    new Promise(r => { ackTimer = setTimeout(() => r(TIMED_OUT), CRON_ACK_DEADLINE_MS); })
+  ]);
+  clearTimeout(ackTimer);
+  if (first !== TIMED_OUT) return { value: first };
+
+  console.warn(`[${label}] Supabase lent (>${CRON_ACK_DEADLINE_MS}ms) — réponse anticipée, suite en arrière-plan`);
+  res.status(200).json({ success: true, queued: 'pending', reason: 'supabase_slow' });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil((async () => {
+    try {
+      await onLate(await preparePromise);
+    } catch (e) {
+      console.error(`[${label}] Unexpected error (late):`, e.message);
+    }
+  })());
+  return null;
+}
+
 // Consulte le registre de fonctionnalités (dashboard admin). Fail-open si la
 // table n'existe pas encore ou si le flag n'est pas défini, pour ne jamais
 // casser une fonctionnalité existante par défaut.
@@ -212,6 +268,53 @@ async function handleListTirages(req, res) {
   return res.status(200).json({ success: true, tirages });
 }
 
+// ============ ACTION : bilan de parcours (motifs récurrents sur l'historique) ============
+async function handleBilanParcours(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) {
+    return res.status(401).json({ success: false, message: 'Authentification requise.' });
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+  }
+
+  const { data, error } = await supabase
+    .from('tirages')
+    .select('created_at, intention, cartes, synthese')
+    .eq('user_id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error('Bilan parcours: list tirages error:', error);
+    return res.status(500).json({ success: false, message: 'Impossible de récupérer l\'historique.' });
+  }
+
+  const { MIN_TIRAGES_FOR_BILAN, generateParcoursBilan } = require('../../lib/parcours-bilan-prompt.js');
+  const tirages = (data || []).map(t => ({ date: t.created_at, intention: t.intention, cartes: t.cartes || [], synthese: t.synthese }));
+
+  if (tirages.length < MIN_TIRAGES_FOR_BILAN) {
+    return res.status(200).json({
+      success: false,
+      reason: 'not_enough_tirages',
+      count: tirages.length,
+      needed: MIN_TIRAGES_FOR_BILAN,
+      message: `Encore ${MIN_TIRAGES_FOR_BILAN - tirages.length} tirage${MIN_TIRAGES_FOR_BILAN - tirages.length > 1 ? 's' : ''} avant de pouvoir dresser un bilan de parcours.`
+    });
+  }
+
+  const bilan = await generateParcoursBilan({ tirages, userEmail: userData.user.email });
+  if (!bilan) {
+    return res.status(502).json({ success: false, message: 'Le bilan n\'a pas pu être généré, réessayez dans un instant.' });
+  }
+
+  return res.status(200).json({ success: true, bilan, count: tirages.length });
+}
+
 // ============ ACTION : envoyer l'email du tirage (comportement existant, inchangé) ============
 async function handleSendEmail(req, res) {
   if (req.method !== 'POST') {
@@ -220,7 +323,74 @@ async function handleSendEmail(req, res) {
 
   try {
     const { email, intention, cards, analysis, synthesis, pistes, subscribeNewsletter,
-            observationWindow: obsWinRaw, observationDays, observationText, attentionPoints } = req.body;
+            observationWindow: obsWinRaw, observationDays, observationText, attentionPoints,
+            lang: rawLang } = req.body;
+    const lang = rawLang === 'en' ? 'en' : 'fr';
+    // Chrome de l'email (habillage autour du texte IA, déjà dans la bonne langue
+    // puisque produit par lib/tore-analysis-prompt.js côté lang correspondant).
+    // Par défaut 'fr' : les tirages programmés (qui n'envoient jamais lang)
+    // produisent un email strictement identique à avant cet ajout.
+    const EMAIL_STRINGS = {
+      fr: {
+        title: 'Votre Tirage du Tore', tagline: 'La Boussole Int\u00e9rieure',
+        yourIntention: 'Votre intention', yourCards: 'Vos Cartes',
+        messageFromOracle: "Message de l'Oracle", pathsToExplore: 'Pistes \u00e0 explorer',
+        synthesis: 'Synth\u00e8se', newDraw: 'Nouveau tirage',
+        newsletterLabel: "La lettre d'Oradia",
+        newsletterDesc: "Symbolique du Tore, int\u00e9riorit\u00e9 et pratiques d'observation.",
+        subscribe: "S'inscrire", preorderOpen: 'Pr\u00e9commandes ouvertes',
+        oracleName: "L'Oracle Oradia",
+        oracleDesc: '64 cartes \u00b7 Livret \u00b7 Conte initiatique \u00b7 Pi\u00e8ce artisanale',
+        preorderBtn: 'Pr\u00e9commander', gratitude: 'Avec gratitude,',
+        founder: "Fondateur d'Oradia",
+        footerDisclaimer: 'Tu re\u00e7ois cet email car tu as demand\u00e9 \u00e0 recevoir ton tirage.<br>Il ne constitue pas un abonnement \u00e0 notre newsletter.',
+        bridgeLabel: 'Passerelle', mutatingLine: 'ligne mutante', cosmosCenter: 'Centre du Tore',
+        obsWindowLabel: "Fen\u00eatre d'observation",
+        dayWord: (n) => n > 1 ? 'jours' : 'jour',
+        oracleRecoNote: (n) => ` (recommandation de l'oracle : ${n} jours)`,
+        obsChoiceSentence: (durLabel, oracleNote) => `Vous avez choisi une fen\u00eatre d'observation de ${durLabel} pour votre tirage${oracleNote}.`,
+        obsClosingSentence: (dateStr) => `Un email de cl\u00f4ture vous sera envoy\u00e9 le ${dateStr} pour recueillir vos retours d'exp\u00e9rience.`,
+        dateLocale: 'fr-FR',
+        subjectWithIntention: (i) => `Rudy d'Oradia - Votre tirage du Tore : ${i}`,
+        subjectPlain: "Rudy d'Oradia - Votre tirage du Tore",
+        successMsg: 'Email envoy\u00e9 avec succ\u00e8s',
+        genericErrorMsg: "Erreur lors de l'envoi de l'email",
+        textTitle: 'VOTRE TIRAGE DU TORE', textYourCards: 'VOS CARTES:',
+        textMessageFromOracle: "MESSAGE DE L'ORACLE:", textPathsToExplore: 'PISTES \u00c0 EXPLORER:',
+        textSynthesis: 'SYNTH\u00c8SE:', textNewDraw: 'Faire un nouveau tirage : ',
+        textGratitude: 'Avec gratitude,'
+      },
+      en: {
+        title: 'Your Torus Draw', tagline: 'The Inner Compass',
+        yourIntention: 'Your intention', yourCards: 'Your Cards',
+        messageFromOracle: 'Message from the Oracle', pathsToExplore: 'Paths to Explore',
+        synthesis: 'Synthesis', newDraw: 'New Draw',
+        newsletterLabel: "Oradia's Letter",
+        newsletterDesc: 'Torus symbolism, inner life, and observation practices.',
+        subscribe: 'Subscribe', preorderOpen: 'Preorders Open',
+        oracleName: 'The Oradia Oracle',
+        oracleDesc: '64 cards \u00b7 Booklet \u00b7 Initiatory tale \u00b7 Handcrafted coin',
+        preorderBtn: 'Preorder', gratitude: 'With gratitude,',
+        founder: 'Founder of Oradia',
+        footerDisclaimer: 'You are receiving this email because you asked to receive your draw.<br>It does not constitute a subscription to our newsletter.',
+        bridgeLabel: 'Bridge', mutatingLine: 'bridge line', cosmosCenter: 'Center of the Torus',
+        obsWindowLabel: 'Observation Window',
+        dayWord: (n) => n > 1 ? 'days' : 'day',
+        oracleRecoNote: (n) => ` (the oracle's recommendation: ${n} days)`,
+        obsChoiceSentence: (durLabel, oracleNote) => `You chose an observation window of ${durLabel} for your draw${oracleNote}.`,
+        obsClosingSentence: (dateStr) => `A closing email will be sent to you on ${dateStr} to gather your feedback.`,
+        dateLocale: 'en-US',
+        subjectWithIntention: (i) => `Rudy from Oradia - Your Torus Draw: ${i}`,
+        subjectPlain: 'Rudy from Oradia - Your Torus Draw',
+        successMsg: 'Email sent successfully',
+        genericErrorMsg: 'Error sending the email',
+        textTitle: 'YOUR TORUS DRAW', textYourCards: 'YOUR CARDS:',
+        textMessageFromOracle: 'MESSAGE FROM THE ORACLE:', textPathsToExplore: 'PATHS TO EXPLORE:',
+        textSynthesis: 'SYNTHESIS:', textNewDraw: 'Do a new draw: ',
+        textGratitude: 'With gratitude,'
+      }
+    };
+    const S = EMAIL_STRINGS[lang];
 
     // Normaliser la fenêtre d'observation : accepte l'ancien format objet OU les champs séparés
     const observationWindow = obsWinRaw || (observationDays ? {
@@ -273,12 +443,12 @@ async function handleSendEmail(req, res) {
         bridgeHtml = `
           <div style="text-align:center;margin-top:8px;">
             <div style="width:1px;height:10px;background:rgba(212,175,55,0.25);margin:0 auto;"></div>
-            <p style="margin:3px 0 5px;color:rgba(212,175,55,0.45);font-size:7px;letter-spacing:1.5px;text-transform:uppercase;">&#9830; Passerelle</p>
+            <p style="margin:3px 0 5px;color:rgba(212,175,55,0.45);font-size:7px;letter-spacing:1.5px;text-transform:uppercase;">&#9830; ${S.bridgeLabel}</p>
             <img src="${bSrc}" alt="${b.name.replace(/_/g,' ')}" width="${BRIDGE_W}" height="${BRIDGE_H}"
               style="display:block;width:${BRIDGE_W}px;height:${BRIDGE_H}px;object-fit:cover;border-radius:6px;margin:0 auto;border:1px solid rgba(212,175,55,0.45);"
               onerror="this.style.background='${bColor}';this.removeAttribute('src');">
             <p style="margin:5px 0 1px;color:#f5e7a1;font-size:11px;font-weight:700;line-height:1.3;">${(b.name.replace(/_/g,' ')).replace(/\b\w/g, l => l.toUpperCase())}</p>
-            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:10px;font-style:italic;">ligne mutante</p>
+            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:10px;font-style:italic;">${S.mutatingLine}</p>
           </div>`;
       }
 
@@ -314,7 +484,7 @@ async function handleSendEmail(req, res) {
               style="display:block;width:${COSMOS_W}px;height:${COSMOS_H}px;object-fit:cover;border-radius:9px;margin:0 auto;border:2px solid rgba(212,175,55,0.55);"
               onerror="this.style.background='${FAMILY_COLORS.memoire_cosmos}';this.removeAttribute('src');">
             <p style="margin:8px 0 2px;color:#f0c75e;font-size:11px;font-weight:700;">${cosmosCard.name.replace(/_/g,' ')}</p>
-            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:8px;letter-spacing:2px;text-transform:uppercase;">Centre du Tore</p>
+            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:8px;letter-spacing:2px;text-transform:uppercase;">${S.cosmosCenter}</p>
           </td></tr>
         </table>
       </td></tr>`;
@@ -332,11 +502,10 @@ async function handleSendEmail(req, res) {
     if (observationWindow) {
       const dur = observationWindow.durationDays || 1;
       const aiMatch = observationWindow.observationText
-        ? observationWindow.observationText.match(/(\d+)\s*jour/i) : null;
+        ? observationWindow.observationText.match(lang === 'en' ? /(\d+)\s*day/i : /(\d+)\s*jour/i) : null;
       const suggested = aiMatch ? parseInt(aiMatch[1]) : null;
-      const durLabel = dur > 1 ? (dur + ' jours') : (dur + ' jour');
-      const oracleNote = (suggested && suggested !== dur)
-        ? ' (recommandation de l\'oracle : ' + suggested + ' jours)' : '';
+      const durLabel = dur + ' ' + S.dayWord(dur);
+      const oracleNote = (suggested && suggested !== dur) ? S.oracleRecoNote(suggested) : '';
 
       const attentionHtml = (observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0)
         ? '<ul style="margin:6px 0 0;padding-left:16px;">'
@@ -347,9 +516,9 @@ async function handleSendEmail(req, res) {
         : '';
 
       const closingHtml = observationWindow.closesAt
-        ? '<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">Un email de clôture vous sera envoyé le '
-          + new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
-          + ' pour recueillir vos retours d\'expérience.</p>'
+        ? '<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">'
+          + S.obsClosingSentence(new Date(observationWindow.closesAt).toLocaleDateString(S.dateLocale, { weekday: 'long', day: 'numeric', month: 'long' }))
+          + '</p>'
         : '';
 
       obsWindowHtml = '<tr><td style="padding:0 32px 24px;">'
@@ -357,8 +526,8 @@ async function handleSendEmail(req, res) {
         + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
         + '<td style="vertical-align:top;width:50px;padding-right:14px;text-align:center;"><p style="margin:0;font-size:22px;line-height:1;">&#127758;</p></td>'
         + '<td style="vertical-align:top;">'
-        + '<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Fen&ecirc;tre d\'observation</p>'
-        + '<p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">Vous avez choisi une fen&ecirc;tre d\'observation de ' + durLabel + ' pour votre tirage' + oracleNote + '.</p>'
+        + '<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">' + S.obsWindowLabel + '</p>'
+        + '<p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">' + S.obsChoiceSentence(durLabel, oracleNote) + '</p>'
         + attentionHtml
         + closingHtml
         + '</td></tr></table></div></td></tr>';
@@ -379,7 +548,7 @@ async function handleSendEmail(req, res) {
     };
 
     const htmlContent = `<!DOCTYPE html>
-<html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="${lang}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -419,12 +588,12 @@ async function handleSendEmail(req, res) {
                 </td>
               </tr>
             </table>
-            <h1 style="margin:0 0 5px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">Votre Tirage du Tore</h1>
-            <p style="margin:0;color:#8a6d20;font-size:10px;letter-spacing:2px;text-transform:uppercase;">La Boussole Int&#233;rieure</p>
+            <h1 style="margin:0 0 5px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">${S.title}</h1>
+            <p style="margin:0;color:#8a6d20;font-size:10px;letter-spacing:2px;text-transform:uppercase;">${S.tagline}</p>
             ${intention ? `
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:18px;border:1px solid #3a3010;" bgcolor="#0c1830">
               <tr><td style="padding:14px 20px;">
-                <p style="margin:0 0 4px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Votre intention</p>
+                <p style="margin:0 0 4px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">${S.yourIntention}</p>
                 <p style="margin:0;color:#f5e7a1;font-size:14px;font-style:italic;line-height:1.5;">&#8220; ${intention} &#8221;</p>
               </td></tr>
             </table>` : ''}
@@ -434,7 +603,7 @@ async function handleSendEmail(req, res) {
         <!-- CARTES -->
         <tr>
           <td class="pad-sm" style="padding:24px 24px 16px;" bgcolor="#050a19">
-            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Vos Cartes &#10022;</p>
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; ${S.yourCards} &#10022;</p>
             ${cardsWheelHtml}
           </td>
         </tr>
@@ -446,7 +615,7 @@ async function handleSendEmail(req, res) {
         ${analysis ? `
         <tr>
           <td class="pad-sm" style="padding:24px 32px 16px;" bgcolor="#050a19">
-            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Message de l'Oracle &#10022;</p>
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; ${S.messageFromOracle} &#10022;</p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:2px solid #8a6d20;">
               <tr><td style="padding:4px 0 4px 20px;">${formatAnalysis(analysis)}</td></tr>
             </table>
@@ -457,7 +626,7 @@ async function handleSendEmail(req, res) {
         ${pistes ? `
         <tr>
           <td class="pad-sm" style="padding:4px 32px 16px;" bgcolor="#050a19">
-            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Pistes &#224; explorer &#10022;</p>
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; ${S.pathsToExplore} &#10022;</p>
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:2px solid #8a6d20;">
               <tr><td style="padding:4px 0 4px 20px;">${formatAnalysis(pistes)}</td></tr>
             </table>
@@ -470,7 +639,7 @@ async function handleSendEmail(req, res) {
           <td style="padding:0 32px 20px;" bgcolor="#050a19">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #3a3010;" bgcolor="#0c1830">
               <tr><td style="padding:16px 20px;">
-                <p style="margin:0 0 5px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Synth&#232;se</p>
+                <p style="margin:0 0 5px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">${S.synthesis}</p>
                 <p style="margin:0;color:#f5e7a1;font-size:14px;line-height:1.8;font-style:italic;">${synthesis.replace(/\n/g, ' ')}</p>
               </td></tr>
             </table>
@@ -483,8 +652,8 @@ async function handleSendEmail(req, res) {
         <!-- CTA TIRAGE -->
         <tr>
           <td style="padding:16px 32px 20px;text-align:center;" bgcolor="#050a19">
-            <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:13px 36px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">
-              Nouveau tirage
+            <a href="https://oradia.fr/${lang === 'en' ? 'en/' : ''}tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:13px 36px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">
+              ${S.newDraw}
             </a>
           </td>
         </tr>
@@ -499,12 +668,12 @@ async function handleSendEmail(req, res) {
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
               <tr>
                 <td class="card-col" style="vertical-align:middle;">
-                  <p style="margin:0 0 3px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">La lettre d'Oradia</p>
-                  <p style="margin:0;color:#c8c0a8;font-size:12px;line-height:1.6;">Symbolique du Tore, int&#233;riorit&#233; et pratiques d'observation.</p>
+                  <p style="margin:0 0 3px;color:#8a6d20;font-size:9px;letter-spacing:3px;text-transform:uppercase;">${S.newsletterLabel}</p>
+                  <p style="margin:0;color:#c8c0a8;font-size:12px;line-height:1.6;">${S.newsletterDesc}</p>
                 </td>
                 <td style="vertical-align:middle;padding-left:20px;white-space:nowrap;width:110px;">
                   <a href="https://oradia.fr/#newsletter" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:10px 20px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:0.05em;white-space:nowrap;font-family:Georgia,serif;">
-                    S'inscrire
+                    ${S.subscribe}
                   </a>
                 </td>
               </tr>
@@ -520,10 +689,10 @@ async function handleSendEmail(req, res) {
                 <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
               </td></tr>
               <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-                <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-                <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-                <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-                <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+                <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">${S.preorderOpen}</p>
+                <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">${S.oracleName}</p>
+                <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">${S.oracleDesc}</p>
+                <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${S.preorderBtn}</a>
               </td></tr>
             </table>
           </td>
@@ -532,9 +701,9 @@ async function handleSendEmail(req, res) {
         <!-- FOOTER -->
         <tr>
           <td align="center" style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15);" bgcolor="#040c1a">
-            <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+            <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">${S.gratitude}</p>
             <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-            <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+            <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">${S.founder}</p>
             <p style="margin:0 0 20px; text-align:center;">
               <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
               <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
@@ -542,7 +711,7 @@ async function handleSendEmail(req, res) {
             </p>
             <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
-            <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as demandé à recevoir ton tirage.<br>Il ne constitue pas un abonnement à notre newsletter.</p>
+            <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">${S.footerDisclaimer}</p>
           </td>
         </tr>
 
@@ -556,19 +725,19 @@ async function handleSendEmail(req, res) {
 </html>`;
 
     const textContent = `
-VOTRE TIRAGE DU TORE
+${S.textTitle}
 ${intention ? `\n« ${intention} »\n` : ''}
 
-VOS CARTES:
+${S.textYourCards}
 ${cards.map(c => `- ${c.name} (${c.family})`).join('\n')}
 
-${analysis ? `\nMESSAGE DE L'ORACLE:\n${analysis}\n` : ''}
-${pistes ? `\nPISTES À EXPLORER:\n${pistes}\n` : ''}
-${synthesis ? `\nSYNTHÈSE:\n${synthesis}\n` : ''}
+${analysis ? `\n${S.textMessageFromOracle}\n${analysis}\n` : ''}
+${pistes ? `\n${S.textPathsToExplore}\n${pistes}\n` : ''}
+${synthesis ? `\n${S.textSynthesis}\n${synthesis}\n` : ''}
 
-Faire un nouveau tirage : https://oradia.fr/tore.html
+${S.textNewDraw}https://oradia.fr/${lang === 'en' ? 'en/' : ''}tore.html
 
-Avec gratitude,
+${S.textGratitude}
 Rudy Boucheron
 oradia.fr
     `;
@@ -587,7 +756,7 @@ oradia.fr
           email: 'contact@oradia.fr'
         },
         to: [{ email }],
-        subject: intention ? `Rudy d'Oradia - Votre tirage du Tore : ${intention}` : "Rudy d'Oradia - Votre tirage du Tore",
+        subject: intention ? S.subjectWithIntention(intention) : S.subjectPlain,
         htmlContent,
         textContent
       })
@@ -596,7 +765,7 @@ oradia.fr
     if (!brevoResponse.ok) {
       const error = await brevoResponse.json();
       console.error('Brevo error:', error);
-      throw new Error('Erreur lors de l\'envoi de l\'email');
+      throw new Error(S.genericErrorMsg);
     }
 
     // Si abonnement newsletter demandé
@@ -621,13 +790,13 @@ oradia.fr
       }
     }
 
-    return res.status(200).json({ success: true, message: 'Email envoyé avec succès' });
+    return res.status(200).json({ success: true, message: S.successMsg });
 
   } catch (error) {
     console.error('Send tirage email error:', error);
     return res.status(500).json({
       success: false,
-      message: error.message || 'Erreur lors de l\'envoi de l\'email'
+      message: error.message || S.genericErrorMsg
     });
   }
 }
@@ -904,62 +1073,279 @@ async function handleCronCheckin(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    if (!(await isFeatureEnabled(supabase, 'checkin_email_j3'))) {
-      return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason: 'feature_disabled' });
+    // Préparation (requêtes Supabase) bornée par awaitBeforeCronTimeout : voir ce helper.
+    const prepared = await awaitBeforeCronTimeout(res, 'cron-checkin', prepareCheckinTargets(supabase), async (late) => {
+      if (late.skipped_reason) return;
+      if (late.error) {
+        console.error('[cron-checkin] Supabase error (late):', late.error.message);
+        return;
+      }
+      await sendCheckinBatch(late.targets);
+    });
+    if (!prepared) return;
+
+    const { skipped_reason, error, targets } = prepared.value;
+    if (skipped_reason) {
+      return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason });
     }
-
-    // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
-    const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
-    const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: rawTargets, error } = await supabase
-      .from('tore_emails')
-      .select('email')
-      .is('checkin_sent_at', null)
-      .gte('created_at', from)
-      .lt('created_at', to)
-      .limit(50);
-
     if (error) {
       console.error('[cron-checkin] Supabase error:', error.message);
       return res.status(500).json({ error: error.message });
     }
 
-    // Qui a activé une fenêtre d'observation pour ce même tirage (créée dans la même
-    // fenêtre J+3/J+4, donc juste après le tirage) reçoit déjà, à la clôture, un email
-    // posant essentiellement la même question ("qu'avez-vous perçu ?") — plus, depuis
-    // peu, un rappel natif sur l'app. Le check-in générique deviendrait un troisième
-    // message redondant pour ces personnes-là ; on les exclut ici.
-    let targets = rawTargets || [];
-    if (targets.length > 0) {
-      const { data: activeWindows } = await supabase
-        .from('observation_windows')
-        .select('email')
-        .gte('created_at', from)
-        .lt('created_at', to);
-      const emailsWithWindow = new Set((activeWindows || []).map(w => w.email));
-      targets = targets.filter(t => !emailsWithWindow.has(t.email));
-    }
-
     // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
     // configurable — pendant que les envois Brevo continuent en arrière-plan via
     // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
-    res.status(200).json({ success: true, queued: (targets || []).length });
+    res.status(200).json({ success: true, queued: targets.length });
     const { waitUntil } = require('@vercel/functions');
-    waitUntil((async () => {
-      let sent = 0, failed = 0;
-      await runWithConcurrency(targets || [], 5, async (row) => {
-        try {
-          await sendCheckinEmail(row.email);
-          sent++;
-        } catch (e) {
-          console.error('[cron-checkin] Failed for', row.email, e.message);
-          failed++;
-        }
-      });
-      console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
-    })());
+    waitUntil(sendCheckinBatch(targets));
   } catch (e) {
     console.error('[cron-checkin] Unexpected error:', e.message);
+    if (!res.headersSent) res.status(500).json({ error: e.message });
+  }
+}
+
+// Requêtes Supabase préalables au check-in J+3 : { skipped_reason } | { error } | { targets }.
+async function prepareCheckinTargets(supabase) {
+  if (!(await isFeatureEnabled(supabase, 'checkin_email_j3'))) {
+    return { skipped_reason: 'feature_disabled' };
+  }
+
+  // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
+  const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+  const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: rawTargets, error } = await withGatewayTimeoutRetry(() => supabase
+    .from('tore_emails')
+    .select('email')
+    .is('checkin_sent_at', null)
+    .gte('created_at', from)
+    .lt('created_at', to)
+    .limit(50));
+
+  if (error) return { error };
+
+  // Qui a activé une fenêtre d'observation pour ce même tirage (créée dans la même
+  // fenêtre J+3/J+4, donc juste après le tirage) reçoit déjà, à la clôture, un email
+  // posant essentiellement la même question ("qu'avez-vous perçu ?") — plus, depuis
+  // peu, un rappel natif sur l'app. Le check-in générique deviendrait un troisième
+  // message redondant pour ces personnes-là ; on les exclut ici.
+  let targets = rawTargets || [];
+  if (targets.length > 0) {
+    const { data: activeWindows } = await supabase
+      .from('observation_windows')
+      .select('email')
+      .gte('created_at', from)
+      .lt('created_at', to);
+    const emailsWithWindow = new Set((activeWindows || []).map(w => w.email));
+    targets = targets.filter(t => !emailsWithWindow.has(t.email));
+  }
+  return { targets };
+}
+
+async function sendCheckinBatch(targets) {
+  let sent = 0, failed = 0;
+  await runWithConcurrency(targets || [], 5, async (row) => {
+    try {
+      await sendCheckinEmail(row.email);
+      sent++;
+    } catch (e) {
+      console.error('[cron-checkin] Failed for', row.email, e.message);
+      failed++;
+    }
+  });
+  console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
+}
+
+// ============ EMAIL RELANCE ABONNÉS TORE INACTIFS (30j) ============
+// Ton volontairement léger, sans culpabilisation ("vous avez arrêté", "vous
+// nous manquez") — un simple signe de vie, l'abonnement reste actif de toute
+// façon. Envoyée une seule fois par période d'inactivité, jamais en rappel
+// récurrent (voir handleCronRelanceInactifs).
+function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = false) {
+  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
+  const paragraphs = [
+    `Ça fait un moment que je n'ai pas eu de nouvelles de vous par ici. Rien d'urgent, juste un petit signe.`,
+    `Votre abonnement au Tore est toujours actif, et l'oracle vous attend, sans aucune pression, pour un tirage le jour où l'envie reviendra.`,
+    `On s'éloigne parfois un temps, et c'est très bien aussi. Si une question se pose en ce moment, même vague, c'est peut-être l'occasion d'y revenir.`
+  ];
+  const bodyRows = paragraphs.map(p => `
+  <tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
+  </td></tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
+</head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+  <tr><td style="padding:0; line-height:0;">
+    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+  </td></tr>
+  <tr><td style="padding:30px 32px 0;">
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">Un petit signe de l'oracle</h2>
+  </td></tr>
+  ${bodyRows}
+  <tr><td style="padding:8px 32px 40px; text-align:center;">
+    <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Faire un tirage</a>
+  </td></tr>
+  ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
+      <tr><td style="padding:0;line-height:0;font-size:0;">
+        <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+      </td></tr>
+      <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+      </td></tr>
+    </table>
+  </td></tr>`}
+  ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
+      <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
+        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton abonnement au Tore. Pour recevoir mes prochains messages :</p>
+        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
+      </td></tr>
+    </table>
+  </td></tr>`}
+  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu es abonné·e au Tore sur oradia.fr.</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function sendRelanceInactifsEmail(email) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const { createClient } = require('@supabase/supabase-js');
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const alreadySub = await isBrevoSubscribed(email);
+  const hidePreorder = await hasCompletedPreorder(supabase, email);
+  const html = buildRelanceInactifsEmailHtml(alreadySub, hidePreorder);
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+      to: [{ email }],
+      subject: "Rudy d'Oradia — Un petit signe de l'oracle",
+      htmlContent: html
+    })
+  });
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    throw new Error(`Brevo error: ${err.message || brevoRes.status}`);
+  }
+}
+
+// ============ CRON : relance douce des abonnés Tore inactifs 30j ============
+// Déclenché par Make (planification quotidienne) plutôt que cron-job.org, pour
+// centraliser les automatisations marketing dans un seul outil visuel — même
+// mécanisme d'authentification (cron_secret) que les crons existants.
+//
+// "Inactif" = aucun tirage depuis 30 jours (ou depuis l'inscription si jamais
+// tiré). Envoyée UNE SEULE fois par période d'inactivité (jamais en rappel
+// récurrent, décision explicite) : last_relance_sent_at sert justement à ça,
+// et n'est jamais remis à NULL automatiquement si la personne reprend puis
+// s'arrête à nouveau (repasserait par un geste admin volontaire).
+async function handleCronRelanceInactifs(req, res) {
+  const secret = req.query.cron_secret || '';
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+    if (!(await isFeatureEnabled(supabase, 'relance_inactifs_30j'))) {
+      return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason: 'feature_disabled' });
+    }
+
+    const { data: subs, error } = await withGatewayTimeoutRetry(() => supabase
+      .from('tore_subscriptions')
+      .select('id, email, created_at')
+      .eq('status', 'active')
+      .is('last_relance_sent_at', null)
+      .limit(200));
+
+    if (error) {
+      console.error('[cron-relance-inactifs] Supabase error:', error.message);
+      return res.status(500).json({ error: error.message });
+    }
+
+    if (!subs || subs.length === 0) {
+      return res.status(200).json({ success: true, sent: 0, failed: 0 });
+    }
+
+    // Répond tout de suite (voir handleCronCheckin pour la raison), le reste
+    // continue en arrière-plan via waitUntil.
+    res.status(200).json({ success: true, queued: subs.length });
+    const { waitUntil } = require('@vercel/functions');
+    waitUntil((async () => {
+      let sent = 0, failed = 0, skipped = 0;
+      try {
+        const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+
+        // email -> user_id : pas de lookup direct par email côté API Admin,
+        // on construit donc une table de correspondance une seule fois plutôt
+        // que d'appeler listUsers pour chaque abonné (voir findAuthUserByEmail
+        // dans api/admin/index.js pour le cas d'un lookup isolé).
+        const idByEmail = {};
+        for (let page = 1; page <= 20; page++) {
+          const { data, error: listErr } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+          if (listErr || !data?.users?.length) break;
+          data.users.forEach(u => { idByEmail[u.email] = u.id; });
+          if (data.users.length < 200) break;
+        }
+
+        await runWithConcurrency(subs, 5, async (sub) => {
+          try {
+            const uid = idByEmail[sub.email];
+            let lastActiveAt = sub.created_at;
+            if (uid) {
+              const { data: lastTirage } = await supabase
+                .from('tirages')
+                .select('created_at')
+                .eq('user_id', uid)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+              if (lastTirage) lastActiveAt = lastTirage.created_at;
+            }
+
+            if (new Date(lastActiveAt).getTime() > cutoff) { skipped++; return; } // encore actif
+
+            await sendRelanceInactifsEmail(sub.email);
+            await supabase.from('tore_subscriptions')
+              .update({ last_relance_sent_at: new Date().toISOString() })
+              .eq('id', sub.id);
+            sent++;
+          } catch (e) {
+            console.error('[cron-relance-inactifs] Failed for', sub.email, e.message);
+            failed++;
+          }
+        });
+      } catch (e) {
+        console.error('[cron-relance-inactifs] Background error:', e.message);
+      }
+      console.log(`[cron-relance-inactifs] sent=${sent} failed=${failed} skipped=${skipped}`);
+    })());
+  } catch (e) {
+    console.error('[cron-relance-inactifs] Unexpected error:', e.message);
     if (!res.headersSent) res.status(500).json({ error: e.message });
   }
 }
@@ -1266,21 +1652,21 @@ async function handleCronPromoTirage(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-    if (!(await isFeatureEnabled(supabase, 'promo_email_j7'))) {
-      return res.status(200).json({ success: true, sent: 0, skipped: 0, failed: 0, skipped_reason: 'feature_disabled' });
+    // Préparation (requêtes Supabase) bornée par awaitBeforeCronTimeout : voir ce helper.
+    const prepared = await awaitBeforeCronTimeout(res, 'cron-promo-tirage', preparePromoTargets(supabase), async (late) => {
+      if (late.skipped_reason) return;
+      if (late.error) {
+        console.error('[cron-promo-tirage] Supabase error (late):', late.error.message);
+        return;
+      }
+      await sendPromoBatch(late.targets);
+    });
+    if (!prepared) return;
+
+    const { skipped_reason, error, targets } = prepared.value;
+    if (skipped_reason) {
+      return res.status(200).json({ success: true, sent: 0, skipped: 0, failed: 0, skipped_reason });
     }
-
-    // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
-    // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
-    const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
-    const { data: targets, error } = await supabase
-      .from('tore_emails')
-      .select('email')
-      .is('promo_sent_at', null)
-      .or('promo_skipped.is.null,promo_skipped.eq.false')
-      .lt('created_at', cutoff)
-      .limit(50);
-
     if (error) {
       console.error('[cron-promo-tirage] Supabase error:', error.message);
       return res.status(500).json({ error: error.message });
@@ -1289,26 +1675,49 @@ async function handleCronPromoTirage(req, res) {
     // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
     // configurable — pendant que les envois Brevo continuent en arrière-plan via
     // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
-    res.status(200).json({ success: true, queued: (targets || []).length });
+    res.status(200).json({ success: true, queued: targets.length });
     const { waitUntil } = require('@vercel/functions');
-    waitUntil((async () => {
-      let sent = 0, skipped = 0, failed = 0;
-      await runWithConcurrency(targets || [], 5, async (row) => {
-        try {
-          const result = await sendPromoTirageEmail(row.email);
-          if (result.skipped) skipped++;
-          else sent++;
-        } catch (e) {
-          console.error('[cron-promo-tirage] Failed for', row.email, e.message);
-          failed++;
-        }
-      });
-      console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
-    })());
+    waitUntil(sendPromoBatch(targets));
   } catch (e) {
     console.error('[cron-promo-tirage] Unexpected error:', e.message);
     if (!res.headersSent) res.status(500).json({ error: e.message });
   }
+}
+
+// Requêtes Supabase préalables à la promo J+7 : { skipped_reason } | { error } | { targets }.
+async function preparePromoTargets(supabase) {
+  if (!(await isFeatureEnabled(supabase, 'promo_email_j7'))) {
+    return { skipped_reason: 'feature_disabled' };
+  }
+
+  // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
+  // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: targets, error } = await withGatewayTimeoutRetry(() => supabase
+    .from('tore_emails')
+    .select('email')
+    .is('promo_sent_at', null)
+    .or('promo_skipped.is.null,promo_skipped.eq.false')
+    .lt('created_at', cutoff)
+    .limit(50));
+
+  if (error) return { error };
+  return { targets: targets || [] };
+}
+
+async function sendPromoBatch(targets) {
+  let sent = 0, skipped = 0, failed = 0;
+  await runWithConcurrency(targets || [], 5, async (row) => {
+    try {
+      const result = await sendPromoTirageEmail(row.email);
+      if (result.skipped) skipped++;
+      else sent++;
+    } catch (e) {
+      console.error('[cron-promo-tirage] Failed for', row.email, e.message);
+      failed++;
+    }
+  });
+  console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
 }
 
 // ============ TIRAGES PROGRAMMÉS (réservés aux abonnés) ============
@@ -1461,12 +1870,22 @@ async function handleRunScheduledDraws(req, res) {
     );
 
     const now = getParisNow();
-    const { data: due, error } = await supabase
+    const duePromise = withGatewayTimeoutRetry(() => supabase
       .from('tore_scheduled_draws')
       .select('*')
       .eq('active', true)
-      .eq('hour', now.hour);
+      .eq('hour', now.hour));
 
+    const ready = await awaitBeforeCronTimeout(res, 'run-scheduled-draws', duePromise, async ({ data: lateDue, error: lateError }) => {
+      if (lateError) {
+        console.error('[run-scheduled-draws] fetch error (late):', lateError.message);
+        return;
+      }
+      await runScheduledDrawsBackground(supabase, lateDue || [], now);
+    });
+    if (!ready) return;
+
+    const { data: due, error } = ready.value;
     if (error) {
       console.error('[run-scheduled-draws] fetch error:', error.message);
       return res.status(500).json({ error: error.message });
@@ -1594,6 +2013,7 @@ export default async function handler(req, res) {
     case 'save':          return handleSaveTirage(req, res);
     case 'update':        return handleUpdateTirage(req, res);
     case 'list':          return handleListTirages(req, res);
+    case 'bilan-parcours': return handleBilanParcours(req, res);
     case 'collect-email':      return handleCollectEmail(req, res);
     case 'check-brevo':        return handleCheckBrevo(req, res);
     case 'send-promo-preview': return handleSendPromoPreview(req, res);
@@ -1603,6 +2023,7 @@ export default async function handler(req, res) {
     case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
     case 'cron-checkin':       return handleCronCheckin(req, res);
+    case 'cron-relance-inactifs': return handleCronRelanceInactifs(req, res);
     case 'get-schedule':       return handleGetSchedule(req, res);
     case 'save-schedule':      return handleSaveSchedule(req, res);
     case 'delete-schedule':    return handleDeleteSchedule(req, res);

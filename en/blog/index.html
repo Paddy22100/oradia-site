@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Blog — Oradia · Personal development oracle</title>
+  <meta name="description" content="Resources on inner guidance, personal development, and introspection through symbol. Articles grounded in psychology and neuroscience.">
+  <link rel="canonical" href="https://oradia.fr/en/blog/">
+  <link rel="alternate" hreflang="fr" href="https://oradia.fr/blog">
+  <link rel="alternate" hreflang="en" href="https://oradia.fr/en/blog/">
+  <link rel="alternate" hreflang="x-default" href="https://oradia.fr/blog">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://oradia.fr/en/blog/">
+  <meta property="og:title" content="Oradia Blog — Guidance, introspection, personal development">
+  <meta property="og:description" content="Resources on inner guidance, personal development, and introspection through symbol.">
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg">
+  <meta property="og:site_name" content="Oradia">
+  <meta property="og:locale" content="en_US">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: linear-gradient(rgba(10,25,47,0.82), rgba(10,25,47,0.92)), url('/images/oradia-hero-4k.webp') center top / cover no-repeat fixed, #0a192f; color: #c8c0a8; font-family: 'Lora', Georgia, serif; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+
+    .site-header { padding: 20px 32px; border-bottom: 1px solid rgba(212,175,55,0.12); display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo img { width: 40px; height: 40px; border-radius: 50%; }
+    .logo span { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 600; letter-spacing: 0.12em; background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-nav { display: flex; gap: 24px; font-size: 14px; }
+    .header-nav a { color: rgba(212,175,55,0.7); transition: color 0.2s; }
+    .header-nav a:hover { color: #d4af37; }
+
+    main { max-width: 760px; margin: 0 auto; padding: 64px 24px 96px; }
+    .blog-label { font-size: 11px; letter-spacing: 0.35em; text-transform: uppercase; color: rgba(212,175,55,0.5); margin-bottom: 16px; }
+    h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(32px, 5vw, 48px); font-weight: 300; color: #f0c75e; letter-spacing: 0.04em; line-height: 1.2; margin-bottom: 12px; }
+    .blog-intro { color: rgba(200,192,168,0.65); font-size: 16px; line-height: 1.7; margin-bottom: 56px; font-style: italic; }
+    .divider { width: 60px; height: 1px; background: linear-gradient(90deg, transparent, #d4af37, transparent); margin: 0 auto 56px; }
+
+    .article-list { display: flex; flex-direction: column; gap: 0; }
+    .article-card { padding: 36px 0; border-bottom: 1px solid rgba(212,175,55,0.1); }
+    .article-card:first-child { padding-top: 0; }
+    .article-meta { font-size: 12px; color: rgba(212,175,55,0.45); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 12px; }
+    .article-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(20px, 3vw, 26px); font-weight: 400; color: #f0c75e; line-height: 1.3; margin-bottom: 12px; transition: color 0.2s; }
+    .article-card:hover .article-title { color: #f5e7a1; }
+    .article-chapeau { font-size: 15px; line-height: 1.75; color: rgba(200,192,168,0.75); margin-bottom: 20px; }
+    .article-link { font-size: 13px; color: rgba(212,175,55,0.6); letter-spacing: 0.08em; transition: color 0.2s; }
+    .article-link:hover { color: #d4af37; }
+    .article-link::after { content: ' →'; }
+
+    .site-footer { border-top: 1px solid rgba(212,175,55,0.1); padding: 40px 32px; text-align: center; }
+    .site-footer a { color: rgba(212,175,55,0.5); font-size: 13px; }
+    .site-footer a:hover { color: #d4af37; }
+  </style>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/security.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { 'night-blue':'#0a192f','gold':'#d4af37','light-gold':'#f5e7a1','dark-blue':'#051428','celtic-blue':'#1a365d' },
+      fontFamily: { 'cormorant':['Cormorant Garamond','serif'],'cinzel':['Cinzel','serif'] }
+    } } };
+  </script>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main>
+    <p class="blog-label">Oradia · Resources</p>
+    <h1>Inner guidance<br>and personal development</h1>
+    <p class="blog-intro">Writing grounded in psychology, neuroscience, and contemplative traditions &mdash; to deepen your relationship with yourself. The articles below are translated from French; new French-only posts from our editorial dashboard are not yet available in English.</p>
+    <div class="divider"></div>
+
+    <div class="article-list">
+
+      <article class="article-card">
+        <p class="article-meta">5 min read</p>
+        <h2 class="article-title"><a href="/en/blog/tirage-gratuit-sans-inscription.html">Free oracle draw, no sign-up: what to really expect</a></h2>
+        <p class="article-chapeau">"Free" and "no sign-up" are two loaded words online. What a free draw with Oradia actually gives you, why it's free to start with, and the one real trap to avoid.</p>
+        <a href="/en/blog/tirage-gratuit-sans-inscription.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">6 min read</p>
+        <h2 class="article-title"><a href="/en/blog/fenetre-observation.html">The observation window: the practice that changes how you live a draw</a></h2>
+        <p class="article-chapeau">Most draws are forgotten an hour later. The observation window proposes the opposite: choosing, in advance, a period of conscious attention. A simple practice that turns an oracle-as-entertainment into a tool for self-knowledge.</p>
+        <a href="/en/blog/fenetre-observation.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">5 min read</p>
+        <h2 class="article-title"><a href="/en/blog/formuler-son-intention.html">Open or closed question: how to set your intention before a draw</a></h2>
+        <p class="article-chapeau">The quality of a draw depends first on the question asked. Why closed questions shut things down, how to set an open and precise intention, with concrete examples to fix.</p>
+        <a href="/en/blog/formuler-son-intention.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">7 min read</p>
+        <h2 class="article-title"><a href="/en/blog/jung-pauli-synchronicites.html">Jung, Pauli, and synchronicity: what the original texts actually said</a></h2>
+        <p class="article-chapeau">Synchronicity isn't a New Age word: it's a concept born from the dialogue between psychiatrist Carl Jung and Nobel physicist Wolfgang Pauli. What they actually wrote &mdash; and, above all, what they never claimed.</p>
+        <a href="/en/blog/jung-pauli-synchronicites.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">5 min read</p>
+        <h2 class="article-title"><a href="/en/blog/oracle-en-ligne-ou-physique.html">Online oracle or physical oracle: two experiences, one mirror</a></h2>
+        <p class="article-chapeau">It's a false debate to pit the "cold" online draw against the "authentic" physical deck. They're two complementary experiences, each with its own strengths. An honest comparison to help you choose &mdash; or combine both.</p>
+        <a href="/en/blog/oracle-en-ligne-ou-physique.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">6 min read</p>
+        <h2 class="article-title"><a href="/en/blog/utiliser-oracle-quotidien.html">5 ways to use the Oradia oracle every day</a></h2>
+        <p class="article-chapeau">An oracle is only useful if you actually use it. The morning card, the decision draw, the evening ritual: five simple, concrete practices to bring the oracle into your daily life, without superstition or pressure.</p>
+        <a href="/en/blog/utiliser-oracle-quotidien.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">6 min read</p>
+        <h2 class="article-title"><a href="/en/blog/oracle-tirage-quantique.html">Oracle and quantum draws: when randomness is no longer simulated</a></h2>
+        <p class="article-chapeau">Almost all online oracles use randomness simulated by a computer: the card is determined before you even ask your question. The Tore draws its cards with a verifiable quantum generator. Here's why that difference matters.</p>
+        <a href="/en/blog/oracle-tirage-quantique.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">7 min read</p>
+        <h2 class="article-title"><a href="/en/blog/oracle-synchronicites.html">Synchronicities after an oracle draw: what I actually observe</a></h2>
+        <p class="article-chapeau">Confirmation bias, the Barnum effect, unverifiable anecdotes: synchronicities deserve better than stories alone. Oradia runs an open study, with strict rules, whose results are published without filtering. The process, told honestly.</p>
+        <a href="/en/blog/oracle-synchronicites.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">6 min read</p>
+        <h2 class="article-title"><a href="/en/blog/voyance-guidance.html">What you're actually looking for under the word "clairvoyance" isn't what you think</a></h2>
+        <p class="article-chapeau">Behind that word lies a real question &mdash; just not the one you think you're asking. This article explores the difference between prediction and introspective guidance, and why the tool that answers one doesn't answer the other.</p>
+        <a href="/en/blog/voyance-guidance.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">7 min read</p>
+        <h2 class="article-title"><a href="/en/blog/decision-difficile.html">How to make a hard decision when you keep going in circles</a></h2>
+        <p class="article-chapeau">Persistent indecision is rarely a lack of data. It's almost always a conflict between two systems that don't speak the same language. What the science says &mdash; and what actually helps.</p>
+        <a href="/en/blog/decision-difficile.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">7 min read</p>
+        <h2 class="article-title"><a href="/en/blog/oracle-developpement-personnel.html">Card draws and personal development: what the oracle reveals that therapy doesn't</a></h2>
+        <p class="article-chapeau">No, the cards don't predict the future. But something happens during a draw that doesn't happen the same way in a therapy session. An exploration of what the symbol does differently.</p>
+        <a href="/en/blog/oracle-developpement-personnel.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">8 min read</p>
+        <h2 class="article-title"><a href="/en/blog/adaptome-strategies-survie.html">The adaptome: why your survival strategies limit you today</a></h2>
+        <p class="article-chapeau">It isn't a lack of willpower. Your repetitions follow a logic &mdash; neurobiological, precise, repairable. The adaptome names the set of strategies you built to survive. They worked. They keep running.</p>
+        <a href="/en/blog/adaptome-strategies-survie.html" class="article-link">Read the article</a>
+      </article>
+
+      <article class="article-card">
+        <p class="article-meta">6 min read</p>
+        <h2 class="article-title"><a href="/en/blog/guidance-spirituelle-voyance.html">Spiritual guidance: the difference between clairvoyance and inner accompaniment</a></h2>
+        <p class="article-chapeau">The two words often circulate together, sometimes as synonyms. Yet they answer different needs &mdash; and lead to very different places. A distinction that changes everything that follows.</p>
+        <a href="/en/blog/guidance-spirituelle-voyance.html" class="article-link">Read the article</a>
+      </article>
+
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+<script src="/js/page-tracker.js" defer></script>
+  <script src="/components/header-manager-en.js" defer></script>
+  <script src="/components/footer-manager-en.js" defer></script>
+</body>
+</html>

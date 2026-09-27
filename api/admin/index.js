@@ -10,10 +10,11 @@ const xml2js = require('xml2js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail } = require('../../lib/brevo-order-email.js');
+const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
+const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
@@ -711,6 +712,90 @@ async function sendToreCheckinReminders(supabase) {
   return out;
 }
 
+// Scoring d'engagement des contacts newsletter, à partir des statistiques Brevo
+// (ouvertures/clics) déjà suivies par Brevo lui-même — pas besoin de tracker nos
+// propres pixels d'ouverture. Un contact franchissant le seuil est tagué "chaud"
+// (colonne newsletter_contacts.tags, voir supabase-migration-contact-tags.sql) :
+// visible et filtrable depuis l'onglet Contacts > Inscrits Newsletter du dashboard.
+// Décision explicite : ne déclenche AUCUN envoi automatique de l'offre de guidance,
+// seulement un récapitulatif hebdomadaire envoyé à ADMIN_EMAIL pour une approche
+// manuelle, contact par contact — le scoring commercial reste piloté par un humain.
+async function scoreNewsletterEngagement(supabase) {
+  const out = { checked: 0, newlyHot: [], noLongerHot: [], errors: [] };
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  if (!BREVO_API_KEY) { out.errors.push('BREVO_API_KEY manquant'); return out; }
+
+  const { data: contacts, error } = await supabase
+    .from('newsletter_contacts')
+    .select('id, email, tags')
+    .eq('status', 'active')
+    .limit(500);
+  if (error) { out.errors.push('select: ' + error.message); return out; }
+
+  const batchSize = 10;
+  const list = contacts || [];
+  for (let i = 0; i < list.length; i += batchSize) {
+    const batch = list.slice(i, i + batchSize);
+    await Promise.all(batch.map(async (contact) => {
+      out.checked++;
+      try {
+        const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+          headers: { 'api-key': BREVO_API_KEY }
+        });
+        if (!r.ok) return;
+        const data = await r.json();
+        const stats = data.statistics || {};
+        // La forme exacte (tableau détaillé par campagne vs simple compteur) a varié
+        // selon les versions de l'API Brevo : on gère les deux plutôt que de supposer.
+        const opensCount  = Array.isArray(stats.opened)  ? stats.opened.length  : (typeof stats.opened  === 'number' ? stats.opened  : 0);
+        const clicksCount = Array.isArray(stats.clicked) ? stats.clicked.length : (typeof stats.clicked === 'number' ? stats.clicked : 0);
+
+        const alreadyHot = (contact.tags || []).includes('chaud');
+        // Seuil resserré après un premier essai en prod : >=3 ouvertures OU >=1 clic
+        // taguait 39 des 74 contacts actifs (53%) — beaucoup trop large pour prioriser
+        // qui approcher. Exige maintenant un engagement plus soutenu ET pas juste
+        // sporadique.
+        const isHot = opensCount >= 6 && clicksCount >= 1;
+
+        if (isHot && !alreadyHot) {
+          const newTags = [...new Set([...(contact.tags || []), 'chaud'])];
+          await supabase.from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
+          out.newlyHot.push({ email: contact.email, opens: opensCount, clicks: clicksCount });
+        } else if (!isHot && alreadyHot) {
+          // Le tag reflète l'engagement courant, pas un cumul historique : un contact
+          // qui ne correspond plus au seuil (ancien seuil trop large, ou engagement
+          // retombé) est retiré plutôt que de rester "chaud" indéfiniment.
+          const newTags = (contact.tags || []).filter(t => t !== 'chaud');
+          await supabase.from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
+          out.noLongerHot.push({ email: contact.email, opens: opensCount, clicks: clicksCount });
+        }
+      } catch (e) {
+        out.errors.push(`${contact.email}: ${e.message}`);
+      }
+    }));
+  }
+  return out;
+}
+
+function buildNewsletterScoringRecapHtml(newlyHot) {
+  const rows = newlyHot.map(c => `
+    <tr>
+      <td style="padding:8px 14px;border-bottom:1px solid #eee;">${c.email}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;">${c.opens}</td>
+      <td style="padding:8px 14px;border-bottom:1px solid #eee;text-align:center;">${c.clicks}</td>
+    </tr>`).join('');
+
+  return `<div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+    <h2 style="color:#0a192f;">🔥 ${newlyHot.length} nouveau${newlyHot.length > 1 ? 'x' : ''} contact${newlyHot.length > 1 ? 's' : ''} "chaud${newlyHot.length > 1 ? 's' : ''}" cette semaine</h2>
+    <p style="color:#555;">Engagement newsletter au-dessus du seuil (≥3 ouvertures ou ≥1 clic). Aucun email n'a été envoyé automatiquement, c'est un signal pour toi.</p>
+    <table style="width:100%;border-collapse:collapse;">
+      <tr style="background:#f5f5f5;"><th style="padding:8px 14px;text-align:left;">Email</th><th style="padding:8px 14px;">Ouvertures</th><th style="padding:8px 14px;">Clics</th></tr>
+      ${rows}
+    </table>
+    <p style="color:#999;font-size:12px;margin-top:20px;">Tag "chaud" posé automatiquement — visible dans Contacts &gt; Inscrits Newsletter.</p>
+  </div>`;
+}
+
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -1376,6 +1461,38 @@ async function handleData(req, res) {
           return res.status(200).json({ success: false, error: e.message });
         }
       }
+      // Scoring d'engagement newsletter, déclenchable seul (cron externe hebdomadaire).
+      // Réponse immédiate + traitement en arrière-plan (voir handleCronCheckin dans
+      // api/tirages/send-email.js) : jusqu'à 500 contacts, un appel Brevo chacun,
+      // risque réel de dépasser les 30s configurés pour cette fonction (vercel.json).
+      if (getAction === 'cron-newsletter-scoring') {
+        if ((req.query?.cron_secret || '') !== process.env.CRON_SECRET) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        res.status(200).json({ success: true, queued: true });
+        const { waitUntil } = require('@vercel/functions');
+        waitUntil((async () => {
+          try {
+            const r = await scoreNewsletterEngagement(supabase);
+            if (r.newlyHot.length && process.env.ADMIN_EMAIL && process.env.BREVO_API_KEY) {
+              await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+                body: JSON.stringify({
+                  sender: { name: 'ORADIA Dashboard', email: 'contact@oradia.fr' },
+                  to: [{ email: process.env.ADMIN_EMAIL }],
+                  subject: `🔥 ${r.newlyHot.length} contact(s) newsletter "chaud(s)" cette semaine`,
+                  htmlContent: buildNewsletterScoringRecapHtml(r.newlyHot)
+                })
+              }).catch(() => {});
+            }
+            await logSystemEvent(supabase, { level: r.errors.length ? 'warn' : 'info', source: 'cron-newsletter-scoring', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Scoring newsletter : ${r.checked} vérifié(s), ${r.newlyHot.length} nouveau(x) "chaud", ${r.noLongerHot.length} retiré(s)`, details: r });
+          } catch (e) {
+            console.error('[cron-newsletter-scoring] Background error:', e.message);
+          }
+        })());
+        return;
+      }
       // Publication des posts sociaux dus, déclenchable seule (cron externe horaire).
       if (getAction === 'cron-social-due') {
         if ((req.query?.cron_secret || '') !== process.env.CRON_SECRET) {
@@ -1544,8 +1661,22 @@ async function handleData(req, res) {
             });
             const events = await evRes.json();
             const crypto = require('crypto');
+            // Vercel écrit aussi des messages parfaitement normaux sur stderr (bannière CLI,
+            // confirmation "Build Completed", avertissement ESM/CommonJS systématique) — les
+            // traiter tous comme des erreurs noyait le dashboard Surveillance sous du bruit
+            // plusieurs fois par heure sans qu'aucun vrai problème ne se soit produit.
+            const BENIGN_STDERR_PATTERNS = [
+                /^Vercel CLI \d/,
+                /^Build Completed in /,
+                /^Warning: Node\.js functions are compiled from ESM to CommonJS/
+            ];
             const candidateLogs = (Array.isArray(events) ? events : [])
-                .filter(e => e.type === 'stderr' || e.type === 'error')
+                .filter(e => {
+                    if (e.type === 'error') return true;
+                    if (e.type !== 'stderr') return false;
+                    const text = typeof e.payload === 'string' ? e.payload : (e.payload?.text || '');
+                    return !BENIGN_STDERR_PATTERNS.some(re => re.test(text));
+                })
                 .map(e => {
                     const msg = typeof e.payload === 'string' ? e.payload.slice(0,500) : JSON.stringify(e.payload).slice(0,500);
                     const eventKey = crypto.createHash('md5').update(`${deployment.uid}:${e.created || ''}:${msg}`).digest('hex');
@@ -1947,6 +2078,55 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Factures jointes à une transaction (Comptabilité > Recettes & dépenses) ──
+      // Bucket privé (contrairement à supplier-files) : une facture peut porter des
+      // informations sensibles (SIRET, IBAN, adresse) — pas de publicUrl stockée,
+      // l'accès passe uniquement par une URL signée à courte durée (action ci-dessous).
+      if (action === 'upload-transaction-invoice') {
+        const { transactionId, fileName, fileData } = body;
+        if (!transactionId) return res.status(400).json({ error: 'transactionId requis' });
+        const m = String(fileData || '').match(/^data:([\w/.+-]+);base64,(.+)$/i);
+        if (!m) return res.status(400).json({ error: 'Fichier invalide (attendu data URL base64)' });
+        const mimeType = m[1];
+        const buffer = Buffer.from(m[2], 'base64');
+        if (buffer.length > 15 * 1024 * 1024) return res.status(400).json({ error: 'Fichier trop lourd (max 15 Mo)' });
+        const ext = (mimeType.split('/')[1] || 'pdf').replace('jpeg', 'jpg');
+        const safeName = (fileName || `facture.${ext}`).replace(/[^\w.\- ]/g, '_').slice(0, 120);
+        const storagePath = `${transactionId}/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage.from('transaction-invoices').upload(storagePath, buffer, { contentType: mimeType, upsert: false });
+        if (upErr) return res.status(500).json({ error: 'Échec upload : ' + upErr.message });
+        const { error: insErr } = await supabase.from('transaction_invoices').insert({
+          transaction_id: transactionId,
+          file_name: safeName,
+          storage_path: storagePath,
+          file_size: buffer.length
+        });
+        if (insErr) throw insErr;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'delete-transaction-invoice') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: fileRow, error: fetchErr } = await supabase.from('transaction_invoices').select('storage_path').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (fileRow?.storage_path) await supabase.storage.from('transaction-invoices').remove([fileRow.storage_path]);
+        const { error } = await supabase.from('transaction_invoices').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'get-transaction-invoice-url') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: fileRow, error: fetchErr } = await supabase.from('transaction_invoices').select('storage_path').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!fileRow?.storage_path) return res.status(404).json({ error: 'Fichier introuvable' });
+        const { data: signed, error: signErr } = await supabase.storage.from('transaction-invoices').createSignedUrl(fileRow.storage_path, 300);
+        if (signErr) return res.status(500).json({ error: 'Échec génération du lien : ' + signErr.message });
+        return res.status(200).json({ success: true, url: signed.signedUrl });
+      }
+
       // ── Partenaires / magasins potentiels (onglet Partenaires) ──
       if (action === 'create-partner' || action === 'update-partner') {
         const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, nextContactDate, notes } = body;
@@ -2259,7 +2439,9 @@ async function handleData(req, res) {
             toEmail: order.email,
             toName: order.full_name || 'Ami(e) d\'ORADIA',
             offer: order.offer,
-            amountTotal: Number(order.amount_total || 0).toFixed(2)
+            amountTotal: Number(order.amount_total || 0).toFixed(2),
+            items: order.items,
+            shipping: shippingFromOrder(order)
           });
           if (emailSent) {
             await supabase.from('preorders')
@@ -2503,6 +2685,37 @@ async function handleData(req, res) {
           await syncContactToBrevo(supabase, BREVO_API_KEY, data);
         }
         return res.status(200).json({ success: true, emailChanged: !!oldEmail });
+      }
+
+      // ── Bêta app mobile : envoie le vrai lien Play Store et retire le tag "en attente" ──
+      // À utiliser SEULEMENT après avoir ajouté la personne à la main au groupe Google
+      // utilisé par la piste "Tests fermés" (voir lib/app-beta-access-email.js) — sinon
+      // elle atterrit sur "Élément introuvable" malgré l'email.
+      if (action === 'send-beta-access') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+
+        const { data: contact, error: fetchErr } = await supabase
+          .from('newsletter_contacts')
+          .select('id, email, full_name, tags')
+          .eq('id', id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
+
+        const sent = await sendAppBetaAccessEmail({ email: contact.email, name: contact.full_name });
+        if (!sent) return res.status(502).json({ error: "Échec de l'envoi de l'email (config Brevo ou erreur API)" });
+
+        const newTags = (contact.tags || [])
+          .filter(t => t !== 'beta-app-en-attente')
+          .concat('beta-app-envoye');
+        const { error: updErr } = await supabase
+          .from('newsletter_contacts')
+          .update({ tags: Array.from(new Set(newTags)) })
+          .eq('id', contact.id);
+        if (updErr) console.warn('[send-beta-access] tag update failed:', updErr.message);
+
+        return res.status(200).json({ success: true });
       }
 
       // ── Contacts newsletter : désinscription manuelle (garde le contact, le retire de la liste 5) ──
@@ -3112,8 +3325,16 @@ async function handleData(req, res) {
           const emailSentPre = await sendBrevoEmail({
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
-            offer: 'Standard - Oracle Oradia',
-            amountTotal: '38.00'
+            offer: 'standard',
+            // Panier d'exemple à 2 offres + point relais : montre le récapitulatif
+            // détaillé tel que le client le reçoit (même fonction que le webhook).
+            items: [{ offer: 'standard', quantity: 2 }, { offer: 'guidance-incluse', quantity: 1 }],
+            shipping: {
+              method: 'relay', priceCents: 799,
+              relayName: 'Relais exemple — Tabac Presse',
+              relayAddress: '12 rue de la Paix', relayPostalCode: '22100', relayCity: 'Dinan'
+            },
+            amountTotal: '131.99'
           });
           if (!emailSentPre) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
@@ -3528,6 +3749,19 @@ async function handleData(req, res) {
       return res.status(200).json({ success: true, data: rows });
     }
 
+    // ── Factures jointes à une transaction (Comptabilité > Recettes & dépenses) ──
+    if (section === 'transaction-invoices') {
+      const transactionId = req.query?.transactionId;
+      if (!transactionId) return res.status(400).json({ error: 'transactionId requis' });
+      const { data, error } = await supabase
+        .from('transaction_invoices')
+        .select('*')
+        .eq('transaction_id', transactionId)
+        .order('uploaded_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
     // ── Section partners : magasins partenaires potentiels ──
     if (section === 'partners') {
       const { data, error } = await supabase
@@ -3679,36 +3913,6 @@ async function handleData(req, res) {
           lastImportAt,
           batchCount: batches.size
         }
-      });
-    }
-
-    // ── Section tirages ponctuels (single draws 3,90€) ──
-    if (section === 'single-draws') {
-      const page  = parseInt(req.query?.page  || '1', 10);
-      const limit = parseInt(req.query?.limit || '20', 10);
-      const offset = (page - 1) * limit;
-
-      const { data, count, error } = await supabase
-        .from('tore_subscriptions')
-        .select('id, email, full_name, single_draw_credits, status, created_at', { count: 'exact' })
-        .or('status.eq.single_draw,single_draw_credits.gt.0')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
-
-      if (error) throw error;
-
-      const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';
-      const rows = (data || []).map(r => ({
-        ...r,
-        created_at_fr: fmt(r.created_at),
-        single_draw_credits: r.single_draw_credits || 0,
-        total_spent_eur: ((r.single_draw_credits || 0) * 3.90).toFixed(2).replace('.', ',') + ' €'
-      }));
-
-      return res.status(200).json({
-        success: true,
-        data: rows,
-        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
       });
     }
 
@@ -4379,11 +4583,10 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes, ululeRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes, ululeRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
-      supabase.from('tore_subscriptions').select('email, single_draw_credits, status').or('status.eq.single_draw,single_draw_credits.gt.0'),
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
@@ -4403,7 +4606,6 @@ async function handleData(req, res) {
     // car cet argent ne transite pas par Stripe/le compte pro et n'est pas déclaré.
     const stripeDonorRows = donorRows.filter(r => r.source !== 'don-especes');
     const cashDonorRows   = donorRows.filter(r => r.source === 'don-especes');
-    const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
     const kickstarterRows = kickstarterRes.data || [];
@@ -4413,10 +4615,6 @@ async function handleData(req, res) {
     const syncAvg         = syncRows.length > 0
       ? (syncRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / syncRows.length).toFixed(1)
       : null;
-
-    // Calcul tirages ponctuels
-    const singleDrawCount  = singleDrawRows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
-    const singleDrawTotal  = singleDrawCount * 3.90;
 
     // Calcul abonnements Tore (revenus totaux = chaque abonnement × son prix mensuel)
     const subscriptionRows = subscriptionsRes.data || [];
@@ -4470,7 +4668,7 @@ async function handleData(req, res) {
     const kickstarterTotal = kickstarterRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
     // Ulule : même règle que Kickstarter (voir import-transactions pour la même règle côté comptabilité).
     const ululeTotal       = ululeRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal + ululeTotal;
+    const globalTotal     = preordersTotal + donorsTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal + ululeTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
@@ -4489,7 +4687,6 @@ async function handleData(req, res) {
     // les dons nets (Stripe ET espèces — cet argent est réellement disponible pour financer
     // la fabrication, même s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions).
     const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
-    const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
     // Frais Kickstarter (commission + traitement paiement) : estimation distincte des frais
@@ -4497,7 +4694,7 @@ async function handleData(req, res) {
     const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
     // Frais Ulule : même logique d'approximation que Kickstarter (voir ULULE_FEE_RATE).
     const ululeNet           = ululeTotal * (1 - ULULE_FEE_RATE);
-    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet + ululeNet;
+    const globalNet          = preordersNet + donorsNet + guidancesNet + subscriptionsNet + kickstarterNet + ululeNet;
 
     const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
@@ -4545,11 +4742,6 @@ async function handleData(req, res) {
           count:      waitlistRows.length,
           notSynced:  waitlistRows.filter(r => !r.brevo_synced).length,
           newThisWeek: waitlistRows.filter(r => now - new Date(r.created_at).getTime() < day7).length
-        },
-        singleDraws: {
-          count:      singleDrawCount,
-          total:      singleDrawTotal,
-          customers:  singleDrawRows.length
         },
         guidances: {
           count:     guidanceRows.length,
@@ -4749,7 +4941,7 @@ const PRODUIT_FACTS = [
   `Le Tore — La Boussole Intérieure : un oracle de 64 cartes (80x120mm), illustrations originales.`,
   `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
   `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
-  `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages) ou tirages ponctuels à 3,90€.`,
+  `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages).`,
   `Offres de lancement précommande : STANDARD à 38€ (coffret complet), ÉDITION SIGNATURE à 42€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 48€ (coffret + dédicace + séance de guidance en visio de 30 min).`
 ].join('\n');
 
@@ -5899,15 +6091,18 @@ async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, c
   }
 }
 
-// ── Parcours individualisé : chaque contact avance à son propre rythme depuis sa date
-// d'inscription (ou son dernier envoi), plutôt qu'une diffusion groupée qui fait
+// ── Parcours individualisé : chaque contact avance dans SA propre séquence (étape
+// suivante = sa dernière étape reçue + 1), plutôt qu'une diffusion groupée qui fait
 // recevoir "le dernier envoi du jour" à un nouvel inscrit au lieu de la toute première
 // étape. Un contact inscrit après la fin des campagnes groupées historiques (étapes
 // 1-6) démarre le parcours complet à l'étape 1 ; un contact déjà inscrit à cette
 // époque les a reçues par campagne et continue directement à partir de l'étape 7,
-// pour ne jamais les recevoir deux fois. Cadence hebdomadaire, calculée à partir du
-// dernier envoi RÉEL de ce contact (newsletter_sends), ou de sa date d'inscription
-// pour un tout nouveau contact n'ayant jamais rien reçu du parcours. Les étapes
+// pour ne jamais les recevoir deux fois. Individualisé sur la SÉQUENCE (quelle étape),
+// pas sur le RYTHME : tous les contacts actifs opt-in avancent d'une étape le même
+// mercredi soir, quelle que soit leur date d'inscription ou celle de leur dernier
+// envoi (règle produit explicite, 18/09/2026 — un ancien calcul basé sur "7 jours
+// depuis le dernier envoi de CE contact" faisait sauter des mercredis à quiconque
+// avait été servi hors cycle, ex. lors d'un rattrapage exceptionnel). Les étapes
 // utilisées ici restent des gabarits réutilisables : jamais marquées statut='envoyé'
 // (ce champ resterait un non-sens pour un envoi étalé dans le temps, contact par
 // contact) — seule newsletter_sends trace qui a reçu quoi et quand.
@@ -5927,7 +6122,6 @@ async function runParcoursIndividualCron(supabase) {
     return { success: true, sent: 0, skipped_reason: 'feature_disabled' };
   }
   try {
-    const CADENCE_DAYS = 7;
     const BREVO_API_KEY = process.env.BREVO_API_KEY;
     if (!BREVO_API_KEY) return { success: false, error: 'BREVO_API_KEY manquante' };
 
@@ -5958,8 +6152,13 @@ async function runParcoursIndividualCron(supabase) {
       .eq('pref_newsletter_mercredi', true);
     if (contactsErr) throw contactsErr;
 
-    // Dernier envoi de parcours par contact (le plus récent en premier) — sert à la
-    // fois à connaître la prochaine étape due et l'ancienneté de ce dernier envoi.
+    // Étape la plus avancée jamais reçue par contact — sert à la fois à connaître la
+    // prochaine étape due et l'ancienneté de ce dernier envoi. Basé sur l'ordre MAXIMAL
+    // jamais atteint, pas sur l'envoi le plus récent par date : un envoi isolé d'une
+    // étape antérieure (test manuel, resend...) est plus récent en date mais ne doit
+    // jamais faire régresser un contact déjà plus avancé. Cause identifiée le
+    // 17/09/2026 : un envoi de l'étape 1 hors cron, sans trace dans les logs, avait fait
+    // repartir 3 contacts déjà à l'étape 7 depuis le début de la séquence.
     const { data: sends, error: sendsErr } = await supabase
       .from('newsletter_sends')
       .select('contact_email, ordre, sent_at')
@@ -5968,31 +6167,39 @@ async function runParcoursIndividualCron(supabase) {
     if (sendsErr) throw sendsErr;
     const lastSendByEmail = new Map();
     for (const s of sends || []) {
-      if (!lastSendByEmail.has(s.contact_email)) lastSendByEmail.set(s.contact_email, s);
+      const current = lastSendByEmail.get(s.contact_email);
+      if (!current || Number(s.ordre) > Number(current.ordre)) lastSendByEmail.set(s.contact_email, s);
     }
 
+    // Règle produit explicite (Rudy, 18/09/2026) : TOUS les contacts actifs opt-in
+    // reçoivent la prochaine étape de leur parcours chaque mercredi soir, une étape à
+    // la fois, quelle que soit leur date d'inscription ou la date de leur dernier
+    // envoi — pas d'attente minimale de 7 jours par contact. Avant ce changement, un
+    // contact fraîchement servi (même par un passage exceptionnel hors mercredi)
+    // pouvait se retrouver à sauter le(s) mercredi(s) suivant(s) tant que 7 jours
+    // pleins ne s'étaient pas écoulés depuis SON dernier envoi — ce qui n'était pas
+    // le comportement voulu. Le seul garde-fou qui reste : ne jamais renvoyer deux
+    // fois la même journée (double-clic sur le bouton manuel, relance du cron...).
     const now = Date.now();
+    const SAME_DAY_GUARD_MS = 20 * 3600000; // 20h, couvre un double-déclenchement le même jour
     const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
     for (const c of contacts || []) {
       const last = lastSendByEmail.get(c.email);
       const createdAt = new Date(c.created_at).getTime();
-      let nextOrdre, referenceDate;
+      let nextOrdre;
       if (last) {
+        if (now - new Date(last.sent_at).getTime() < SAME_DAY_GUARD_MS) continue;
         nextOrdre = Number(last.ordre) + 1;
-        referenceDate = new Date(last.sent_at);
       } else if (historicalCutoff && createdAt > historicalCutoff) {
         // Nouvel inscrit depuis l'arrêt des campagnes groupées 1-6 : démarre le
-        // parcours complet à l'étape 1, comme n'importe quel autre abonné.
+        // parcours complet à l'étape 1, comme n'importe quel autre abonné, dès le
+        // premier mercredi qui suit son inscription.
         nextOrdre = 1;
-        referenceDate = new Date(c.created_at);
       } else {
         // Inscrit avant la fin de l'historique groupé : a déjà reçu 1-6 par
         // campagne, ne rejoue jamais cet historique.
         nextOrdre = 7;
-        referenceDate = new Date(c.created_at);
       }
-      const daysSince = (now - referenceDate.getTime()) / 86400000;
-      if (daysSince < CADENCE_DAYS) continue;
       const step = steps.find(s => Number(s.extra?.ordre) === nextOrdre);
       if (!step) continue; // à jour (dernière étape disponible déjà reçue) ou étape suivante pas encore validée
       if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
@@ -6060,8 +6267,7 @@ async function runParcoursIndividualCron(supabase) {
       details.push({ ordre, subject: finalSubject, sent: sentCount, targeted: emails.length });
     }
 
-    // Publication automatique du mercredi : avance de façon séquentielle et
-    // indépendante de qui a effectivement reçu quoi par email ce passage-ci — l'étape
+    // Publication automatique du mercredi : avance de façon séquentielle — l'étape
     // utilisée est celle dont l'ordre suit immédiatement la dernière étape déjà
     // utilisée pour une publication (9, puis 10, puis 11...), retrouvée via
     // social_posts.ordre (voir supabase-migration-social-posts-ordre.sql). Étape 1
@@ -6075,7 +6281,7 @@ async function runParcoursIndividualCron(supabase) {
     // email du même passage et pouvaient se tromper d'étape si celui-ci échouait
     // partiellement (cause identifiée le 10/09/2026) ou en cas de désabonnements
     // massifs des membres avancés.
-    let mainStep = null; // { ordre, subject, text }
+    let mainStep = null; // { ordre, subject, text, imageUrl }
     const { data: usedOrdreRows } = await supabase.from('social_posts').select('ordre').not('ordre', 'is', null);
     const usedOrdres = new Set((usedOrdreRows || []).map(r => Number(r.ordre)));
     const nextStep = steps.find(s => {
@@ -6086,14 +6292,19 @@ async function runParcoursIndividualCron(supabase) {
       const rawSubject = nextStep.subject || 'Oradia';
       const finalSubject = rawSubject.startsWith("Rudy d'ORADIA - ") ? rawSubject : `Rudy d'ORADIA - ${rawSubject}`;
       const html = buildCommunicationEmailHtml({ ...nextStep, subject: finalSubject });
-      mainStep = { ordre: Number(nextStep.extra?.ordre) || 0, subject: finalSubject, text: nlEmailPlainText(html) };
+      mainStep = { ordre: Number(nextStep.extra?.ordre) || 0, subject: finalSubject, text: nlEmailPlainText(html), imageUrl: getNewsletterLeadImageUrl(nextStep) };
     }
 
     // Publication Facebook + Instagram + LinkedIn pour l'étape ci-dessus — jamais si
-    // la prochaine étape de la séquence n'est pas encore validée.
+    // la prochaine étape de la séquence n'est pas encore validée, NI si aucun email de
+    // parcours n'est réellement parti à ce passage (totalSent === 0, ex. aucun contact
+    // pas encore dû cette semaine-là). Avant ce garde-fou (ajouté le 17/09/2026, suite
+    // à un post publié un mercredi où aucun email n'était parti), la publication
+    // avançait indépendamment des envois réels — ce qui pouvait promouvoir par les
+    // réseaux sociaux une "newsletter du jour" que personne n'avait reçue.
     let social = null;
-    if (mainStep) {
-      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text, ordre: mainStep.ordre });
+    if (mainStep && totalSent > 0) {
+      social = await scheduleAutoSocialPost(supabase, { subject: mainStep.subject, textContent: mainStep.text, imageUrl: mainStep.imageUrl, ordre: mainStep.ordre });
     }
 
     // Journalisé pour de bon (contrairement à avant : ce cron ne laissait aucune trace
@@ -6105,9 +6316,11 @@ async function runParcoursIndividualCron(supabase) {
     // generateSocialImage — impossible à corréler après coup avec "pourquoi ce post-là".
     const socialNote = !mainStep
       ? ' — aucun post social (prochaine étape de la séquence pas encore validée)'
-      : social?.success
-        ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
-        : ` — ÉCHEC de la programmation du post social : ${social?.error}`;
+      : totalSent === 0
+        ? ' — aucun post social (aucun email de parcours envoyé à ce passage)'
+        : social?.success
+          ? ` — post social programmé${social.usedFallbackImage ? ' AVEC IMAGE DE REPLI (logo, generateSocialImage a échoué)' : ''}${!social.linkedinScheduled ? ', sans texte LinkedIn' : ''}`
+          : ` — ÉCHEC de la programmation du post social : ${social?.error}`;
     await logSystemEvent(supabase, {
       level: social && !social.success ? 'warn' : (social?.usedFallbackImage ? 'warn' : 'info'),
       source: 'cron-send-parcours-individual',
@@ -6455,7 +6668,18 @@ async function handleNewsletter(req, res) {
         const ordreOf = d => Number(d.extra?.ordre) || 0;
         const sent = validated.filter(d => d.statut === 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
         const queue = validated.filter(d => d.statut !== 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
-        const maxSentOrdre = sent.length ? ordreOf(sent[sent.length - 1]) : null;
+        // maxSentOrdre : les étapes de l'envoi individualisé (cron-send-parcours-individual)
+        // ne sont JAMAIS marquées statut='envoyé' (ce sont des gabarits réutilisables,
+        // chaque contact avance à son rythme) — seules les étapes 1-6/7 de l'ancien envoi
+        // groupé le sont encore. Sans compléter avec newsletter_sends.ordre (qui trace,
+        // lui, les vrais envois individualisés), une étape déjà partie à tout le monde
+        // (ex. étape 8) restait indéfiniment "prochaine étape prête" ici, alors qu'elle
+        // était déjà passée pour de bon — bug repéré le 12/09/2026 sur la carte "Parcours
+        // — mercredi prochain" de l'onglet Réseaux sociaux.
+        const statutSentMax = sent.length ? ordreOf(sent[sent.length - 1]) : 0;
+        const { data: sendRows } = await supabase.from('newsletter_sends').select('ordre').not('ordre', 'is', null);
+        const individualSentMax = (sendRows || []).reduce((max, r) => Math.max(max, Number(r.ordre) || 0), 0);
+        const maxSentOrdre = Math.max(statutSentMax, individualSentMax) || null;
 
         const now = Date.now();
         const scheduledQueue = queue.filter(d => d.scheduled_at && new Date(d.scheduled_at).getTime() > now);
@@ -7508,7 +7732,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
                 ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
               });
               if (draft.type === 'promo') {
-                await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+                await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text, imageUrl: getNewsletterLeadImageUrl(draft) });
               }
               return res.status(200).json({
                 success: true,
@@ -7589,7 +7813,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           });
 
           if (draft.type === 'promo' && sentEmails.length > 0) {
-            await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+            await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text, imageUrl: getNewsletterLeadImageUrl(draft) });
           }
 
           return res.status(200).json({
@@ -7655,7 +7879,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           .eq('id', draft_id);
 
         if (draft.type === 'promo') {
-          await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+          await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text, imageUrl: getNewsletterLeadImageUrl(draft) });
         }
 
         return res.status(200).json({ success: true });
@@ -7814,6 +8038,27 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
   if (!linkedin_text) linkedin_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\noradia.fr`;
 
   return { facebook_text, instagram_text, linkedin_text };
+}
+
+// Retrouve l'image qui s'affiche en premier dans le corps de la newsletter (juste
+// sous le titre), pour que la publication automatique sur les réseaux sociaux
+// reprenne ce visuel plutôt qu'une image générée par IA ou, en dernier recours,
+// le logo générique. Réplique la règle de rendu de buildCommunicationEmailHtml :
+// une image positionnée explicitement (img.position, choisi dans l'éditeur du
+// dashboard) prime sur l'ordre du tableau ; sinon la première image du tableau
+// est la première à s'afficher (répartition automatique entre les paragraphes,
+// en partant du début). Cause identifiée le 17/09/2026 : aucun appelant de
+// scheduleAutoSocialPost ne passait jamais imageUrl, donc chaque post partait
+// soit avec une image générée par IA, soit — quand celle-ci échouait — avec le
+// logo, sans lien visuel avec le contenu de la newsletter du jour.
+function getNewsletterLeadImageUrl(draft) {
+  const images = draft?.images || [];
+  if (!images.length) return null;
+  const placed = images.filter(img => img.position !== undefined && img.position !== null && img.position >= 0);
+  const lead = placed.length > 0
+    ? [...placed].sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]
+    : images[0];
+  return lead?.path ? nlAbsUrl(lead.path) : null;
 }
 
 // Programme une publication sur les 3 réseaux (Facebook + Instagram + LinkedIn) pour un
@@ -8640,8 +8885,10 @@ Réponds en français, sans tiret long, format markdown compact.`
         const body = await parseBody(req);
         const key = String(body.key || '').trim();
         if (!key || typeof body.enabled !== 'boolean') return res.status(400).json({ error: 'key et enabled (boolean) requis' });
-        const { error } = await sbFeat.from('feature_flags').update({ enabled: body.enabled, updated_at: new Date().toISOString() }).eq('key', key);
+        const { data: updated, error } = await sbFeat.from('feature_flags').update({ enabled: body.enabled, updated_at: new Date().toISOString() }).eq('key', key).select('key');
         if (error) return res.status(500).json({ error: error.message });
+        // Sans ce contrôle, une clé absente de la table renvoyait "succès" sans rien changer.
+        if (!updated || updated.length === 0) return res.status(404).json({ error: `Fonctionnalité inconnue : ${key}` });
         return res.status(200).json({ success: true });
       }
       return res.status(405).json({ error: 'Method not allowed' });
@@ -9122,8 +9369,9 @@ Réponds en français, sans tiret long, format markdown compact.`
         const userAgent = String(body.user_agent || '').slice(0, 500);
         const isNewVisitor = body.is_new_visitor === true;
         const isApp = body.is_app === true;
+        const utmSource = String(body.utm_source || '').slice(0, 100) || null;
         // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
-        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance'];
+        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse', 'precommande_offre_ajoutee', 'precommande_checkout_lance', 'parrainage_lien_utilise'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
         // Rejette les requêtes qui ne proviennent pas réellement d'une page oradia.fr. Cet
@@ -9168,7 +9416,7 @@ Réponds en français, sans tiret long, format markdown compact.`
           return res.status(204).end();
         }
         if (pagePath) {
-          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor, is_app: isApp });
+          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor, is_app: isApp, utm_source: utmSource });
         }
         if (event) {
           await sb.from('funnel_events').insert({ session_id: sessionId, event_name: event, path: pagePath || null }).select().single()
@@ -9509,9 +9757,21 @@ Réponds en français, sans tiret long, format markdown compact.`
           .filter(t => t.source === 'don' || t.source === 'don-especes')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
 
+        // Nombre de factures jointes par transaction — une seule requête groupée plutôt
+        // qu'un appel par ligne, pour afficher un badge dans la liste sans surcharger l'API.
+        let invoiceCounts = {};
+        if ((data || []).length > 0) {
+          const { data: invoiceRows } = await sb
+            .from('transaction_invoices')
+            .select('transaction_id')
+            .in('transaction_id', data.map(t => t.id));
+          (invoiceRows || []).forEach(r => { invoiceCounts[r.transaction_id] = (invoiceCounts[r.transaction_id] || 0) + 1; });
+        }
+        const dataWithInvoiceCounts = (data || []).map(t => ({ ...t, invoice_count: invoiceCounts[t.id] || 0 }));
+
         return res.status(200).json({
           success: true,
-          data: data || [],
+          data: dataWithInvoiceCounts,
           summary: {
             recettes, depenses, net: recettes - depenses, urssaf,
             stripeFees, stripeFeesAreReal,
@@ -9592,10 +9852,16 @@ Réponds en français, sans tiret long, format markdown compact.`
           'reddit.com': 'Reddit',
         };
         const EMAIL_DOMAINS = /sendibm|brevo|sendinblue|mailchimp|mailjet|sendgrid|mandrill|mailerlite|constantcontact|campaign-archive|list-manage/i;
+        // Trafic payant identifié via ?utm_source=... (voir js/page-tracker.js) — sans ça,
+        // un clic sur une annonce Google Ads arrive avec referrer=google.com ou vide, donc
+        // indiscernable du trafic organique Google dans "Provenance des visiteurs".
+        const UTM_SOURCE_NAMES = { google_ads: 'Google Ads (payant)' };
         const referrerCounts = {};
         v.forEach(r => {
           let ref = 'Accès direct';
-          if (r.referrer) {
+          if (r.utm_source) {
+            ref = UTM_SOURCE_NAMES[r.utm_source] || (r.utm_source + ' (payant)');
+          } else if (r.referrer) {
             try {
               const hostname = new URL(r.referrer).hostname.replace(/^www\./, '');
               if (SELF_REFERRERS.has(hostname)) return;
@@ -9657,7 +9923,17 @@ Réponds en français, sans tiret long, format markdown compact.`
         Object.values(firstBySession).forEach(p => { landingCounts[p] = (landingCounts[p] || 0) + 1; });
         const landingPages = Object.entries(landingCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([path,count]) => ({path,count}));
 
-        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors, devices, by_hour: byHour, by_weekday: byWeekday, landing_pages: landingPages };
+        // ── Version anglaise (/en/) : vues déjà filtrées anti-bot par ce même calcul,
+        // donc ce chiffre hérite du filtrage BOT_PATTERN + validation origin/referer
+        // appliqué à l'insertion dans page_views (voir POST /track ci-dessus).
+        const enRows = v.filter(r => r.path && (r.path === '/en' || r.path === '/en/' || r.path.indexOf('/en/') === 0));
+        const enTraffic = {
+          views: enRows.length,
+          unique_visitors: new Set(enRows.map(r => r.session_id)).size,
+          share_pct: v.length > 0 ? +(enRows.length / v.length * 100).toFixed(1) : 0
+        };
+
+        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors, devices, by_hour: byHour, by_weekday: byWeekday, landing_pages: landingPages, en_traffic: enTraffic };
       };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
@@ -9671,7 +9947,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       // avec .range() jusqu'à épuisement des lignes, quel que soit le plafond réel.
       const [views, prevViews] = await Promise.all([
         sbFetchAllRows(() => sb.from('page_views')
-          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent,is_app')
+          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent,is_app,utm_source')
           .gte('created_at', since).not('path', 'like', '/admin%')
           .order('created_at', { ascending: false })),
         sbFetchAllRows(() => sb.from('page_views')
@@ -9698,12 +9974,23 @@ Réponds en français, sans tiret long, format markdown compact.`
         appViews.forEach(v => { const h = new Date(v.created_at).getHours(); appByHour[h]++; });
         const appByDay = {};
         appViews.forEach(v => { const d = v.created_at.slice(0,10); appByDay[d] = (appByDay[d] || 0) + 1; });
+        // Nouveaux vs anciens visiteurs de l'app — même logique que sessionIsNew plus haut
+        // (une session est "nouvelle" dès qu'une de ses vues porte is_new_visitor=true).
+        const appSessionIsNew = {};
+        appViews.forEach(v => {
+          if (v.is_new_visitor === true) appSessionIsNew[v.session_id] = true;
+          else if (v.is_new_visitor === false && !(v.session_id in appSessionIsNew)) appSessionIsNew[v.session_id] = false;
+        });
+        let appNewVisitors = 0, appReturningVisitors = 0;
+        Object.values(appSessionIsNew).forEach(isNew => { if (isNew) appNewVisitors++; else appReturningVisitors++; });
         traffic.app_usage = {
           total_views: appViews.length,
           unique_sessions: appSessions.size,
           top_pages: appTopPages,
           by_hour: appByHour,
           by_day: Object.entries(appByDay).sort((a,b) => a[0] < b[0] ? -1 : 1).map(([date,count]) => ({ date, count })),
+          new_visitors: appNewVisitors,
+          returning_visitors: appReturningVisitors,
           last_seen: appViews.length ? appViews[0].created_at : null
         };
       }
@@ -9781,6 +10068,32 @@ Réponds en français, sans tiret long, format markdown compact.`
         };
       } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
 
+      // ── Programme de parrainage : combien de liens ont été utilisés, et combien
+      // ont réellement abouti (le filleul est allé jusqu'au bout d'un tirage) ──
+      // "Utilisé" = événement parrainage_lien_utilise (posé dès que le bonus du filleul
+      // est crédité, voir js/referral.js) ; "abouti" = ligne dans referral_conversions
+      // (posée seulement quand le filleul termine son 1er tirage). Le delta entre les
+      // deux mesure l'attrition : des gens cliquent le lien mais ne tirent jamais.
+      let referral = null;
+      try {
+        const [linkEvents, { data: refRows }] = await Promise.all([
+          sbFetchAllRows(() => sb.from('funnel_events').select('session_id')
+            .eq('event_name', 'parrainage_lien_utilise').gte('created_at', since)),
+          sb.from('referral_conversions').select('code, claimed_at').gte('converted_at', since)
+        ]);
+        const liensUtilises = new Set((linkEvents || []).map(e => e.session_id)).size;
+        const conversions = refRows || [];
+        const bonusReclames = conversions.filter(c => c.claimed_at).length;
+        referral = {
+          liens_utilises: liensUtilises,
+          conversions_abouties: conversions.length,
+          taux_conversion_pct: liensUtilises > 0 ? Math.round((conversions.length / liensUtilises) * 100) : null,
+          parrains_actifs: new Set(conversions.map(c => c.code)).size,
+          bonus_reclames: bonusReclames,
+          bonus_en_attente: conversions.length - bonusReclames
+        };
+      } catch (_) { /* migration referral_conversions ou funnel_events pas encore exécutée */ }
+
       // ── Conversions réelles de la période (précommandes, dons, inscriptions newsletter) ──
       const conversions = {};
       await Promise.all([
@@ -9830,6 +10143,12 @@ Conversions réelles de la période :
 - Dons libres : ${conversions.dons == null ? 'N/A' : conversions.dons}
 - Nouvelles inscriptions newsletter : ${conversions.inscriptions_newsletter == null ? 'N/A' : conversions.inscriptions_newsletter}
 
+Programme de parrainage ("offrir un tirage à un proche", chaque lien utilisé crédite immédiatement 1 tirage gratuit au filleul ; le parrain gagne 1 tirage quand le filleul termine son 1er tirage) :
+${referral ? `- Liens de parrainage utilisés (bonus filleul crédité) : ${referral.liens_utilises}
+- Dont allés au bout d'un 1er tirage (conversion réelle) : ${referral.conversions_abouties}${referral.taux_conversion_pct != null ? ` (${referral.taux_conversion_pct}% des liens utilisés)` : ''}
+- Parrains distincts ayant obtenu au moins une conversion : ${referral.parrains_actifs}
+- Bonus parrain réclamés : ${referral.bonus_reclames} / en attente de réclamation : ${referral.bonus_en_attente}` : '- Données de parrainage indisponibles sur la période (ou aucun lien utilisé).'}
+
 Santé technique (erreurs journalisées, pas forcément visibles par le visiteur) :
 - Erreurs serveur (API) : ${serverErrors}
 - Erreurs JavaScript côté client (bugs réellement rencontrés dans le navigateur) : ${clientErrors}
@@ -9842,6 +10161,7 @@ Analyse ces chiffres et donne-moi, en français, de façon concise et actionnabl
 
 Consignes d'interprétation importantes :
 - Le tunnel ci-dessus montre où les visiteurs décrochent : concentre les recommandations sur la plus grosse fuite entre deux étapes, pas sur des généralités.
+- Pour le parrainage : si le taux de conversion (liens utilisés → 1er tirage terminé) est bas, c'est un signal que le parcours du filleul après clic sur le lien a un problème (pas que le programme lui-même ne marche pas) — creuse cette piste plutôt que de recommander "communiquer plus sur le parrainage" par défaut. À l'inverse, si peu de liens sont utilisés mais que ceux qui le sont convertissent bien, le problème est en amont (visibilité/incitation à partager, pas le parcours filleul).
 - Ne confonds pas erreurs serveur et erreurs client : les erreurs serveur sont des incidents d'API (souvent invisibles pour le visiteur), les erreurs client sont des bugs JS vécus dans le navigateur (impact UX direct). Si les deux sont à 0 ou très faibles, ne dramatise pas une « catastrophe technique ».
 - Priorise les actions sur les leviers déjà en place plutôt que d'en réinventer : le site a déjà un blog (SEO de contenu), des CTA en page d'accueil, et un suivi de conversion first-party. Ne recommande pas d'« ajouter Google Analytics / Pixel Facebook » ni d'« écrire des articles » sans vérifier ce qui existe déjà.
 
@@ -9876,6 +10196,7 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         traffic,
         funnel,
         funnel_precommande: funnelPrecommande,
+        referral,
         conversions,
         logs_stats: { errors, server_errors: serverErrors, client_errors: clientErrors, warnings, total: (logs||[]).length }
       });
@@ -10126,7 +10447,13 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         }
       }
 
-      if (event === 'unsubscribed' || event === 'hardBounced') {
+      // "blocked" traité comme un désabonnement définitif au même titre que hardBounced :
+      // ça signifie que le contact est déjà sur la liste de blocage de Brevo (plainte
+      // spam ou rejets répétés côté destinataire) — Brevo n'essaiera plus jamais de lui
+      // délivrer un email, donc le garder "Inscrit" est trompeur et continuer à l'inclure
+      // dans les envois n'a plus aucun effet. "softBounced" reste volontairement exclu
+      // (souvent transitoire — boîte pleine, serveur indisponible un instant).
+      if (event === 'unsubscribed' || event === 'hardBounced' || event === 'blocked') {
         const updates = {
           status: 'unsubscribed',
           brevo_synced: false,
@@ -10501,7 +10828,8 @@ async function handleMondialRelayPickupPoints(req, res) {
   try {
     const { postalCode, country = 'FR' } = req.query;
 
-    if (!postalCode || postalCode.length < 5) {
+    // 4 chiffres minimum (codes postaux suisses/belges), 5 pour la France.
+    if (!postalCode || postalCode.length < 4) {
       return res.status(400).json({
         success: false,
         error: 'Bad Request',
