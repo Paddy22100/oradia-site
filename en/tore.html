@@ -4337,16 +4337,187 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     }
   }
 
+  // ============ SAUVEGARDE DU TIRAGE EN COURS ============
+  // Un tirage interrompu (onglet fermé, retour arrière, batterie, fausse manœuvre…)
+  // était perdu en entier — signalé par une abonnée le 2026-09-27. Chaque résultat est
+  // désormais enregistré dans localStorage AU MOMENT où il est tiré (carte, pièce,
+  // passerelle), avant toute animation : à la reprise, ce qui a été tiré est restitué
+  // à l'identique et ne peut pas être retiré au sort en quittant la page.
+  // Effacée à la fin du tirage, sur abandon explicite, ou si l'utilisateur choisit
+  // d'en commencer un nouveau.
+  // Clé distincte de la page française : les données de cartes sauvegardées sont
+  // celles de la langue du tirage (noms, citations) — jamais reproposées dans l'autre langue.
+  const TORE_SAVE_KEY = 'oradia_tore_draw_in_progress_en';
+  const TORE_SAVE_VERSION = 1;
+  const TORE_SAVE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+  let toreSave = null;
+
+  function currentMemberEmail() {
+    try {
+      const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+      return sessStr ? (JSON.parse(sessStr).email || null) : null;
+    } catch (_) { return null; }
+  }
+
+  function persistToreSave() {
+    if (!toreSave) return;
+    toreSave.updatedAt = Date.now();
+    try { localStorage.setItem(TORE_SAVE_KEY, JSON.stringify(toreSave)); } catch (_) {}
+  }
+
+  function clearToreSave() {
+    toreSave = null;
+    try { localStorage.removeItem(TORE_SAVE_KEY); } catch (_) {}
+  }
+  window.clearToreDrawSave = clearToreSave;
+
+  function startToreSave(intention, gender) {
+    toreSave = {
+      v: TORE_SAVE_VERSION,
+      startedAt: Date.now(),
+      email: currentMemberEmail(),
+      intention: intention || '',
+      gender: gender || 'neutre',
+      guidanceId: sessionStorage.getItem('tore_guidance_id') || null,
+      cards: [],   // [{ family, data }] dans l'ordre de révélation
+      coins: [],   // [{ family, polarity, bridge, bridgePending }] dans l'ordre des lancers
+      qrng: null
+    };
+    persistToreSave();
+  }
+
+  function recordToreCard(family, data) {
+    if (!toreSave || !data) return;
+    if (toreSave.cards.some(c => c.family === family)) return;
+    toreSave.cards.push({ family, data });
+    persistToreSave();
+  }
+
+  function recordToreCoin(family, polarity, bridgePending) {
+    if (!toreSave) return;
+    toreSave.coins.push({ family, polarity, bridge: null, bridgePending: !!bridgePending });
+    if (window.QRNG && QRNG.snapshotDraw) toreSave.qrng = QRNG.snapshotDraw();
+    persistToreSave();
+  }
+
+  // data : carte passerelle révélée, ou null si l'éventail a été refermé sans passerelle.
+  function recordToreBridge(family, data) {
+    if (!toreSave) return;
+    const entry = toreSave.coins.find(c => c.family === family);
+    if (!entry) return;
+    entry.bridge = data || null;
+    entry.bridgePending = false;
+    if (window.QRNG && QRNG.snapshotDraw) toreSave.qrng = QRNG.snapshotDraw();
+    persistToreSave();
+  }
+
+  // Sauvegarde exploitable pour une reprise, sinon null (et la purge si elle est invalide).
+  function readToreSave() {
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(TORE_SAVE_KEY) || 'null'); } catch (_) {}
+    if (!saved) return null;
+    const known = new Set(TIRAGE_ORDER);
+    const valid = saved.v === TORE_SAVE_VERSION
+      && Array.isArray(saved.cards) && Array.isArray(saved.coins)
+      && saved.cards.every(c => c && known.has(c.family) && c.data && c.data.name)
+      && saved.coins.every(c => c && known.has(c.family) && (c.polarity === 'yang' || c.polarity === 'yin'))
+      && (Date.now() - (saved.updatedAt || 0)) < TORE_SAVE_MAX_AGE_MS;
+    if (!valid) { clearToreSave(); return null; }
+    // Rien de révélé : rien à reprendre.
+    if (!saved.cards.length) { clearToreSave(); return null; }
+    // Un autre membre connecté sur cet appareil ne se voit pas proposer ce tirage.
+    const email = currentMemberEmail();
+    if (saved.email && email && saved.email !== email) return null;
+    return saved;
+  }
+
+  // Reconstruit le plateau à l'état sauvegardé — appelé une fois la distribution
+  // des cartes terminée (boardReady), à la place de highlightNextCard().
+  function restoreToreDraw(saved) {
+    if (!boardHost) return;
+    toreSave = saved;
+
+    saved.cards.forEach(({ family, data }) => {
+      const card = boardHost.querySelector(`.tore-card[data-family="${family}"]`);
+      const front = card && card.querySelector('.tore-card-front');
+      if (!card || !front) return;
+      const pol = (data.polarity === 'yang' || data.polarity === 'yin') ? data.polarity : 'none';
+      card.dataset.polarity = pol;
+      card.dataset.name = data.name;
+      flippedCardData.set(family, data);
+      const imgEl2 = fillRevealedCardFront(card, front, data, buildImagePath(family, data));
+      imgEl2.style.opacity = '1';
+      imgEl2.addEventListener('load', () => {
+        const placeholder = front.querySelector('div');
+        if (placeholder) placeholder.remove();
+        front.style.position = '';
+      }, { once: true });
+      card.classList.remove('next-to-draw');
+      card.classList.add('flipped');
+      toreThrowIndex++;
+    });
+
+    const total = boardHost.querySelectorAll('.tore-card').length;
+    const flipped = boardHost.querySelectorAll('.tore-card.flipped').length;
+    if (!(total > 0 && flipped === total)) {
+      highlightNextCard();
+      return;
+    }
+
+    // Toutes les cartes révélées : phase pièce.
+    boardHost.classList.remove('has-active-card');
+    showCoinAfterAllCards();
+    if (window.QRNG && QRNG.restoreDraw && saved.coins.length) QRNG.restoreDraw(saved.qrng);
+
+    const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
+    let pending = null;
+    saved.coins.forEach((c, i) => {
+      coinThrowIndex = i + 1;
+      const stepIndex = STEPS_TORE.findIndex(st => st.key === c.family);
+      if (c.bridge && stepIndex !== -1) placeBridgeCard(stepIndex, 'actions', c.bridge);
+      if (c.bridgePending && stepIndex !== -1) pending = { stepIndex, isLastCoin: coinThrowIndex >= familiesWithCoin.length };
+    });
+
+    const last = saved.coins[saved.coins.length - 1];
+    if (coin && last) {
+      coin.classList.remove('face-yang', 'face-yin');
+      coin.classList.add(last.polarity === 'yang' ? 'face-yang' : 'face-yin');
+      const coinImg = document.getElementById('tore-coin-img');
+      if (coinImg) coinImg.src = last.polarity === 'yang' ? 'images/coin_triangle.webp' : 'images/coin_cercle.webp';
+    }
+    updateCoinDots();
+    updateCoinFamilyLabel();
+
+    if (pending) {
+      // Pièce tombée en désaccord mais passerelle pas encore choisie : on rouvre l'éventail.
+      if (coin) coin.dataset.locked = '1';
+      openBridgeFan(pending.stepIndex, 'actions', pending.isLastCoin);
+    } else if (coinThrowIndex >= familiesWithCoin.length) {
+      if (coin) { coin.classList.remove('glow'); coin.dataset.locked = '1'; }
+      showToreAnalysisCTA();
+    } else if (coinThrowIndex > 0) {
+      setTimeout(highlightCoinForNextThrow, 300);
+    }
+  }
+
+ // La phase pièce ne s'initialise qu'une fois par tirage : showCoinAfterAllCards() est
+ // aussi appelée par un filet de sécurité 4s après chaque retournement, qui — si la
+ // pièce avait déjà été lancée entre-temps — remettait coinThrowIndex à 0 : le lancer
+ // suivant retombait alors sur la 1re famille (constaté en test, 2026-09-27).
+ let coinPhaseStarted = false;
+
  function showCoinAfterAllCards() {
   // Afficher la pièce après que toutes les 7 cartes soient tirées
   // Ne pas afficher la pièce si le guide est encore ouvert
   if (isGuideMessageShown) return;
+  if (coinPhaseStarted) return;
   
   if (coinWrapper && boardHost) {
     const totalCards = boardHost.querySelectorAll('.tore-card').length;
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
     
     if (totalCards > 0 && flippedCards === totalCards) {
+      coinPhaseStarted = true;
       // Masquer le guide étape et afficher le wrapper pièce
       const sg = el('tore-step-guide');
       if (sg) sg.style.display = 'none';
@@ -4393,9 +4564,39 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
 // Variable globale pour suivre l'état du tirage
 let isToreComplete = false;
+// Complétion traitée (décompte freemium + historique) : une seule fois par tirage.
+let toreCompletionHandled = false;
+
+// Un tirage n'est « réalisé » — et donc décompté des tirages gratuits — que s'il est
+// complet : les 7 cartes retournées ET les 6 lancers de pièce effectués, avec chaque
+// carte passerelle posée (aucun éventail ouvert ni passerelle restant à choisir).
+function isToreDrawComplete() {
+  if (!boardHost) return false;
+  const total = boardHost.querySelectorAll('.tore-card').length;
+  const flipped = boardHost.querySelectorAll('.tore-card.flipped').length;
+  const throwsNeeded = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos').length;
+  const bridgePending = !!(toreSave && toreSave.coins.some(c => c.bridgePending));
+  return total === TIRAGE_ORDER.length && flipped === total
+    && coinThrowIndex >= throwsNeeded
+    && !isBridgeFanOpen && !bridgePending;
+}
 
 function showToreAnalysisCTA() {
   if (!coinWrapper) return;
+
+  // Appelée par plusieurs chemins (minuteries de fin de lancer, fermeture de
+  // l'éventail, reprise…) : sans ce garde-fou, un double appel décomptait le tirage
+  // deux fois des tirages gratuits et l'enregistrait deux fois dans l'historique.
+  if (toreCompletionHandled) {
+    const existingBtn = document.getElementById('tore-floating-analysis-btn');
+    if (existingBtn) existingBtn.style.display = 'inline-flex';
+    return;
+  }
+  if (!isToreDrawComplete()) {
+    console.warn('[tore] showToreAnalysisCTA ignoré : tirage incomplet (non décompté)');
+    return;
+  }
+  toreCompletionHandled = true;
 
   // Cacher pièce + bouton lancer
   coin?.classList.add('hidden');
@@ -4403,9 +4604,17 @@ function showToreAnalysisCTA() {
 
   isToreComplete = true;
   if (boardHost) boardHost.style.pointerEvents = 'auto';
+  clearToreSave();
 
-  // Enregistrer le tirage Tore complété
-  if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
+  // Enregistrer le tirage Tore complété — seul endroit où un tirage est décompté
+  // des tirages gratuits (tirage complet vérifié ci-dessus, une seule fois).
+  // Jamais pour un accès illimité : abonnés (recordToreDraw() ne compte rien si
+  // freemiumTracker.isSubscribed()) et tirages guidance (?guidance=, traités comme
+  // abonnés par checkToreAccess mais inconnus de freemiumTracker — ils étaient
+  // décomptés à tort des tirages gratuits de l'appareil).
+  const unlimitedAccess = !!sessionStorage.getItem('tore_guidance_id')
+    || (window.freemiumTracker && window.freemiumTracker.isSubscribed());
+  if (window.freemiumTracker && !unlimitedAccess) window.freemiumTracker.recordToreDraw();
   window.oradiaReferral?.markConversionIfNeeded();
 
   // Collecter les cartes retournées
@@ -5213,6 +5422,7 @@ function closeToreExitModal(){
     // Reset de l'état du tirage de pièce
 
     toreThrowIndex = 0;
+    coinPhaseStarted = false;
 
     for (let i = 0; i < toreBridgeAdded.length; i++) {
 
@@ -5435,6 +5645,8 @@ function closeToreExitModal(){
 
         }
 
+        recordToreCard(famKey, data);
+
                 const imgPath = (pre && pre.imgPath) ? pre.imgPath : buildImagePath(famKey, data);
 
 
@@ -5490,36 +5702,7 @@ function closeToreExitModal(){
           if (coinWrapper && coinWrapper.style.display !== 'none') {
             coinWrapper.style.pointerEvents = 'auto';
           }
-          const escName = (data.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-          const imgEl2 = document.createElement('img');
-          imgEl2.src = imgPath;
-          imgEl2.alt = escName;
-          imgEl2.setAttribute('loading', 'eager');
-          imgEl2.setAttribute('fetchpriority', 'high');
-          imgEl2.setAttribute('draggable', 'false');
-          front.style.position = 'relative';
-          imgEl2.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.35s ease;';
-          front.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;z-index:0;"></div>';
-          front.appendChild(imgEl2);
-          // Filet de sécurité réseau faible : si l'image de la carte échoue vraiment à
-          // charger (pas juste lente — un échec réel), un nouvel essai après une seconde,
-          // puis un repli visuel (nom de la carte) plutôt qu'une icône d'image cassée qui
-          // donne l'impression que le tirage a planté.
-          let imgRetried = false;
-          imgEl2.onerror = () => {
-            if (!imgRetried) {
-              imgRetried = true;
-              setTimeout(() => { imgEl2.src = imgPath + (imgPath.includes('?') ? '&' : '?') + 'retry=1'; }, 1000);
-              return;
-            }
-            imgEl2.onerror = null;
-            imgEl2.style.display = 'none';
-            const fallback = document.createElement('div');
-            fallback.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;color:#f0c75e;font-family:Georgia,serif;font-size:15px;line-height:1.4;';
-            fallback.textContent = escName;
-            front.appendChild(fallback);
-            requestAnimationFrame(() => { fallback.style.opacity = '1'; });
-          };
+          const imgEl2 = fillRevealedCardFront(card, front, data, imgPath);
           if (navigator.vibrate) navigator.vibrate(18);
           card.classList.remove('flipping');
           card.classList.add('flipped', 'just-flipped');
@@ -5527,26 +5710,6 @@ function closeToreExitModal(){
             const inner = card.querySelector('.tore-card-inner');
             if (inner) inner.style.willChange = 'auto';
           }, 1200);
-          const backEl = card.querySelector('.tore-card-back');
-          if (backEl) {
-            backEl.setAttribute('aria-pressed', 'true');
-            backEl.setAttribute('aria-label', 'Card revealed — tap to enlarge');
-            backEl.setAttribute('tabindex', '-1');
-          }
-          // Agrandissement au clic/tactile — le zoom n'existait jusqu'ici qu'au survol
-          // de la carte passerelle (addZoomToBridgeCard), donc inaccessible sur mobile
-          // et absent des 7 cartes principales du tirage (signalé par un abonné : image
-          // impossible à agrandir depuis un smartphone pour "s'imprégner" du visuel).
-          // Le déclencheur est posé sur l'image révélée (imgEl2), un élément neuf créé
-          // ici, plutôt que sur .tore-card-back qui porte déjà l'écouteur de clic gérant
-          // le retournement des cartes suivantes : le partager avait bloqué le tirage
-          // sur la carte "besoins" (2e de l'ordre), un des deux écouteurs empêchant l'autre
-          // de fonctionner correctement sur le même élément.
-          imgEl2.style.cursor = ORADIA_ZOOM_CURSOR;
-          imgEl2.addEventListener('click', () => {
-            if (previewImg) previewImg.style.backgroundImage = `url('${imgPath}')`;
-            if (previewOverlay) previewOverlay.classList.add('card-preview-visible');
-          });
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               imgEl2.style.opacity = '1';
@@ -5668,6 +5831,64 @@ if (previewOverlay) {
     };
     bridgeImgWrap.addEventListener('click', openBridgeZoom);
     bridgeImgWrap.addEventListener('touchend', (e) => { e.preventDefault(); openBridgeZoom(); });
+  }
+
+  // Remplit la face d'une carte révélée : image (avec nouvel essai puis repli texte
+  // en cas d'échec réseau), attributs d'accessibilité et zoom au clic/tactile.
+  // Partagé entre le retournement animé (doFlip) et la reprise d'un tirage
+  // sauvegardé (restoreToreDraw), pour que les deux produisent exactement la même carte.
+  function fillRevealedCardFront(card, front, data, imgPath) {
+    const escName = (data.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    const imgEl2 = document.createElement('img');
+    imgEl2.src = imgPath;
+    imgEl2.alt = escName;
+    imgEl2.setAttribute('loading', 'eager');
+    imgEl2.setAttribute('fetchpriority', 'high');
+    imgEl2.setAttribute('draggable', 'false');
+    front.style.position = 'relative';
+    imgEl2.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.35s ease;';
+    front.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;z-index:0;"></div>';
+    front.appendChild(imgEl2);
+    // Filet de sécurité réseau faible : si l'image de la carte échoue vraiment à
+    // charger (pas juste lente — un échec réel), un nouvel essai après une seconde,
+    // puis un repli visuel (nom de la carte) plutôt qu'une icône d'image cassée qui
+    // donne l'impression que le tirage a planté.
+    let imgRetried = false;
+    imgEl2.onerror = () => {
+      if (!imgRetried) {
+        imgRetried = true;
+        setTimeout(() => { imgEl2.src = imgPath + (imgPath.includes('?') ? '&' : '?') + 'retry=1'; }, 1000);
+        return;
+      }
+      imgEl2.onerror = null;
+      imgEl2.style.display = 'none';
+      const fallback = document.createElement('div');
+      fallback.style.cssText = 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center;text-align:center;padding:16px;color:#f0c75e;font-family:Georgia,serif;font-size:15px;line-height:1.4;';
+      fallback.textContent = escName;
+      front.appendChild(fallback);
+      requestAnimationFrame(() => { fallback.style.opacity = '1'; });
+    };
+    const backEl = card.querySelector('.tore-card-back');
+    if (backEl) {
+      backEl.setAttribute('aria-pressed', 'true');
+      backEl.setAttribute('aria-label', 'Card revealed — tap to enlarge');
+      backEl.setAttribute('tabindex', '-1');
+    }
+    // Agrandissement au clic/tactile — le zoom n'existait jusqu'ici qu'au survol
+    // de la carte passerelle (addZoomToBridgeCard), donc inaccessible sur mobile
+    // et absent des 7 cartes principales du tirage (signalé par un abonné : image
+    // impossible à agrandir depuis un smartphone pour "s'imprégner" du visuel).
+    // Le déclencheur est posé sur l'image révélée (imgEl2), un élément neuf créé
+    // ici, plutôt que sur .tore-card-back qui porte déjà l'écouteur de clic gérant
+    // le retournement des cartes suivantes : le partager avait bloqué le tirage
+    // sur la carte "besoins" (2e de l'ordre), un des deux écouteurs empêchant l'autre
+    // de fonctionner correctement sur le même élément.
+    imgEl2.style.cursor = ORADIA_ZOOM_CURSOR;
+    imgEl2.addEventListener('click', () => {
+      if (previewImg) previewImg.style.backgroundImage = `url('${imgPath}')`;
+      if (previewOverlay) previewOverlay.classList.add('card-preview-visible');
+    });
+    return imgEl2;
   }
 
   function placeBridgeCard(stepIndex, familyKey, dataNext) {
@@ -5931,6 +6152,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         const dataNext = await pickFromData('actions', true);
 
         if (!dataNext) {
+          recordToreBridge(STEPS_TORE[stepIndex].key, null);
           overlay.remove();
           isBridgeFanOpen = false;
           // Déverrouiller la pièce après fermeture du bridge fan
@@ -5943,6 +6165,8 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
           if (bsvg) bsvg.classList.remove('beam-hidden');
           return;
         }
+
+        recordToreBridge(STEPS_TORE[stepIndex].key, dataNext);
 
         // --- Révélation de la carte tirée avant placement ---
         const imgPath = buildImagePath('actions', dataNext);
@@ -6049,6 +6273,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
       btnCancel.addEventListener('click', () => {
 
+        recordToreBridge(STEPS_TORE[stepIndex].key, null);
         overlay.remove();
         isBridgeFanOpen = false;
         // Déverrouiller la pièce après fermeture du bridge fan
@@ -6232,6 +6457,30 @@ function showArrowForStep(stepIndex, isMatch) {
     if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
   }
 
+  // Points de progression de la phase pièce (bandeau principal)
+  function updateCoinDots() {
+    const dotsContainer2 = document.getElementById('tore-step-dots');
+    if (!dotsContainer2) return;
+    dotsContainer2.querySelectorAll('[data-coin-dot]').forEach((dot, idx) => {
+      if (idx < coinThrowIndex) {
+        dot.style.background = '#d4af37';
+        dot.style.boxShadow = '0 0 4px rgba(212,175,55,0.6)';
+        dot.style.border = 'none';
+        dot.style.transform = '';
+      } else if (idx === coinThrowIndex) {
+        dot.style.background = 'rgba(212,175,55,0.5)';
+        dot.style.border = '1px solid #d4af37';
+        dot.style.transform = 'scale(1.3)';
+        dot.style.boxShadow = '';
+      } else {
+        dot.style.background = 'rgba(212,175,55,0.15)';
+        dot.style.border = '1px solid rgba(212,175,55,0.2)';
+        dot.style.transform = '';
+        dot.style.boxShadow = '';
+      }
+    });
+  }
+
   // Fonction pour attirer l'attention vers la pièce pour le prochain lancer
   function highlightCoinForNextThrow() {
     if (!coin) return;
@@ -6338,6 +6587,10 @@ function showArrowForStep(stepIndex, isMatch) {
       const _qBit = await QRNG.getInt(0, 2);
       const isYang = _qBit === 1;
       const coinPolarity = isYang ? 'yang' : 'yin';
+      {
+        const _cardPol = card ? (card.dataset.polarity || 'none') : 'none';
+        recordToreCoin(currentFamily, coinPolarity, _cardPol !== 'none' && _cardPol !== coinPolarity && !!nextStep);
+      }
 
       coin.classList.add(isYang ? 'face-yang' : 'face-yin');
       const coinImg = document.getElementById('tore-coin-img');
@@ -6392,27 +6645,7 @@ function showArrowForStep(stepIndex, isMatch) {
       const isLastCoin = coinThrowIndex >= familiesWithCoin.length;
 
       // Mettre à jour les dots phase pièce dans le bandeau principal
-      const dotsContainer2 = document.getElementById('tore-step-dots');
-      if (dotsContainer2) {
-        dotsContainer2.querySelectorAll('[data-coin-dot]').forEach((dot, idx) => {
-          if (idx < coinThrowIndex) {
-            dot.style.background = '#d4af37';
-            dot.style.boxShadow = '0 0 4px rgba(212,175,55,0.6)';
-            dot.style.border = 'none';
-            dot.style.transform = '';
-          } else if (idx === coinThrowIndex) {
-            dot.style.background = 'rgba(212,175,55,0.5)';
-            dot.style.border = '1px solid #d4af37';
-            dot.style.transform = 'scale(1.3)';
-            dot.style.boxShadow = '';
-          } else {
-            dot.style.background = 'rgba(212,175,55,0.15)';
-            dot.style.border = '1px solid rgba(212,175,55,0.2)';
-            dot.style.transform = '';
-            dot.style.boxShadow = '';
-          }
-        });
-      }
+      updateCoinDots();
 
       if (isLastCoin) {
         coin.classList.remove('glow');
@@ -6815,6 +7048,32 @@ function maybePromptToreReconnect() {
     setTimeout(() => form?.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true})), 500);
     return;
   }
+  const resetSubmitBtn = () => {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.dataset.submitting = '0';
+      const _s = submitBtn.querySelector('.font-cinzel');
+      if (_s) _s.textContent = 'Begin the Draw';
+    }
+  };
+  if (!(await checkToreAccess(resetSubmitBtn))) return;
+
+  const selectedGenderBtn = document.querySelector('.tore-gender-btn.selected');
+  startToreDraw({
+    submitBtn,
+    intention: intentionValue,
+    gender: selectedGenderBtn?.dataset.gender || 'neutre'
+  });
+});
+
+// Contrôle d'accès au Tore (abonnement vérifié en direct, sinon quota freemium de 2
+// tirages gratuits + bonus). Partagé entre le lancement d'un nouveau tirage et la
+// REPRISE d'un tirage sauvegardé : une reprise ne doit jamais permettre de terminer
+// un tirage que la limite gratuite n'autorise plus (limite atteinte entre-temps dans
+// un autre onglet, abonnement expiré depuis le démarrage…). Le tirage n'est compté
+// qu'une fois, à sa complétion (showToreAnalysisCTA → recordToreDraw), qu'il ait été
+// repris ou non. resetButton : remet le bouton déclencheur dans son état initial.
+async function checkToreAccess(resetButton) {
   let isSubscribed = window.freemiumTracker.isSubscribed();
   if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
 
@@ -6872,14 +7131,9 @@ function maybePromptToreReconnect() {
   }
 
   if (subscriptionLapsed) {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.dataset.submitting = '0';
-      const _slr = submitBtn.querySelector('.font-cinzel');
-      if (_slr) _slr.textContent = 'Begin the Draw';
-    }
+    resetButton();
     window.location.href = '/member/abonnements.html?expired=1';
-    return;
+    return false;
   }
 
   if (!isSubscribed) {
@@ -6889,51 +7143,16 @@ function maybePromptToreReconnect() {
       ? window.freemiumTracker.canDrawTore()
       : true;
 
+    // Limite des 2 tirages gratuits (+ bonus parrainage) atteinte : proposer l'abonnement.
     if (!localCanDraw) {
-      // Tenter une vérification serveur si email disponible
-      let serverAllows = false;
-      const sessStr = sessionStorage.getItem('oradia_member_session')
-                    || localStorage.getItem('oradia_member_session');
-      if (sessStr) {
-        try {
-          const sess = JSON.parse(sessStr);
-          if (sess.email) {
-            try {
-              const quotaResp = await fetch('/api/auth/check-tore-draw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: sess.email })
-              });
-              if (quotaResp.ok) {
-                const quotaData = await quotaResp.json();
-                // Ne débloquer que si un abonnement actif existe (plan non nul) :
-                // l'endpoint renvoie allowed:true avec plan:null pour les non-abonnés
-                // (le freemium localStorage reste alors la seule limite).
-                serverAllows = quotaData.allowed === true && !!quotaData.plan;
-              }
-            } catch(_) {
-              // API indisponible : bloquer (sécurité par défaut)
-              serverAllows = false;
-            }
-          }
-        } catch(_) {}
-      }
-
-      if (!serverAllows) {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.dataset.submitting = '0';
-          const _slr = submitBtn.querySelector('.font-cinzel');
-          if (_slr) _slr.textContent = 'Begin the Draw';
-        }
-        if (window.gtag) window.gtag('event', 'tore_limit_reached', {
-          event_category: 'freemium',
-          event_label: 'limit_reached',
-          value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
-        });
-        window.freemiumTracker?.showToreLimitReached?.();
-        return;
-      }
+      resetButton();
+      if (window.gtag) window.gtag('event', 'tore_limit_reached', {
+        event_category: 'freemium',
+        event_label: 'limit_reached',
+        value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
+      });
+      window.freemiumTracker?.showToreLimitReached?.();
+      return false;
     }
   }
 
@@ -6943,6 +7162,80 @@ function maybePromptToreReconnect() {
   // On l'invite activement à se reconnecter pour que ses PROCHAINS tirages
   // soient bien enregistrés — celui-ci démarre quand même, sans être bloqué.
   if (isSubscribed) maybePromptToreReconnect();
+  return true;
+}
+
+// Au chargement : si un tirage a été interrompu, proposer de le reprendre à la place
+// du formulaire d'intention. La reprise part d'un clic (geste utilisateur), ce qui
+// arme aussi correctement la garde du bouton retour (voir armToreBackGuard).
+(function offerToreResume() {
+  const saved = readToreSave();
+  if (!saved || !form) return;
+
+  const esc = t => String(t || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const nCards = saved.cards.length;
+  const nCoins = saved.coins.length;
+  const progress = nCoins
+    ? `All 7 cards are revealed, ${nCoins} coin toss${nCoins > 1 ? 'es' : ''} out of 6.`
+    : `${nCards} card${nCards > 1 ? 's' : ''} revealed out of 7.`;
+
+  const panelEl = document.createElement('div');
+  panelEl.id = 'tore-resume-panel';
+  panelEl.setAttribute('role', 'region');
+  panelEl.setAttribute('aria-label', 'Resume your draw in progress');
+  panelEl.style.cssText = 'flex:1;display:flex;align-items:center;justify-content:center;padding:clamp(16px,4vh,48px) 0;';
+  panelEl.innerHTML = `
+    <div style="width:100%;max-width:34rem;text-align:center;padding:clamp(22px,4vw,36px);border-radius:1.5rem;border:1px solid rgba(212,175,55,0.35);background:linear-gradient(135deg,rgba(10,25,47,0.85),rgba(5,20,40,0.92));box-shadow:0 0 40px rgba(212,175,55,0.12);">
+      <p class="font-cinzel" style="color:rgba(212,175,55,0.75);font-size:12px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:10px;">Draw in progress</p>
+      <h2 class="cormorant font-bold gold-gradient" style="font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.15;margin-bottom:14px;">Your draw is waiting for you</h2>
+      ${saved.intention ? `<p class="font-cormorant italic" style="color:#f0c75e;font-size:clamp(16px,2.2vw,19px);line-height:1.45;margin-bottom:10px;">“${esc(saved.intention)}”</p>` : ''}
+      <p style="color:rgba(240,199,94,0.75);font-size:clamp(13px,1.7vw,15px);margin-bottom:24px;">${progress}</p>
+      <div style="display:flex;flex-direction:column;gap:12px;align-items:center;">
+        <button type="button" id="tore-resume-btn" class="btn-gold px-10 py-4 text-base rounded-full touch-target transition-all duration-300 hover:scale-105">
+          <span class="flex items-center gap-3"><i class="fas fa-compass"></i><span class="font-cinzel">Resume my draw</span></span>
+        </button>
+        <button type="button" id="tore-resume-discard" class="touch-target" style="background:none;border:none;color:rgba(212,175,55,0.6);font-size:0.9rem;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:8px 12px;">
+          Start a new draw
+        </button>
+      </div>
+    </div>`;
+
+  form.classList.add('hidden');
+  form.parentNode.insertBefore(panelEl, form);
+
+  const resumeBtn = panelEl.querySelector('#tore-resume-btn');
+  resumeBtn.addEventListener('click', async () => {
+    if (resumeBtn.disabled) return;
+    resumeBtn.disabled = true;
+    // Même contrôle d'accès qu'un nouveau tirage (voir checkToreAccess). En cas de
+    // refus (limite gratuite atteinte), la sauvegarde est conservée : la personne
+    // pourra reprendre ce tirage après s'être abonnée.
+    for (let i = 0; i < 20 && !window.freemiumTracker; i++) await new Promise(r => setTimeout(r, 250));
+    if (saved.guidanceId) sessionStorage.setItem('tore_guidance_id', saved.guidanceId);
+    const allowed = window.freemiumTracker ? await checkToreAccess(() => { resumeBtn.disabled = false; }) : false;
+    if (!allowed) { resumeBtn.disabled = false; return; }
+    panelEl.remove();
+    startToreDraw({ restoreState: saved });
+  });
+  panelEl.querySelector('#tore-resume-discard').addEventListener('click', () => {
+    clearToreSave();
+    panelEl.remove();
+    form.classList.remove('hidden');
+    el('tore-intention-input')?.focus();
+  });
+})();
+
+// Démarre le tirage (plateau, distribution des cartes). Appelé après les contrôles
+// d'accès du formulaire, ou directement pour reprendre un tirage sauvegardé
+// (restoreState) — les contrôles ont alors déjà été passés au démarrage initial.
+function startToreDraw({ submitBtn = null, intention = '', gender = 'neutre', restoreState = null } = {}) {
+  if (restoreState) {
+    intention = restoreState.intention || '';
+    gender = restoreState.gender || 'neutre';
+    if (restoreState.guidanceId) sessionStorage.setItem('tore_guidance_id', restoreState.guidanceId);
+    // Déjà compté au démarrage initial de ce tirage (funnel 'tirage_lance').
+    window._trackedTirageLance = true;
+  }
 
   // Un nouveau tirage commence : purger toute analyse mise en cache du tirage précédent.
   // tore_analysis_data survit à un rechargement d'onglet PENDANT le même tirage, et
@@ -6955,22 +7248,25 @@ function maybePromptToreReconnect() {
   sessionStorage.removeItem('preloaded_analysis');
 
   // Sauvegarder l'intention et le genre dans sessionStorage
-  sessionStorage.setItem('tore_intention', intentionValue);
-  const selectedGenderBtn = document.querySelector('.tore-gender-btn.selected');
-  sessionStorage.setItem('tore_gender', selectedGenderBtn?.dataset.gender || 'neutre');
+  sessionStorage.setItem('tore_intention', intention);
+  sessionStorage.setItem('tore_gender', gender);
+  if (!restoreState) startToreSave(intention, gender);
 
   form.classList.add('hidden');
   buildBoardTore();
   enterImmersiveTore();
   toreHasStarted = true;
+  // Appelé ici, dans le geste de l'utilisateur (validation de l'intention) : voir armToreBackGuard.
+  if (typeof window.armToreBackGuard === 'function') window.armToreBackGuard();
   results.classList.add('hidden');
   // (le funnel 'tirage_lance' est déclenché une seule fois par session dans buildBoardTore())
 
   // Le tirage gratuit (localStorage) est enregistré à la COMPLÉTION du tirage
   // dans showToreAnalysisCTA(), pas ici — sinon un même tirage serait compté deux fois.
 
-  // Décrémenter le crédit serveur si disponible (sans bloquer le tirage)
-  (async () => {
+  // Décrémenter le crédit serveur si disponible (sans bloquer le tirage) — pas à la
+  // reprise d'un tirage sauvegardé, déjà décompté à son démarrage initial.
+  if (!restoreState) (async () => {
     const sessStr = sessionStorage.getItem('oradia_member_session')
                   || localStorage.getItem('oradia_member_session');
     if (sessStr) {
@@ -7091,7 +7387,6 @@ function maybePromptToreReconnect() {
       allCards.forEach(c => {
         c.classList.remove('card-dealing-hidden');
       });
-      highlightNextCard();
       const bb = el('tore-bottom-bar');
       if (bb) requestAnimationFrame(() => requestAnimationFrame(() => {
         bb.style.opacity = '1';
@@ -7099,6 +7394,8 @@ function maybePromptToreReconnect() {
       if (boardHost) boardHost.style.pointerEvents = 'auto';
       if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
       boardReady = true;
+      if (restoreState) restoreToreDraw(restoreState);
+      else highlightNextCard();
       if (!window._toreBeamResizeListener) {
         window._toreBeamResizeListener = true;
         const rb = () => {
@@ -7111,7 +7408,7 @@ function maybePromptToreReconnect() {
       }
     }, done);
   };
-});
+}
 
 
 
@@ -7148,6 +7445,7 @@ function maybePromptToreReconnect() {
       openToreExitModal(() => {
 
         toreHasStarted = false;
+        clearToreSave();
 
         exitImmersiveTore();
 
@@ -7425,11 +7723,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Détecter si un tirage est en cours ───────────────────────────
   function drawInProgress() {
-    // toreThrowIndex est déclaré dans le scope global de tore.html
-    if (typeof toreThrowIndex === 'undefined') return false;
+    // toreThrowIndex et toreHasStarted sont déclarés dans le scope global de tore.html.
+    // toreThrowIndex > 0 seul laissait la toute première carte (avant son retournement
+    // complet) sans aucune protection contre un retour accidentel — on protège dès que
+    // l'intention a été validée et le plateau affiché, pas seulement après la 1ère carte.
     const immersif = document.getElementById('tore-immersif');
     const visible = immersif && immersif.style.display !== 'none';
-    return visible && toreThrowIndex > 0;
+    if (!visible) return false;
+    if (typeof toreHasStarted !== 'undefined' && toreHasStarted) return true;
+    if (typeof toreThrowIndex !== 'undefined' && toreThrowIndex > 0) return true;
+    return false;
   }
 
   // ── Ouvrir / fermer le modal ──────────────────────────────────────
@@ -7451,6 +7754,8 @@ document.addEventListener("DOMContentLoaded", () => {
   window.confirmAbandonTirage = function() {
     const modal = document.getElementById('abandon-tirage-modal');
     if (modal) modal.style.display = 'none';
+    // Abandon explicite : le tirage ne doit pas être reproposé au retour sur la page.
+    if (typeof window.clearToreDrawSave === 'function') window.clearToreDrawSave();
     window.location.href = _abandonDestination;
   };
 
@@ -7462,11 +7767,25 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Carte agrandie (zoom au toucher d'une carte retournée) : un toucher imprécis
+  // pendant la phase pièce l'ouvre par erreur, et le réflexe pour la refermer est
+  // "retour" — qui faisait quitter la page et perdre tout le tirage (signalé par une
+  // abonnée, 2026-09-27). Échap et retour referment désormais d'abord ce zoom.
+  function closeCardPreviewIfOpen() {
+    const overlay = document.getElementById('card-preview-overlay');
+    if (!overlay || !overlay.classList.contains('card-preview-visible')) return false;
+    overlay.classList.remove('card-preview-visible');
+    const img = document.getElementById('card-preview-img');
+    if (img) img.style.backgroundImage = '';
+    return true;
+  }
+
   // Fermer sur Échap
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
       const modal = document.getElementById('abandon-tirage-modal');
       if (modal && modal.style.display === 'flex') { closeAbandonModal(); return; }
+      if (closeCardPreviewIfOpen()) return;
     }
     // Intercepter F5 / Ctrl+R / Cmd+R pendant un tirage
     const isRefresh = e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key === 'r');
@@ -7498,14 +7817,48 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Intercepter bouton retour navigateur
-  history.pushState(null, '', location.href);
+  // Intercepter bouton retour navigateur (web), y compris Alt+← / Cmd+[ au clavier.
+  // L'entrée d'historique "garde" était auparavant ajoutée au chargement de la page,
+  // hors de tout geste utilisateur : Chrome (et Edge, Safari) marquent une telle entrée
+  // comme "sautable" et le bouton retour la traverse sans déclencher popstate — la page
+  // était quittée directement, sans le modal de confirmation (tirage perdu, signalé par
+  // une abonnée le 2026-09-27). On l'ajoute donc au lancement du tirage, pendant le
+  // clic de validation de l'intention (appel depuis le handler de démarrage).
+  let _backGuardArmed = false;
+  window.armToreBackGuard = function() {
+    if (_backGuardArmed) return;
+    _backGuardArmed = true;
+    history.pushState({ toreGuard: true }, '', location.href);
+  };
   window.addEventListener('popstate', function() {
-    if (drawInProgress()) {
-      history.pushState(null, '', location.href); // re-push pour rester
-      openAbandonModal('index.html');
-    }
+    if (!drawInProgress()) return;
+    history.pushState({ toreGuard: true }, '', location.href); // re-push pour rester
+    if (closeCardPreviewIfOpen()) return; // "retour" referme d'abord la carte agrandie
+    openAbandonModal('index.html');
   });
+
+  // Intercepter le bouton/geste retour natif Android (webview Capacitor) : le
+  // geste de balayage depuis le bord de l'écran (navigation "retour" native
+  // d'Android, notamment le "predictive back" d'Android 13+) peut court-circuiter
+  // le popstate web ci-dessus et faire disparaître tout le tirage en cours sans
+  // confirmation — signalé par une abonnée dont le doigt avait "dérapé" près du
+  // bord en tirage. L'API native @capacitor/app est le seul point d'interception
+  // fiable pour ce geste dans une webview.
+  if (window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform() && window.Capacitor.Plugins && window.Capacitor.Plugins.App) {
+    window.Capacitor.Plugins.App.addListener('backButton', function() {
+      if (drawInProgress()) {
+        if (closeCardPreviewIfOpen()) return;
+        openAbandonModal('index.html');
+        return;
+      }
+      // Rien en cours : comportement par défaut (reculer dans l'historique, sinon quitter l'appli).
+      if (window.history.length > 1) {
+        window.history.back();
+      } else {
+        window.Capacitor.Plugins.App.exitApp();
+      }
+    });
+  }
 })();
 </script>
 
