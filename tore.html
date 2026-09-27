@@ -4749,7 +4749,13 @@ function showToreAnalysisCTA() {
 
   // Enregistrer le tirage Tore complété — seul endroit où un tirage est décompté
   // des tirages gratuits (tirage complet vérifié ci-dessus, une seule fois).
-  if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
+  // Jamais pour un accès illimité : abonnés (recordToreDraw() ne compte rien si
+  // freemiumTracker.isSubscribed()) et tirages guidance (?guidance=, traités comme
+  // abonnés par checkToreAccess mais inconnus de freemiumTracker — ils étaient
+  // décomptés à tort des tirages gratuits de l'appareil).
+  const unlimitedAccess = !!sessionStorage.getItem('tore_guidance_id')
+    || (window.freemiumTracker && window.freemiumTracker.isSubscribed());
+  if (window.freemiumTracker && !unlimitedAccess) window.freemiumTracker.recordToreDraw();
   window.oradiaReferral?.markConversionIfNeeded();
 
   // Collecter les cartes retournées

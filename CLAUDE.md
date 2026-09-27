@@ -140,6 +140,7 @@ problème à signaler en priorité (catégorie "Problèmes importants").
       `isToreDrawComplete()` et `toreCompletionHandled` (jamais deux fois pour un même tirage).
       Un tirage abandonné ou repris (sauvegarde `oradia_tore_draw_in_progress`) n'est compté qu'à sa complétion ;
       la reprise repasse par le même contrôle d'accès (`checkToreAccess`) qu'un nouveau tirage.
+      **Jamais de décompte pour un accès illimité** : abonnés actifs et tirages guidance (`?guidance=`).
 - [ ] Vérifier que le fallback vers Stripe est bien déclenché quand le compteur atteint 2
 - [ ] Signaler si le compteur pourrait être contourné côté client (c'est acceptable pour du freemium, mais le noter)
 
