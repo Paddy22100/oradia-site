@@ -114,7 +114,7 @@ module.exports = async (req, res) => {
         }
 
         // ── Abonnement Complet (8€/mois) ─────────────────────────────────────────
-        if (req.body.type === 'tore-complet' || req.body.type === 'tore-decouverte') {
+        if (req.body.type === 'tore-complet') {
             // Normalisé dès la création de la session : cet email finit dans les metadata
             // Stripe, relues telles quelles par le webhook pour créer/retrouver la ligne
             // tore_subscriptions (comparaisons Postgres sensibles à la casse) — le normaliser

@@ -3310,7 +3310,7 @@
             </div>
 
             <!-- KPIs -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="syncKpiRow">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="syncKpiRow">
                 <div class="stat-card rounded-xl p-5">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Réponses valides</div>
                     <div class="text-2xl font-bold text-teal-300" id="syncTotal">—</div>
@@ -3320,6 +3320,11 @@
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen (quantique)</div>
                     <div class="text-2xl font-bold text-gold" id="syncAvgScore">—</div>
                     <div class="text-light-gold/40 text-xs">/ 10</div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Ont vécu une synchronicité</div>
+                    <div class="text-2xl font-bold text-teal-300" id="syncExperiencedPct">—</div>
+                    <div class="text-light-gold/40 text-xs" id="syncExperiencedSub"></div>
                 </div>
                 <div class="stat-card rounded-xl p-5 col-span-2">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Distribution des scores</div>
@@ -13682,6 +13687,7 @@
             const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
             setEl('syncTotal',    '<span class="animate-pulse">…</span>');
             setEl('syncAvgScore', '<span class="animate-pulse">…</span>');
+            setEl('syncExperiencedPct', '<span class="animate-pulse">…</span>');
 
             try {
                 const res  = await adminFetch('/api/admin/data?section=synchronicity');
@@ -13699,6 +13705,13 @@
                 setEl('syncTotalAll', excluded > 0
                     ? `sur ${d.totalAll} reçues · ${excluded} exclue(s)`
                     : (d.totalAll ? `${d.totalAll} reçue(s)` : ''));
+
+                // Part des retours de questionnaire rapportant avoir vécu une synchronicité
+                // (score > 1 — "1" correspondant explicitement à "Aucune" sur le questionnaire,
+                // voir synchronicite.html). Calculé sur les mêmes réponses valides (quantiques
+                // pures) que le reste de cette section, pour rester cohérent avec "Réponses valides".
+                setEl('syncExperiencedPct', d.experiencedPct !== null && d.experiencedPct !== undefined ? `${d.experiencedPct}%` : '—');
+                setEl('syncExperiencedSub', d.total > 0 ? `${d.experiencedCount} sur ${d.total} retour(s)` : '');
 
                 // Validité scientifique : source du tirage (QRNG) — ANU + Outshift comptent comme quantique
                 const qb = d.qrngBreakdown || { anu: 0, outshift: 0, fallback: 0, unknown: 0 };
