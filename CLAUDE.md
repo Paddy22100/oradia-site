@@ -134,6 +134,12 @@ problème à signaler en priorité (catégorie "Problèmes importants").
 
 - [ ] Localiser le code qui gère les 2 tirages gratuits dans `localStorage`
 - [ ] Vérifier que le compteur est bien incrémenté APRÈS un tirage réussi (pas avant)
+- [ ] Règle métier : un tirage n'est décompté des 2 tirages gratuits que s'il est **complet** — 7 cartes
+      retournées + 6 lancers de pièce, chaque carte passerelle posée. Décompte en un seul endroit
+      (`showToreAnalysisCTA` → `freemiumTracker.recordToreDraw()` dans `tore.html`), garde-fous
+      `isToreDrawComplete()` et `toreCompletionHandled` (jamais deux fois pour un même tirage).
+      Un tirage abandonné ou repris (sauvegarde `oradia_tore_draw_in_progress`) n'est compté qu'à sa complétion ;
+      la reprise repasse par le même contrôle d'accès (`checkToreAccess`) qu'un nouveau tirage.
 - [ ] Vérifier que le fallback vers Stripe est bien déclenché quand le compteur atteint 2
 - [ ] Signaler si le compteur pourrait être contourné côté client (c'est acceptable pour du freemium, mais le noter)
 

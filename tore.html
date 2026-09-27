@@ -4705,9 +4705,39 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
 // Variable globale pour suivre l'état du tirage
 let isToreComplete = false;
+// Complétion traitée (décompte freemium + historique) : une seule fois par tirage.
+let toreCompletionHandled = false;
+
+// Un tirage n'est « réalisé » — et donc décompté des tirages gratuits — que s'il est
+// complet : les 7 cartes retournées ET les 6 lancers de pièce effectués, avec chaque
+// carte passerelle posée (aucun éventail ouvert ni passerelle restant à choisir).
+function isToreDrawComplete() {
+  if (!boardHost) return false;
+  const total = boardHost.querySelectorAll('.tore-card').length;
+  const flipped = boardHost.querySelectorAll('.tore-card.flipped').length;
+  const throwsNeeded = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos').length;
+  const bridgePending = !!(toreSave && toreSave.coins.some(c => c.bridgePending));
+  return total === TIRAGE_ORDER.length && flipped === total
+    && coinThrowIndex >= throwsNeeded
+    && !isBridgeFanOpen && !bridgePending;
+}
 
 function showToreAnalysisCTA() {
   if (!coinWrapper) return;
+
+  // Appelée par plusieurs chemins (minuteries de fin de lancer, fermeture de
+  // l'éventail, reprise…) : sans ce garde-fou, un double appel décomptait le tirage
+  // deux fois des tirages gratuits et l'enregistrait deux fois dans l'historique.
+  if (toreCompletionHandled) {
+    const existingBtn = document.getElementById('tore-floating-analysis-btn');
+    if (existingBtn) existingBtn.style.display = 'inline-flex';
+    return;
+  }
+  if (!isToreDrawComplete()) {
+    console.warn('[tore] showToreAnalysisCTA ignoré : tirage incomplet (non décompté)');
+    return;
+  }
+  toreCompletionHandled = true;
 
   // Cacher pièce + bouton lancer
   coin?.classList.add('hidden');
@@ -4717,7 +4747,8 @@ function showToreAnalysisCTA() {
   if (boardHost) boardHost.style.pointerEvents = 'auto';
   clearToreSave();
 
-  // Enregistrer le tirage Tore complété
+  // Enregistrer le tirage Tore complété — seul endroit où un tirage est décompté
+  // des tirages gratuits (tirage complet vérifié ci-dessus, une seule fois).
   if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
   window.oradiaReferral?.markConversionIfNeeded();
 
@@ -7181,7 +7212,7 @@ function maybePromptToreReconnect() {
 // un autre onglet, abonnement expiré depuis le démarrage…). Le tirage n'est compté
 // qu'une fois, à sa complétion (showToreAnalysisCTA → recordToreDraw), qu'il ait été
 // repris ou non. resetButton : remet le bouton déclencheur dans son état initial.
-async function checkToreAccess(resetButton) {
+async function checkToreAccess(resetButton, { resume = false } = {}) {
   let isSubscribed = window.freemiumTracker.isSubscribed();
   if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
 
@@ -7256,7 +7287,9 @@ async function checkToreAccess(resetButton) {
       let serverAllows = false;
       const sessStr = sessionStorage.getItem('oradia_member_session')
                     || localStorage.getItem('oradia_member_session');
-      if (sessStr) {
+      // Pas à la reprise : check-tore-draw CONSOMME le tirage du jour (plan Découverte),
+      // déjà consommé au démarrage initial de ce tirage.
+      if (sessStr && !resume) {
         try {
           const sess = JSON.parse(sessStr);
           if (sess.email) {
@@ -7350,7 +7383,7 @@ async function checkToreAccess(resetButton) {
     // pourra reprendre ce tirage après s'être abonnée.
     for (let i = 0; i < 20 && !window.freemiumTracker; i++) await new Promise(r => setTimeout(r, 250));
     if (saved.guidanceId) sessionStorage.setItem('tore_guidance_id', saved.guidanceId);
-    const allowed = window.freemiumTracker ? await checkToreAccess(() => { resumeBtn.disabled = false; }) : false;
+    const allowed = window.freemiumTracker ? await checkToreAccess(() => { resumeBtn.disabled = false; }, { resume: true }) : false;
     if (!allowed) { resumeBtn.disabled = false; return; }
     panelEl.remove();
     startToreDraw({ restoreState: saved });
