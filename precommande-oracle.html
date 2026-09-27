@@ -2354,6 +2354,32 @@ La production est lancée grâce aux premières commandes.</p>
 </body>
 
 <!-- Scripts -->
+<script src="/js/shop-mode.js" defer></script>
+<script>
+    // Bascule Boutique (Dashboard > Paramètres > Fonctionnalités) : précommandes
+    // fermées → redirection vers la vente ferme si elle est ouverte, sinon message
+    // « L'oracle revient bientôt » à la place des offres et du panier.
+    document.addEventListener('DOMContentLoaded', function () {
+        if (!window.OradiaShop) return;
+        window.OradiaShop.ready.then(function (shop) {
+            if (!shop || shop.preorder) return;
+            if (shop.order) { window.location.replace('/commander'); return; }
+            var offres = document.getElementById('offres');
+            if (offres) {
+                offres.innerHTML = '<div class="container mx-auto px-6"><div class="max-w-2xl mx-auto text-center rounded-2xl border border-gold/40 bg-[rgba(5,20,40,0.8)] p-10">'
+                    + '<h2 class="cormorant text-3xl sm:text-4xl font-bold gold-gradient mb-4">L\'oracle revient bientôt</h2>'
+                    + '<p class="text-light-gold/90 mb-6">Les précommandes sont closes. L\'oracle Oradia sera très prochainement disponible à la vente en ligne.</p>'
+                    + '<a href="#waitlist" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full">Être prévenu(e) de la sortie</a>'
+                    + '</div></div>';
+            }
+            ['cart-section', 'mobileStickyCta'].forEach(function (id) {
+                var el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+            try { localStorage.removeItem('oradia-cart'); } catch (e) {}
+        });
+    });
+</script>
 <script src="components/header-manager.js" defer></script>
 
 <script>

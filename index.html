@@ -227,17 +227,17 @@
   <div id="header-placeholder"></div>
 
   <!-- Bandeau d'annonce Précommande -->
-  <div id="precommandeBanner" class="bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 sm:py-3 px-4 sm:px-4 relative z-50">
+  <div id="precommandeBanner" data-shop-hide-when="closed" class="bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 sm:py-3 px-4 sm:px-4 relative z-50">
     <div class="container mx-auto max-w-6xl">
       <!-- Version Desktop : disposition horizontale -->
       <div class="hidden sm:flex items-center justify-between gap-4">
         <div class="flex items-center space-x-3">
           <i class="fas fa-sparkles text-2xl animate-pulse"></i>
-          <span class="font-bold text-lg leading-tight">✨ L'Oracle Oradia vous appelle ? — Précommande ouverte jusqu'au 31 décembre 2026</span>
+          <span class="font-bold text-lg leading-tight" data-shop-text-order="✨ L'Oracle Oradia est disponible — expédié sous 3 jours ouvrés">✨ L'Oracle Oradia vous appelle ? — Précommande ouverte jusqu'au 31 décembre 2026</span>
         </div>
         <div class="flex items-center space-x-4">
-          <a href="precommande-oracle.html" class="bg-night-blue text-gold px-4 py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors text-base flex items-center">
-            Accéder aux précommandes
+          <a href="precommande-oracle.html" data-shop-link class="bg-night-blue text-gold px-4 py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors text-base flex items-center">
+            <span data-shop-text-order="Commander l'oracle">Accéder aux précommandes</span>
             <i class="fas fa-shopping-cart ml-2"></i>
           </a>
           <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors p-1" title="Fermer">
@@ -264,14 +264,14 @@
           </div>
           
           <!-- Message secondaire -->
-          <p class="text-xs leading-relaxed text-night-blue/90 font-medium">
+          <p class="text-xs leading-relaxed text-night-blue/90 font-medium" data-shop-text-order="Disponible — expédié sous 3 jours ouvrés">
             Précommande ouverte jusqu'au 31 décembre 2026
           </p>
           
           <!-- Bouton CTA premium -->
-          <a href="precommande-oracle.html" class="inline-flex items-center justify-center bg-night-blue text-gold px-6 py-2.5 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 text-sm shadow-lg">
+          <a href="precommande-oracle.html" data-shop-link class="inline-flex items-center justify-center bg-night-blue text-gold px-6 py-2.5 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 text-sm shadow-lg">
             <i class="fas fa-shopping-cart mr-2"></i>
-            Accéder aux précommandes
+            <span data-shop-text-order="Commander l'oracle">Accéder aux précommandes</span>
           </a>
         </div>
       </div>
@@ -315,9 +315,9 @@
                 </a>
                 
                 <!-- CTA Secondaire - Précommande -->
-                <a href="precommande-oracle.html" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                <a href="precommande-oracle.html" data-shop-link data-shop-hide-when="closed" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
                     <i class="fas fa-shopping-cart"></i>
-                    <span class="text-sm sm:text-base">Accéder aux précommandes</span>
+                    <span class="text-sm sm:text-base" data-shop-text-order="Commander l'oracle">Accéder aux précommandes</span>
                 </a>
             </div>
             
@@ -516,7 +516,7 @@
   </section>
 
 <!-- Précommande -->
-<section id="precommande" class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-night-blue to-dark-blue relative">
+<section id="precommande" data-shop-hide-when="closed" class="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-night-blue to-dark-blue relative">
     <!-- Background pattern -->
     <div class="absolute inset-0 opacity-5">
       <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
@@ -531,19 +531,19 @@
           
           <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Première Édition Limitée</h2>
           
-          <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-6 sm:mb-8">
+          <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-6 sm:mb-8" data-shop-text-order="L'oracle Oradia est disponible : 64 cartes, un livret d'accompagnement et un coffret rigide doré.">
             L'oracle Oradia est en précommande jusqu'au 31 décembre 2026.
           </p>
           
-          <p class="text-base sm:text-lg text-light-gold/80 leading-relaxed mb-6 sm:mb-8">
+          <p class="text-base sm:text-lg text-light-gold/80 leading-relaxed mb-6 sm:mb-8" data-shop-text-order="Expédié sous 3 jours ouvrés, en point relais ou à domicile.">
             Une fois cette première série réservée, la production pourra être lancée. ORADIA prendra vie.
           </p>
         </div>
         
         <div class="text-center">
-          <a href="precommande-oracle.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 sm:py-4 px-6 sm:px-8 lg:px-10 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center inline-flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+          <a href="precommande-oracle.html" data-shop-link class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 sm:py-4 px-6 sm:px-8 lg:px-10 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center inline-flex items-center justify-center gap-2 group hover:scale-105 touch-target">
             <i class="fas fa-shopping-cart"></i>
-            <span class="text-sm sm:text-base">Accéder aux précommandes</span>
+            <span class="text-sm sm:text-base" data-shop-text-order="Commander l'oracle">Accéder aux précommandes</span>
           </a>
         </div>
       </div>
@@ -555,6 +555,7 @@
 
 <!-- Scripts -->
 <script src="js/freemium-tracker.js"></script>
+<script src="/js/shop-mode.js" defer></script>
 <script src="components/header-manager.js" defer></script>
 <script src="components/footer-manager.js" defer></script>
 

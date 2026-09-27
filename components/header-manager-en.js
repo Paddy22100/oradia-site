@@ -1,3 +1,15 @@
+// Bascule précommande / vente ferme : applique js/shop-mode.js (liens et libellés
+// data-shop-*) au HTML injecté, en chargeant le script s'il n'est pas déjà présent.
+function oradiaApplyShopMode(root) {
+  if (window.OradiaShop) return window.OradiaShop.apply(root);
+  if (document.querySelector('script[data-oradia-shop]')) return;
+  var s = document.createElement('script');
+  s.src = '/js/shop-mode.js';
+  s.setAttribute('data-oradia-shop', '1');
+  s.onload = function () { if (window.OradiaShop) window.OradiaShop.apply(); };
+  document.head.appendChild(s);
+}
+
 // Variante anglaise de header-manager.js : ne change que templateUrl (charge
 // header-template-en.html) et les quelques chaînes visibles côté membre.
 // Toute la logique (menu mobile, état actif, session) reste identique — dupliquée
@@ -41,6 +53,7 @@ class HeaderManagerEN {
     const placeholder = document.getElementById('header-placeholder');
     if (placeholder) {
       placeholder.innerHTML = this.template;
+      oradiaApplyShopMode(placeholder);
     } else {
       console.error('HeaderManagerEN: placeholder not found');
     }

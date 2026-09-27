@@ -1,3 +1,15 @@
+// Bascule précommande / vente ferme : applique js/shop-mode.js (liens et libellés
+// data-shop-*) au HTML injecté, en chargeant le script s'il n'est pas déjà présent.
+function oradiaApplyShopMode(root) {
+  if (window.OradiaShop) return window.OradiaShop.apply(root);
+  if (document.querySelector('script[data-oradia-shop]')) return;
+  var s = document.createElement('script');
+  s.src = '/js/shop-mode.js';
+  s.setAttribute('data-oradia-shop', '1');
+  s.onload = function () { if (window.OradiaShop) window.OradiaShop.apply(); };
+  document.head.appendChild(s);
+}
+
 // Variante anglaise de footer-manager.js : ne change que templateUrl (charge
 // footer-template-en.html), les chaînes du formulaire newsletter, et la source
 // envoyée à /api/waitlist ('en-landing' au lieu de 'footer-newsletter', pour
@@ -29,6 +41,7 @@ class FooterManagerEN {
     const placeholder = document.getElementById('footer-placeholder');
     if (placeholder) {
       placeholder.innerHTML = this.template;
+      oradiaApplyShopMode(placeholder);
       this.initNewsletterForm();
       this.initBackToTop();
       this.hideNewsletterBlockIfSubscribedMember();
