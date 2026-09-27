@@ -248,7 +248,7 @@
                             <h1 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-4">
                                 Finalisez votre commande
                             </h1>
-                            <p class="text-light-gold/80">
+                            <p id="checkoutIntro" class="text-light-gold/80">
                                 Renseignez vos coordonnées et choisissez votre mode de livraison.
                             </p>
                         </div>
@@ -460,7 +460,7 @@
 
                         <!-- Bouton retour -->
                         <div class="text-center lg:text-left">
-                            <a href="precommande-oracle.html#cart-section" class="inline-flex items-center text-gold/70 hover:text-gold transition-colors">
+                            <a id="backToCartLink" href="precommande-oracle.html#cart-section" class="inline-flex items-center text-gold/70 hover:text-gold transition-colors">
                                 <i class="fas fa-arrow-left mr-2"></i>
                                 Retour au panier
                             </a>
@@ -801,6 +801,43 @@
             'edition-signature': { name: 'Édition Signature', priceEuros: 42 }
         };
 
+        // Mode de vente : ?mode=order (vente ferme, depuis /commander) ou précommande.
+        // Prix de repli = lib/shop-config.js ; remplacés par ceux de l'API au chargement
+        // (loadShopCatalog). Le serveur recalcule de toute façon le montant payé.
+        const SALE_MODE = new URLSearchParams(window.location.search).get('mode') === 'order' ? 'order' : 'preorder';
+        const FALLBACK_PRICES = {
+            preorder: { 'standard': 38, 'guidance-incluse': 48, 'edition-signature': 42 },
+            order:    { 'standard': 42, 'guidance-incluse': 52, 'edition-signature': 46 }
+        };
+        Object.keys(OFFER_CONFIG).forEach(id => { OFFER_CONFIG[id].priceEuros = FALLBACK_PRICES[SALE_MODE][id]; });
+        const SHOP_PAGE_URL = SALE_MODE === 'order' ? '/commander' : 'precommande-oracle.html#cart-section';
+
+        async function loadShopCatalog() {
+            try {
+                const ctrl = new AbortController();
+                const timer = setTimeout(() => ctrl.abort(), 4000);
+                const res = await fetch('/api/preorders/progress', { signal: ctrl.signal });
+                clearTimeout(timer);
+                const data = await res.json();
+                const offers = data?.shop?.catalog?.offers || {};
+                Object.keys(offers).forEach(id => {
+                    const price = offers[id]?.price?.[SALE_MODE];
+                    if (OFFER_CONFIG[id] && Number.isFinite(price)) OFFER_CONFIG[id].priceEuros = price;
+                });
+                return data?.shop || null;
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function applySaleModeTexts() {
+            if (SALE_MODE !== 'order') return;
+            const back = document.getElementById('backToCartLink');
+            if (back) back.setAttribute('href', SHOP_PAGE_URL);
+            const intro = document.getElementById('checkoutIntro');
+            if (intro) intro.textContent = 'Renseignez vos coordonnées et choisissez votre mode de livraison. Votre oracle est expédié sous 3 jours ouvrés.';
+        }
+
         // Configuration des produits et poids
         const PRODUCT_WEIGHT_KG = 0.8; // 800g par oracle
         
@@ -1041,6 +1078,9 @@
                         return;
                     }
                     cart[offerId].price = officialConfig.priceEuros;
+                    // Le panier de la page Commande ne stocke que quantité et prix : le libellé
+                    // vient toujours de la config (évite « undefined » dans le récapitulatif).
+                    cart[offerId].name = officialConfig.name;
                     const qty = Math.floor(Number(cart[offerId].quantity) || 1);
                     cart[offerId].quantity = Math.min(10, Math.max(1, qty));
                 });
@@ -1048,7 +1088,7 @@
                 updateOrderSummary();
                 updateDeliveryPrices(); // Mettre à jour les prix de livraison
             } else {
-                window.location.href = 'precommande-oracle.html#cart-section';
+                window.location.href = SHOP_PAGE_URL;
             }
         }
 
@@ -1334,6 +1374,7 @@
                         method: selectedDelivery,
                         price: Math.round(deliveryPrice * 100) // Convertir en centimes
                     },
+                    saleMode: SALE_MODE,
                     relayPoint: selectedDelivery === 'relay' ? {
                         id: selectedRelayPoint.id,
                         name: selectedRelayPoint.name,
@@ -1569,7 +1610,10 @@
         });
 
         // Initialisation unique au chargement de la page
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
+            applySaleModeTexts();
+            // Prix à jour selon le mode (précommande / vente ferme) avant d'afficher le panier.
+            await loadShopCatalog();
             // Charger les données initiales
             loadCart();
             clearRelayPoint();

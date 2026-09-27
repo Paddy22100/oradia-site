@@ -2928,7 +2928,7 @@ async function handleData(req, res) {
         const sb = supabase;
         const isExcluded = (email) => email && ACCOUNTING_EXCLUDED_EMAILS.includes(String(email).toLowerCase().trim());
         // Import depuis preorders
-        const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,stripe_session_id').eq('paid_status','completed');
+        const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,order_type,stripe_session_id').eq('paid_status','completed');
         const { data: donors } = await sb.from('donors').select('created_at,amount_total,email,full_name,stripe_session_id,source');
         const { data: guidances } = await sb.from('guidances').select('created_at,amount,client_email,client_name,cal_booking_uid').in('status',['confirmed','completed']);
         const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status,is_free').neq('status','payment_failed');
@@ -2986,7 +2986,7 @@ async function handleData(req, res) {
         }
 
         const toInsert = [
-            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
+            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category: p.order_type === 'order' ? 'commande' : 'précommande', description:`${p.order_type === 'order' ? 'Commande' : 'Précommande'} ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             // Dons en espèces visibles en comptabilité (source distincte 'don-especes') mais
             // exclus de la base de calcul URSSAF plus bas (voir GET /transactions) — reçus
             // hors Stripe/compte pro, cet argent n'est pas déclaré.
@@ -3326,6 +3326,7 @@ async function handleData(req, res) {
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
             offer: 'standard',
+            orderType: 'preorder',
             // Panier d'exemple à 2 offres + point relais : montre le récapitulatif
             // détaillé tel que le client le reçoit (même fonction que le webhook).
             items: [{ offer: 'standard', quantity: 2 }, { offer: 'guidance-incluse', quantity: 1 }],
@@ -3337,6 +3338,22 @@ async function handleData(req, res) {
             amountTotal: '131.99'
           });
           if (!emailSentPre) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
+        } else if (type === 'order-confirm') {
+          // Même fonction que la précommande (lib/brevo-order-email.js), variante vente
+          // ferme : c'est exactement l'email envoyé par le webhook pour order_type = 'order'.
+          const emailSentOrder = await sendBrevoEmail({
+            toEmail: dest,
+            toName: 'Prénom Nom (exemple)',
+            offer: 'standard',
+            orderType: 'order',
+            items: [{ offer: 'standard', quantity: 1 }, { offer: 'edition-signature', quantity: 1 }],
+            shipping: {
+              method: 'home', priceCents: 1099
+            },
+            amountTotal: '98.99'
+          });
+          if (!emailSentOrder) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
         } else if (type === 'guidance-confirm') {
           // Réutilise le VRAI template (lib/guidance-email.js), partagé avec le webhook
@@ -3667,6 +3684,7 @@ async function handleData(req, res) {
       const status = req.query?.status || 'all';
       const period = req.query?.period || 'all';
       const offer  = req.query?.offer  || 'all';
+      const type   = req.query?.type   || 'all'; // 'preorder' | 'order' | 'all'
       const q      = (req.query?.q || '').trim();
 
       let query = supabase
@@ -3676,6 +3694,7 @@ async function handleData(req, res) {
 
       if (status !== 'all') query = query.eq('paid_status', status);
       if (offer  !== 'all') query = query.eq('offer', offer);
+      if (type === 'preorder' || type === 'order') query = query.eq('order_type', type);
       if (q) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
 
       if (period !== 'all') {
@@ -4686,7 +4705,14 @@ async function handleData(req, res) {
     // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus tous
     // les dons nets (Stripe ET espèces — cet argent est réellement disponible pour financer
     // la fabrication, même s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions).
-    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
+    // Cagnotte : précommandes uniquement — la vente ferme (order_type = 'order') finance le
+    // stock suivant, pas la fabrication de la première édition (même règle que la barre
+    // publique /api/preorders/progress).
+    const cagnotteRows = paidPreorderRows.filter(r => (r.order_type || 'preorder') === 'preorder');
+    const cagnotteTotal = sumPreorders(cagnotteRows);
+    const cagnotteNet = cagnotteTotal - stripeFee(cagnotteTotal, cagnotteRows.length);
+    const cagnotteShipping = cagnotteRows.reduce((s, r) => s + ((parseInt(r.shipping_price_cents, 10) || 0) / 100), 0);
+    const preordersCagnotteFabrication = Math.max(0, cagnotteNet - cagnotteShipping + donorsNet);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
     // Frais Kickstarter (commission + traitement paiement) : estimation distincte des frais

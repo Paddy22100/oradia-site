@@ -1143,7 +1143,8 @@
             </div>
 
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                <p id="preordersStockInfo" class="text-light-gold/60 text-xs mb-3"></p>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <input id="preordersSearch" type="search" placeholder="Recherche email ou nom" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
                     <select id="preordersStatusFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
                         <option value="all">Tous statuts</option>
@@ -1163,6 +1164,11 @@
                         <option value="standard">Standard</option>
                         <option value="guidance-incluse">Guidance incluse</option>
                         <option value="edition-signature">Édition signature</option>
+                    </select>
+                    <select id="preordersTypeFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="all">Précommandes et commandes</option>
+                        <option value="preorder">Précommandes</option>
+                        <option value="order">Commandes (vente ferme)</option>
                     </select>
                     <button id="resetPreordersFilters" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-3 py-2 text-sm hover:bg-gold/30 transition">Réinitialiser</button>
                 </div>
@@ -4472,6 +4478,17 @@
                     </button>
                 </div>
 
+                <!-- Confirmation commande (vente ferme) -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Confirmation commande Oracle (vente ferme)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement sur la page Commande — même modèle que la précommande</p>
+                    </div>
+                    <button onclick="sendMailTest('order-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                    </button>
+                </div>
+
                 <!-- Confirmation guidance -->
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div>
@@ -7616,6 +7633,7 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gold/20 text-gold border border-gold/30">
                             ${preorder.offer || '-'}
                         </span>
+                        ${preorder.order_type === 'order' ? '<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-400/15 text-teal-300 border border-teal-300/30">Commande</span>' : ''}
                     </td>
                     <td class="px-6 py-4 text-gold font-bold text-lg">${formatCurrency(preorder.amount_total)}</td>
                     <td class="px-6 py-4">
@@ -8311,7 +8329,7 @@
                         <td>${o.created_at_fr || formatDate(o.created_at)}</td>
                         <td>${o.email || '-'}</td>
                         <td>${o.full_name || '-'}</td>
-                        <td>${o.offer || '-'}</td>
+                        <td>${o.offer || '-'}${o.order_type === 'order' ? ' (commande)' : ''}</td>
                         <td>${formatCurrency(o.amount_total)}</td>
                         <td>${getStatusLabelFr(o.paid_status)}</td>
                         <td>${getShippingMethodLabel(o.shipping_method)}</td>
@@ -8565,6 +8583,7 @@
             status: 'all',
             period: 'all',
             offer: 'all',
+            type: 'all',
             q: ''
         };
 
@@ -8576,6 +8595,7 @@
                 status: preordersFilters.status,
                 period: preordersFilters.period,
                 offer: preordersFilters.offer,
+                type: preordersFilters.type,
                 q: preordersFilters.q
             });
             return `/api/admin/data?${params.toString()}`;
@@ -8831,12 +8851,32 @@
                 });
             }
 
+            const typeFilter = document.getElementById('preordersTypeFilter');
+            if (typeFilter) {
+                typeFilter.addEventListener('change', () => {
+                    preordersFilters.type = typeFilter.value;
+                    loadPreorders(1);
+                });
+            }
+
+            // Stock restant des offres limitées (même source que la page Commande).
+            fetch('/api/preorders/progress').then(r => r.json()).then(d => {
+                const el = document.getElementById('preordersStockInfo');
+                const offers = d?.shop?.catalog?.offers || {};
+                const parts = Object.values(offers).filter(o => o.stockMax != null)
+                    .map(o => `${o.label} : ${o.remaining} / ${o.stockMax} restants`);
+                const mode = d?.shop ? `Boutique : précommandes ${d.shop.preorder ? 'ouvertes' : 'fermées'}, vente en ligne ${d.shop.order ? 'ouverte' : 'fermée'}` : '';
+                if (el) el.textContent = [mode, ...parts].filter(Boolean).join(' · ');
+            }).catch(() => {});
+
             if (resetFiltersBtn) {
                 resetFiltersBtn.addEventListener('click', () => {
                     preordersFilters.status = 'all';
                     preordersFilters.period = 'all';
                     preordersFilters.offer = 'all';
+                    preordersFilters.type = 'all';
                     preordersFilters.q = '';
+                    if (typeFilter) typeFilter.value = 'all';
 
                     if (searchInput) searchInput.value = '';
                     if (statusFilter) statusFilter.value = 'all';
@@ -16376,6 +16416,7 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
                     </div>
                     <div class="space-y-2">
                         <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-1">Commande</p>
+                        <p class="text-light-gold/70">Type : <span class="text-light-gold">${preorder.order_type === 'order' ? 'Commande (vente ferme)' : 'Précommande'}</span></p>
                         <p class="text-light-gold/70">Offre : <span class="text-light-gold">${fmt(preorder.offer)}</span></p>
                         <p class="text-light-gold/70">Statut : <span class="${statusClass} font-semibold">${fmt(preorder.paid_status)}</span></p>
                         <p class="text-light-gold/70">Montant : <span class="text-gold font-semibold">${preorder.amount_total != null ? formatCurrency(preorder.amount_total) : '—'}</span></p>
