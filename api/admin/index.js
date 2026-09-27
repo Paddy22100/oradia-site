@@ -2938,7 +2938,7 @@ async function handleData(req, res) {
         const { data: kickstarterBackers } = await sb.from('kickstarter_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
         // Ulule : même règle que Kickstarter ci-dessus (uniquement les contributions en EUR).
         const { data: ululeBackers } = await sb.from('ulule_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
-        const planPriceEur = p => p === 'decouverte' ? 5 : 8;
+        const planPriceEur = () => 8; // abonnement Tore unique (l'ancien plan Découverte à 5€ n'existe plus)
 
         // Le webhook Stripe (api/stripe-webhook.js) crée déjà une ligne "abonnement" réelle
         // au moment du paiement, avec le vrai montant facturé (source_ref = session Stripe
@@ -3295,7 +3295,7 @@ async function handleData(req, res) {
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
             tempPassword: body.mode === 'existing' ? null : 'ExempleMdp123',
-            plan: body.plan === 'decouverte' ? 'decouverte' : 'complet'
+            plan: 'complet'
           });
           if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
@@ -3556,8 +3556,8 @@ async function handleData(req, res) {
 
       // "Dernier tirage" réel, calculé depuis la table tirages (via la même RPC que
       // "Voir les tirages"), pour TOUS les abonnés — payants ET gratuits. Le champ
-      // last_draw_date de tore_subscriptions n'est renseigné que pour le plan
-      // "découverte" (limite 1/jour) et reste vide pour tous les autres, donnant
+      // last_draw_date de tore_subscriptions n'était renseigné que pour l'ancien plan
+      // "découverte" (supprimé) et reste vide pour tous les abonnés, donnant
       // l'impression à tort qu'ils n'ont jamais tiré. Plafonné et parallélisé.
       const DRAW_CHECK_CAP = 100;
       const drawTargets = rows.filter(r => r.email).slice(0, DRAW_CHECK_CAP);
@@ -4618,7 +4618,7 @@ async function handleData(req, res) {
 
     // Calcul abonnements Tore (revenus totaux = chaque abonnement × son prix mensuel)
     const subscriptionRows = subscriptionsRes.data || [];
-    const planPrice = p => p === 'decouverte' ? 5 : 8;
+    const planPrice = () => 8; // abonnement Tore unique (l'ancien plan Découverte à 5€ n'existe plus)
     // is_free peut être absent si la migration n'a pas tourné — on l'exclut seulement si explicitement true
     const subscriptionsTotal = subscriptionRows.reduce((s, r) => r.is_free === true ? s : s + planPrice(r.plan), 0);
     const SYSTEM_EMAILS = ['audit@oradia.fr', 'contact@oradia.fr'];

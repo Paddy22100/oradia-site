@@ -7218,7 +7218,7 @@ function maybePromptToreReconnect() {
 // un autre onglet, abonnement expiré depuis le démarrage…). Le tirage n'est compté
 // qu'une fois, à sa complétion (showToreAnalysisCTA → recordToreDraw), qu'il ait été
 // repris ou non. resetButton : remet le bouton déclencheur dans son état initial.
-async function checkToreAccess(resetButton, { resume = false } = {}) {
+async function checkToreAccess(resetButton) {
   let isSubscribed = window.freemiumTracker.isSubscribed();
   if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
 
@@ -7288,48 +7288,16 @@ async function checkToreAccess(resetButton, { resume = false } = {}) {
       ? window.freemiumTracker.canDrawTore()
       : true;
 
+    // Limite des 2 tirages gratuits (+ bonus parrainage) atteinte : proposer l'abonnement.
     if (!localCanDraw) {
-      // Tenter une vérification serveur si email disponible
-      let serverAllows = false;
-      const sessStr = sessionStorage.getItem('oradia_member_session')
-                    || localStorage.getItem('oradia_member_session');
-      // Pas à la reprise : check-tore-draw CONSOMME le tirage du jour (plan Découverte),
-      // déjà consommé au démarrage initial de ce tirage.
-      if (sessStr && !resume) {
-        try {
-          const sess = JSON.parse(sessStr);
-          if (sess.email) {
-            try {
-              const quotaResp = await fetch('/api/auth/check-tore-draw', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: sess.email })
-              });
-              if (quotaResp.ok) {
-                const quotaData = await quotaResp.json();
-                // Ne débloquer que si un abonnement actif existe (plan non nul) :
-                // l'endpoint renvoie allowed:true avec plan:null pour les non-abonnés
-                // (le freemium localStorage reste alors la seule limite).
-                serverAllows = quotaData.allowed === true && !!quotaData.plan;
-              }
-            } catch(_) {
-              // API indisponible : bloquer (sécurité par défaut)
-              serverAllows = false;
-            }
-          }
-        } catch(_) {}
-      }
-
-      if (!serverAllows) {
-        resetButton();
-        if (window.gtag) window.gtag('event', 'tore_limit_reached', {
-          event_category: 'freemium',
-          event_label: 'limit_reached',
-          value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
-        });
-        window.freemiumTracker?.showToreLimitReached?.();
-        return false;
-      }
+      resetButton();
+      if (window.gtag) window.gtag('event', 'tore_limit_reached', {
+        event_category: 'freemium',
+        event_label: 'limit_reached',
+        value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
+      });
+      window.freemiumTracker?.showToreLimitReached?.();
+      return false;
     }
   }
 
@@ -7389,7 +7357,7 @@ async function checkToreAccess(resetButton, { resume = false } = {}) {
     // pourra reprendre ce tirage après s'être abonnée.
     for (let i = 0; i < 20 && !window.freemiumTracker; i++) await new Promise(r => setTimeout(r, 250));
     if (saved.guidanceId) sessionStorage.setItem('tore_guidance_id', saved.guidanceId);
-    const allowed = window.freemiumTracker ? await checkToreAccess(() => { resumeBtn.disabled = false; }, { resume: true }) : false;
+    const allowed = window.freemiumTracker ? await checkToreAccess(() => { resumeBtn.disabled = false; }) : false;
     if (!allowed) { resumeBtn.disabled = false; return; }
     panelEl.remove();
     startToreDraw({ restoreState: saved });

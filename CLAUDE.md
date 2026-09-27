@@ -25,6 +25,12 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - Ne jamais dépasser 12 fonctions serverless sur Vercel (Hobby plan)
 - Les variables d'environnement sensibles ne doivent jamais apparaître côté client
 - La logique freemium repose sur **localStorage** (2 tirages gratuits à vie)
+- Offre Tore : **2 tirages gratuits à vie, puis un abonnement unique** (8€/mois, tirages illimités).
+  L'ancien plan « Découverte » (5€/mois, 1 tirage/jour) est supprimé (endpoint `check-tore-draw` retiré,
+  aucun abonné concerné en base) — ne pas le réintroduire.
+- `tore.html` a une copie anglaise **séparée** : `en/tore.html`. Toute modification de la logique du
+  tirage doit être portée sur les deux fichiers (la sauvegarde du tirage en cours y utilise la clé
+  `oradia_tore_draw_in_progress_en`, distincte de la version française).
 - Le tirage payant passe par Stripe, déclenche un webhook Supabase, puis envoie un email Brevo
 - **Toujours merger sur `main` et pousser (déploiement Vercel) après chaque modification de code**,
   plutôt que de laisser un correctif sur une branche de travail non déployée. Avant de merger :
