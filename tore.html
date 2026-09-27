@@ -7156,6 +7156,32 @@ function maybePromptToreReconnect() {
     setTimeout(() => form?.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true})), 500);
     return;
   }
+  const resetSubmitBtn = () => {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.dataset.submitting = '0';
+      const _s = submitBtn.querySelector('.font-cinzel');
+      if (_s) _s.textContent = 'Commencer le Tirage';
+    }
+  };
+  if (!(await checkToreAccess(resetSubmitBtn))) return;
+
+  const selectedGenderBtn = document.querySelector('.tore-gender-btn.selected');
+  startToreDraw({
+    submitBtn,
+    intention: intentionValue,
+    gender: selectedGenderBtn?.dataset.gender || 'neutre'
+  });
+});
+
+// Contrôle d'accès au Tore (abonnement vérifié en direct, sinon quota freemium de 2
+// tirages gratuits + bonus). Partagé entre le lancement d'un nouveau tirage et la
+// REPRISE d'un tirage sauvegardé : une reprise ne doit jamais permettre de terminer
+// un tirage que la limite gratuite n'autorise plus (limite atteinte entre-temps dans
+// un autre onglet, abonnement expiré depuis le démarrage…). Le tirage n'est compté
+// qu'une fois, à sa complétion (showToreAnalysisCTA → recordToreDraw), qu'il ait été
+// repris ou non. resetButton : remet le bouton déclencheur dans son état initial.
+async function checkToreAccess(resetButton) {
   let isSubscribed = window.freemiumTracker.isSubscribed();
   if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
 
@@ -7213,14 +7239,9 @@ function maybePromptToreReconnect() {
   }
 
   if (subscriptionLapsed) {
-    if (submitBtn) {
-      submitBtn.disabled = false;
-      submitBtn.dataset.submitting = '0';
-      const _slr = submitBtn.querySelector('.font-cinzel');
-      if (_slr) _slr.textContent = 'Commencer le Tirage';
-    }
+    resetButton();
     window.location.href = '/member/abonnements.html?expired=1';
-    return;
+    return false;
   }
 
   if (!isSubscribed) {
@@ -7261,19 +7282,14 @@ function maybePromptToreReconnect() {
       }
 
       if (!serverAllows) {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.dataset.submitting = '0';
-          const _slr = submitBtn.querySelector('.font-cinzel');
-          if (_slr) _slr.textContent = 'Commencer le Tirage';
-        }
+        resetButton();
         if (window.gtag) window.gtag('event', 'tore_limit_reached', {
           event_category: 'freemium',
           event_label: 'limit_reached',
           value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
         });
         window.freemiumTracker?.showToreLimitReached?.();
-        return;
+        return false;
       }
     }
   }
@@ -7284,14 +7300,8 @@ function maybePromptToreReconnect() {
   // On l'invite activement à se reconnecter pour que ses PROCHAINS tirages
   // soient bien enregistrés — celui-ci démarre quand même, sans être bloqué.
   if (isSubscribed) maybePromptToreReconnect();
-
-  const selectedGenderBtn = document.querySelector('.tore-gender-btn.selected');
-  startToreDraw({
-    submitBtn,
-    intention: intentionValue,
-    gender: selectedGenderBtn?.dataset.gender || 'neutre'
-  });
-});
+  return true;
+}
 
 // Au chargement : si un tirage a été interrompu, proposer de le reprendre à la place
 // du formulaire d'intention. La reprise part d'un clic (geste utilisateur), ce qui
@@ -7331,7 +7341,17 @@ function maybePromptToreReconnect() {
   form.classList.add('hidden');
   form.parentNode.insertBefore(panelEl, form);
 
-  panelEl.querySelector('#tore-resume-btn').addEventListener('click', () => {
+  const resumeBtn = panelEl.querySelector('#tore-resume-btn');
+  resumeBtn.addEventListener('click', async () => {
+    if (resumeBtn.disabled) return;
+    resumeBtn.disabled = true;
+    // Même contrôle d'accès qu'un nouveau tirage (voir checkToreAccess). En cas de
+    // refus (limite gratuite atteinte), la sauvegarde est conservée : la personne
+    // pourra reprendre ce tirage après s'être abonnée.
+    for (let i = 0; i < 20 && !window.freemiumTracker; i++) await new Promise(r => setTimeout(r, 250));
+    if (saved.guidanceId) sessionStorage.setItem('tore_guidance_id', saved.guidanceId);
+    const allowed = window.freemiumTracker ? await checkToreAccess(() => { resumeBtn.disabled = false; }) : false;
+    if (!allowed) { resumeBtn.disabled = false; return; }
     panelEl.remove();
     startToreDraw({ restoreState: saved });
   });
