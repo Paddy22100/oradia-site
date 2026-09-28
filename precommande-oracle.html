@@ -231,11 +231,6 @@
                 }
                 
                 const data = await response.json();
-                try {
-                    const cat = data.shop && data.shop.catalog;
-                    const tier = cat && cat.shippingRates.FR.relay.filter(r => cat.productWeightKg <= r.maxWeight)[0];
-                    if (tier) document.querySelectorAll('[data-ship-from]').forEach(e => { e.textContent = tier.price.toFixed(2).replace('.', ','); });
-                } catch (_) {}
                 
                 const rarityText = document.getElementById('rarityText');
                 const paliersList = document.getElementById('paliersList');
@@ -820,7 +815,7 @@
     </section>
 
     <!-- Section Contenu du Coffret -->
-    <section id="contenu" class="py-20 section-light">
+    <section id="contenu" class="py-20 bg-[rgba(5,20,40,0.6)]">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
                 <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
@@ -1039,7 +1034,6 @@
                                 <span class="text-2xl text-gold">€</span>
                             </div>
                             <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">42 € à la sortie</span></p>
-                            <p class="offer-ship -mt-2 mb-4">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                             <p class="text-light-gold/80 text-base">L'oracle complet</p>
                         </div>
                         
@@ -1075,7 +1069,6 @@
                                 <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-3 text-center">Faites partie des premiers à recevoir Oradia</p>
-                            <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>Remboursement intégral si l'objectif n'est pas atteint</p>
                         </div>
                     </div>
                     
@@ -1097,7 +1090,6 @@
                                 <span class="text-3xl text-gold">€</span>
                             </div>
                             <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">52 € à la sortie</span></p>
-                            <p class="offer-ship -mt-2 mb-4">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                             <p class="text-center text-gold/80 text-sm mb-4 font-medium">30min de guidance offerte (valeur réelle 30€)</p>
                             <p class="text-light-gold/70 text-sm mb-5">Nombre de places limité</p>
                             <ul class="space-y-3 text-left">
@@ -1123,7 +1115,6 @@
                                 <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-4 text-center">L'offre la plus complète pour vivre l'expérience Oradia</p>
-                            <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>Remboursement intégral si l'objectif n'est pas atteint</p>
                         </div>
                     </div>
                     
@@ -1146,7 +1137,6 @@
                                 <span class="text-2xl text-gold">€</span>
                             </div>
                             <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">46 € à la sortie</span></p>
-                            <p class="offer-ship -mt-2 mb-4">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                         </div>
                         
                         <div class="flex-grow mb-6">
@@ -1169,9 +1159,15 @@
                                 <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-3 text-center">Un exemplaire unique, dédié pour vous</p>
-                            <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>Remboursement intégral si l'objectif n'est pas atteint</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Réassurance (commune aux trois offres) -->
+                <div id="reassurance" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 text-center text-sm text-light-gold/90">
+                    <div><i class="fas fa-shield-halved text-gold text-xl mb-2 block"></i>Paiement sécurisé par Stripe</div>
+                    <div><i class="fas fa-credit-card text-gold text-xl mb-2 block"></i>Carte bancaire ou Apple Pay</div>
+                    <div><i class="fas fa-rotate-left text-gold text-xl mb-2 block"></i>Remboursement intégral si l'objectif n'est pas atteint</div>
                 </div>
 
                 <!-- Comparatif des offres -->
