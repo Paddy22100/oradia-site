@@ -6904,11 +6904,10 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
       }
 
       // ── Liste brute des intentions (anonymisées, triées par date) ──
-      // Source unique : intentions_anonymes. Depuis le correctif d'août 2026 (voir
-      // tore.html, POST vers /api/admin/intentions), CHAQUE tirage avec intention y est
-      // enregistré, membre ou anonyme — le tirage d'un membre est déjà présent par
-      // ailleurs dans la table `tirages`, donc interroger aussi `tirages` ici doublait
-      // chacune de ses intentions (une fois par table, ~1s d'écart).
+      // Source unique : intentions_anonymes. Chaque tirage avec intention y est enregistré
+      // avec sa colonne `source` ('membre' écrit par api/tirages/send-email.js, 'anonyme'
+      // écrit par /intentions ci-dessous) — interroger aussi `tirages` ici doublait chaque
+      // intention d'un membre (une fois par table, ~1s d'écart), d'où cette source unique.
       if (action === 'list-intentions') {
         const nlSupa = createClient(
           process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
@@ -6916,7 +6915,7 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
         );
         const { data: fromAnon } = await nlSupa
           .from('intentions_anonymes')
-          .select('intention, cartes, created_at')
+          .select('intention, cartes, created_at, source')
           .not('intention', 'is', null)
           .neq('intention', '')
           .order('created_at', { ascending: false })
@@ -10392,6 +10391,7 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
       );
       const { error: iErr } = await sb.from('intentions_anonymes').insert({
         intention,
+        source: 'anonyme',
         cartes: body.cartes || null
       });
       if (iErr) { console.error('[intentions_anonymes]', iErr); return res.status(500).json({ error: 'Erreur sauvegarde' }); }

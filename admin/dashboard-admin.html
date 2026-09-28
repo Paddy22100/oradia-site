@@ -15412,12 +15412,18 @@
                     const d = new Date(i.created_at);
                     const dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
                     const cartes = (i.cartes || []).map(c => c.replace(/_/g, ' ')).join(', ');
+                    const badge = i.source === 'membre'
+                        ? '<span class="text-xs bg-blue-500/10 text-blue-300/70 border border-blue-400/20 rounded-full px-2 py-0.5">membre</span>'
+                        : '<span class="text-xs bg-white/5 text-gold/30 border border-gold/10 rounded-full px-2 py-0.5">anonyme</span>';
                     return `<div class="flex flex-col gap-1 bg-white/3 border border-gold/8 rounded-xl px-4 py-3">
                         <div class="flex items-center justify-between gap-2">
                             <span class="text-gold/80 text-sm leading-snug">${i.intention}</span>
                             <span class="shrink-0 text-gold/30 text-xs">${dateStr}</span>
                         </div>
-                        ${cartes ? `<div class="flex items-center gap-2 flex-wrap"><span class="text-gold/30 text-xs">${cartes}</span></div>` : ''}
+                        <div class="flex items-center gap-2 flex-wrap">
+                            ${badge}
+                            ${cartes ? `<span class="text-gold/30 text-xs">${cartes}</span>` : ''}
+                        </div>
                     </div>`;
                 }).join('');
                 list.classList.remove('hidden');

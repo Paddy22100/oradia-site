@@ -188,6 +188,7 @@ async function handleSaveTirage(req, res) {
       );
       const { error: iErr } = await supabaseService.from('intentions_anonymes').insert({
         intention: row.intention,
+        source: 'membre',
         cartes: row.cartes
       });
       if (iErr) console.error('[intentions_anonymes] miroir échoué:', iErr);
