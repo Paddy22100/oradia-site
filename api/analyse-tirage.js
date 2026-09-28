@@ -96,8 +96,18 @@ async function callAnthropicWithFallback(payload, userEmail, clientIP) {
                     'anthropic-beta': 'messages-2023-12-15',
                 },
                 body: JSON.stringify({ ...payload, model }),
-                signal: AbortSignal.timeout(25000),
+                // Réponse complète : 25 s. Streaming : délai global un peu plus long (le texte
+                // arrive au fil de l'eau), toujours sous le maxDuration Vercel de 30 s.
+                signal: AbortSignal.timeout(payload.stream ? 27000 : 25000),
             });
+
+            if (response.ok && payload.stream) {
+                // Streaming : le corps est relayé au client par relayAnthropicStream(), qui
+                // journalise l'usage (tokens de l'événement final) une fois le flux terminé.
+                if (model !== firstModel) sendModelAlert(firstModel, model);
+                response._oradia = { model, status: model !== firstModel ? 'fallback' : 'success', startTime };
+                return response;
+            }
 
             if (response.ok) {
                 const duration = Date.now() - startTime;
@@ -310,6 +320,9 @@ export default async function handler(req, res) {
   }
 
   const { intention, cards, userEmail, gender, lang: rawLang } = body;
+  // stream: true → réponse text/event-stream (texte affiché au fil de l'eau, voir
+  // tore-analysis.html) ; sinon réponse JSON complète (préchargement de tore.html).
+  const wantStream = body.stream === true;
   const lang = rawLang === 'en' ? 'en' : 'fr';
   if (!Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({ error: 'Cards array required' });
@@ -399,7 +412,12 @@ export default async function handler(req, res) {
         max_tokens: 1024,
         temperature: 0.7,
         messages: [{ role: 'user', content: userPrompt }],
+        ...(wantStream ? { stream: true } : {}),
     }, userEmail, clientIP);
+
+    if (wantStream && anthropicResponse.ok) {
+      return await relayAnthropicStream(anthropicResponse, res, { userEmail, clientIP, lang, cleanAnalysisText });
+    }
 
     if (!anthropicResponse.ok) {
       const errText = await anthropicResponse.text();
@@ -422,6 +440,81 @@ export default async function handler(req, res) {
   }
 }
 
+// Relaie le flux SSE d'Anthropic au client, en format simplifié :
+//   data: {"t":"<morceau de texte>"}      (autant que nécessaire)
+//   event: done  / data: {"analysis":"<texte complet nettoyé>"}
+//   event: error / data: {"error":"...","partial":true}   (coupure en cours de route)
+// Le texte final nettoyé (cleanAnalysisText) fait foi côté client.
+async function relayAnthropicStream(anthropicResponse, res, { userEmail, clientIP, lang, cleanAnalysisText }) {
+  const meta = anthropicResponse._oradia || {};
+  res.writeHead(200, {
+    'Content-Type': 'text/event-stream; charset=utf-8',
+    'Cache-Control': 'no-cache, no-transform',
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no',
+  });
+  const send = (event, data) => {
+    res.write((event ? `event: ${event}\n` : '') + `data: ${JSON.stringify(data)}\n\n`);
+  };
+
+  let text = '';
+  let inputTokens = null, outputTokens = null, stopReason = null, streamError = null;
+  const decoder = new TextDecoder();
+  let buffer = '';
+  try {
+    for await (const chunk of anthropicResponse.body) {
+      buffer += decoder.decode(chunk, { stream: true });
+      let idx;
+      while ((idx = buffer.indexOf('\n\n')) !== -1) {
+        const rawEvent = buffer.slice(0, idx);
+        buffer = buffer.slice(idx + 2);
+        const dataLine = rawEvent.split('\n').find(l => l.startsWith('data:'));
+        if (!dataLine) continue;
+        let evt;
+        try { evt = JSON.parse(dataLine.slice(5).trim()); } catch { continue; }
+        if (evt.type === 'message_start') inputTokens = evt.message?.usage?.input_tokens ?? null;
+        else if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
+          text += evt.delta.text;
+          send(null, { t: evt.delta.text });
+        } else if (evt.type === 'message_delta') {
+          outputTokens = evt.usage?.output_tokens ?? outputTokens;
+          stopReason = evt.delta?.stop_reason || stopReason;
+        } else if (evt.type === 'error') {
+          streamError = evt.error?.message || 'stream error';
+        }
+      }
+    }
+  } catch (e) {
+    streamError = e.name === 'TimeoutError' || e.name === 'AbortError' ? 'timeout' : e.message;
+  }
+
+  await logApiUsage({
+    apiName: 'anthropic-claude',
+    modelName: meta.model || null,
+    requestTokens: inputTokens,
+    responseTokens: outputTokens,
+    userEmail,
+    ipAddress: clientIP,
+    status: streamError ? 'error' : (meta.status || 'success'),
+    errorMessage: streamError || (stopReason === 'max_tokens' ? 'max_tokens atteint' : undefined),
+    requestDurationMs: meta.startTime ? Date.now() - meta.startTime : null
+  }).catch(err => console.warn('[analyse-tirage] Erreur logging API usage (stream):', err.message));
+
+  if (streamError || !text.trim()) {
+    console.error('[analyse-tirage] Flux interrompu:', streamError || 'texte vide');
+    send('error', {
+      error: streamError || 'empty',
+      partial: !!text.trim(),
+      message: lang === 'en'
+        ? 'The reading was interrupted. Please reload the page to try again.'
+        : "La lecture a été interrompue. Rechargez la page pour réessayer."
+    });
+  } else {
+    send('done', { success: true, analysis: cleanAnalysisText(text) });
+  }
+  return res.end();
+}
+
 function streamToString(stream) {
   return new Promise((resolve, reject) => {
     const chunks = [];
@@ -430,3 +523,6 @@ function streamToString(stream) {
     stream.on('error', reject);
   });
 }
+
+// Exposé pour les tests unitaires uniquement.
+export { relayAnthropicStream as _relayAnthropicStream };

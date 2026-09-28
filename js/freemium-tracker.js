@@ -417,7 +417,7 @@ class FreemiumTracker {
                         <!-- Colonne droite : pub précommande + parrainage, secondaires -->
                         <div class="tlm-col-right">
                             <a href="/precommande-oracle.html" class="tlm-preorder tlm-side-card" style="border:1px solid rgba(212,175,55,0.22);">
-                                <img src="/images/medias/banniere-facebook.webp" alt="Oracle Oradia — précommandes ouvertes"
+                                <img src="/images/medias/banniere-facebook.webp" srcset="/images/medias/banniere-facebook-640.webp 640w, /images/medias/banniere-facebook-1280.webp 1280w, /images/medias/banniere-facebook.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" width="2034" height="773" decoding="async" alt="Oracle Oradia — précommandes ouvertes"
                                      style="width:100%;height:auto;display:block;">
                                 <div style="padding:12px 14px;background:rgba(212,175,55,0.06);display:flex;align-items:center;gap:10px;">
                                     <span class="tlm-icon-badge"><i class="fas fa-box-open"></i></span>

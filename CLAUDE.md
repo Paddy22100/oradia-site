@@ -31,6 +31,12 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - `tore.html` a une copie anglaise **séparée** : `en/tore.html`. Toute modification de la logique du
   tirage doit être portée sur les deux fichiers (la sauvegarde du tirage en cours y utilise la clé
   `oradia_tore_draw_in_progress_en`, distincte de la version française).
+- **Tailwind est compilé** (plus de `cdn.tailwindcss.com`, ne pas le réintroduire) : feuilles
+  `assets/tailwind.css` (pages du site), `tailwind-guidance.css`, `tailwind-livraison.css`,
+  `tailwind-default.css` (fiches cartes), générées par `npm run build:css` (config
+  `tailwind.config.js`) et **commitées** (Vercel n'a pas d'étape de build). Après tout ajout
+  de classe Tailwind dans un HTML/JS : relancer `npm run build:css` et commiter les CSS.
+  Classes construites dynamiquement (`'bg-' + x`) : non détectées, écrire la classe en entier.
 - Le tirage payant passe par Stripe, déclenche un webhook Supabase, puis envoie un email Brevo
 - **Toujours merger sur `main` et pousser (déploiement Vercel) après chaque modification de code**,
   plutôt que de laisser un correctif sur une branche de travail non déployée. Avant de merger :

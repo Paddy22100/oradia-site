@@ -35,41 +35,15 @@
   <!-- Canonical URL -->
   <link rel="canonical" href="https://oradia.fr/en/tore-analysis.html" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="/style.css">
   <link rel="stylesheet" href="/responsive.css">
   <link rel="stylesheet" href="/production-mode.css">
   <script src="/security.js"></script>
   <script src="/js/tirages-storage.js"></script>
+  <script src="/js/analysis-stream.js"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'night-blue': '#0a192f',
-            'gold': '#d4af37',
-            'light-gold': '#f5e7a1',
-            'dark-blue': '#051428',
-            'celtic-blue': '#1a365d'
-          },
-          fontFamily: {
-            'cormorant': ['Cormorant Garamond', 'serif'],
-            'cinzel': ['Cinzel', 'serif'],
-            'lora': ['Lora', 'serif']
-          },
-          animation: {
-            'float': 'float 6s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s ease-in-out infinite',
-            'shimmer': 'shimmer 3s ease-in-out infinite',
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
+<style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
     
     .font-cormorant {
@@ -650,6 +624,7 @@
       .obs-submit-btn { width: 100%; }
     }
   </style>
+    <link rel="stylesheet" href="/assets/tailwind.css">
 </head>
 
 <body class="relative">
@@ -1012,7 +987,7 @@
 
                     <!-- Photo -->
                     <div class="flex-shrink-0 flex items-center justify-center p-6 md:p-8">
-                        <img src="/images/medias/photo_a_propos.webp"
+                        <img src="/images/medias/photo_a_propos.webp" srcset="/images/medias/photo_a_propos-640.webp 640w, /images/medias/photo_a_propos.webp 1024w" sizes="(max-width: 768px) 100vw, 60vw" width="1024" height="1536" decoding="async"
                              alt="Rudy — Oracle Oradia"
                              style="width:180px; height:auto; display:block; border-radius:12px;">
                     </div>
@@ -1603,13 +1578,13 @@
 
                 // Si pas de données préchargées valides, faire l'appel API
                 if (!data) {
-                    const resp = await fetch('/api/analyse-tirage', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ intention, cards, gender: sessionStorage.getItem('tore_gender') || 'neutre', lang: 'en' })
-                    });
-                    data = await resp.json();
-                    if (!resp.ok || !data.success || !data.analysis) throw new Error(data.error || 'Analyse indisponible');
+                    // Streaming: the Oracle's text appears progressively in the waiting card,
+                    // then the full text is split into sections below.
+                    const liveBody = container.querySelector('.card-body');
+                    data = await window.OradiaAnalysisStream.fetchAnalysisStream(
+                        { intention, cards, gender: sessionStorage.getItem('tore_gender') || 'neutre', lang: 'en' },
+                        (partial) => { if (liveBody) liveBody.innerHTML = window.OradiaAnalysisStream.renderStreamingPreview(partial); }
+                    );
                     // Sauvegarde pour récupération : si l'onglet est fermé/rechargé après
                     // ce point, la prochaine visite réutilisera ce résultat au lieu de
                     // relancer un appel IA (voir le cache en haut de cette fonction).

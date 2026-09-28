@@ -100,8 +100,7 @@
     <link rel="icon" type="image/jpeg" href="images/logo-hd-v2.webp" />
     <link rel="apple-touch-icon" sizes="180x180" href="images/logo-hd-v2.webp" />
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="responsive.css">
     
@@ -232,6 +231,11 @@
                 }
                 
                 const data = await response.json();
+                try {
+                    const cat = data.shop && data.shop.catalog;
+                    const tier = cat && cat.shippingRates.FR.relay.filter(r => cat.productWeightKg <= r.maxWeight)[0];
+                    if (tier) document.querySelectorAll('[data-ship-from]').forEach(e => { e.textContent = tier.price.toFixed(2).replace('.', ','); });
+                } catch (_) {}
                 
                 const rarityText = document.getElementById('rarityText');
                 const paliersList = document.getElementById('paliersList');
@@ -318,27 +322,7 @@
         document.addEventListener('DOMContentLoaded', loadPreorderProgress);
     </script>
     
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'night-blue': '#0a192f',
-                        'gold': '#d4af37',
-                        'light-gold': '#f5e7a1',
-                        'dark-blue': '#051428',
-                        'celtic-blue': '#1a365d'
-                    },
-                    fontFamily: {
-                        'cormorant': ['Cormorant Garamond', 'serif'],
-                        'poppins': ['Poppins', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
+<style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
         
         .gold-gradient {
@@ -513,8 +497,10 @@
             transform: scale(1.2);
         }
     </style>
+    <link rel="stylesheet" href="/assets/tailwind.css">
+    <link rel="stylesheet" href="/assets/sales-page.css">
 </head>
-<body class="bg-night-blue text-light-gold">
+<body class="bg-night-blue text-light-gold sales-page">
     <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up text-sm"></i>
 </button>
@@ -533,7 +519,7 @@
                  hors du max-w-4xl du bloc texte ci-dessous pour pouvoir s'afficher plus grande. -->
             <div class="relative max-w-5xl mx-auto mb-8 sm:mb-10">
                 <div class="absolute inset-0 bg-gradient-to-r from-gold/15 to-transparent rounded-2xl blur-2xl"></div>
-                <img src="images/medias/banniere-facebook.webp" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="relative w-full h-auto rounded-2xl shadow-2xl shadow-gold/20 border border-gold/30">
+                <img src="images/medias/banniere-facebook.webp" srcset="images/medias/banniere-facebook-640.webp 640w, images/medias/banniere-facebook-1280.webp 1280w, images/medias/banniere-facebook.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" width="2034" height="773" decoding="async" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="relative w-full h-auto rounded-2xl shadow-2xl shadow-gold/20 border border-gold/30">
             </div>
 
             <div class="hero-content text-center max-w-4xl mx-auto">
@@ -804,7 +790,7 @@
                   </div>
                   <div class="bg-[rgba(5,20,40,0.65)] rounded-2xl p-6 border border-gold/30 backdrop-blur-sm hover:border-gold/50 transition-all duration-300 hover:shadow-xl hover:shadow-gold/20 group">
                     <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden group-hover:bg-gold/20 transition-colors duration-300">
-                      <img src="images/apercu-hd.webp" alt="Livret d'accompagnement de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg group-hover:scale-105 transition-transform duration-300">
+                      <img src="images/apercu-hd.webp" srcset="images/apercu-hd-640.webp 640w, images/apercu-hd.webp 958w" sizes="(max-width: 768px) 100vw, 60vw" width="958" height="1120" decoding="async" alt="Livret d'accompagnement de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg group-hover:scale-105 transition-transform duration-300">
                     </div>
                     <p class="text-gold font-semibold text-xl group-hover:text-light-gold transition-colors duration-300">Livret d'accompagnement</p>
                     <p class="text-light-gold/80 text-base mt-2">Un livret d'accompagnement avec conte initiatique pour plonger dans l'univers Oradia. Chaque tirage permet de construire un hexagramme du Yi Jing pour accéder à une sagesse millénaire.</p>
@@ -834,7 +820,7 @@
     </section>
 
     <!-- Section Contenu du Coffret -->
-    <section id="contenu" class="py-20 bg-[rgba(5,20,40,0.6)]">
+    <section id="contenu" class="py-20 section-light">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
                 <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
@@ -895,12 +881,12 @@
                                         </div>
                                         <!-- Slide 3 - Livret -->
                                         <div class="carousel-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-500">
-                                            <img src="/images/apercu-hd.webp" alt="Livret d'accompagnement ORADIA" class="w-full h-full object-contain rounded-lg" onerror="this.src='/images/apercu-hd.webp'">
+                                            <img src="/images/apercu-hd.webp" srcset="/images/apercu-hd-640.webp 640w, /images/apercu-hd.webp 958w" sizes="(max-width: 768px) 100vw, 60vw" width="958" height="1120" decoding="async" alt="Livret d'accompagnement ORADIA" class="w-full h-full object-contain rounded-lg" onerror="this.src='/images/apercu-hd.webp'">
                                             <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/70 bg-night-blue/60 py-1">Livret d'accompagnement · 200 pages</span>
                                         </div>
                                         <!-- Slide 4 - Pièce de tirage -->
                                         <div class="carousel-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-500">
-                                            <img src="/images/coin.webp" alt="Pièce de tirage ORADIA" class="w-full h-full object-contain rounded-lg" onerror="this.src='/images/coin.webp'">
+                                            <img src="/images/coin.webp" srcset="/images/coin-640.webp 640w, /images/coin-1280.webp 1280w, /images/coin.webp 1376w" sizes="(max-width: 768px) 100vw, 60vw" width="1376" height="768" decoding="async" alt="Pièce de tirage ORADIA" class="w-full h-full object-contain rounded-lg" onerror="this.src='/images/coin.webp'">
                                             <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/70 bg-night-blue/60 py-1">Pièce de tirage</span>
                                         </div>
                                         <!-- Slide 5 - Coffret -->
@@ -1053,6 +1039,7 @@
                                 <span class="text-2xl text-gold">€</span>
                             </div>
                             <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">42 € à la sortie</span></p>
+                            <p class="offer-ship -mt-2 mb-4">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                             <p class="text-light-gold/80 text-base">L'oracle complet</p>
                         </div>
                         
@@ -1088,6 +1075,7 @@
                                 <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-3 text-center">Faites partie des premiers à recevoir Oradia</p>
+                            <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>Remboursement intégral si l'objectif n'est pas atteint</p>
                         </div>
                     </div>
                     
@@ -1109,6 +1097,7 @@
                                 <span class="text-3xl text-gold">€</span>
                             </div>
                             <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">52 € à la sortie</span></p>
+                            <p class="offer-ship -mt-2 mb-4">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                             <p class="text-center text-gold/80 text-sm mb-4 font-medium">30min de guidance offerte (valeur réelle 30€)</p>
                             <p class="text-light-gold/70 text-sm mb-5">Nombre de places limité</p>
                             <ul class="space-y-3 text-left">
@@ -1134,6 +1123,7 @@
                                 <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-4 text-center">L'offre la plus complète pour vivre l'expérience Oradia</p>
+                            <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>Remboursement intégral si l'objectif n'est pas atteint</p>
                         </div>
                     </div>
                     
@@ -1156,6 +1146,7 @@
                                 <span class="text-2xl text-gold">€</span>
                             </div>
                             <p class="text-light-gold/70 text-sm -mt-2 mb-4">Prix de précommande · <span class="text-light-gold font-semibold">46 € à la sortie</span></p>
+                            <p class="offer-ship -mt-2 mb-4">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                         </div>
                         
                         <div class="flex-grow mb-6">
@@ -1178,8 +1169,25 @@
                                 <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-3 text-center">Un exemplaire unique, dédié pour vous</p>
+                            <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>Remboursement intégral si l'objectif n'est pas atteint</p>
                         </div>
                     </div>
+                </div>
+
+                <!-- Comparatif des offres -->
+                <div class="offer-compare-wrap" id="offer-compare">
+                    <table class="offer-compare">
+                        <caption>Comparer les coffrets</caption>
+                        <thead><tr><th scope="col"></th><th scope="col">Standard</th><th scope="col" class="col-featured">Guidance offerte</th><th scope="col">Édition Signature</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">Prix de précommande</th><td class="price">38 €<small>42 € à la sortie</small></td><td class="price col-featured">48 €<small>52 € à la sortie</small></td><td class="price">42 €<small>46 € à la sortie</small></td></tr>
+                            <tr><th scope="row">64 cartes, livret d'accompagnement, conte initiatique</th><td class="yes"><span aria-label="inclus">✓</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
+                            <tr><th scope="row">Pièce de tirage et coffret de protection</th><td class="yes"><span aria-label="inclus">✓</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
+                            <tr><th scope="row">Dédicace personnalisée</th><td class="no"><span aria-label="non inclus">–</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
+                            <tr><th scope="row">Séance de guidance en visio (30 min)</th><td class="no"><span aria-label="non inclus">–</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="no"><span aria-label="non inclus">–</span></td></tr>
+                            <tr><th scope="row">Tirage limité</th><td class="no"><span aria-label="non inclus">–</span></td><td class="no col-featured"><span aria-label="non inclus">–</span></td><td class="yes">100 premiers exemplaires</td></tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -1293,6 +1301,69 @@
                             <i class="fas fa-trash mr-2"></i>
                             Vider le panier
                         </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="faq" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
+                    Questions Fréquentes
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Quand vais-je recevoir mon oracle ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Les précommandes ferment le 31 décembre 2026. La production a lieu courant octobre — la livraison est estimée à partir de mi-février 2027. Les commandes seront expédiées dans l'ordre de réception.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Comment fonctionne la précommande ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>La précommande vous permet de réserver votre exemplaire avant fabrication.
+La production est lancée grâce aux premières commandes.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Et si l'objectif de précommandes n'est pas atteint ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Vous êtes intégralement remboursé, sans avoir à en faire la demande. Aucun risque à précommander maintenant : soit l'oracle physique est fabriqué, soit vous récupérez votre argent. L'oracle existe déjà en version numérique et est utilisé chaque jour — la précommande ne finance pas une idée de départ, mais le passage au physique d'un projet déjà actif.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Que se passe-t-il si la production est retardée ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>En cas de retard de production, vous serez immédiatement informé par email. Je m'engage à vous tenir informé de l'avancement du projet en toute transparence.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Puis-je modifier ma commande ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Oui, vous pouvez modifier votre offre ou votre adresse jusqu'au début de la production. Contactez-moi simplement par email pour apporter les modifications nécessaires.</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1439,7 +1510,7 @@
                         <!-- Colonne image -->
                         <div class="relative min-h-[280px] md:min-h-full">
                             <img
-                                src="/images/medias/newsletter_image.webp"
+                                src="/images/medias/newsletter_image.webp" srcset="/images/medias/newsletter_image-640.webp 640w, /images/medias/newsletter_image.webp 957w" sizes="(max-width: 768px) 100vw, 60vw" width="957" height="1120" decoding="async"
                                 alt="La newsletter Oradia"
                                 class="w-full h-full object-cover object-center"
                                 style="min-height: 280px;"
@@ -1526,68 +1597,6 @@
     </section>
 
     <!-- Section FAQ -->
-    <section id="faq" class="py-20">
-        <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto">
-                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
-                    Questions Fréquentes
-                </h2>
-                
-                <div class="space-y-6">
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
-                            <span class="flex-1 pr-3">Quand vais-je recevoir mon oracle ?</span>
-                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
-                        </button>
-                        <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>Les précommandes ferment le 31 décembre 2026. La production a lieu courant octobre — la livraison est estimée à partir de mi-février 2027. Les commandes seront expédiées dans l'ordre de réception.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
-                            <span class="flex-1 pr-3">Comment fonctionne la précommande ?</span>
-                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
-                        </button>
-                        <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>La précommande vous permet de réserver votre exemplaire avant fabrication.
-La production est lancée grâce aux premières commandes.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
-                            <span class="flex-1 pr-3">Et si l'objectif de précommandes n'est pas atteint ?</span>
-                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
-                        </button>
-                        <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>Vous êtes intégralement remboursé, sans avoir à en faire la demande. Aucun risque à précommander maintenant : soit l'oracle physique est fabriqué, soit vous récupérez votre argent. L'oracle existe déjà en version numérique et est utilisé chaque jour — la précommande ne finance pas une idée de départ, mais le passage au physique d'un projet déjà actif.</p>
-                        </div>
-                    </div>
-
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
-                            <span class="flex-1 pr-3">Que se passe-t-il si la production est retardée ?</span>
-                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
-                        </button>
-                        <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>En cas de retard de production, vous serez immédiatement informé par email. Je m'engage à vous tenir informé de l'avancement du projet en toute transparence.</p>
-                        </div>
-                    </div>
-                    
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
-                            <span class="flex-1 pr-3">Puis-je modifier ma commande ?</span>
-                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
-                        </button>
-                        <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>Oui, vous pouvez modifier votre offre ou votre adresse jusqu'au début de la production. Contactez-moi simplement par email pour apporter les modifications nécessaires.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
 
     <!-- Footer -->
@@ -1596,7 +1605,7 @@ La production est lancée grâce aux premières commandes.</p>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
                 <div>
                     <div class="flex items-center mb-4">
-                        <img src="images/logo-hd-v2.webp" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+                        <img src="images/logo-160.webp" alt="Oradia Logo" class="w-16 h-16 mr-4" />
                         <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
                     </div>
                     <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>

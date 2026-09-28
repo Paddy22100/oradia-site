@@ -1,0 +1,96 @@
+/* Pages de vente de l'oracle (precommande-oracle.html, commande-oracle.html).
+   Chargée après assets/tailwind.css : lisibilité, section claire, comparatif, rassurance. */
+
+/* ── Lisibilité : texte courant à 90 % d'opacité minimum, 16 px sur mobile ── */
+.sales-page .text-light-gold\/70,
+.sales-page .text-light-gold\/80 { color: rgb(245 231 161 / 0.9); }
+.sales-page .text-gold\/70,
+.sales-page .text-gold\/80 { color: rgb(212 175 55 / 0.92); }
+@media (max-width: 640px) {
+  .sales-page #offres p.text-sm,
+  .sales-page #offres li,
+  .sales-page #faq p,
+  .sales-page #contenu p.text-sm,
+  .sales-page #contenu figcaption { font-size: 1rem; line-height: 1.6; }
+}
+
+/* ── Section claire (parchemin) pour rompre la continuité bleu nuit ── */
+.section-light {
+  background: linear-gradient(180deg, #f7f0e1 0%, #efe4cc 100%) !important;
+  color: #2a2418;
+}
+.section-light .gold-gradient {
+  background: none !important;
+  -webkit-text-fill-color: #7a5c14 !important;
+  color: #7a5c14 !important;
+}
+.section-light .text-gold,
+.section-light [class*="text-gold/"] { color: #8a6a1c !important; }
+.section-light .text-light-gold,
+.section-light [class*="text-light-gold"] { color: #2f2819 !important; }
+.section-light [class*="bg-[rgba(5,20,40"] {
+  background-color: rgba(255, 255, 255, 0.6) !important;
+}
+.section-light [class*="border-gold"] { border-color: rgba(138, 106, 28, 0.35) !important; }
+.section-light #cartesCarousel .carousel-slide span { color: #f5e7a1 !important; }
+.section-light #carouselDots > div { background-color: #8a6a1c; }
+
+/* ── Frais de livraison et rassurance sous chaque offre ── */
+.offer-ship {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  color: rgb(245 231 161 / 0.9);
+}
+.offer-ship strong { color: #d4af37; font-weight: 600; }
+.pay-reassure {
+  margin-top: 0.85rem;
+  text-align: center;
+  font-size: 0.8rem;
+  line-height: 1.55;
+  color: rgb(245 231 161 / 0.85);
+}
+.pay-reassure i { color: #d4af37; margin-right: 0.3rem; }
+
+/* ── Tableau comparatif des offres ── */
+.offer-compare-wrap { margin-top: 3.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.offer-compare {
+  width: 100%;
+  min-width: 560px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.95rem;
+  color: #f5e7a1;
+  background: rgba(5, 20, 40, 0.75);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.offer-compare caption {
+  caption-side: top;
+  text-align: center;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #d4af37;
+  padding-bottom: 1rem;
+}
+.offer-compare th,
+.offer-compare td {
+  padding: 0.8rem 1rem;
+  text-align: center;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+}
+.offer-compare thead th {
+  color: #d4af37;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  background: rgba(212, 175, 55, 0.08);
+}
+.offer-compare tbody th { text-align: left; font-weight: 500; color: rgb(245 231 161 / 0.95); }
+.offer-compare tr:last-child th,
+.offer-compare tr:last-child td { border-bottom: none; }
+.offer-compare .yes { color: #d4af37; font-weight: 700; font-size: 1.1rem; }
+.offer-compare .no { color: rgb(245 231 161 / 0.35); }
+.offer-compare .col-featured { background: rgba(212, 175, 55, 0.07); }
+.offer-compare .price { font-weight: 700; color: #d4af37; font-size: 1.05rem; }
+.offer-compare .price small { display: block; font-weight: 400; font-size: 0.75rem; color: rgb(245 231 161 / 0.85); }

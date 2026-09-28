@@ -19,7 +19,8 @@
   },
   "scripts": {
     "dev-static": "npx serve .",
-    "dev-vercel": "vercel dev"
+    "dev-vercel": "vercel dev",
+    "build:css": "for v in main guidance livraison default; do f=$([ $v = main ] && echo tailwind || echo tailwind-$v); TW_VARIANT=$v npx tailwindcss -c tailwind.config.js -i assets/css-src/tailwind.css -o assets/$f.css --minify; done"
   },
   "keywords": [
     "stripe",
@@ -42,6 +43,7 @@
   },
   "homepage": "https://github.com/Paddy22100/oradia-site#readme",
   "devDependencies": {
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "tailwindcss": "^3.4.17"
   }
 }
