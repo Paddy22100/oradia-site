@@ -351,7 +351,7 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
 // d'abord échoué puis réussi via une nouvelle tentative automatique de Stripe,
 // sans repasser par checkout.session.completed).
 // trialSource : 'oracle-qr' pour le mois d'essai offert avec l'oracle (lib/oracle-trial.js).
-async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId, trialSource = null }) {
+async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId, trialSource = null, lang = 'fr' }) {
     if (!email) { console.error('[webhook] activateToreSubscription: email manquant'); return; }
 
     // .ilike() (insensible à la casse) : email arrive normalisé en minuscules, mais une
@@ -521,7 +521,8 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         toName:   fullName || '',
         tempPassword,
         resetLink,
-        plan: plan || 'complet'
+        plan: plan || 'complet',
+        lang // 'en' si souscrit depuis le tirage anglais (métadonnées Stripe), sinon français
     });
 }
 
@@ -572,7 +573,8 @@ async function processEvent(event) {
                     stripeSubscriptionId: invSubId,
                     amountTotalCents: invoice.amount_paid || 0,
                     sourceRef: invoice.id,
-                    trialSource: subscription?.metadata?.trial_source || null
+                    trialSource: subscription?.metadata?.trial_source || null,
+                    lang: subscription?.metadata?.lang === 'en' ? 'en' : 'fr'
                 });
                 console.log(`[webhook] Abonnement Tore activé en filet de sécurité (invoice.payment_succeeded) pour ${email}`);
                 break;
@@ -833,7 +835,8 @@ async function processEvent(event) {
                         amountTotalCents: extractedData.amount_total,
                         sourceRef: sessionId,
                         paymentIntentId: extractedData.payment_intent_id,
-                        trialSource: session.metadata?.trial_source || null
+                        trialSource: session.metadata?.trial_source || null,
+                        lang: session.metadata?.lang === 'en' ? 'en' : 'fr'
                     });
 
                     console.log(`[webhook] Tore subscription traitée: ${sessionId}`);

@@ -3329,7 +3329,8 @@ async function handleData(req, res) {
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
             tempPassword: body.mode === 'existing' ? null : 'ExempleMdp123',
-            plan: 'complet'
+            plan: 'complet',
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });

@@ -143,6 +143,11 @@ avec des données d'exemple pour le test. Si un audit trouve un bouton de test q
 construit son propre HTML au lieu d'appeler une fonction partagée, c'est un
 problème à signaler en priorité (catégorie "Problèmes importants").
 
+Emails bilingues : une langue = un paramètre de la même fonction, jamais une copie du template.
+L'email de bienvenue abonné (`sendToreSubscriptionEmail`, `lib/tore-subscription-email.js`) accepte
+`lang: 'en'` — transmis par la fenêtre de limite de `/en/tore.html` → `create-checkout-session`
+(métadonnées Stripe `lang`) → `stripe-webhook.js`. Bouton « Test EN » dans l'onglet Mails.
+
 ### 5. LOGIQUE FREEMIUM — localStorage
 
 - [ ] Localiser le code qui gère les 2 tirages gratuits dans `localStorage`
