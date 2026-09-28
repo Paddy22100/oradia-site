@@ -1893,6 +1893,14 @@
                         <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Nombre de mois offerts</label>
                         <input id="newSubMonths" type="number" min="1" max="24" value="1" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                     </div>
+                    <!-- Langue des emails de l'abonné (invitation, rappels, échec de paiement…) -->
+                    <div>
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Langue des emails</label>
+                        <select id="newSubLang" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <option value="fr" selected>Français</option>
+                            <option value="en">English</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex items-center gap-4 flex-wrap">
                     <label class="flex items-center gap-2 text-light-gold/80 text-sm cursor-pointer">
@@ -4579,9 +4587,14 @@
                         <p class="text-gold font-semibold text-sm">Invitation « mois offert » (QR code)</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé à la création manuelle d'un abonnement gratuit (onglet Abonnements &gt; Offrir un mois)</p>
                     </div>
-                    <button onclick="sendMailTest('oracle-gift-invite')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('oracle-gift-invite')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('oracle-gift-invite', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Confirmation précommande -->
@@ -4634,9 +4647,14 @@
                         <p class="text-gold font-semibold text-sm">Rappel de renouvellement (avant échéance)</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé ~3 jours avant le renouvellement automatique · bandeau_rappel_abonnement_tore</p>
                     </div>
-                    <button onclick="sendMailTest('renewal-reminder')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('renewal-reminder')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('renewal-reminder', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Rappel de fin d'essai (mois offert avec l'oracle) -->
@@ -4645,9 +4663,14 @@
                         <p class="text-gold font-semibold text-sm">Rappel de fin du mois offert (QR code oracle)</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé ~3 jours avant la fin de l'essai gratuit · même template que le rappel de renouvellement</p>
                     </div>
-                    <button onclick="sendMailTest('trial-reminder')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('trial-reminder')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('trial-reminder', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Abonnement expiré -->
@@ -11304,7 +11327,7 @@
                     res = await adminFetch('/api/admin/data?action=test-subscription-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type, email: 'contact@oradia.fr' })
+                        body: JSON.stringify({ type, email: 'contact@oradia.fr', lang })
                     });
                 } else {
                     res = await adminFetch('/api/admin/data?action=test-email', {
@@ -13273,6 +13296,7 @@
             const expiry   = document.getElementById('newSubExpiry').value;
             const isFree   = document.getElementById('newSubFree').checked;
             const months   = Math.max(1, parseInt(document.getElementById('newSubMonths').value, 10) || 1);
+            const lang     = document.getElementById('newSubLang')?.value === 'en' ? 'en' : 'fr';
             const msg      = document.getElementById('newSubMsg');
 
             if (!email) { msg.style.color = '#f87171'; msg.textContent = 'Email requis.'; return; }
@@ -13286,7 +13310,7 @@
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code || undefined, expiresAt: expiry || null, isFree, months: isFree ? months : undefined })
+                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code || undefined, expiresAt: expiry || null, isFree, months: isFree ? months : undefined, lang })
                 });
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);

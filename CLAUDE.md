@@ -145,11 +145,13 @@ problème à signaler en priorité (catégorie "Problèmes importants").
 
 Emails bilingues : une langue = un paramètre de la même fonction, jamais une copie du template.
 Les emails abonnés de `lib/tore-subscription-email.js` (bienvenue/réparation d'accès, échec de
-paiement, fin d'abonnement, relance « pas encore de tirage ») acceptent `lang: 'en'`. La langue part
+paiement, fin d'abonnement, relance « pas encore de tirage », rappel de renouvellement / fin
+d'essai, invitation « mois offert ») acceptent `lang: 'en'`. Pour un mois offert depuis le
+dashboard, la langue est choisie dans le formulaire « Offrir un mois ». La langue part
 de la fenêtre de limite de `/en/tore.html` → `create-checkout-session` (métadonnées Stripe `lang`)
 → `stripe-webhook.js`, qui l'enregistre dans `tore_subscriptions.lang` ; les envois ultérieurs
-(webhook, cron, dashboard) lisent cette colonne. Visuel de précommande anglais :
-`images/medias/banniere-facebook-en*.webp`. Boutons « Test EN » dans l'onglet Mails.
+(webhook, cron, dashboard) lisent cette colonne. Visuels anglais :
+`images/medias/banniere-facebook-en*.webp` (précommande), `bandeau_rappel_abonnement_tore-en.webp` (rappel). Boutons « Test EN » dans l'onglet Mails.
 
 ### 5. LOGIQUE FREEMIUM — localStorage
 
