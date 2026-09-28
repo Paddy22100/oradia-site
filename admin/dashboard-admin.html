@@ -11,6 +11,8 @@
     <!-- Import de sources .docx / .pdf pour la newsletter (extraction de texte côté navigateur) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    <!-- QR code du livret (mois offert) : Abonnements > Mois offert -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
     <link rel="stylesheet" href="../style.css">
     
 <style>
@@ -1865,9 +1867,9 @@
                         <input id="newSubName" type="text" placeholder="Jean Dupont" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                     </div>
                     <div>
-                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Code d'accès <span class="text-gold">*</span></label>
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Code d'accès (interne, optionnel)</label>
                         <div class="flex gap-2">
-                            <input id="newSubCode" type="text" placeholder="Ex: Oradia2026!" class="flex-1 bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <input id="newSubCode" type="text" placeholder="Généré automatiquement si vide" class="flex-1 bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                             <button onclick="generateCode()" title="Générer" class="bg-gold/20 border border-gold/40 text-gold rounded-lg px-3 py-2 hover:bg-gold/30 transition text-sm"><i class="fas fa-dice"></i></button>
                         </div>
                     </div>
@@ -1879,12 +1881,28 @@
                 <div class="flex items-center gap-4 flex-wrap">
                     <label class="flex items-center gap-2 text-light-gold/80 text-sm cursor-pointer">
                         <input id="newSubFree" type="checkbox" class="accent-gold w-4 h-4">
-                        Gratuit (exclu des recettes en comptabilité)
+                        Gratuit — crée le compte et envoie l'email d'accès Oradia (1 mois par défaut si expiration vide, exclu des recettes en comptabilité)
                     </label>
                     <button onclick="createSubscription()" class="bg-gold text-night-blue font-semibold px-5 py-2 rounded-lg hover:bg-light-gold transition text-sm">
-                        <i class="fas fa-paper-plane mr-2"></i>Créer et envoyer le code par email
+                        <i class="fas fa-paper-plane mr-2"></i>Créer l'abonnement
                     </button>
                     <span id="newSubMsg" class="text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Mois offert — QR code du livret : point d'entrée public (auto-service, avec
+                 carte bancaire demandée par Stripe) ; le panneau "Nouvel abonnement" ci-dessus
+                 sert lui à offrir un mois directement à quelqu'un, sans passer par ce QR code.
+                 Suivi des utilisations (plafond, alertes) : Analytique > Conversion. -->
+            <div class="mb-6 bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-6">
+                <h4 class="text-gold font-semibold mb-1" style="font-family:'Cormorant Garamond',serif;">Mois offert — QR code du livret</h4>
+                <p class="text-light-gold/50 text-sm mb-4">Imprimé dans le livret de l'oracle physique, il renvoie vers <span class="font-mono text-gold/70">oradia.fr/oracle-offert</span>, où l'acheteur active lui-même son mois d'essai (carte demandée par Stripe, 8€/mois ensuite). Suivi des utilisations et plafond réglable : onglet Analytique &gt; Conversion.</p>
+                <div class="flex items-start gap-6 flex-wrap">
+                    <div class="bg-white p-3 rounded-lg inline-block"><div id="oracleQrCode"></div></div>
+                    <div class="flex flex-col gap-2">
+                        <button onclick="downloadOracleQr()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-download mr-1"></i>Télécharger en PNG</button>
+                        <p class="text-light-gold/40 text-xs max-w-xs">À transmettre à l'imprimeur pour le livret.</p>
+                    </div>
                 </div>
             </div>
 
@@ -4503,17 +4521,6 @@
                     </button>
                 </div>
 
-                <!-- Accès abonnement gratuit (création manuelle) -->
-                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
-                    <div>
-                        <p class="text-gold font-semibold text-sm">Accès abonnement gratuit (identifiant + code)</p>
-                        <p class="text-gold/40 text-xs mt-0.5">Envoyé automatiquement à la création manuelle d'un abonnement gratuit depuis le dashboard</p>
-                    </div>
-                    <button onclick="sendMailTest('free-sub-welcome')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
-                </div>
-
                 <!-- Confirmation inscription newsletter -->
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div>
@@ -4528,8 +4535,8 @@
                 <!-- Confirmation paiement Tore -->
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div>
-                        <p class="text-gold font-semibold text-sm">Confirmation paiement abonnement Tore</p>
-                        <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement Stripe réussi</p>
+                        <p class="text-gold font-semibold text-sm">Confirmation abonnement Tore (accès)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement Stripe réussi, et aussi pour un abonnement gratuit créé manuellement (onglet Abonnements)</p>
                     </div>
                     <button onclick="sendMailTest('tore-payment')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
                         <i class="fas fa-paper-plane text-xs"></i> Envoyer test
@@ -4937,7 +4944,7 @@
             if (name !== 'newsletter') nlShowFloatingBar(false);
             if (name === 'newsletter')    nlLoadDrafts();
             if (name === 'waitlist')       { triggerSyncAll(false); }
-            if (name === 'subscriptions') loadSubscriptions();
+            if (name === 'subscriptions') { loadSubscriptions(); renderOracleQr(); }
             if (name === 'quotes')      { initCostCalculator(); loadQuotes().then(initPlan); }
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
@@ -13205,19 +13212,21 @@
             const isFree   = document.getElementById('newSubFree').checked;
             const msg      = document.getElementById('newSubMsg');
 
-            if (!email || !code) { msg.style.color = '#f87171'; msg.textContent = 'Email et code requis.'; return; }
+            if (!email) { msg.style.color = '#f87171'; msg.textContent = 'Email requis.'; return; }
             msg.style.color = '#d4af37'; msg.textContent = 'Envoi en cours…';
 
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code, expiresAt: expiry || null, isFree })
+                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code || undefined, expiresAt: expiry || null, isFree })
                 });
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);
                 msg.style.color = '#4ade80';
-                msg.textContent = json.emailSent ? '✓ Abonnement créé et code envoyé par email.' : '✓ Abonnement créé (email non envoyé).';
+                msg.textContent = json.emailSent
+                    ? '✓ Abonnement créé — email d\'accès envoyé (1 mois offert par défaut si aucune date choisie).'
+                    : '✓ Abonnement créé (email non envoyé — abonnement non gratuit, ou Brevo indisponible).';
                 document.getElementById('newSubEmail').value = '';
                 document.getElementById('newSubName').value = '';
                 document.getElementById('newSubCode').value = '';
@@ -13225,6 +13234,25 @@
                 document.getElementById('newSubFree').checked = false;
                 await loadSubscriptions();
             } catch(e) { msg.style.color = '#f87171'; msg.textContent = e.message; }
+        }
+
+        // ── QR code du livret (mois offert) — encode une URL fixe, pas de données serveur ──
+        let _oracleQrRendered = false;
+        function renderOracleQr() {
+            if (_oracleQrRendered) return;
+            const el = document.getElementById('oracleQrCode');
+            if (!el || typeof QRCode === 'undefined') return;
+            new QRCode(el, { text: 'https://oradia.fr/oracle-offert', width: 220, height: 220, correctLevel: QRCode.CorrectLevel.M });
+            _oracleQrRendered = true;
+        }
+
+        function downloadOracleQr() {
+            const canvas = document.querySelector('#oracleQrCode canvas');
+            if (!canvas) { adminAlert("Le QR code n'a pas fini de charger, réessaie dans un instant."); return; }
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'oradia-qr-mois-offert.png';
+            a.click();
         }
 
         async function resendCode(id) {
