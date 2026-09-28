@@ -104,7 +104,17 @@
 
                     <h3 class="text-xl font-semibold text-gold mb-3">Oracle Oradia (physical product)</h3>
                     <p class="mb-4">
-                        A 64-card deck with a 200-page companion booklet. Available for preorder in three tiers: STANDARD (&euro;38), GUIDANCE INCLUDED (&euro;48), and SIGNATURE EDITION (&euro;52).
+                        A 64-card deck with a 200-page companion booklet, an initiatory tale, a drawing coin and a box.
+                    </p>
+                    <!-- Blocks driven by the dashboard Shop switches (js/shop-mode.js, data-shop-show-if). -->
+                    <p class="mb-4" data-shop-show-if="preorder">
+                        <strong>Preorder:</strong> until December 31, 2026, in three tiers: STANDARD (&euro;38), GUIDANCE INCLUDED (&euro;48, 30-minute video guidance session included) and SIGNATURE EDITION (&euro;42, 100 copies). At release, the oracle will be sold at &euro;42, &euro;52 and &euro;46 respectively.
+                    </p>
+                    <p class="mb-4" data-shop-show-if="order" style="display:none">
+                        <strong>Online sale:</strong> the oracle is in stock in three tiers: STANDARD (&euro;42), GUIDANCE INCLUDED (&euro;52, 30-minute video guidance session included) and SIGNATURE EDITION (&euro;46, while the 100 copies last).
+                    </p>
+                    <p class="mb-4" data-shop-show-if="closed" style="display:none">
+                        The oracle is not available for sale at the moment.
                     </p>
 
                     <h3 class="text-xl font-semibold text-gold mb-3">Tore access (digital services)</h3>
@@ -219,9 +229,12 @@
                         <strong>Delivery times:</strong> Delivery times are given for guidance only and may vary depending on the carrier.
                     </p>
                     <p class="mb-4">
-                        <strong>Carrier:</strong> Deliveries are handled by partner carriers (such as Colissimo or equivalent).
+                        <strong>Carrier:</strong> Deliveries are handled by Mondial Relay (pickup point or home delivery). Hand delivery may be offered.
                     </p>
-                    <p>
+                    <p class="mb-4" data-shop-show-if="order" style="display:none">
+                        <strong>Online sale timing:</strong> Orders ship within 3 business days of payment confirmation, then usually arrive within 3 to 5 business days. A tracking number is emailed at shipping.
+                    </p>
+                    <p data-shop-show-if="preorder">
                         <strong>Preorder-specific timing:</strong> Preorders are open until December 31, 2026. Shipping will begin after preorders close and the production phase (around January 2027), starting from mid-February 2027. The customer will be informed by email at each stage.
                     </p>
                 </section>
@@ -243,10 +256,17 @@
                     <p class="mb-4">
                         <strong>Preorders:</strong> For a preorder, the withdrawal period begins upon receipt of the product.
                     </p>
+                    <p class="mb-4" data-shop-show-if="order" style="display:none">
+                        <strong>Online sale:</strong> The 14-day period begins upon receipt of the box. For the Guidance Included tier, once the guidance session has taken place with the customer's express consent, it can no longer be withdrawn from; the box remains subject to the right of withdrawal.
+                    </p>
 
                     <h3 class="text-xl font-semibold text-gold mb-3">How to exercise this right</h3>
                     <p>
                         To exercise your right of withdrawal, send an email to contact@oradia.fr stating your decision to withdraw.
+                    </p>
+                    <p class="mt-4">
+                        The product must be returned complete (cards, booklet, coin, box) and in good condition within 14 days of notifying your decision. <strong>Return shipping costs are borne by the customer.</strong>
+                        All sums paid, including initial delivery costs (based on the least expensive delivery option offered), are refunded within 14 days of receiving your decision, using the same payment method; the refund may be withheld until the product is received or proof of shipment is provided.
                     </p>
                 </section>
 
@@ -352,7 +372,7 @@
                 <!-- Last updated -->
                 <section class="border-t border-gold/20 pt-6">
                     <p class="text-center text-light-gold/70">
-                        Last updated: September 24, 2026
+                        Last updated: September 28, 2026
                     </p>
                 </section>
             </div>
