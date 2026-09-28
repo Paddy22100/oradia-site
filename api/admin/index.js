@@ -1889,39 +1889,70 @@ async function handleData(req, res) {
       if (action === 'create' && email) {
         const finalAccessCode = accessCode || ('ADMIN-' + Date.now().toString(36).toUpperCase());
         const cleanEmail = email.toLowerCase().trim();
+
+        // Abonnement gratuit créé manuellement (mois offert à quelqu'un en direct, en
+        // dehors du QR code du livret) : même mécanique que "Réparer l'accès" — compte
+        // Supabase Auth créé avec mot de passe provisoire si inexistant, sinon lien de
+        // réinitialisation à usage unique — puis le VRAI email d'accès abonné
+        // (lib/tore-subscription-email.js, partagé avec le webhook Stripe), au lieu
+        // d'un gabarit "code d'accès" séparé qui ne correspondait à aucune vérification
+        // réelle au moment de la connexion.
+        let tempPassword = null;
+        let resetLink = null;
+        let finalExpiresAt = expiresAt || null;
+        if (isFree) {
+          const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+            type: 'recovery',
+            email: cleanEmail,
+            options: { redirectTo: 'https://oradia.fr/member/reset-password.html' }
+          });
+          if (!linkErr && linkData?.properties?.action_link) {
+            resetLink = linkData.properties.action_link;
+          } else {
+            tempPassword = crypto.randomBytes(8).toString('hex');
+            const { error: createErr } = await supabase.auth.admin.createUser({
+              email: cleanEmail,
+              password: tempPassword,
+              email_confirm: true,
+              user_metadata: {
+                full_name: fullName || '',
+                subscription_type: 'tore',
+                subscription_active: true,
+                must_change_password: true
+              }
+            });
+            if (createErr) return res.status(500).json({ error: `Impossible de créer le compte : ${createErr.message}` });
+          }
+          // "1 mois offert" par défaut si aucune date n'est choisie — sans ça, laisser le
+          // champ vide donnerait un accès gratuit illimité dans le temps.
+          if (!finalExpiresAt) {
+            const d = new Date();
+            d.setMonth(d.getMonth() + 1);
+            finalExpiresAt = d.toISOString();
+          }
+        }
+
         const { error } = await supabase
           .from('tore_subscriptions')
           .upsert({
             email: cleanEmail,
             full_name: fullName || '',
             access_code: finalAccessCode,
-            expires_at: expiresAt || null,
+            expires_at: finalExpiresAt,
             status: 'active',
             is_free: !!isFree,
+            must_change_password: isFree ? !!(tempPassword || resetLink) : undefined,
+            trial_source: isFree ? 'admin-gift' : undefined,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }, { onConflict: 'email' });
         if (error) throw error;
 
-        // Abonnement gratuit créé manuellement : envoyer automatiquement au membre
-        // ses informations d'accès. Le mot de passe n'est jamais connu du serveur
-        // (Supabase Auth) — le membre le crée lui-même à l'inscription.
         let welcomeEmailSent = false;
-        if (isFree && process.env.BREVO_API_KEY) {
-          try {
-            const html = buildFreeSubscriptionWelcomeHtml({ email: cleanEmail, fullName: fullName || '', accessCode: finalAccessCode, expiresAt: expiresAt || null });
-            const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-              body: JSON.stringify({
-                sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
-                to: [{ email: cleanEmail }],
-                subject: "Rudy d'Oradia - Votre accès au Tore est activé",
-                htmlContent: html
-              })
-            });
-            welcomeEmailSent = r.ok;
-          } catch (e) { console.error('[subscriptions/create] welcome email error:', e.message); }
+        if (isFree) {
+          welcomeEmailSent = await sendToreSubscriptionEmail({
+            toEmail: cleanEmail, toName: fullName || '', tempPassword, resetLink, plan: 'complet'
+          });
         }
         return res.status(200).json({ success: true, emailSent: welcomeEmailSent });
       }
@@ -3332,16 +3363,7 @@ async function handleData(req, res) {
 
         let subject, html;
 
-        if (type === 'free-sub-welcome') {
-          // Réutilise le vrai template d'accès (abonnement gratuit manuel) avec des données d'exemple
-          subject = "[TEST] Rudy d'Oradia - Votre accès au Tore est activé";
-          html = buildFreeSubscriptionWelcomeHtml({
-            email: 'contact@oradia.fr',
-            fullName: 'Rudy Boucheron',
-            accessCode: 'ADMIN-EXEMPLE123',
-            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
-          });
-        } else if (type === 'newsletter-confirm') {
+        if (type === 'newsletter-confirm') {
           // Réutilise le VRAI template (api/waitlist.js), au lieu d'une copie générique
           // qui ne reflétait plus l'email réellement envoyé (bandeau, encart précommande, etc.)
           const emailSentNl = await sendWaitlistConfirmationEmail(dest);
@@ -5065,77 +5087,6 @@ function buildGeneratePrompt(body) {
     ``,
     `<corps de la newsletter en texte brut, 3 à 5 paragraphes courts, sans markdown>`
   ].filter(Boolean).join('\n');
-}
-
-// Email de bienvenue envoyé automatiquement quand un abonnement Tore GRATUIT
-// est créé manuellement depuis le dashboard. Modèle visuel des newsletters
-// (fond sombre uni + carte), bandeau rappel abonnement en tête.
-function buildFreeSubscriptionWelcomeHtml({ email, fullName, accessCode, expiresAt }) {
-  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
-  const prenom = (fullName || '').trim().split(/\s+/)[0] || '';
-  const expiryLine = expiresAt
-    ? `<p style="margin:14px 0 0;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:12px;font-style:italic;">Accès valable jusqu'au ${new Date(expiresAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>`
-    : '';
-  const paragraphs = [
-    `${prenom ? prenom + ', v' : 'V'}otre accès à l'espace Tore vient d'être activé. Vous pouvez dès maintenant profiter de tirages illimités, des fenêtres d'observation et de votre historique personnel.`,
-    `Voici vos informations d'accès :`
-  ];
-  const bodyRows = paragraphs.map(p => `
-  <tr><td style="padding:0 32px 20px;">
-    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
-  </td></tr>`).join('');
-
-  // L'image de fond reste sur la table extérieure — elle habille les marges de chaque côté
-  // de la carte. C'est la carte elle-même qui devait changer : elle reposait sur un dégradé
-  // semi-transparent (rgba), or ni Gmail (web et mobile) ni Outlook ne gèrent les dégradés
-  // CSS sur une <table>. Le conteneur restait donc transparent et, dès que le destinataire
-  // chargeait les images — ou transférait le message —, la photo remontait derrière le texte,
-  // qui devenait illisible. La carte a maintenant un fond opaque, porté à la fois par
-  // l'attribut bgcolor (Outlook) et par background-color : l'image ne peut plus la traverser.
-  // Les liens Google Fonts sont retirés au passage : aucun client mail ne charge de feuille
-  // de style externe, et ces requêtes distantes pèsent dans le score anti-spam.
-  return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="margin:0; padding:0; background-color:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
-<tr><td align="center" style="padding:32px 12px;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="background-color:#0a192f; max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
-  <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
-  </td></tr>
-  <tr><td style="padding:30px 32px 0;">
-    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">Bienvenue dans l'espace Tore</h2>
-  </td></tr>
-  ${bodyRows}
-  <tr><td style="padding:0 32px 24px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
-      <tr><td style="padding:24px 28px;">
-        <p style="margin:0 0 10px;color:#c8c0a8;font-family:Georgia,serif;font-size:14px;"><span style="color:rgba(212,175,55,0.6);text-transform:uppercase;font-size:11px;letter-spacing:0.15em;">Identifiant</span><br><strong style="color:#f0c75e;font-size:16px;">${nlEscHtml(email)}</strong></p>
-        <p style="margin:0;color:#c8c0a8;font-family:Georgia,serif;font-size:14px;"><span style="color:rgba(212,175,55,0.6);text-transform:uppercase;font-size:11px;letter-spacing:0.15em;">Code d'accès</span><br><strong style="color:#f0c75e;font-size:16px;letter-spacing:0.08em;">${nlEscHtml(accessCode)}</strong></p>
-        ${expiryLine}
-      </td></tr>
-    </table>
-  </td></tr>
-  <tr><td style="padding:0 32px 24px;">
-    <div style="color:#c8c0a8; font-size:14px; line-height:1.8; font-family:Georgia,serif;">Votre mot de passe est personnel : vous le créez vous-même lors de votre première connexion, en vous inscrivant avec cette adresse email. Personne d'autre que vous ne le connaît, pas même moi.</div>
-  </td></tr>
-  <tr><td style="padding:4px 32px 40px; text-align:center;">
-    <a href="https://oradia.fr/inscription" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Créer mon mot de passe et accéder au Tore</a>
-    <p style="margin:14px 0 0;color:rgba(212,175,55,0.45);font-family:Georgia,serif;font-size:12px;">Déjà un compte ? <a href="https://oradia.fr/connexion" style="color:#d4af37;">Connectez-vous directement</a>.</p>
-  </td></tr>
-  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
-    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
-    <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
-    <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
-    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car un accès à l'espace Tore a été créé pour toi sur oradia.fr.</p>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body></html>`;
 }
 
 // Email de réponse aux messages support/témoignages/suggestions envoyé depuis le
