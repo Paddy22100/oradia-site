@@ -1,3 +1,6 @@
+// Moyens de paiement proposés pour les paiements ponctuels (oracle, don libre).
+const PAYMENT_METHODS_ONE_TIME = ['card', 'link', 'bancontact'];
+
 const { createClient } = require('@supabase/supabase-js');
 
 function getStripeClient() {
@@ -143,6 +146,7 @@ module.exports = async (req, res) => {
                 // Carte demandée dès l'inscription : l'abonnement démarre seul à la fin de
                 // l'essai (résiliable à tout moment depuis l'espace membre).
                 payment_method_collection: 'always',
+                payment_method_types: ['card', 'link'],
                 success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}&essai=oracle`,
                 cancel_url:  `${frontendUrl}/oracle-offert?cancelled=1`,
                 metadata: { offer: 'tore-subscription', ...meta }
@@ -221,9 +225,8 @@ module.exports = async (req, res) => {
             const donationFullName = String(req.body.fullName || 'Contribution ORADIA').trim();
 
             const session = await stripe.checkout.sessions.create({
-                // Pas de payment_method_types : Stripe affiche les moyens activés dans le dashboard
-                // (carte, Apple Pay, Google Pay, Link…). Les moyens différés sont gérés par le webhook
-                // (checkout.session.async_payment_succeeded / _failed).
+                // Même liste fermée que les commandes (voir PAYMENT_METHODS_ONE_TIME).
+                payment_method_types: PAYMENT_METHODS_ONE_TIME,
                 line_items: [
                     {
                         price_data: {
@@ -552,9 +555,12 @@ module.exports = async (req, res) => {
         // Créer la session Stripe Checkout
 
         const session = await stripe.checkout.sessions.create({
-            // Pas de payment_method_types : Stripe affiche les moyens activés dans le dashboard
-            // (carte, Apple Pay, Google Pay, Link…). Les moyens différés sont gérés par le webhook
+            // Liste fermée (choix d'Oradia) : carte bancaire, Link et Bancontact (Belgique).
+            // Pas de Klarna ni de moyens étrangers au marché FR/BE. Apple Pay / Google Pay
+            // passent par « card » et se règlent dans le dashboard Stripe (Paramètres ›
+            // Moyens de paiement). Moyens différés éventuels : gérés par le webhook
             // (checkout.session.async_payment_succeeded / _failed).
+            payment_method_types: PAYMENT_METHODS_ONE_TIME,
             line_items: lineItems,
             mode: 'payment',
             // value en clair dans l'URL (pas une donnée sensible, juste un montant) : évite un

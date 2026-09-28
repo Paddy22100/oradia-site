@@ -6343,6 +6343,11 @@ video {
     grid-column: span 3 / span 3;
   }
 
+  .md\:mx-0 {
+    margin-left: 0px;
+    margin-right: 0px;
+  }
+
   .md\:mb-12 {
     margin-bottom: 3rem;
   }

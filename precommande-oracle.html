@@ -1017,6 +1017,7 @@
                 
                 <p class="text-center text-light-gold/80 mb-12 max-w-3xl mx-auto">
                     Choisissez l'offre qui vous correspond et réservez votre exemplaire avant la clôture des précommandes.
+                    <br><a href="#contribution-libre" class="text-gold underline hover:text-light-gold">Vous préférez simplement soutenir le projet&nbsp;? Contribution libre</a>
                 </p>
 
                 
@@ -1166,7 +1167,7 @@
                 <!-- Réassurance (commune aux trois offres) -->
                 <div id="reassurance" class="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-12 text-center text-sm text-light-gold/90">
                     <div><i class="fas fa-shield-halved text-gold text-xl mb-2 block"></i>Paiement sécurisé par Stripe</div>
-                    <div><i class="fas fa-credit-card text-gold text-xl mb-2 block"></i>Carte bancaire ou Apple Pay</div>
+                    <div><i class="fas fa-credit-card text-gold text-xl mb-2 block"></i>Carte bancaire ou Bancontact</div>
                     <div><i class="fas fa-rotate-left text-gold text-xl mb-2 block"></i>Remboursement intégral si l'objectif n'est pas atteint</div>
                 </div>
 
@@ -1181,7 +1182,7 @@
                             <tr><th scope="row">Pièce de tirage et coffret de protection</th><td class="yes"><span aria-label="inclus">✓</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
                             <tr><th scope="row">Dédicace personnalisée</th><td class="no"><span aria-label="non inclus">–</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
                             <tr><th scope="row">Séance de guidance en visio (30 min)</th><td class="no"><span aria-label="non inclus">–</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="no"><span aria-label="non inclus">–</span></td></tr>
-                            <tr><th scope="row">Tirage limité</th><td class="no"><span aria-label="non inclus">–</span></td><td class="no col-featured"><span aria-label="non inclus">–</span></td><td class="yes">100 premiers exemplaires</td></tr>
+                            <tr><th scope="row">Édition limitée</th><td class="no"><span aria-label="non inclus">–</span></td><td class="no col-featured"><span aria-label="non inclus">–</span></td><td class="yes">100 premiers exemplaires</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1303,6 +1304,38 @@
         </div>
     </section>
 
+    <!-- Section Contribution Libre (juste après les offres, avant la FAQ) -->
+    <section id="contribution-libre" class="py-16">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-4xl mx-auto rounded-2xl border border-gold/40 bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.85)] p-6 sm:p-10">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div class="text-center md:text-left">
+                        <div class="w-16 h-16 mx-auto md:mx-0 mb-4 bg-gold/20 rounded-full flex items-center justify-center">
+                            <i class="fas fa-heart text-2xl text-gold"></i>
+                        </div>
+                        <h2 class="cormorant text-3xl sm:text-4xl font-bold gold-gradient mb-4">Soutenir Oradia autrement</h2>
+                        <p class="text-light-gold/90 mb-3">Vous ne souhaitez pas de coffret, ou vous en avez déjà un&nbsp;? Vous pouvez soutenir le projet par une contribution libre, du montant de votre choix.</p>
+                        <p class="text-light-gold/90">Elle aide à financer la fabrication de l'oracle et à faire vivre l'expérience en ligne.</p>
+                    </div>
+                    <div class="flex flex-col items-center gap-3 w-full">
+                        <div class="flex gap-2 w-full" role="group" aria-label="Montants suggérés">
+                            <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="20">20 €</button>
+                            <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="30">30 €</button>
+                            <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="50">50 €</button>
+                        </div>
+                        <input type="text" inputmode="numeric" id="customAmount" aria-label="Montant libre (minimum 20 €)" placeholder="Autre montant (min. 20 €)" class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
+                        <input type="email" id="contributionEmail" aria-label="Votre email" placeholder="Votre email" required class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
+                        <input type="text" id="contributionName" aria-label="Votre nom (optionnel)" placeholder="Votre nom (optionnel)" class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
+                        <button type="button" onclick="startCustomCheckout()" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
+                            <i class="fas fa-heart mr-2"></i>Contribuer
+                        </button>
+                        <p class="text-light-gold/80 text-sm">Paiement sécurisé par Stripe</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <section id="faq" class="py-20">
         <div class="container mx-auto px-6">
             <div class="max-w-4xl mx-auto">
@@ -1363,71 +1396,6 @@ La production est lancée grâce aux premières commandes.</p>
                     </div>
                 </div>
             </div>
-        </div>
-    </section>
-
-    <!-- Section Micro-Réassurance Paiement -->
-    <section class="py-8 bg-[rgba(5,20,40,0.8)] border-t border-gold/10">
-        <div class="container mx-auto px-6">
-            <div class="max-w-3xl mx-auto text-center">
-                <div class="space-y-4 text-sm text-light-gold/70">
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-shield-alt text-gold"></i>
-                        <span>Paiement sécurisé via Stripe</span>
-                    </div>
-                    <div class="flex items-center justify-center gap-2">
-                        <i class="fas fa-truck text-gold"></i>
-                        <span>Livraison dès production terminée</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Section Contribution Libre -->
-    <section id="contribution-libre" class="mt-16 text-center max-w-2xl mx-auto px-4">
-        <h3 class="text-2xl md:text-3xl font-semibold text-gold mb-4">
-            Contribution libre
-        </h3>
-        
-        <p class="text-light-gold/80 mb-6">
-            Soutenir ORADIA sans précommander l'oracle physique.
-        </p>
-        
-        <div class="flex flex-col items-center gap-4">
-            <div class="flex flex-col items-center gap-3 w-full max-w-md">
-                <input
-                    type="email"
-                    id="contributionEmail"
-                    aria-label="Votre email"
-                    placeholder="Votre email"
-                    class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
-                    required
-                />
-                <input
-                    type="text"
-                    id="contributionName"
-                    aria-label="Votre nom (optionnel)"
-                    placeholder="Votre nom (optionnel)"
-                    class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
-                />
-                <input
-                    type="text"
-                    id="customAmount"
-                    aria-label="Montant libre (minimum 20€)"
-                    placeholder="Montant libre (min 20€)"
-                    min="20"
-                    class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
-                />
-            </div>
-            
-            <button
-                onclick="startCustomCheckout()"
-                class="bg-gold text-night-blue font-bold py-3 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 transform hover:scale-105"
-            >
-                <i class="fas fa-heart mr-2"></i>
-                Contribuer
-            </button>
         </div>
     </section>
 
@@ -2278,6 +2246,14 @@ La production est lancée grâce aux premières commandes.</p>
         document.getElementById('customAmount').addEventListener('input', function(e) {
             // Remove all non-numeric characters
             this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
+        document.querySelectorAll('.contrib-amount').forEach(btn => btn.addEventListener('click', () => {
+            document.getElementById('customAmount').value = btn.dataset.amount;
+            document.querySelectorAll('.contrib-amount').forEach(b => b.classList.toggle('bg-gold/20', b === btn));
+        }));
+        document.getElementById('customAmount')?.addEventListener('input', () => {
+            document.querySelectorAll('.contrib-amount').forEach(b => b.classList.remove('bg-gold/20'));
         });
 
         async function startCustomCheckout() {
