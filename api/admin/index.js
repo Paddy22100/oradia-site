@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, sendAbandonedCartEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
-const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
+const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail, sendOracleGiftInviteEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
@@ -1890,46 +1890,20 @@ async function handleData(req, res) {
         const finalAccessCode = accessCode || ('ADMIN-' + Date.now().toString(36).toUpperCase());
         const cleanEmail = email.toLowerCase().trim();
 
-        // Abonnement gratuit créé manuellement (mois offert à quelqu'un en direct, en
-        // dehors du QR code du livret) : même mécanique que "Réparer l'accès" — compte
-        // Supabase Auth créé avec mot de passe provisoire si inexistant, sinon lien de
-        // réinitialisation à usage unique — puis le VRAI email d'accès abonné
-        // (lib/tore-subscription-email.js, partagé avec le webhook Stripe), au lieu
-        // d'un gabarit "code d'accès" séparé qui ne correspondait à aucune vérification
-        // réelle au moment de la connexion.
-        let tempPassword = null;
-        let resetLink = null;
+        // Abonnement gratuit créé manuellement (offrir un mois à quelqu'un en direct, en
+        // dehors du QR code du livret) : AUCUNE carte bancaire, jamais. La ligne
+        // tore_subscriptions est activée tout de suite (is_free, expires_at = aujourd'hui +
+        // N mois) ; contrairement au flux "Réparer l'accès", on ne crée PAS le compte
+        // Supabase Auth ici — un email d'invitation (QR code + bouton) renvoie vers
+        // /inscription, où le destinataire choisit lui-même son mot de passe. Comme la
+        // ligne tore_subscriptions existe déjà à ce moment-là, api/waitlist.js (action
+        // signup) ne fait alors que créer le compte, sans écraser expires_at.
+        const months = isFree ? Math.max(1, parseInt(body.months, 10) || 1) : null;
         let finalExpiresAt = expiresAt || null;
         if (isFree) {
-          const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-            type: 'recovery',
-            email: cleanEmail,
-            options: { redirectTo: 'https://oradia.fr/member/reset-password.html' }
-          });
-          if (!linkErr && linkData?.properties?.action_link) {
-            resetLink = linkData.properties.action_link;
-          } else {
-            tempPassword = crypto.randomBytes(8).toString('hex');
-            const { error: createErr } = await supabase.auth.admin.createUser({
-              email: cleanEmail,
-              password: tempPassword,
-              email_confirm: true,
-              user_metadata: {
-                full_name: fullName || '',
-                subscription_type: 'tore',
-                subscription_active: true,
-                must_change_password: true
-              }
-            });
-            if (createErr) return res.status(500).json({ error: `Impossible de créer le compte : ${createErr.message}` });
-          }
-          // "1 mois offert" par défaut si aucune date n'est choisie — sans ça, laisser le
-          // champ vide donnerait un accès gratuit illimité dans le temps.
-          if (!finalExpiresAt) {
-            const d = new Date();
-            d.setMonth(d.getMonth() + 1);
-            finalExpiresAt = d.toISOString();
-          }
+          const d = new Date();
+          d.setMonth(d.getMonth() + months);
+          finalExpiresAt = d.toISOString();
         }
 
         const { error } = await supabase
@@ -1941,20 +1915,20 @@ async function handleData(req, res) {
             expires_at: finalExpiresAt,
             status: 'active',
             is_free: !!isFree,
-            must_change_password: isFree ? !!(tempPassword || resetLink) : undefined,
             trial_source: isFree ? 'admin-gift' : undefined,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }, { onConflict: 'email' });
         if (error) throw error;
 
-        let welcomeEmailSent = false;
+        let inviteEmailSent = false;
         if (isFree) {
-          welcomeEmailSent = await sendToreSubscriptionEmail({
-            toEmail: cleanEmail, toName: fullName || '', tempPassword, resetLink, plan: 'complet'
+          const claimUrl = `https://oradia.fr/inscription?email=${encodeURIComponent(cleanEmail)}&gift=1&months=${months}`;
+          inviteEmailSent = await sendOracleGiftInviteEmail({
+            toEmail: cleanEmail, toName: fullName || '', months, claimUrl
           });
         }
-        return res.status(200).json({ success: true, emailSent: welcomeEmailSent });
+        return res.status(200).json({ success: true, emailSent: inviteEmailSent });
       }
 
       // ── Saisie manuelle d'un don reçu en espèces (hors circuit Stripe) ──
@@ -3356,6 +3330,19 @@ async function handleData(req, res) {
             toName: 'Prénom Nom (exemple)',
             tempPassword: body.mode === 'existing' ? null : 'ExempleMdp123',
             plan: 'complet'
+          });
+          if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
+        }
+
+        // Invitation "mois offert" (création manuelle d'un abonnement gratuit, onglet
+        // Abonnements > Offrir un mois) — QR code + bouton, sans carte bancaire.
+        if (type === 'oracle-gift-invite') {
+          const emailSent = await sendOracleGiftInviteEmail({
+            toEmail: dest,
+            toName: 'Prénom Nom (exemple)',
+            months: 2,
+            claimUrl: `https://oradia.fr/inscription?email=${encodeURIComponent(dest)}&gift=1&months=2`
           });
           if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });

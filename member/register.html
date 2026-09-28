@@ -14,6 +14,7 @@
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: 'Lora', Georgia, serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .hidden { display: none !important; }
 
         .bg-scene { position: fixed; inset: 0; background: url('../images/oradia-hero-4k.webp') center/cover no-repeat; z-index: 0; }
         .bg-overlay { position: fixed; inset: 0; background: linear-gradient(140deg,rgba(5,15,40,0.60) 0%,rgba(10,25,60,0.55) 100%); backdrop-filter: blur(2px); z-index: 1; }
@@ -163,6 +164,13 @@
                 <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
                     <label for="website_url">Website</label>
                     <input type="text" id="website_url" name="website_url" tabindex="-1" autocomplete="off" value="">
+                </div>
+
+                <!-- Bandeau "mois offert" (lien d'invitation depuis le dashboard admin) —
+                     masqué par défaut, affiché en JS si ?gift=1 est présent. -->
+                <div id="giftBanner" class="hidden" style="background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:14px 18px;margin-bottom:18px;text-align:center;">
+                    <p style="margin:0;color:#f0c75e;font-family:Georgia,serif;font-size:14px;"><i class="fas fa-gift" style="margin-right:8px;"></i><span id="giftBannerText"></span></p>
+                    <p style="margin:4px 0 0;color:rgba(212,175,55,0.6);font-size:12px;">Créez simplement votre mot de passe ci-dessous — aucune carte bancaire n'est demandée.</p>
                 </div>
 
                 <!-- Étape 1 -->
@@ -335,6 +343,20 @@
         // Vérifier si on vient pour un abonnement Tore
         const urlParams = new URLSearchParams(window.location.search);
         const subscribeToTore = urlParams.get('subscribe') === 'tore';
+
+        // Lien d'invitation "mois offert" (dashboard admin > Abonnements > Offrir un mois) :
+        // la ligne tore_subscriptions est déjà active côté serveur, ce formulaire ne fait
+        // que créer le compte — pré-remplir l'email et l'annoncer évite toute confusion.
+        (function initGiftInvite() {
+            if (urlParams.get('gift') !== '1') return;
+            const giftEmail = urlParams.get('email');
+            if (giftEmail) document.getElementById('email').value = giftEmail;
+            const months = parseInt(urlParams.get('months'), 10) || 1;
+            document.getElementById('giftBannerText').textContent = months > 1
+                ? `Vous avez ${months} mois offerts sur l'abonnement Tore !`
+                : 'Vous avez 1 mois offert sur l\'abonnement Tore !';
+            document.getElementById('giftBanner').classList.remove('hidden');
+        })();
 
         // Soumission
         document.getElementById('registerForm').addEventListener('submit', async function(e) {

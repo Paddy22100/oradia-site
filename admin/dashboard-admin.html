@@ -1844,18 +1844,30 @@
         <!-- ══ ONGLET : ABONNEMENTS ══ -->
         <div id="tab-subscriptions" class="tab-panel">
         <section class="mb-10">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Abonnements Tore</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Abonnement Tore — 8€/mois, 5€ le premier mois</p>
-                </div>
-                <button onclick="document.getElementById('newSubPanel').classList.toggle('hidden')" class="flex items-center gap-2 bg-gradient-to-r from-gold/20 to-gold/10 border border-gold/50 text-gold px-4 py-2 rounded-lg hover:from-gold/30 hover:to-gold/20 transition text-sm font-semibold">
-                    <i class="fas fa-plus"></i> Nouvel abonnement
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Abonnements Tore</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Abonnement Tore — 8€/mois, 5€ le premier mois</p>
+            </div>
+
+            <!-- Sous-onglets : Abonnés / Offrir un mois / QR code du livret -->
+            <div class="flex gap-1 mb-8 border-b border-gold/20 pb-0">
+                <button onclick="showSubscriptionsSubTab('abonnes')" id="subscriptions-subtab-btn-abonnes"
+                    class="subscriptions-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                    <i class="fas fa-users mr-1.5"></i>Abonnés
+                </button>
+                <button onclick="showSubscriptionsSubTab('offrir')" id="subscriptions-subtab-btn-offrir"
+                    class="subscriptions-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-gift mr-1.5"></i>Offrir un mois
+                </button>
+                <button onclick="showSubscriptionsSubTab('qr')" id="subscriptions-subtab-btn-qr"
+                    class="subscriptions-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-qrcode mr-1.5"></i>QR code du livret
                 </button>
             </div>
 
-            <!-- Formulaire création -->
-            <div id="newSubPanel" class="hidden mb-6 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-xl p-6">
+            <!-- ── Sous-onglet Offrir un mois ── -->
+            <div id="subscriptions-subtab-offrir" class="hidden">
+            <div class="mb-6 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-xl p-6">
                 <h4 class="text-gold font-semibold mb-4" style="font-family:'Cormorant Garamond',serif;">Créer un accès abonné</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
@@ -1873,15 +1885,19 @@
                             <button onclick="generateCode()" title="Générer" class="bg-gold/20 border border-gold/40 text-gold rounded-lg px-3 py-2 hover:bg-gold/30 transition text-sm"><i class="fas fa-dice"></i></button>
                         </div>
                     </div>
-                    <div>
+                    <div id="newSubExpiryWrap">
                         <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Expiration</label>
                         <input id="newSubExpiry" type="date" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                    </div>
+                    <div id="newSubMonthsWrap" class="hidden">
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Nombre de mois offerts</label>
+                        <input id="newSubMonths" type="number" min="1" max="24" value="1" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                     </div>
                 </div>
                 <div class="flex items-center gap-4 flex-wrap">
                     <label class="flex items-center gap-2 text-light-gold/80 text-sm cursor-pointer">
-                        <input id="newSubFree" type="checkbox" class="accent-gold w-4 h-4">
-                        Gratuit — crée le compte et envoie l'email d'accès Oradia (1 mois par défaut si expiration vide, exclu des recettes en comptabilité)
+                        <input id="newSubFree" type="checkbox" class="accent-gold w-4 h-4" onchange="updateNewSubFreeVisibility()">
+                        Gratuit — sans carte bancaire, envoie une invitation par email (QR code + lien) pour que la personne active elle-même son accès sur /inscription
                     </label>
                     <button onclick="createSubscription()" class="bg-gold text-night-blue font-semibold px-5 py-2 rounded-lg hover:bg-light-gold transition text-sm">
                         <i class="fas fa-paper-plane mr-2"></i>Créer l'abonnement
@@ -1889,9 +1905,12 @@
                     <span id="newSubMsg" class="text-sm"></span>
                 </div>
             </div>
+            </div><!-- /subscriptions-subtab-offrir -->
 
+            <!-- ── Sous-onglet QR code du livret ── -->
+            <div id="subscriptions-subtab-qr" class="hidden">
             <!-- Mois offert — QR code du livret : point d'entrée public (auto-service, avec
-                 carte bancaire demandée par Stripe) ; le panneau "Nouvel abonnement" ci-dessus
+                 carte bancaire demandée par Stripe) ; le panneau "Offrir un mois" ci-dessus
                  sert lui à offrir un mois directement à quelqu'un, sans passer par ce QR code.
                  Suivi des utilisations (plafond, alertes) : Analytique > Conversion. -->
             <div class="mb-6 bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-6">
@@ -1905,7 +1924,10 @@
                     </div>
                 </div>
             </div>
+            </div><!-- /subscriptions-subtab-qr -->
 
+            <!-- ── Sous-onglet Abonnés ── -->
+            <div id="subscriptions-subtab-abonnes">
             <!-- Stats rapides -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="subStatsRow">
                 <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 text-center">
@@ -2018,6 +2040,7 @@
                 </div>
             </div>
         </section>
+        </div><!-- /subscriptions-subtab-abonnes -->
         </section>
 
         </div><!-- /tab-subscriptions -->
@@ -4536,9 +4559,20 @@
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div>
                         <p class="text-gold font-semibold text-sm">Confirmation abonnement Tore (accès)</p>
-                        <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement Stripe réussi, et aussi pour un abonnement gratuit créé manuellement (onglet Abonnements)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement Stripe réussi</p>
                     </div>
                     <button onclick="sendMailTest('tore-payment')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                    </button>
+                </div>
+
+                <!-- Invitation mois offert (QR code) -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Invitation « mois offert » (QR code)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé à la création manuelle d'un abonnement gratuit (onglet Abonnements &gt; Offrir un mois)</p>
+                    </div>
+                    <button onclick="sendMailTest('oracle-gift-invite')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
                         <i class="fas fa-paper-plane text-xs"></i> Envoyer test
                     </button>
                 </div>
@@ -4944,7 +4978,7 @@
             if (name !== 'newsletter') nlShowFloatingBar(false);
             if (name === 'newsletter')    nlLoadDrafts();
             if (name === 'waitlist')       { triggerSyncAll(false); }
-            if (name === 'subscriptions') { loadSubscriptions(); renderOracleQr(); }
+            if (name === 'subscriptions') loadSubscriptions();
             if (name === 'quotes')      { initCostCalculator(); loadQuotes().then(initPlan); }
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
@@ -13204,36 +13238,68 @@
             document.getElementById('modalPayments').classList.add('hidden');
         }
 
+        // Bascule Expiration (abonnement payant suivi manuellement) / Nombre de mois
+        // offerts (cadeau gratuit, sans carte) selon la case "Gratuit".
+        function updateNewSubFreeVisibility() {
+            const isFree = document.getElementById('newSubFree').checked;
+            document.getElementById('newSubExpiryWrap').classList.toggle('hidden', isFree);
+            document.getElementById('newSubMonthsWrap').classList.toggle('hidden', !isFree);
+        }
+
         async function createSubscription() {
             const email    = document.getElementById('newSubEmail').value.trim();
             const fullName = document.getElementById('newSubName').value.trim();
             const code     = document.getElementById('newSubCode').value.trim();
             const expiry   = document.getElementById('newSubExpiry').value;
             const isFree   = document.getElementById('newSubFree').checked;
+            const months   = Math.max(1, parseInt(document.getElementById('newSubMonths').value, 10) || 1);
             const msg      = document.getElementById('newSubMsg');
 
             if (!email) { msg.style.color = '#f87171'; msg.textContent = 'Email requis.'; return; }
+            if (isFree && months > 1) {
+                const ok = await adminConfirm(`Offrir ${months} mois (au lieu d'1 seul) à ${email} ?`);
+                if (!ok) return;
+            }
             msg.style.color = '#d4af37'; msg.textContent = 'Envoi en cours…';
 
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code || undefined, expiresAt: expiry || null, isFree })
+                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code || undefined, expiresAt: expiry || null, isFree, months: isFree ? months : undefined })
                 });
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);
                 msg.style.color = '#4ade80';
                 msg.textContent = json.emailSent
-                    ? '✓ Abonnement créé — email d\'accès envoyé (1 mois offert par défaut si aucune date choisie).'
+                    ? `✓ Invitation envoyée — ${months > 1 ? months + ' mois offerts' : '1 mois offert'}, sans carte bancaire.`
                     : '✓ Abonnement créé (email non envoyé — abonnement non gratuit, ou Brevo indisponible).';
                 document.getElementById('newSubEmail').value = '';
                 document.getElementById('newSubName').value = '';
                 document.getElementById('newSubCode').value = '';
                 document.getElementById('newSubExpiry').value = '';
+                document.getElementById('newSubMonths').value = '1';
                 document.getElementById('newSubFree').checked = false;
+                updateNewSubFreeVisibility();
                 await loadSubscriptions();
             } catch(e) { msg.style.color = '#f87171'; msg.textContent = e.message; }
+        }
+
+        // ── Sous-onglets Abonnements ──────────────────────────────────────────────
+        function showSubscriptionsSubTab(name) {
+            document.querySelectorAll('.subscriptions-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('subscriptions-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.getElementById('subscriptions-subtab-abonnes').classList.toggle('hidden', name !== 'abonnes');
+            document.getElementById('subscriptions-subtab-offrir').classList.toggle('hidden', name !== 'offrir');
+            document.getElementById('subscriptions-subtab-qr').classList.toggle('hidden', name !== 'qr');
+            if (name === 'qr') renderOracleQr();
         }
 
         // ── QR code du livret (mois offert) — encode une URL fixe, pas de données serveur ──
