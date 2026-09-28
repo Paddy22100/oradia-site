@@ -2129,7 +2129,7 @@ async function handleData(req, res) {
 
       // ── Partenaires / magasins potentiels (onglet Partenaires) ──
       if (action === 'create-partner' || action === 'update-partner') {
-        const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, nextContactDate, notes } = body;
+        const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, nextContactDate, notes, pricingTier, customPrice } = body;
         const cleanStore = (storeName || '').trim();
         if (action === 'create-partner' && !cleanStore) return res.status(400).json({ error: 'Nom du magasin requis' });
         const payload = {
@@ -2142,6 +2142,8 @@ async function handleData(req, res) {
           last_contact_date: lastContactDate || null,
           next_contact_date: nextContactDate || null,
           notes: notes || null,
+          pricing_tier: pricingTier || 'a_definir',
+          custom_price: (customPrice !== undefined && customPrice !== null && customPrice !== '') ? Number(customPrice) : null,
           updated_at: new Date().toISOString()
         };
         if (action === 'update-partner') {
@@ -2161,6 +2163,23 @@ async function handleData(req, res) {
         const { id } = body;
         if (!id) return res.status(400).json({ error: 'id requis' });
         const { error } = await supabase.from('retail_partners').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Grille tarifaire revendeurs (ligne unique, id=1) ──
+      if (action === 'save-reseller-pricing') {
+        const { prixPublic, remise3exPct, remise10exPct, commissionDepotPct } = body;
+        const { error } = await supabase
+          .from('reseller_pricing_settings')
+          .update({
+            prix_public: Number(prixPublic),
+            remise_3ex_pct: Number(remise3exPct),
+            remise_10ex_pct: Number(remise10exPct),
+            commission_depot_pct: Number(commissionDepotPct),
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', 1);
         if (error) throw error;
         return res.status(200).json({ success: true });
       }
@@ -3799,6 +3818,17 @@ async function handleData(req, res) {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section reseller-pricing : grille tarifaire revendeurs (ligne unique) ──
+    if (section === 'reseller-pricing') {
+      const { data, error } = await supabase
+        .from('reseller_pricing_settings')
+        .select('*')
+        .eq('id', 1)
+        .maybeSingle();
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || null });
     }
 
     // ── Section partner-notes : historique des RDV/échanges pour un partenaire ──
