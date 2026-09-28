@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Commander l'Oracle Oradia — La Boussole Intérieure</title>
+    <meta name="description" content="Commandez l'oracle Oradia : 64 cartes, livret de 200 pages, pièce de tirage et coffret rigide doré. Expédition sous 3 jours ouvrés en France et en Belgique.">
+    <meta name="author" content="Rudy Boucheron — Oradia" />
+    <meta name="robots" content="index, follow" />
+    <meta property="og:type" content="product" />
+    <meta property="og:url" content="https://oradia.fr/commander" />
+    <meta property="og:title" content="Oracle Oradia — La Boussole Intérieure" />
+    <meta property="og:description" content="64 cartes, un livret de 200 pages, une pièce de tirage en métal et un coffret rigide doré.">
+    <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+    <meta property="og:site_name" content="Oradia" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <link rel="canonical" href="https://oradia.fr/commander" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Oracle Oradia — La Boussole Intérieure",
+      "description": "Oracle de 64 cartes avec livret d'accompagnement de 200 pages, conte initiatique, pièce de tirage en métal et coffret rigide doré.",
+      "image": ["https://oradia.fr/images/Coffret.webp", "https://oradia.fr/images/apercu-hd.webp"],
+      "brand": { "@type": "Brand", "name": "Oradia" },
+      "sku": "ORADIA-ORACLE",
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "EUR",
+        "lowPrice": "42.00",
+        "highPrice": "52.00",
+        "offerCount": "3",
+        "url": "https://oradia.fr/commander",
+        "availability": "https://schema.org/InStock",
+        "seller": { "@type": "Organization", "name": "Oradia", "url": "https://oradia.fr" }
+      }
+    }
+    </script>
+    <!-- Page de vente ferme (vente en stock). Visible et achetable uniquement quand
+         l'interrupteur « Commandes en ligne ouvertes » est activé dans le dashboard
+         (Paramètres > Fonctionnalités > Boutique). Prix et stock : lib/shop-config.js. -->
+    <link rel="icon" type="image/jpeg" href="images/logo-hd-v2.webp" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/logo-hd-v2.webp" />
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    
+    <!-- Couleurs ORADIA additionnelles -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        #offres {
+            scroll-margin-top: 100px;
+        }
+        
+        #cart-section {
+            scroll-margin-top: 100px;
+        }
+        
+        .text-gold {
+            color: #d4af37 !important;
+        }
+        
+        .text-light-gold {
+            color: #f5e7a1 !important;
+        }
+        
+        .text-night-blue {
+            color: #0a192f !important;
+        }
+        
+        .text-dark-blue {
+            color: #051428 !important;
+        }
+        
+        .bg-night-blue {
+            background-color: #0a192f !important;
+        }
+        
+        .bg-dark-blue {
+            background-color: #051428 !important;
+        }
+        
+        .border-gold {
+            border-color: #d4af37 !important;
+        }
+        
+        .border-gold\/20 {
+            border-color: rgba(212, 175, 55, 0.2) !important;
+        }
+        
+        .border-gold\/30 {
+            border-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .border-gold\/40 {
+            border-color: rgba(212, 175, 55, 0.4) !important;
+        }
+        
+        .border-gold\/50 {
+            border-color: rgba(212, 175, 55, 0.5) !important;
+        }
+        
+        .bg-gold\/10 {
+            background-color: rgba(212, 175, 55, 0.1) !important;
+        }
+        
+        .bg-gold\/20 {
+            background-color: rgba(212, 175, 55, 0.2) !important;
+        }
+        
+        .bg-gold\/30 {
+            background-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .text-gold\/60 {
+            color: rgba(212, 175, 55, 0.6) !important;
+        }
+        
+        .text-light-gold\/70 {
+            color: rgba(245, 231, 161, 0.7) !important;
+        }
+        
+        .text-light-gold\/80 {
+            color: rgba(245, 231, 161, 0.8) !important;
+        }
+        
+        .text-light-gold\/90 {
+            color: rgba(245, 231, 161, 0.9) !important;
+        }
+    </style>
+    
+    <!-- Stripe -->
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("images/oradia-hero-4k.webp") center/cover;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .offer-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .offer-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #d4af37, #f4e4c1);
+            transition: width 0.5s ease;
+        }
+        
+        .early-bird-badge {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            color: #0a192f;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* FAQ Styles */
+        .faq-answer {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question i.rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        .faq-question {
+            transition: background-color 0.2s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-radius: 0.5rem;
+        }
+        
+        /* Carrousel Styles */
+        .carousel-slide {
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        #carouselDots div {
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Bouton backToTop - positionnement optimisé */
+        #backToTop {
+            position: fixed !important;
+            right: 24px !important;
+            bottom: 24px !important;
+            z-index: 999 !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Mobile - marges réduites */
+        @media (max-width: 768px) {
+            #backToTop {
+                right: 16px !important;
+                bottom: 88px !important;
+            }
+        }
+        
+        /* Safe areas pour mobiles modernes */
+        @supports (padding: max(0px)) {
+            #backToTop {
+                right: max(24px, env(safe-area-inset-right)) !important;
+                bottom: max(24px, env(safe-area-inset-bottom)) !important;
+            }
+            
+            @media (max-width: 768px) {
+                #backToTop {
+                    right: max(16px, env(safe-area-inset-right)) !important;
+                    bottom: max(88px, env(safe-area-inset-bottom)) !important;
+                }
+            }
+        }
+
+        /* CTA mobile sticky discret */
+        #mobileStickyCta {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 998;
+            width: calc(100% - 24px);
+            max-width: 420px;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        #mobileStickyCta.mobile-cta-hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            pointer-events: none;
+        }
+
+        @media (min-width: 769px) {
+            #mobileStickyCta {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .animate-pulse,
+            .floating,
+            .early-bird-badge {
+                animation: none !important;
+            }
+
+            .blur-3xl,
+            .blur-2xl {
+                filter: blur(10px) !important;
+            }
+
+            .hover\:scale-105:hover,
+            .group:hover .group-hover\:scale-110 {
+                transform: none !important;
+            }
+        }
+        
+        #carouselDots div:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <div id="header-placeholder"></div>
+
+    <!-- ── Héro ─────────────────────────────────────────────── -->
+    <section id="oracle" class="hero-section py-12 sm:py-16 md:py-20">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-6xl mx-auto mb-8">
+                <img src="images/medias/banniere-facebook.webp" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="w-full rounded-2xl shadow-2xl shadow-gold/10 border border-gold/20" width="2034" height="773" fetchpriority="high">
+            </div>
+            <div class="max-w-3xl mx-auto text-center">
+                <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl font-bold gold-gradient mb-4 leading-tight">
+                    ORADIA — La Boussole Intérieure
+                </h1>
+                <p class="text-light-gold/90 text-lg sm:text-xl mb-6">
+                    64 cartes, un livret de 200 pages et une pièce de tirage pour retrouver de la clarté dans vos moments de doute.
+                </p>
+                <div class="flex flex-wrap items-center justify-center gap-3 mb-8">
+                    <span class="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-sm text-light-gold"><i class="fas fa-box-open text-gold"></i> En stock</span>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-sm text-light-gold"><i class="fas fa-truck text-gold"></i> <span data-shop-delay>Expédition sous 3 jours ouvrés</span></span>
+                    <span class="inline-flex items-center gap-2 rounded-full border border-gold/40 bg-gold/10 px-4 py-2 text-sm text-light-gold"><i class="fas fa-lock text-gold"></i> Paiement sécurisé</span>
+                </div>
+                <a href="#offres" class="inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 text-lg">
+                    <i class="fas fa-shopping-cart"></i>
+                    <span>Commander — à partir de <span data-price-from>42</span> €</span>
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Contenu du coffret ───────────────────────────────── -->
+    <section id="contenu" class="py-16 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-10">Dans le coffret</h2>
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
+                    <figure class="text-center"><img src="/images/emotions/joie.webp" alt="Carte Émotions — Joie" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">64 cartes illustrées</figcaption></figure>
+                    <figure class="text-center"><img src="/images/memoire_cosmos/souvenir_d_ame.webp" alt="Carte Mémoire Cosmos — Souvenir d'Âme" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">6 familles de cartes</figcaption></figure>
+                    <figure class="text-center"><img src="/images/apercu-hd.webp" alt="Livret d'accompagnement ORADIA" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">Livret de 200 pages et conte initiatique</figcaption></figure>
+                    <figure class="text-center"><img src="/images/coin.webp" alt="Pièce de tirage ORADIA" loading="lazy" class="w-full aspect-[2/3] object-contain rounded-xl border border-gold/20 bg-[rgba(5,20,40,0.6)]"><figcaption class="text-light-gold/80 text-sm mt-2">Pièce de tirage en métal</figcaption></figure>
+                    <figure class="text-center col-span-2 md:col-span-1"><img src="/images/Coffret.webp" alt="Coffret de protection ORADIA" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">Coffret rigide doré, pochette incluse</figcaption></figure>
+                </div>
+                <div class="grid md:grid-cols-3 gap-6 text-center">
+                    <div class="rounded-2xl border border-gold/20 bg-[rgba(5,20,40,0.6)] p-6">
+                        <i class="fas fa-compass text-3xl text-gold mb-3"></i>
+                        <h3 class="text-gold font-semibold text-lg mb-2">Une méthode unique</h3>
+                        <p class="text-light-gold/90 text-sm">Chaque tirage suit le Tore et construit un hexagramme du Yi Jing : l'intuition donne le sens, la méthode garde le cap.</p>
+                    </div>
+                    <div class="rounded-2xl border border-gold/20 bg-[rgba(5,20,40,0.6)] p-6">
+                        <i class="fas fa-book-open text-3xl text-gold mb-3"></i>
+                        <h3 class="text-gold font-semibold text-lg mb-2">Un vrai livre</h3>
+                        <p class="text-light-gold/90 text-sm">Le livret d'accompagnement de 200 pages détaille chaque carte et propose des tirages pour chaque moment de vie.</p>
+                    </div>
+                    <div class="rounded-2xl border border-gold/20 bg-[rgba(5,20,40,0.6)] p-6">
+                        <i class="fas fa-gift text-3xl text-gold mb-3"></i>
+                        <h3 class="text-gold font-semibold text-lg mb-2">Un bel objet à offrir</h3>
+                        <p class="text-light-gold/90 text-sm">Coffret rigide avec dorure et pièce en métal : un cadeau qui accompagne longtemps.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Offres ──────────────────────────────────────────── -->
+    <section id="offres" class="py-20 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)]">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-4">Choisissez votre coffret</h2>
+                <p class="text-center text-light-gold/90 mb-12 max-w-2xl mx-auto">Livraison en point relais ou à domicile (France et Belgique), ou remise en main propre.</p>
+
+                <div id="shop-closed" class="hidden max-w-2xl mx-auto text-center rounded-2xl border border-gold/40 bg-[rgba(5,20,40,0.8)] p-10">
+                    <h3 class="cormorant text-3xl font-bold gold-gradient mb-4">Bientôt disponible</h3>
+                    <p id="shop-closed-text" class="text-light-gold/90 mb-6">La vente en ligne de l'oracle ouvrira très prochainement.</p>
+                    <a id="shop-closed-link" href="#newsletter" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full">Être prévenu(e) de la sortie</a>
+                </div>
+
+                <div id="offers-grid" class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+                    <!-- Standard -->
+                    <div class="offer-card relative bg-[rgba(5,20,40,0.8)] rounded-2xl p-8 border border-gold/30 flex flex-col" data-offer="standard">
+                        <div class="text-center mb-6">
+                            <h3 class="cormorant text-2xl font-bold text-gold mb-2">STANDARD</h3>
+                            <div class="flex items-baseline justify-center gap-2 mb-2"><span class="text-5xl font-bold text-gold" data-price="standard">42</span><span class="text-2xl text-gold">€</span></div>
+                            <p class="text-light-gold/90">L'oracle complet</p>
+                        </div>
+                        <ul class="space-y-3 text-light-gold/90 mb-8 flex-1">
+                            <li><i class="fas fa-check text-gold mr-2"></i>64 cartes oracle</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Livret d'accompagnement (200 pages)</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Conte initiatique de l'univers Oradia</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Pièce de tirage en métal</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Coffret rigide doré, pochette incluse</li>
+                        </ul>
+                        <button type="button" class="buy-now w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full mb-3" data-offer="standard"><i class="fas fa-bolt mr-2"></i>Commander</button>
+                        <button type="button" class="add-cart w-full border border-gold/50 text-gold font-semibold py-3 rounded-full hover:bg-gold/10" data-offer="standard"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                    </div>
+
+                    <!-- Guidance Offerte -->
+                    <div class="offer-card relative bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-[rgba(5,20,40,0.85)] rounded-2xl p-8 border-2 border-gold/60 flex flex-col lg:scale-105" data-offer="guidance-incluse">
+                        <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gold to-light-gold text-night-blue text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap">LE PLUS POPULAIRE</span>
+                        <div class="text-center mb-6">
+                            <h3 class="cormorant text-2xl font-bold text-gold mb-2">GUIDANCE OFFERTE</h3>
+                            <div class="flex items-baseline justify-center gap-2 mb-2"><span class="text-5xl sm:text-6xl font-bold text-gold" data-price="guidance-incluse">52</span><span class="text-3xl text-gold">€</span></div>
+                            <p class="text-gold/90 text-sm font-medium">30 min de guidance offerte (valeur réelle 30 €)</p>
+                            <p class="text-light-gold/70 text-sm">Nombre de places limité</p>
+                        </div>
+                        <ul class="space-y-3 text-light-gold/90 mb-8 flex-1">
+                            <li><i class="fas fa-check text-gold mr-2"></i>L'oracle complet</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Dédicace personnalisée</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Une séance de guidance personnalisée en visio (30 min)</li>
+                        </ul>
+                        <button type="button" class="buy-now w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full mb-3" data-offer="guidance-incluse"><i class="fas fa-bolt mr-2"></i>Commander</button>
+                        <button type="button" class="add-cart w-full border border-gold/50 text-gold font-semibold py-3 rounded-full hover:bg-gold/10" data-offer="guidance-incluse"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                    </div>
+
+                    <!-- Édition Signature -->
+                    <div class="offer-card relative bg-[rgba(5,20,40,0.9)] rounded-2xl p-8 border-2 border-gold flex flex-col" data-offer="edition-signature">
+                        <span class="absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-gold to-light-gold text-night-blue text-xs font-bold px-4 py-1.5 rounded-full whitespace-nowrap">ÉDITION LIMITÉE</span>
+                        <div class="text-center mb-6">
+                            <h3 class="cormorant text-2xl font-bold text-gold mb-2">ÉDITION SIGNATURE</h3>
+                            <p class="text-light-gold/80 text-sm mb-2">Limitée à 100 exemplaires</p>
+                            <div class="flex items-baseline justify-center gap-2 mb-2"><span class="text-5xl font-bold text-gold" data-price="edition-signature">46</span><span class="text-2xl text-gold">€</span></div>
+                            <p class="text-gold/90 text-sm font-semibold hidden" data-stock="edition-signature"></p>
+                        </div>
+                        <ul class="space-y-3 text-light-gold/90 mb-8 flex-1">
+                            <li><i class="fas fa-check text-gold mr-2"></i>L'oracle complet</li>
+                            <li><i class="fas fa-check text-gold mr-2"></i>Dédicace personnalisée</li>
+                        </ul>
+                        <button type="button" class="buy-now w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full mb-3" data-offer="edition-signature"><i class="fas fa-bolt mr-2"></i>Commander</button>
+                        <button type="button" class="add-cart w-full border border-gold/50 text-gold font-semibold py-3 rounded-full hover:bg-gold/10" data-offer="edition-signature"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                    </div>
+                </div>
+
+                <!-- Réassurance -->
+                <div id="reassurance" class="grid grid-cols-2 md:grid-cols-4 gap-4 mt-12 text-center text-sm text-light-gold/90">
+                    <div><i class="fas fa-shield-halved text-gold text-xl mb-2 block"></i>Paiement sécurisé par Stripe</div>
+                    <div><i class="fas fa-truck-fast text-gold text-xl mb-2 block"></i><span data-shop-delay>Expédition sous 3 jours ouvrés</span></div>
+                    <div><i class="fas fa-location-dot text-gold text-xl mb-2 block"></i>Point relais dès <span data-ship-from>5,99</span> € ou domicile</div>
+                    <div><i class="fas fa-rotate-left text-gold text-xl mb-2 block"></i>14 jours pour changer d'avis</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Essayer en ligne ───────────────────────────────── -->
+    <section class="py-16">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-3xl mx-auto text-center rounded-2xl border border-gold/30 bg-[rgba(5,20,40,0.6)] p-8 sm:p-10">
+                <h2 class="cormorant text-3xl sm:text-4xl font-bold gold-gradient mb-4">Essayez l'oracle avant de le commander</h2>
+                <p class="text-light-gold/90 mb-6">Le tirage du Tore est disponible en ligne, gratuitement, avec les mêmes 64 cartes. Faites l'expérience d'un tirage complet et de son interprétation.</p>
+                <a href="/tore.html" class="inline-flex items-center gap-2 border-2 border-gold text-gold font-bold py-3 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all"><i class="fas fa-circle-nodes"></i>Faire un tirage gratuit</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── FAQ ─────────────────────────────────────────────── -->
+    <section id="faq" class="py-16 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-10">Questions fréquentes</h2>
+                <div class="space-y-4">
+                    <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Quand vais-je recevoir mon oracle ?</summary><p class="mt-4 text-light-gold/90">Votre commande est expédiée sous 3 jours ouvrés. Comptez ensuite généralement 3 à 5 jours ouvrés en point relais ou à domicile avec Mondial Relay. Vous recevez un email avec le numéro de suivi dès l'expédition.</p></details>
+                    <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Puis-je changer d'avis ?</summary><p class="mt-4 text-light-gold/90">Oui : vous disposez de 14 jours à compter de la réception pour exercer votre droit de rétractation, en écrivant à <a href="mailto:contact@oradia.fr" class="text-gold underline">contact@oradia.fr</a>. Le coffret doit être retourné complet et en bon état ; les frais de retour sont à votre charge. La séance de guidance de l'offre Guidance Offerte, une fois réalisée, ne peut plus faire l'objet d'une rétractation.</p></details>
+                    <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Comment se passe la séance de guidance ?</summary><p class="mt-4 text-light-gold/90">Avec l'offre Guidance Offerte, vous recevez après votre commande un lien pour réserver une séance de 30 minutes en visio avec Rudy, au moment qui vous convient.</p></details>
+                    <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">C'est pour offrir : est-ce possible ?</summary><p class="mt-4 text-light-gold/90">Bien sûr. Indiquez simplement l'adresse de la personne comme adresse de livraison : le colis ne contient aucun prix. Pour une dédicace personnalisée (offres Guidance et Signature), précisez le prénom à <a href="mailto:contact@oradia.fr" class="text-gold underline">contact@oradia.fr</a> après votre commande.</p></details>
+                    <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Quelle différence avec le Tore en ligne ?</summary><p class="mt-4 text-light-gold/90">Le Tore en ligne permet de faire des tirages avec les mêmes cartes et une interprétation générée. L'oracle physique, c'est l'expérience complète : les cartes en main, le livret de 200 pages, la pièce de tirage, et un rituel qui vous appartient.</p></details>
+                    <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Livrez-vous hors de France ?</summary><p class="mt-4 text-light-gold/90">Nous livrons en France et en Belgique. Pour un autre pays, <a href="/contact.html" class="text-gold underline">contactez-nous</a> avant de commander.</p></details>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Newsletter ──────────────────────────────────────── -->
+    <section id="newsletter" class="py-16">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-xl mx-auto text-center">
+                <h2 class="cormorant text-3xl font-bold gold-gradient mb-3">Restez en lien</h2>
+                <p class="text-light-gold/90 mb-6">Tirages, nouveautés et coulisses d'Oradia, directement dans votre boîte mail.</p>
+                <form id="newsletter-form" class="flex flex-col sm:flex-row gap-3">
+                    <input type="email" id="newsletter-email" required placeholder="votre@email.com" class="flex-1 bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-full px-5 py-3 text-light-gold">
+                    <button type="submit" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full">S'inscrire</button>
+                </form>
+                <p id="newsletter-message" class="text-sm mt-3 hidden"></p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Barre panier (collante) -->
+    <div id="cart-bar" class="hidden fixed bottom-0 inset-x-0 z-50 bg-[rgba(5,15,30,0.97)] border-t border-gold/40 backdrop-blur-sm">
+        <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+            <div class="text-light-gold text-sm sm:text-base">
+                <i class="fas fa-shopping-cart text-gold mr-2"></i><span id="cart-count">0</span> coffret(s) · <strong id="cart-total" class="text-gold">0 €</strong>
+                <button type="button" id="cart-clear" class="ml-3 text-light-gold/60 underline text-xs">vider</button>
+            </div>
+            <a href="/livraison.html?mode=order" id="cart-checkout" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-5 sm:px-8 rounded-full whitespace-nowrap">Passer commande</a>
+        </div>
+    </div>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="/js/shop-mode.js" defer></script>
+    <script>
+    (function () {
+        // Prix par défaut = prix de vente ferme de lib/shop-config.js ; remplacés par
+        // ceux de l'API (/api/preorders/progress → shop.catalog) dès leur réception.
+        var PRICES = { 'standard': 42, 'guidance-incluse': 52, 'edition-signature': 46 };
+        var REMAINING = {};
+        var CART_KEY = 'oradia-cart';
+        var MAX_QTY = 10;
+
+        function fmt(n) { return (Math.round(n * 100) / 100).toFixed(2).replace('.', ',').replace(',00', ''); }
+        function readCart() { try { return JSON.parse(localStorage.getItem(CART_KEY) || '{}') || {}; } catch (e) { return {}; } }
+        function writeCart(c) { try { localStorage.setItem(CART_KEY, JSON.stringify(c)); } catch (e) {} }
+
+        function renderCart() {
+            var cart = readCart(), count = 0, total = 0;
+            Object.keys(cart).forEach(function (id) {
+                if (!PRICES[id]) { delete cart[id]; return; }
+                var q = Math.max(1, Math.min(MAX_QTY, parseInt(cart[id].quantity, 10) || 1));
+                cart[id] = { quantity: q, price: PRICES[id] };
+                count += q; total += q * PRICES[id];
+            });
+            writeCart(cart);
+            document.getElementById('cart-count').textContent = count;
+            document.getElementById('cart-total').textContent = fmt(total) + ' €';
+            document.getElementById('cart-bar').classList.toggle('hidden', count === 0);
+            document.body.style.paddingBottom = count ? '72px' : '';
+            // Bouton « remonter en haut » (ajouté par footer-manager.js) au-dessus de la barre panier.
+            var top = document.getElementById('backToTop');
+            if (top) top.style.bottom = count ? '88px' : '';
+        }
+
+        function add(id) {
+            var cart = readCart();
+            var q = (cart[id] && cart[id].quantity) || 0;
+            var max = REMAINING[id] != null ? Math.min(MAX_QTY, REMAINING[id]) : MAX_QTY;
+            if (q >= max) { alert(REMAINING[id] === 0 ? 'Cette offre est épuisée.' : 'Quantité maximale atteinte pour cette offre.'); return false; }
+            cart[id] = { quantity: q + 1, price: PRICES[id] };
+            writeCart(cart);
+            renderCart();
+            if (typeof window.oradiaTrackEvent === 'function') window.oradiaTrackEvent('commande_offre_ajoutee');
+            return true;
+        }
+
+        document.querySelectorAll('.add-cart').forEach(function (b) {
+            b.addEventListener('click', function () { add(b.dataset.offer); });
+        });
+        document.querySelectorAll('.buy-now').forEach(function (b) {
+            b.addEventListener('click', function () {
+                var cart = readCart();
+                if (!cart[b.dataset.offer] && !add(b.dataset.offer)) return;
+                window.location.href = '/livraison.html?mode=order';
+            });
+        });
+        document.getElementById('cart-clear').addEventListener('click', function () { writeCart({}); renderCart(); });
+
+        // Newsletter (même API que le reste du site)
+        document.getElementById('newsletter-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var msg = document.getElementById('newsletter-message');
+            fetch('/api/waitlist', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: document.getElementById('newsletter-email').value.trim() }) })
+                .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+                .then(function (res) {
+                    msg.textContent = res.ok ? 'Merci ! Vous êtes inscrit(e).' : (res.d.message || 'Inscription impossible, réessayez.');
+                    msg.className = 'text-sm mt-3 ' + (res.ok ? 'text-green-300' : 'text-red-300');
+                })
+                .catch(function () { msg.textContent = 'Inscription impossible, réessayez.'; msg.className = 'text-sm mt-3 text-red-300'; });
+        });
+
+        renderCart();
+        window.addEventListener('load', renderCart);
+
+        // Données boutique : prix, stock, délai, frais de port, et état ouvert/fermé.
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.OradiaShop) return;
+            window.OradiaShop.ready.then(function (shop) {
+                if (!shop) return;
+                var cat = shop.catalog;
+                if (cat && cat.offers) {
+                    Object.keys(cat.offers).forEach(function (id) {
+                        var o = cat.offers[id];
+                        if (o.price && o.price.order) PRICES[id] = o.price.order;
+                        REMAINING[id] = o.remaining;
+                        var el = document.querySelector('[data-price="' + id + '"]');
+                        if (el) el.textContent = fmt(PRICES[id]);
+                        var st = document.querySelector('[data-stock="' + id + '"]');
+                        if (st && o.remaining != null) {
+                            st.classList.remove('hidden');
+                            st.textContent = o.remaining === 0 ? 'Épuisée' : (o.remaining <= 30 ? 'Plus que ' + o.remaining + ' exemplaires' : '');
+                        }
+                        if (o.remaining === 0) {
+                            document.querySelectorAll('[data-offer="' + id + '"] button, button[data-offer="' + id + '"]').forEach(function (b) {
+                                b.disabled = true; b.classList.add('opacity-50', 'cursor-not-allowed');
+                            });
+                        }
+                    });
+                    var min = Math.min.apply(null, Object.keys(PRICES).map(function (k) { return PRICES[k]; }));
+                    document.querySelectorAll('[data-price-from]').forEach(function (e) { e.textContent = fmt(min); });
+                    if (cat.orderShippingDelay) document.querySelectorAll('[data-shop-delay]').forEach(function (e) { e.textContent = cat.orderShippingDelay; });
+                    try {
+                        var relay = cat.shippingRates.FR.relay, w = cat.productWeightKg;
+                        var tier = relay.filter(function (r) { return w <= r.maxWeight; })[0];
+                        if (tier) document.querySelectorAll('[data-ship-from]').forEach(function (e) { e.textContent = fmt(tier.price); });
+                    } catch (e) {}
+                    renderCart();
+                }
+                if (!shop.order) {
+                    // Vente ferme fermée : pas d'achat possible depuis cette page.
+                    document.getElementById('offers-grid').classList.add('hidden');
+                    document.getElementById('reassurance').classList.add('hidden');
+                    document.getElementById('cart-bar').classList.add('hidden');
+                    document.body.style.paddingBottom = '';
+                    document.getElementById('shop-closed').classList.remove('hidden');
+                    if (shop.preorder) {
+                        document.getElementById('shop-closed-text').textContent = "L'oracle est actuellement en précommande, avec une livraison estimée en février 2027.";
+                        var link = document.getElementById('shop-closed-link');
+                        link.textContent = 'Voir les précommandes';
+                        link.href = '/precommande-oracle.html';
+                    }
+                }
+            });
+        });
+    })();
+    </script>
+    <script src="components/header-manager.js" defer></script>
+    <script src="components/footer-manager.js" defer></script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script src="js/page-tracker.js" defer></script>
+</body>
+</html>

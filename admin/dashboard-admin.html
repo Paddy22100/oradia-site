@@ -1143,7 +1143,8 @@
             </div>
 
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                <p id="preordersStockInfo" class="text-light-gold/60 text-xs mb-3"></p>
+                <div class="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
                     <input id="preordersSearch" type="search" placeholder="Recherche email ou nom" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
                     <select id="preordersStatusFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
                         <option value="all">Tous statuts</option>
@@ -1163,6 +1164,11 @@
                         <option value="standard">Standard</option>
                         <option value="guidance-incluse">Guidance incluse</option>
                         <option value="edition-signature">Édition signature</option>
+                    </select>
+                    <select id="preordersTypeFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="all">Précommandes et commandes</option>
+                        <option value="preorder">Précommandes</option>
+                        <option value="order">Commandes (vente ferme)</option>
                     </select>
                     <button id="resetPreordersFilters" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-3 py-2 text-sm hover:bg-gold/30 transition">Réinitialiser</button>
                 </div>
@@ -3310,7 +3316,7 @@
             </div>
 
             <!-- KPIs -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="syncKpiRow">
+            <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6" id="syncKpiRow">
                 <div class="stat-card rounded-xl p-5">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Réponses valides</div>
                     <div class="text-2xl font-bold text-teal-300" id="syncTotal">—</div>
@@ -3320,6 +3326,11 @@
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen (quantique)</div>
                     <div class="text-2xl font-bold text-gold" id="syncAvgScore">—</div>
                     <div class="text-light-gold/40 text-xs">/ 10</div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Ont vécu une synchronicité</div>
+                    <div class="text-2xl font-bold text-teal-300" id="syncExperiencedPct">—</div>
+                    <div class="text-light-gold/40 text-xs" id="syncExperiencedSub"></div>
                 </div>
                 <div class="stat-card rounded-xl p-5 col-span-2">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Distribution des scores</div>
@@ -4463,6 +4474,17 @@
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement précommande</p>
                     </div>
                     <button onclick="sendMailTest('preorder-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                    </button>
+                </div>
+
+                <!-- Confirmation commande (vente ferme) -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Confirmation commande Oracle (vente ferme)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement sur la page Commande — même modèle que la précommande</p>
+                    </div>
+                    <button onclick="sendMailTest('order-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
                         <i class="fas fa-paper-plane text-xs"></i> Envoyer test
                     </button>
                 </div>
@@ -7611,6 +7633,7 @@
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gold/20 text-gold border border-gold/30">
                             ${preorder.offer || '-'}
                         </span>
+                        ${preorder.order_type === 'order' ? '<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-400/15 text-teal-300 border border-teal-300/30">Commande</span>' : ''}
                     </td>
                     <td class="px-6 py-4 text-gold font-bold text-lg">${formatCurrency(preorder.amount_total)}</td>
                     <td class="px-6 py-4">
@@ -8306,7 +8329,7 @@
                         <td>${o.created_at_fr || formatDate(o.created_at)}</td>
                         <td>${o.email || '-'}</td>
                         <td>${o.full_name || '-'}</td>
-                        <td>${o.offer || '-'}</td>
+                        <td>${o.offer || '-'}${o.order_type === 'order' ? ' (commande)' : ''}</td>
                         <td>${formatCurrency(o.amount_total)}</td>
                         <td>${getStatusLabelFr(o.paid_status)}</td>
                         <td>${getShippingMethodLabel(o.shipping_method)}</td>
@@ -8560,6 +8583,7 @@
             status: 'all',
             period: 'all',
             offer: 'all',
+            type: 'all',
             q: ''
         };
 
@@ -8571,6 +8595,7 @@
                 status: preordersFilters.status,
                 period: preordersFilters.period,
                 offer: preordersFilters.offer,
+                type: preordersFilters.type,
                 q: preordersFilters.q
             });
             return `/api/admin/data?${params.toString()}`;
@@ -8826,12 +8851,32 @@
                 });
             }
 
+            const typeFilter = document.getElementById('preordersTypeFilter');
+            if (typeFilter) {
+                typeFilter.addEventListener('change', () => {
+                    preordersFilters.type = typeFilter.value;
+                    loadPreorders(1);
+                });
+            }
+
+            // Stock restant des offres limitées (même source que la page Commande).
+            fetch('/api/preorders/progress').then(r => r.json()).then(d => {
+                const el = document.getElementById('preordersStockInfo');
+                const offers = d?.shop?.catalog?.offers || {};
+                const parts = Object.values(offers).filter(o => o.stockMax != null)
+                    .map(o => `${o.label} : ${o.remaining} / ${o.stockMax} restants`);
+                const mode = d?.shop ? `Boutique : précommandes ${d.shop.preorder ? 'ouvertes' : 'fermées'}, vente en ligne ${d.shop.order ? 'ouverte' : 'fermée'}` : '';
+                if (el) el.textContent = [mode, ...parts].filter(Boolean).join(' · ');
+            }).catch(() => {});
+
             if (resetFiltersBtn) {
                 resetFiltersBtn.addEventListener('click', () => {
                     preordersFilters.status = 'all';
                     preordersFilters.period = 'all';
                     preordersFilters.offer = 'all';
+                    preordersFilters.type = 'all';
                     preordersFilters.q = '';
+                    if (typeFilter) typeFilter.value = 'all';
 
                     if (searchInput) searchInput.value = '';
                     if (statusFilter) statusFilter.value = 'all';
@@ -13682,6 +13727,7 @@
             const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
             setEl('syncTotal',    '<span class="animate-pulse">…</span>');
             setEl('syncAvgScore', '<span class="animate-pulse">…</span>');
+            setEl('syncExperiencedPct', '<span class="animate-pulse">…</span>');
 
             try {
                 const res  = await adminFetch('/api/admin/data?section=synchronicity');
@@ -13699,6 +13745,13 @@
                 setEl('syncTotalAll', excluded > 0
                     ? `sur ${d.totalAll} reçues · ${excluded} exclue(s)`
                     : (d.totalAll ? `${d.totalAll} reçue(s)` : ''));
+
+                // Part des retours de questionnaire rapportant avoir vécu une synchronicité
+                // (score > 1 — "1" correspondant explicitement à "Aucune" sur le questionnaire,
+                // voir synchronicite.html). Calculé sur les mêmes réponses valides (quantiques
+                // pures) que le reste de cette section, pour rester cohérent avec "Réponses valides".
+                setEl('syncExperiencedPct', d.experiencedPct !== null && d.experiencedPct !== undefined ? `${d.experiencedPct}%` : '—');
+                setEl('syncExperiencedSub', d.total > 0 ? `${d.experiencedCount} sur ${d.total} retour(s)` : '');
 
                 // Validité scientifique : source du tirage (QRNG) — ANU + Outshift comptent comme quantique
                 const qb = d.qrngBreakdown || { anu: 0, outshift: 0, fallback: 0, unknown: 0 };
@@ -14520,7 +14573,11 @@
         }
 
         // ── Registre de fonctionnalités ──
-        const FEATURE_CATEGORY_LABELS = { acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        const FEATURE_CATEGORY_LABELS = { boutique: 'Boutique — vente de l\'oracle', acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        // Ordre d'affichage des catégories : la Boutique en premier (bascule précommande →
+        // vente ferme), les autres dans l'ordre de FEATURE_CATEGORY_LABELS.
+        const FEATURE_CATEGORY_ORDER = Object.keys(FEATURE_CATEGORY_LABELS);
+        let _featureFlagsCache = [];
         async function loadFeatureFlags() {
             const el = document.getElementById('feature-flags-list');
             if (!el) return;
@@ -14536,10 +14593,20 @@
                     </div>`;
                     return;
                 }
+                _featureFlagsCache = features;
                 const byCategory = {};
                 features.forEach(f => { (byCategory[f.category || 'general'] ??= []).push(f); });
-                el.innerHTML = Object.entries(byCategory).map(([cat, items]) => `
+                const rank = c => { const i = FEATURE_CATEGORY_ORDER.indexOf(c); return i === -1 ? 99 : i; };
+                const flagOn = k => features.find(f => f.key === k)?.enabled === true;
+                const shopWarning = (byCategory.boutique && flagOn('shop_preorder_enabled') === flagOn('shop_order_enabled'))
+                    ? `<div class="rounded-xl border border-amber-400/40 bg-amber-400/10 p-3 text-amber-200 text-xs mb-2">
+                          ${flagOn('shop_preorder_enabled')
+                            ? '⚠️ Précommandes <b>et</b> commandes sont ouvertes en même temps : les visiteurs voient les deux pages, avec deux prix différents.'
+                            : '⚠️ Précommandes <b>et</b> commandes sont fermées : les pages de vente affichent « L\'oracle revient bientôt ».'}
+                       </div>` : '';
+                el.innerHTML = Object.entries(byCategory).sort(([a], [b]) => rank(a) - rank(b)).map(([cat, items]) => `
                     <p class="text-gold/60 text-xs uppercase tracking-widest mt-4 mb-2 first:mt-0">${FEATURE_CATEGORY_LABELS[cat] || cat}</p>
+                    ${cat === 'boutique' ? shopWarning : ''}
                     ${items.map(f => `
                         <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                             <div class="min-w-0">
@@ -14556,6 +14623,16 @@
             }
         }
         async function toggleFeatureFlag(key, enabled) {
+            // Interrupteurs Boutique : effet immédiat sur les pages de vente publiques.
+            const SHOP_CONFIRM = {
+                shop_preorder_enabled: enabled
+                    ? 'Rouvrir les précommandes ? Les visiteurs pourront à nouveau précommander au prix de précommande.'
+                    : 'Fermer les précommandes ? La page /precommande redirigera vers /commander si la vente en ligne est ouverte, sinon affichera « bientôt disponible ». Les paiements de précommande seront refusés.',
+                shop_order_enabled: enabled
+                    ? 'Ouvrir la vente en ligne ? La page /commander devient accessible et le menu du site pointera vers elle si les précommandes sont fermées. Vérifiez que le stock est bien arrivé.'
+                    : 'Fermer la vente en ligne ? Les paiements de commande seront refusés.'
+            };
+            if (SHOP_CONFIRM[key] && !confirm(SHOP_CONFIRM[key] + '\n\nLe changement est visible sur le site en moins d\'une minute.')) return;
             try {
                 const res = await adminFetch('/api/admin/features', {
                     method: 'POST',
@@ -16333,6 +16410,7 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
                     </div>
                     <div class="space-y-2">
                         <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-1">Commande</p>
+                        <p class="text-light-gold/70">Type : <span class="text-light-gold">${preorder.order_type === 'order' ? 'Commande (vente ferme)' : 'Précommande'}</span></p>
                         <p class="text-light-gold/70">Offre : <span class="text-light-gold">${fmt(preorder.offer)}</span></p>
                         <p class="text-light-gold/70">Statut : <span class="${statusClass} font-semibold">${fmt(preorder.paid_status)}</span></p>
                         <p class="text-light-gold/70">Montant : <span class="text-gold font-semibold">${preorder.amount_total != null ? formatCurrency(preorder.amount_total) : '—'}</span></p>

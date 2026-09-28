@@ -890,6 +890,10 @@ async function processEvent(event) {
                     city: extractedData.city || existingOrder?.city || null,
                     country: extractedData.country || existingOrder?.country || 'FR',
                     phone: extractedData.phone || existingOrder?.phone || null,
+                    // Précommande ou vente ferme (metadata posée par create-checkout-session)
+                    order_type: session.metadata?.sale_mode === 'order'
+                        ? 'order'
+                        : (existingOrder?.order_type || 'preorder'),
                     updated_at: new Date().toISOString(),
 
                     // Champs livraison fusionnés
@@ -954,7 +958,8 @@ async function processEvent(event) {
                         invoiceUrl: invoiceUrl,
                         // Panier détaillé (enregistré à la création de la session Stripe)
                         items: upsertData.items,
-                        shipping: shippingFromOrder(upsertData)
+                        shipping: shippingFromOrder(upsertData),
+                        orderType: upsertData.order_type
                     });
                     
                     if (emailSent) {
@@ -973,15 +978,18 @@ async function processEvent(event) {
                 await supabase.from('transactions').insert({
                     date: new Date().toISOString().split('T')[0],
                     type: 'recette',
-                    category: 'précommande',
-                    description: `Précommande ${upsertData.offer || ''} — ${upsertData.full_name || upsertData.email || ''}`,
+                    category: upsertData.order_type === 'order' ? 'commande' : 'précommande',
+                    description: `${upsertData.order_type === 'order' ? 'Commande' : 'Précommande'} ${upsertData.offer || ''} — ${upsertData.full_name || upsertData.email || ''}`,
                     amount: parseFloat(upsertData.amount_total) || 0,
+                    // Même source pour précommande et vente ferme (vente de marchandise) : la
+                    // comptabilité du dashboard (BIC, frais Stripe, rapport mensuel) filtre
+                    // sur 'precommande'. Seules la catégorie et la description distinguent.
                     source: 'precommande',
                     source_ref: sessionId
                 }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (precommande):', error.message); });
                 }
 
-                console.log(`[webhook] Précommande traitée: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
+                console.log(`[webhook] ${upsertData.order_type === 'order' ? 'Commande' : 'Précommande'} traitée: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
                 return;
             }
             

@@ -106,7 +106,7 @@
             </div>
             
             <!-- H1 avec style ORADIA -->
-            <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold gold-gradient mb-8 sm:mb-6 leading-tight">
+            <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold gold-gradient mb-8 sm:mb-6 leading-tight" data-order-text="Commande confirmée">
                 Précommande Confirmée
             </h1>
             
@@ -117,7 +117,7 @@
             
             <!-- Message principal -->
             <div class="bg-gradient-to-b from-dark-blue to-night-blue/50 border border-gold/30 rounded-2xl p-8 mb-8 sm:mb-12">
-                <p class="lora text-xl md:text-2xl text-light-gold/90 max-w-2xl sm:max-w-3xl mx-auto leading-relaxed mb-6">
+                <p class="lora text-xl md:text-2xl text-light-gold/90 max-w-2xl sm:max-w-3xl mx-auto leading-relaxed mb-6" data-order-text="Votre paiement a été traité avec succès et votre commande de l'Oracle Oradia est confirmée.">
                     Votre paiement a été traité avec succès et votre précommande de l'Oracle Oradia est maintenant confirmée.
                 </p>
                 
@@ -136,9 +136,9 @@
                 </a>
                 
                 <!-- Secondaire -->
-                <a href="precommande-oracle.html" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                <a href="precommande-oracle.html" data-order-href="/commander" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
                     <i class="fas fa-gift"></i>
-                    <span class="text-sm sm:text-base">Autres précommandes</span>
+                    <span class="text-sm sm:text-base" data-order-text="Offrir un autre coffret">Autres précommandes</span>
                 </a>
             </div>
             
@@ -146,7 +146,7 @@
             <div class="flex flex-col sm:flex-row gap-4 justify-center items-center text-light-gold/80 text-sm">
                 <div class="flex items-center gap-2">
                     <i class="fas fa-sparkles text-gold"></i>
-                    <span>Livraison estimée : mi-février 2027</span>
+                    <span data-order-text="Expédition sous 3 jours ouvrés">Livraison estimée : mi-février 2027</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <i class="fas fa-layer-group text-gold"></i>
@@ -170,7 +170,7 @@
     
     <div class="container mx-auto max-w-6xl relative z-10">
         <div class="text-center mb-12">
-            <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+            <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8" data-order-text="Détails de votre commande">
                 Détails de votre précommande
             </h2>
         </div>
@@ -191,7 +191,7 @@
                     <i class="fas fa-check-circle text-green-500 text-2xl"></i>
                 </div>
                 <h3 class="cormorant text-xl text-gold mb-2">Statut</h3>
-                <p class="text-light-gold/80">Précommande confirmée</p>
+                <p class="text-light-gold/80" data-order-text="Commande confirmée">Précommande confirmée</p>
             </div>
             
             <!-- Livraison -->
@@ -200,7 +200,7 @@
                     <i class="fas fa-truck text-gold text-2xl"></i>
                 </div>
                 <h3 class="cormorant text-xl text-gold mb-2">Livraison</h3>
-                <p class="text-light-gold/80">mi-février 2027</p>
+                <p class="text-light-gold/80" data-order-text="Sous 3 jours ouvrés">mi-février 2027</p>
             </div>
             
             <!-- Suivi -->
@@ -239,8 +239,8 @@
                 <div class="w-20 h-20 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-gold/50">
                     <i class="fas fa-palette text-gold text-2xl"></i>
                 </div>
-                <h3 class="cormorant text-2xl text-gold mb-4">Production</h3>
-                <p class="text-light-gold/80">Lancement de la production basée sur les précommandes. Vous serez informé de l'avancement.</p>
+                <h3 class="cormorant text-2xl text-gold mb-4" data-order-text="Préparation">Production</h3>
+                <p class="text-light-gold/80" data-order-text="Votre coffret est préparé avec soin et expédié sous 3 jours ouvrés.">Lancement de la production basée sur les précommandes. Vous serez informé de l'avancement.</p>
             </div>
             
             <!-- Étape 3 -->
@@ -249,7 +249,7 @@
                     <i class="fas fa-truck text-gold text-2xl"></i>
                 </div>
                 <h3 class="cormorant text-2xl text-gold mb-4">Livraison</h3>
-                <p class="text-light-gold/80">Expédition prévue en mi-février 2027. Vous recevrez un email de suivi colis.</p>
+                <p class="text-light-gold/80" data-order-text="Livraison en point relais ou à domicile ; vous recevrez un email avec le numéro de suivi.">Expédition prévue en mi-février 2027. Vous recevrez un email de suivi colis.</p>
             </div>
         </div>
     </div>
@@ -361,6 +361,15 @@
     });
 </script>
 
+<script>
+    // Vente ferme (?mode=order, posé par create-checkout-session) : mêmes blocs, textes
+    // de commande en stock au lieu de ceux de la précommande.
+    if (new URLSearchParams(window.location.search).get('mode') === 'order') {
+        document.title = 'Paiement réussi - Commande Oracle Oradia';
+        document.querySelectorAll('[data-order-text]').forEach(function (el) { el.textContent = el.getAttribute('data-order-text'); });
+        document.querySelectorAll('[data-order-href]').forEach(function (el) { el.setAttribute('href', el.getAttribute('data-order-href')); });
+    }
+</script>
 <script src="js/page-tracker.js" defer></script>
 </body>
 
