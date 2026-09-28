@@ -558,7 +558,7 @@ class FreemiumTracker {
                 const resp = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, email, promoCode: 'promo_1TtZP25oaKXBczQqQEQ85oV7' })
+                    body: JSON.stringify({ type, email, promoCode: 'promo_1TtZP25oaKXBczQqQEQ85oV7', lang: isEN ? 'en' : 'fr' })
                 });
                 const data = await resp.json();
                 if (data.url) {
