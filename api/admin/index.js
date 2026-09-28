@@ -4609,7 +4609,7 @@ async function handleData(req, res) {
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
-      supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed').neq('status', 'single_draw') : r),
+      supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed') : r),
       supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1),
       // .catch : la table peut ne pas exister tant que la migration kickstarter_backers n'a pas été appliquée
       supabase.from('kickstarter_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r),

@@ -7264,25 +7264,6 @@ function startToreDraw({ submitBtn = null, intention = '', gender = 'neutre', re
   // Le tirage gratuit (localStorage) est enregistré à la COMPLÉTION du tirage
   // dans showToreAnalysisCTA(), pas ici — sinon un même tirage serait compté deux fois.
 
-  // Décrémenter le crédit serveur si disponible (sans bloquer le tirage) — pas à la
-  // reprise d'un tirage sauvegardé, déjà décompté à son démarrage initial.
-  if (!restoreState) (async () => {
-    const sessStr = sessionStorage.getItem('oradia_member_session')
-                  || localStorage.getItem('oradia_member_session');
-    if (sessStr) {
-      try {
-        const sess = JSON.parse(sessStr);
-        if (sess.email) {
-          await fetch('/api/auth/consume-tore-draw', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: sess.email })
-          }).catch(() => {}); // silencieux si API indisponible
-        }
-      } catch(_) {}
-    }
-  })();
-
   // tore-dealing déjà ajouté dans buildBoardTore() avant l'affichage du plateau
 
   // Débloquer le bouton submit
