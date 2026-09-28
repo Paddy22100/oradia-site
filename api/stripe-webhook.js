@@ -461,6 +461,7 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
             .update({ trial_source: trialSource })
             .eq('id', savedRow.id);
         if (trialErr) console.error('[webhook] trial_source update:', trialErr.message);
+        else await require('../lib/oracle-trial.js').checkOracleTrialAlert(supabase);
     }
 
     // Essai gratuit : 0 € encaissé, pas de recette (la contrainte transactions.amount > 0

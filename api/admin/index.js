@@ -8914,8 +8914,8 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Compteur du mois d'essai offert (QR code du livret), affiché sous son interrupteur.
         let oracleTrial = null;
         try {
-          const { countOracleTrials, ORACLE_TRIAL_MAX } = require('../../lib/oracle-trial.js');
-          oracleTrial = { used: await countOracleTrials(sbFeat), max: ORACLE_TRIAL_MAX };
+          const { countOracleTrials, getOracleTrialSettings } = require('../../lib/oracle-trial.js');
+          oracleTrial = { used: await countOracleTrials(sbFeat), max: (await getOracleTrialSettings(sbFeat)).max };
         } catch (e) { /* colonne trial_source absente : pas de compteur */ }
         return res.status(200).json({ success: true, features: data || [], oracleTrial });
       }
@@ -8928,6 +8928,32 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Sans ce contrôle, une clé absente de la table renvoyait "succès" sans rien changer.
         if (!updated || updated.length === 0) return res.status(404).json({ error: `Fonctionnalité inconnue : ${key}` });
         return res.status(200).json({ success: true });
+      }
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Mois offert via le QR code du livret : statistiques (GET) et réglage du plafond /
+    // seuil d'alerte (POST { max, alertPct }) — carte dédiée dans l'onglet Analytique.
+    if (path === '/oracle-trial' || path === '/oracle-trial/') {
+      verifyAdminAuth(req);
+      const sbTrial = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const trialLib = require('../../lib/oracle-trial.js');
+      if (req.method === 'GET') {
+        try {
+          return res.status(200).json({ success: true, ...(await trialLib.getOracleTrialStats(sbTrial)) });
+        } catch (e) { return res.status(500).json({ error: e.message }); }
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        try {
+          const saved = await trialLib.setOracleTrialSettings(sbTrial, body);
+          // Le nouveau plafond peut déjà être proche : alerte immédiate le cas échéant.
+          await trialLib.checkOracleTrialAlert(sbTrial);
+          return res.status(200).json({ success: true, ...saved });
+        } catch (e) { return res.status(400).json({ error: e.message }); }
       }
       return res.status(405).json({ error: 'Method not allowed' });
     }

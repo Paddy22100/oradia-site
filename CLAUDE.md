@@ -56,6 +56,7 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 | `observation_windows` | Fenêtres d'observation actives (20 lignes) | liée aux tirages |
 | `users` | Profils membres (0 ligne — auth gérée par Supabase Auth) | table publique miroir de auth.users |
 | `support_messages` | Messages support / témoignages / suggestions | migration : `supabase-migration-support-messages.sql` |
+| `app_settings` | Réglages modifiables depuis le dashboard (ex. `oracle_trial` : plafond et seuil d'alerte du mois offert via le QR code) | migration : `supabase-migration-app-settings.sql`, service_role uniquement |
 
 ### Politique de rétention — table `tirages`
 

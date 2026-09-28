@@ -130,7 +130,8 @@ module.exports = async (req, res) => {
             }
             const refusal = await trial.oracleTrialRefusal(supabase, email);
             if (refusal) return res.status(409).json({ success: false, error: 'trial_not_eligible', message: refusal });
-            if ((await trial.countOracleTrials(supabase)) >= trial.ORACLE_TRIAL_MAX) {
+            const trialSettings = await trial.getOracleTrialSettings(supabase);
+            if ((await trial.countOracleTrials(supabase)) >= trialSettings.max) {
                 return res.status(410).json({ success: false, error: 'trial_exhausted', message: "Tous les mois offerts ont été attribués. Vous pouvez tout de même vous abonner au Tore." });
             }
             const meta = { email, full_name: fullName, plan: 'complet', trial_source: trial.ORACLE_TRIAL_SOURCE };
