@@ -185,17 +185,19 @@ module.exports = async (req, res) => {
                     promoCode = '';
                 }
             }
-            // Paiement annulé : retour sur le tirage dans la langue d'origine (la fenêtre de
-            // limite de /en/tore.html envoie lang:'en'). Valeur contrôlée, jamais une URL cliente.
-            const cancelPath = req.body.lang === 'en' ? '/en/tore.html' : '/tore.html';
+            // Retour de Stripe (succès ou annulation) dans la langue d'origine : la fenêtre de
+            // limite de /en/tore.html envoie lang:'en'. Valeur contrôlée, jamais une URL cliente.
+            const lang = req.body.lang === 'en' ? 'en' : 'fr';
+            const langPrefix = lang === 'en' ? '/en' : '';
             const sessionParams = {
                 payment_method_types: ['card'],
                 mode: 'subscription',
                 line_items: [{ price: priceId, quantity: 1 }],
-                success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url:  `${frontendUrl}${cancelPath}?cancelled=1`,
-                metadata: { offer: 'tore-subscription', plan, email, full_name: fullName },
-                subscription_data: { metadata: { email, full_name: fullName, plan } }
+                success_url: `${frontendUrl}${langPrefix}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url:  `${frontendUrl}${langPrefix}/tore.html?cancelled=1`,
+                // lang : langue de l'email de bienvenue envoyé par le webhook (stripe-webhook.js).
+                metadata: { offer: 'tore-subscription', plan, email, full_name: fullName, lang },
+                subscription_data: { metadata: { email, full_name: fullName, plan, lang } }
             };
             if (promoCode) {
                 sessionParams.discounts = [{ promotion_code: promoCode }];
