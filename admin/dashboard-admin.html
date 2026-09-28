@@ -13304,7 +13304,10 @@
 
         // ── QR code du livret (mois offert) — encode une URL fixe, pas de données serveur.
         // Logo Oradia incrusté au centre (niveau de correction H, tolère ~30% de la surface
-        // recouverte), même esthétique que le QR envoyé par email (invitation "Offrir un mois").
+        // recouverte — ratios vérifiés par décodage jsQR avant mise en prod), même esthétique
+        // que le QR envoyé par email (invitation "Offrir un mois") : modules "nuit étoilée"
+        // plutôt que noir pur, halo blanc autour du médaillon pour le détacher du bruit du QR
+        // (sans ce halo le logo se noyait dans les modules voisins et ressemblait à une tache).
         let _oracleQrRendered = false;
         let _oracleQrReady = null;
         function renderOracleQr() {
@@ -13312,7 +13315,11 @@
             const el = document.getElementById('oracleQrCode');
             if (!el || typeof QRCode === 'undefined') return;
             el.innerHTML = '';
-            new QRCode(el, { text: 'https://oradia.fr/oracle-offert', width: 220, height: 220, correctLevel: QRCode.CorrectLevel.H });
+            new QRCode(el, {
+                text: 'https://oradia.fr/oracle-offert', width: 300, height: 300,
+                colorDark: '#0a192f', colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
             _oracleQrRendered = true;
 
             const canvas = el.querySelector('canvas');
@@ -13322,17 +13329,25 @@
                 const logo = new Image();
                 logo.onload = () => {
                     const size = canvas.width;
-                    const logoSize = size * 0.24;
-                    const ringSize = logoSize + size * 0.03;
+                    const logoSize = size * 0.23;
+                    const ringSize = size * 0.27;
+                    const haloSize = size * 0.34;
                     const cx = size / 2, cy = size / 2;
-                    // Fond de la bague : couleur du logo lui-même (nuit étoilée), pour que le
-                    // cercle se fonde avec l'image plutôt qu'un patch blanc disparate.
+                    // Halo blanc de séparation.
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, haloSize / 2, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fill();
+                    ctx.restore();
+                    // Bague or + fond nuit étoilée, pour que le médaillon se fonde avec le logo
+                    // plutôt qu'un patch blanc disparate.
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cx, cy, ringSize / 2, 0, Math.PI * 2);
                     ctx.fillStyle = '#0a192f';
                     ctx.fill();
-                    ctx.lineWidth = size * 0.006;
+                    ctx.lineWidth = size * 0.007;
                     ctx.strokeStyle = '#d4af37';
                     ctx.stroke();
                     ctx.restore();
@@ -13351,7 +13366,7 @@
                     resolve();
                 };
                 logo.onerror = () => resolve(); // logo indisponible : le QR reste utilisable sans lui
-                logo.src = '../images/logo-hd-v2.webp';
+                logo.src = '../images/logo-160.webp';
             });
         }
 
