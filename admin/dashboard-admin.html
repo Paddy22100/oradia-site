@@ -4478,6 +4478,17 @@
                     </button>
                 </div>
 
+                <!-- Relance panier abandonné -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Relance panier abandonné</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé 24 à 48 h après un paiement non finalisé (et bouton « Relancer » d'une commande)</p>
+                    </div>
+                    <button onclick="sendMailTest('abandon-cart')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                    </button>
+                </div>
+
                 <!-- Confirmation commande (vente ferme) -->
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div>
@@ -7634,6 +7645,7 @@
                             ${preorder.offer || '-'}
                         </span>
                         ${preorder.order_type === 'order' ? '<span class="ml-1 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-teal-400/15 text-teal-300 border border-teal-300/30">Commande</span>' : ''}
+                        ${preorder.is_gift ? '<span class="ml-1" title="Cadeau : colis sans prix">🎁</span>' : ''}
                     </td>
                     <td class="px-6 py-4 text-gold font-bold text-lg">${formatCurrency(preorder.amount_total)}</td>
                     <td class="px-6 py-4">
@@ -16431,6 +16443,11 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
                     ${preorder.shipped_at ? `<p class="text-light-gold/40 text-xs">Expédiée le ${formatDate(preorder.shipped_at)}</p>` : ''}
                     ${preorder.delivered_at ? `<p class="text-teal-300/70 text-xs">Livrée le ${formatDate(preorder.delivered_at)}</p>` : ''}
                 </div>
+                ${preorder.is_gift ? `
+                <div class="mb-5 space-y-1">
+                    <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-2">🎁 Cadeau — ne pas mettre de prix dans le colis</p>
+                    ${preorder.gift_message ? `<p class="text-light-gold/80 text-sm italic">« ${escapeHtmlFront(preorder.gift_message)} »</p>` : '<p class="text-light-gold/50 text-sm">Pas de message</p>'}
+                </div>` : ''}
                 ${preorder.billing_address ? `
                 <div class="mb-5 space-y-1">
                     <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-2">Facturation (adresse différente)</p>

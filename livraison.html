@@ -508,9 +508,24 @@
                                     <span class="text-light-gold/70 text-sm">Livraison</span>
                                     <span id="delivery-cost" class="text-light-gold font-semibold">-</span>
                                 </div>
+                                <p id="free-shipping-hint" class="text-xs text-gold/80"></p>
                                 <div class="flex justify-between items-center pt-4 border-t border-gold/20">
                                     <span class="text-gold font-bold text-lg">Total TTC</span>
                                     <span id="final-total" class="text-gold font-bold text-4xl">-</span>
+                                </div>
+                            </div>
+
+                            <!-- Option cadeau -->
+                            <div class="mt-6 pt-4 border-t border-gold/15">
+                                <label for="giftOption" class="inline-flex items-start gap-3 cursor-pointer">
+                                    <input type="checkbox" id="giftOption" class="w-4 h-4 mt-0.5 flex-shrink-0 accent-gold cursor-pointer">
+                                    <span class="text-sm text-light-gold/85 leading-snug">🎁 <strong class="text-light-gold">C'est un cadeau</strong> — aucun prix dans le colis
+                                        <span class="text-light-gold/50 text-xs block mt-0.5">Indiquez l'adresse de la personne comme adresse de livraison.</span>
+                                    </span>
+                                </label>
+                                <div id="giftMessageWrap" class="hidden mt-3">
+                                    <textarea id="giftMessage" maxlength="200" rows="3" class="form-input w-full text-sm" placeholder="Votre message (facultatif), glissé dans le coffret"></textarea>
+                                    <p class="text-light-gold/40 text-xs text-right"><span id="giftMessageCount">0</span>/200</p>
                                 </div>
                             </div>
 
@@ -810,6 +825,7 @@
             order:    { 'standard': 42, 'guidance-incluse': 52, 'edition-signature': 46 }
         };
         Object.keys(OFFER_CONFIG).forEach(id => { OFFER_CONFIG[id].priceEuros = FALLBACK_PRICES[SALE_MODE][id]; });
+        const FREE_RELAY = { minQty: 2, price: 0.01 };
         const SHOP_PAGE_URL = SALE_MODE === 'order' ? '/commander' : 'precommande-oracle.html#cart-section';
 
         async function loadShopCatalog() {
@@ -824,6 +840,11 @@
                     const price = offers[id]?.price?.[SALE_MODE];
                     if (OFFER_CONFIG[id] && Number.isFinite(price)) OFFER_CONFIG[id].priceEuros = price;
                 });
+                const cat = data?.shop?.catalog;
+                if (cat && 'freeRelayShippingMinQty' in cat) {
+                    FREE_RELAY.minQty = cat.freeRelayShippingMinQty;
+                    FREE_RELAY.price = Number(cat.freeRelayShippingPrice) || 0.01;
+                }
                 return data?.shop || null;
             } catch (e) {
                 return null;
@@ -1018,9 +1039,18 @@
         }
 
         // Calculer le tarif de livraison selon le poids et le mode
+        function cartQuantity() {
+            return Object.values(cart).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
+        }
+
         function calculateDeliveryPrice(weight, deliveryMethod) {
             if (deliveryMethod === 'hand_delivery') {
                 return 0;
+            }
+            // Livraison « offerte » en point relais dès N coffrets (0,01 € : minimum légal
+            // pour un livre, loi Darcos) — même règle que lib/shop-config.js.
+            if (deliveryMethod === 'relay' && FREE_RELAY.minQty && cartQuantity() >= FREE_RELAY.minQty) {
+                return FREE_RELAY.price;
             }
             
             const rates = MONDIAL_RELAY_RATES[deliveryMethod];
@@ -1052,6 +1082,8 @@
                 if (priceElement) {
                     if (price === 0) {
                         priceElement.textContent = 'GRATUIT';
+                    } else if (price < 0.1) {
+                        priceElement.textContent = 'OFFERTE (0,01 €)';
                     } else {
                         priceElement.textContent = `${price.toFixed(2)} €`;
                     }
@@ -1130,11 +1162,21 @@
             if (deliveryPrice !== null && deliveryPrice !== undefined) {
                 if (deliveryPrice === 0) {
                     document.getElementById('delivery-cost').textContent = 'GRATUIT';
+                } else if (deliveryPrice < 0.1) {
+                    document.getElementById('delivery-cost').textContent = 'Offerte (0,01 €)';
                 } else {
                     document.getElementById('delivery-cost').textContent = `${deliveryPrice.toFixed(2)} €`;
                 }
             } else {
                 document.getElementById('delivery-cost').textContent = '-';
+            }
+            const hint = document.getElementById('free-shipping-hint');
+            if (hint) {
+                const missing = FREE_RELAY.minQty ? FREE_RELAY.minQty - cartQuantity() : null;
+                hint.textContent = !FREE_RELAY.minQty ? ''
+                    : (missing > 0
+                        ? `Livraison offerte en point relais dès ${FREE_RELAY.minQty} coffrets — plus que ${missing} !`
+                        : (selectedDelivery === 'relay' ? '✓ Livraison en point relais offerte' : `Livraison offerte en choisissant le point relais`));
             }
             
             const total = productsSubtotal + deliveryPrice;
@@ -1375,6 +1417,9 @@
                         price: Math.round(deliveryPrice * 100) // Convertir en centimes
                     },
                     saleMode: SALE_MODE,
+                    gift: document.getElementById('giftOption')?.checked
+                        ? { isGift: true, message: (document.getElementById('giftMessage')?.value || '').trim().slice(0, 200) }
+                        : null,
                     relayPoint: selectedDelivery === 'relay' ? {
                         id: selectedRelayPoint.id,
                         name: selectedRelayPoint.name,
@@ -1612,6 +1657,10 @@
         // Initialisation unique au chargement de la page
         document.addEventListener('DOMContentLoaded', async () => {
             applySaleModeTexts();
+            const giftBox = document.getElementById('giftOption');
+            const giftMsg = document.getElementById('giftMessage');
+            giftBox?.addEventListener('change', () => document.getElementById('giftMessageWrap').classList.toggle('hidden', !giftBox.checked));
+            giftMsg?.addEventListener('input', () => { document.getElementById('giftMessageCount').textContent = giftMsg.value.length; });
             // Prix à jour selon le mode (précommande / vente ferme) avant d'afficher le panier.
             await loadShopCatalog();
             // Charger les données initiales

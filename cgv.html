@@ -104,9 +104,21 @@
                     <h2 class="cormorant text-2xl font-bold text-gold mb-4">Produits et services proposés</h2>
                     
                     <h3 class="text-xl font-semibold text-gold mb-3">Oracle Oradia (produit physique)</h3>
+                    <!-- Blocs pilotés par les interrupteurs Boutique du dashboard (js/shop-mode.js,
+                         attribut data-shop-show-if) : les CGV suivent automatiquement l'ouverture
+                         des précommandes et de la vente en ligne. -->
                     <p class="mb-4">
-                        Jeu de 64 cartes avec livret d'accompagnement de 200 pages. 
-                        Disponible en précommande avec trois formules : STANDARD (38€), GUIDANCE OFFERTE (48€) et ÉDITION SIGNATURE (52€).
+                        Jeu de 64 cartes avec livret d'accompagnement de 200 pages, conte initiatique, pièce de tirage et coffret.
+                    </p>
+                    <p class="mb-4" data-shop-show-if="preorder">
+                        <strong>Précommande :</strong> jusqu'au 31 décembre 2026, avec trois formules : STANDARD (38€), GUIDANCE OFFERTE (48€, séance de guidance de 30 minutes en visio incluse) et ÉDITION SIGNATURE (42€, 100 exemplaires).
+                        À sa sortie, l'oracle sera vendu 42€, 52€ et 46€ respectivement.
+                    </p>
+                    <p class="mb-4" data-shop-show-if="order" style="display:none">
+                        <strong>Vente en ligne :</strong> l'oracle est disponible en stock avec trois formules : STANDARD (42€), GUIDANCE OFFERTE (52€, séance de guidance de 30 minutes en visio incluse) et ÉDITION SIGNATURE (46€, dans la limite des 100 exemplaires).
+                    </p>
+                    <p class="mb-4" data-shop-show-if="closed" style="display:none">
+                        L'oracle n'est pas disponible à la vente pour le moment.
                     </p>
                     
                     <h3 class="text-xl font-semibold text-gold mb-3">Accès au Tore (services numériques)</h3>
@@ -225,9 +237,13 @@
                         <strong>Délais de livraison :</strong> Les délais de livraison sont donnés à titre indicatif et peuvent varier selon le transporteur.
                     </p>
                     <p class="mb-4">
-                        <strong>Transport :</strong> Les livraisons sont assurées par des transporteurs partenaires (type Colissimo ou équivalent).
+                        <strong>Transport :</strong> Les livraisons sont assurées par Mondial Relay (en point relais ou à domicile). Une remise en main propre peut être proposée.
                     </p>
-                    <p>
+                    <p class="mb-4" data-shop-show-if="order" style="display:none">
+                        <strong>Délais de la vente en ligne :</strong> La commande est expédiée sous 3 jours ouvrés après confirmation du paiement.
+                        La livraison intervient ensuite généralement sous 3 à 5 jours ouvrés. Un numéro de suivi est envoyé par email lors de l'expédition.
+                    </p>
+                    <p data-shop-show-if="preorder">
                         <strong>Délais spécifiques précommande :</strong> Les précommandes sont ouvertes jusqu'au 31 décembre 2026. L'expédition interviendra après la clôture des précommandes et la phase de production (courant janvier 2027), à partir de mi-février 2027.
                         Le client sera informé par email à chaque étape.
                     </p>
@@ -256,11 +272,21 @@
                     <p class="mb-4">
                         <strong>Précommandes :</strong> Dans le cadre d'une précommande, le délai de rétractation court à partir de la réception du produit.
                     </p>
+                    <p class="mb-4" data-shop-show-if="order" style="display:none">
+                        <strong>Vente en ligne :</strong> Le délai de 14 jours court à compter de la réception du coffret. Pour l'offre Guidance Offerte,
+                        la séance de guidance, une fois réalisée avec l'accord exprès du client, ne peut plus faire l'objet d'une rétractation ; le coffret reste soumis au droit de rétractation.
+                    </p>
                     
                     <h3 class="text-xl font-semibold text-gold mb-3">Modalités d'exercice</h3>
                     <p>
                         Pour exercer votre droit de rétractation, envoyez un email à contact@oradia.fr 
                         en indiquant votre décision de vous rétracter.
+                    </p>
+                    <p class="mt-4">
+                        Le produit doit être retourné complet (cartes, livret, pièce, coffret) et en bon état, dans les 14 jours suivant la communication
+                        de votre décision. <strong>Les frais de retour sont à la charge du client.</strong> Le remboursement de la totalité des sommes versées,
+                        frais de livraison initiaux inclus (sur la base du mode de livraison le moins coûteux proposé), intervient dans les 14 jours suivant
+                        la réception de votre décision, par le même moyen de paiement ; il peut être différé jusqu'à la récupération du produit ou la preuve de son expédition.
                     </p>
                 </section>
 
@@ -370,7 +396,7 @@
                 <!-- Date de mise à jour -->
                 <section class="border-t border-gold/20 pt-6">
                     <p class="text-center text-light-gold/70">
-                        Date de mise à jour : 24 septembre 2026
+                        Date de mise à jour : 28 septembre 2026
                     </p>
                 </section>
             </div>

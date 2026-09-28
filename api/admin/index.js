@@ -10,7 +10,7 @@ const xml2js = require('xml2js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
+const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, sendAbandonedCartEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
@@ -1333,10 +1333,12 @@ async function handleData(req, res) {
 
       if (getAction === 'cron-relance') {
         try {
-          const BREVO_API_KEY = process.env.BREVO_API_KEY;
-          const templateId = parseInt(process.env.BREVO_TEMPLATE_ABANDON_CART || '0', 10);
-          if (!BREVO_API_KEY || !templateId) {
-            return res.status(200).json({ success: false, error: 'BREVO_API_KEY ou BREVO_TEMPLATE_ABANDON_CART manquant' });
+          // Relance panier abandonné : email construit par lib/brevo-order-email.js
+          // (sendAbandonedCartEmail) — plus de dépendance au modèle Brevo n°15 ni à
+          // BREVO_TEMPLATE_ABANDON_CART, dont l'absence faisait sortir ce cron avant la
+          // séquence post-tirage (check-in J+3, promo J+7) déclenchée plus bas.
+          if (!process.env.BREVO_API_KEY) {
+            return res.status(200).json({ success: false, error: 'BREVO_API_KEY manquant' });
           }
           // Commandes pending créées entre 24h et 48h (fenêtre unique, évite les doublons)
           const now = new Date();
@@ -1344,7 +1346,7 @@ async function handleData(req, res) {
           const h48ago = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
           const { data: pending, error } = await supabase
             .from('preorders')
-            .select('id, email, offer, created_at')
+            .select('id, email, full_name, offer, items, order_type, created_at')
             .eq('paid_status', 'pending')
             .not('email', 'is', null)
             .gte('created_at', h48ago)
@@ -1368,19 +1370,17 @@ async function handleData(req, res) {
           const results = [];
           for (const order of toRelance) {
             try {
-              const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-                method: 'POST',
-                headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  templateId,
-                  to: [{ email: order.email }],
-                  params: { OFFER: order.offer || 'Oracle Oradia', NAME: '' }
-                })
+              const sent = await sendAbandonedCartEmail({
+                toEmail: order.email,
+                toName: order.full_name || '',
+                offer: order.offer,
+                items: order.items,
+                orderType: order.order_type
               });
-              if (brevoRes.ok) {
+              if (sent) {
                 await supabase.from('preorders').update({ relance_sent_at: new Date().toISOString() }).eq('id', order.id);
               }
-              results.push({ email: order.email, ok: brevoRes.ok, status: brevoRes.status });
+              results.push({ email: order.email, ok: sent });
             } catch(e) {
               results.push({ email: order.email, ok: false, error: e.message });
             }
@@ -3351,9 +3351,23 @@ async function handleData(req, res) {
             shipping: {
               method: 'home', priceCents: 1099
             },
+            // Aperçu des blocs facultatifs : option cadeau et code « 1 mois de Tore offert ».
+            gift: { message: 'Joyeux anniversaire, que cet oracle t\'accompagne !' },
+            toreGiftCode: 'ORADIA-EXEMPLE',
             amountTotal: '98.99'
           });
           if (!emailSentOrder) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
+        } else if (type === 'abandon-cart') {
+          // Relance panier abandonné : même fonction que le cron et la relance manuelle.
+          const emailSentAb = await sendAbandonedCartEmail({
+            toEmail: dest,
+            toName: 'Prénom Nom (exemple)',
+            offer: 'guidance-incluse',
+            items: [{ offer: 'guidance-incluse', quantity: 1 }],
+            orderType: 'preorder'
+          });
+          if (!emailSentAb) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
         } else if (type === 'guidance-confirm') {
           // Réutilise le VRAI template (lib/guidance-email.js), partagé avec le webhook
@@ -3393,24 +3407,20 @@ async function handleData(req, res) {
       }
 
       if (action === 'abandon-relance' && body.orderId && body.email) {
-        const BREVO_API_KEY = process.env.BREVO_API_KEY;
-        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configuré' });
-        const templateId = parseInt(process.env.BREVO_TEMPLATE_ABANDON_CART || '0', 10);
-        if (!templateId) return res.status(500).json({ error: 'BREVO_TEMPLATE_ABANDON_CART non configuré' });
-
-        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            templateId,
-            to: [{ email: body.email, name: body.name || undefined }],
-            params: { OFFER: body.offer || '', NAME: body.name || '' }
-          })
+        // Même fonction que le cron quotidien (lib/brevo-order-email.js).
+        const { data: order } = await supabase
+          .from('preorders')
+          .select('email, full_name, offer, items, order_type')
+          .eq('id', body.orderId)
+          .maybeSingle();
+        const sent = await sendAbandonedCartEmail({
+          toEmail: body.email,
+          toName: body.name || order?.full_name || '',
+          offer: order?.offer || body.offer,
+          items: order?.items,
+          orderType: order?.order_type
         });
-        if (!brevoRes.ok) {
-          const txt = await brevoRes.text();
-          throw new Error(`Brevo ${brevoRes.status}: ${txt}`);
-        }
+        if (!sent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
         await supabase.from('preorders').update({ relance_sent_at: new Date().toISOString() }).eq('id', body.orderId);
         return res.status(200).json({ success: true, email: body.email });
       }

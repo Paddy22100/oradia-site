@@ -10,6 +10,13 @@
  *   data-shop-text-order="…"             → texte si la vente ferme est active
  *   data-shop-text-closed="…"            → texte si tout est fermé
  *   data-shop-hide-when="order closed"   → masqué dans les modes listés
+ *   data-shop-show-if="preorder order"   → visible seulement si l'un des modes listés
+ *                                          est OUVERT ("closed" = les deux fermés).
+ *                                          Contrairement au mode actif, précommande et
+ *                                          vente ferme peuvent être visibles ensemble
+ *                                          (ex. CGV quand les deux sont ouvertes).
+ *                                          Mettre style="display:none" dans le HTML sur
+ *                                          les blocs invisibles par défaut.
  *
  * Mode actif : "order" si la vente ferme est ouverte, sinon "preorder" si les
  * précommandes le sont, sinon "closed". Sans réponse de l'API, rien n'est modifié
@@ -74,6 +81,11 @@
     });
     scope.querySelectorAll('[data-shop-text-' + mode + ']').forEach(function (el) {
       el.textContent = el.getAttribute('data-shop-text-' + mode);
+    });
+    var open = { preorder: state.preorder, order: state.order, closed: !state.preorder && !state.order };
+    scope.querySelectorAll('[data-shop-show-if]').forEach(function (el) {
+      var modes = (el.getAttribute('data-shop-show-if') || '').split(/\s+/);
+      el.style.display = modes.some(function (m) { return open[m]; }) ? '' : 'none';
     });
     scope.querySelectorAll('[data-shop-hide-when]').forEach(function (el) {
       var modes = (el.getAttribute('data-shop-hide-when') || '').split(/\s+/);
