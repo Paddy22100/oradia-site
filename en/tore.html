@@ -4655,10 +4655,12 @@ function showToreAnalysisCTA() {
         } else {
           sessionStorage.removeItem('tore_tirage_id');
         }
-        // Sauvegarde l'intention pour l'analyse éditoriale — pour tous les tirages, pas
-        // seulement les visiteurs anonymes : les insights du dashboard admin sous-comptaient
-        // silencieusement toutes les intentions des membres/abonnés connectés jusqu'ici.
-        if (intention) {
+        // Sauvegarde l'intention pour l'analyse éditoriale — uniquement pour les invités
+        // (result.id absent) : côté membre connecté, api/tirages/send-email.js fait déjà
+        // ce miroir lui-même, côté serveur et dans la même requête que l'enregistrement du
+        // tirage. Appeler aussi ce fetch ici pour les membres recréerait le doublon
+        // (une ligne par table) déjà corrigé le 2026-09-27.
+        if (intention && !(result && result.id)) {
           fetch('/api/admin/intentions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },

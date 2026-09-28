@@ -173,6 +173,29 @@ async function handleSaveTirage(req, res) {
     return res.status(500).json({ success: false, message: 'Impossible d\'enregistrer le tirage.' });
   }
 
+  // Miroir dans intentions_anonymes pour les insights admin (voir list-intentions /
+  // analyze-intentions dans api/admin/index.js, qui lisent exclusivement cette table).
+  // Fait ici, côté serveur et dans la même requête que l'enregistrement du tirage,
+  // plutôt que via un fetch séparé côté client (tore.html) : ce second aller-retour
+  // fire-and-forget pouvait échouer silencieusement (navigation, réseau) sans que le
+  // tirage lui-même soit affecté — un tirage réel du 2026-09-28 en a fait les frais,
+  // absent des insights bien qu'enregistré avec succès dans `tirages`.
+  if (row.intention) {
+    try {
+      const supabaseService = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const { error: iErr } = await supabaseService.from('intentions_anonymes').insert({
+        intention: row.intention,
+        cartes: row.cartes
+      });
+      if (iErr) console.error('[intentions_anonymes] miroir échoué:', iErr);
+    } catch (e) {
+      console.error('[intentions_anonymes] miroir exception:', e.message);
+    }
+  }
+
   return res.status(200).json({ success: true, tirage: data });
 }
 
