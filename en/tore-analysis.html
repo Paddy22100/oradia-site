@@ -940,8 +940,9 @@
         </div>
         <!-- /Bloc conversion Tore -->
 
-        <!-- Message de conversion - Oracle Physique - VERSION PREMIUM -->
-        <div class="mb-16 fade-in-up" style="animation-delay: 0.3s">
+        <!-- Message de conversion - Oracle Physique - VERSION PREMIUM
+             (piloté par les interrupteurs Boutique : js/shop-mode.js) -->
+        <div class="mb-16 fade-in-up" style="animation-delay: 0.3s" data-shop-hide-when="closed">
             <div class="relative overflow-hidden rounded-3xl">
                 <!-- Background avec dégradé premium -->
                 <div class="absolute inset-0 bg-gradient-to-br from-gold/20 via-gold/10 to-purple-500/10"></div>
@@ -978,10 +979,10 @@
                     
                     <!-- CTA Principal -->
                     <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-                        <a href="/precommande-oracle.html" class="bg-gradient-to-r from-gold via-light-gold to-gold text-night-blue font-bold py-5 px-10 md:px-12 rounded-full hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center gap-3 hover:scale-110 text-lg group relative overflow-hidden">
+                        <a href="/precommande-oracle.html" data-shop-link class="bg-gradient-to-r from-gold via-light-gold to-gold text-night-blue font-bold py-5 px-10 md:px-12 rounded-full hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center gap-3 hover:scale-110 text-lg group relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-r from-light-gold to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                             <i class="fas fa-box-open text-2xl relative z-10"></i>
-                            <span class="relative z-10">Preorder the Physical Oracle</span>
+                            <span class="relative z-10" data-shop-text-order="Order the Physical Oracle">Preorder the Physical Oracle</span>
                         </a>
                         
                     </div>
@@ -2451,6 +2452,7 @@
     </script>
     
     <!-- Scripts pour header/footer -->
+    <script src="/js/shop-mode.js" defer></script>
     <script src="/components/header-manager-en.js" defer></script>
     <script src="/components/footer-manager-en.js" defer></script>
     

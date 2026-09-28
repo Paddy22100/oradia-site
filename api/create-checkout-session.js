@@ -155,6 +155,11 @@ module.exports = async (req, res) => {
             };
             if (promoCode) {
                 sessionParams.discounts = [{ promotion_code: promoCode }];
+            } else {
+                // Champ « code promo » sur la page Stripe : permet notamment d'utiliser le code
+                // « 1 mois de Tore offert » reçu avec l'oracle physique (lib/tore-gift.js).
+                // Stripe interdit discounts et allow_promotion_codes ensemble.
+                sessionParams.allow_promotion_codes = true;
             }
             // Pré-remplir l'email si connu, sinon Stripe le collecte pendant le checkout
             if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
@@ -180,7 +185,9 @@ module.exports = async (req, res) => {
             const donationFullName = String(req.body.fullName || 'Contribution ORADIA').trim();
 
             const session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
+                // Pas de payment_method_types : Stripe affiche les moyens activés dans le dashboard
+                // (carte, Apple Pay, Google Pay, Link…). Les moyens différés sont gérés par le webhook
+                // (checkout.session.async_payment_succeeded / _failed).
                 line_items: [
                     {
                         price_data: {
@@ -217,6 +224,11 @@ module.exports = async (req, res) => {
         // Adresse de facturation différente (case à cocher de livraison.html) : envoyée
         // depuis toujours par le formulaire mais ignorée ici — la facture Stripe ne la
         // portait donc jamais.
+        // Option cadeau (livraison.html) : message glissé dans le colis, sans prix.
+        const rawGift = body.gift || null;
+        const gift = rawGift && rawGift.isGift ? {
+            message: String(rawGift.message || '').replace(/\s+/g, ' ').trim().slice(0, shopConfig.GIFT_MESSAGE_MAX_LENGTH)
+        } : null;
         const rawBilling = body.billingInfo || customerInfo.billingInfo || null;
         const billing = rawBilling && rawBilling.isDifferent ? {
             address: String(rawBilling.address || '').trim(),
@@ -415,7 +427,8 @@ module.exports = async (req, res) => {
 
         // Calculer le poids total et le prix de livraison selon la logique exacte du frontend
         const totalWeight = shopConfig.totalWeightKg(normalizedData.items);
-        const calculatedDeliveryPrice = shopConfig.calculateShippingEuros(totalWeight, normalizedData.deliveryMethod, destinationCountry);
+        const totalQuantity = normalizedData.items.reduce((sum, it) => sum + it.quantity, 0);
+        const calculatedDeliveryPrice = shopConfig.calculateShippingEuros(totalWeight, normalizedData.deliveryMethod, destinationCountry, totalQuantity);
         
         // Utiliser le prix calculé par le serveur, ignorer totalement le prix frontend
         const deliveryPrice = calculatedDeliveryPrice;
@@ -464,7 +477,9 @@ module.exports = async (req, res) => {
                     currency: 'eur',
                     product_data: {
                         name: 'Frais de livraison',
-                        description: `Livraison: ${normalizedData.deliveryMethod} (${totalWeight}kg)`,
+                        description: deliveryPrice < 0.1
+                            ? `Livraison offerte en point relais dès ${shopConfig.FREE_RELAY_SHIPPING_MIN_QTY} coffrets`
+                            : `Livraison: ${normalizedData.deliveryMethod} (${totalWeight}kg)`,
                     },
                     unit_amount: Math.round(deliveryPrice * 100), // Convertir € en centimes
                 },
@@ -501,7 +516,9 @@ module.exports = async (req, res) => {
         // Créer la session Stripe Checkout
 
         const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
+            // Pas de payment_method_types : Stripe affiche les moyens activés dans le dashboard
+            // (carte, Apple Pay, Google Pay, Link…). Les moyens différés sont gérés par le webhook
+            // (checkout.session.async_payment_succeeded / _failed).
             line_items: lineItems,
             mode: 'payment',
             // value en clair dans l'URL (pas une donnée sensible, juste un montant) : évite un
@@ -531,6 +548,7 @@ module.exports = async (req, res) => {
             metadata: {
                 offer: primaryOfferForStripe,
                 sale_mode: saleMode,
+                ...(gift && { is_gift: '1', gift_message: gift.message }),
                 delivery_method: normalizedData.deliveryMethod || '',
                 delivery_price_cents: String(Math.round(deliveryPrice * 100)),
                 total_amount_cents: String(totalAmount),
@@ -604,7 +622,8 @@ module.exports = async (req, res) => {
             calculated_delivery_price_eur: calculatedDeliveryPrice,
             paid_status: 'pending',
             source: 'oradia-livraison',
-            order_type: saleMode
+            order_type: saleMode,
+            ...(gift && { is_gift: true, gift_message: gift.message || null })
         };
 
         const { error: insertError } = await supabase
