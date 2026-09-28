@@ -408,7 +408,7 @@ async function handleSendEmail(req, res) {
     const getImagePath = (card) => {
       if (card.imgSrc) return card.imgSrc;
       if (card.image) return card.image;
-      return `images/${card.family}/${card.name}.png`;
+      return `images/${card.family}/${card.name}.webp`;
     };
     
     // Générer le HTML des cartes - incluant les cartes passerelles
@@ -581,7 +581,7 @@ async function handleSendEmail(req, res) {
             <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 18px;">
               <tr>
                 <td style="vertical-align:middle;">
-                  <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="O" width="40" height="40" style="display:block;width:40px;height:40px;border-radius:50%;border:1px solid #8a6d20;">
+                  <img src="https://oradia.fr/images/logo-email.jpg" alt="O" width="40" height="40" style="display:block;width:40px;height:40px;border-radius:50%;border:1px solid #8a6d20;">
                 </td>
                 <td style="vertical-align:middle;padding-left:8px;">
                   <p style="margin:0;color:#d4af37;font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:7px;text-transform:uppercase;line-height:1;">RADIA</p>
