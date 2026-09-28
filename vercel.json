@@ -105,6 +105,7 @@
     { "src": "/precommande-oracle",            "dest": "/precommande-oracle.html" },
     { "src": "/precommande",                   "dest": "/precommande-oracle.html" },
     { "src": "/commander",                     "dest": "/commande-oracle.html" },
+    { "src": "/oracle-offert",                 "dest": "/oracle-offert.html" },
     { "src": "/boutique",                      "dest": "/commande-oracle.html" },
     { "src": "/commande-oracle",               "dest": "/commande-oracle.html" },
     { "src": "/accompagnements",               "dest": "/accompagnements.html" },

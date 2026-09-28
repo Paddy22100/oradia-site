@@ -14624,6 +14624,7 @@
                             <div class="min-w-0">
                                 <p class="text-light-gold font-semibold text-sm">${f.label}</p>
                                 ${f.description ? `<p class="text-light-gold/40 text-xs mt-0.5">${f.description}</p>` : ''}
+                                ${f.key === 'oracle_qr_trial' && data.oracleTrial ? `<p class="text-gold/70 text-xs mt-1">Essais utilisés : ${data.oracleTrial.used} / ${data.oracleTrial.max} · lien du QR code : oradia.fr/oracle-offert</p>` : ''}
                             </div>
                             <button onclick="toggleFeatureFlag('${f.key}', ${!f.enabled})" class="shrink-0 relative inline-flex h-7 w-13 items-center rounded-full transition ${f.enabled ? 'bg-gold' : 'bg-white/10'}" style="width:52px;">
                                 <span class="inline-block h-5 w-5 transform rounded-full bg-night-blue transition ${f.enabled ? 'translate-x-7' : 'translate-x-1'}"></span>

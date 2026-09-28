@@ -113,6 +113,45 @@ module.exports = async (req, res) => {
             return res.json({ success: true, url: portalSession.url });
         }
 
+        // ── Mois d'essai offert avec l'oracle physique (QR code du livret) ────────
+        // Page /oracle-offert → abonnement Tore avec 30 jours d'essai, nouveaux abonnés
+        // uniquement, plafonné (voir lib/oracle-trial.js).
+        if (req.body.type === 'tore-oracle-trial') {
+            const trial = require('../lib/oracle-trial.js');
+            const email    = (req.body.email || '').trim().toLowerCase();
+            const fullName = (req.body.fullName || '').trim().slice(0, 120);
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return res.status(400).json({ success: false, message: 'Adresse email invalide' });
+            }
+            const priceId = process.env.STRIPE_PRICE_COMPLET;
+            if (!priceId) return res.status(500).json({ success: false, message: 'Abonnement indisponible pour le moment' });
+            if (!(await trial.isOracleTrialEnabled(supabase))) {
+                return res.status(403).json({ success: false, error: 'trial_closed', message: "L'offre du mois gratuit n'est pas disponible pour le moment." });
+            }
+            const refusal = await trial.oracleTrialRefusal(supabase, email);
+            if (refusal) return res.status(409).json({ success: false, error: 'trial_not_eligible', message: refusal });
+            if ((await trial.countOracleTrials(supabase)) >= trial.ORACLE_TRIAL_MAX) {
+                return res.status(410).json({ success: false, error: 'trial_exhausted', message: "Tous les mois offerts ont été attribués. Vous pouvez tout de même vous abonner au Tore." });
+            }
+            const meta = { email, full_name: fullName, plan: 'complet', trial_source: trial.ORACLE_TRIAL_SOURCE };
+            const session = await stripe.checkout.sessions.create({
+                mode: 'subscription',
+                line_items: [{ price: priceId, quantity: 1 }],
+                customer_email: email,
+                subscription_data: {
+                    trial_period_days: trial.ORACLE_TRIAL_DAYS,
+                    metadata: meta
+                },
+                // Carte demandée dès l'inscription : l'abonnement démarre seul à la fin de
+                // l'essai (résiliable à tout moment depuis l'espace membre).
+                payment_method_collection: 'always',
+                success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}&essai=oracle`,
+                cancel_url:  `${frontendUrl}/oracle-offert?cancelled=1`,
+                metadata: { offer: 'tore-subscription', ...meta }
+            });
+            return res.json({ success: true, url: session.url });
+        }
+
         // ── Abonnement Complet (8€/mois) ─────────────────────────────────────────
         if (req.body.type === 'tore-complet') {
             // Normalisé dès la création de la session : cet email finit dans les metadata

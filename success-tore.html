@@ -62,6 +62,9 @@
                 <p class="text-xl mb-4">
                     Félicitations ! Votre abonnement au <strong>Tore</strong> est maintenant activé.
                 </p>
+                <p id="oracle-trial-note" class="hidden text-gold/90 mb-4">
+                    Votre mois offert avec l'oracle commence aujourd'hui : aucun prélèvement pendant 30 jours.
+                </p>
                 <p class="text-light-gold/80 mb-4">
                     Vous avez accès à l'expérience complète d'Oradia :
                 </p>
@@ -182,6 +185,10 @@
     // Vérifier si l'abonnement a été traité
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
+    // Mois d'essai offert via le QR code du livret (/oracle-offert).
+    if (urlParams.get('essai') === 'oracle') {
+        document.getElementById('oracle-trial-note')?.classList.remove('hidden');
+    }
         
         if (sessionId) {
             // Optionnel: vérifier le statut de l'abonnement côté serveur

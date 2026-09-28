@@ -8907,7 +8907,13 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (req.method === 'GET') {
         const { data, error } = await sbFeat.from('feature_flags').select('*').order('category').order('label');
         if (error) return res.status(200).json({ success: true, features: [] }); // migration pas encore exécutée
-        return res.status(200).json({ success: true, features: data || [] });
+        // Compteur du mois d'essai offert (QR code du livret), affiché sous son interrupteur.
+        let oracleTrial = null;
+        try {
+          const { countOracleTrials, ORACLE_TRIAL_MAX } = require('../../lib/oracle-trial.js');
+          oracleTrial = { used: await countOracleTrials(sbFeat), max: ORACLE_TRIAL_MAX };
+        } catch (e) { /* colonne trial_source absente : pas de compteur */ }
+        return res.status(200).json({ success: true, features: data || [], oracleTrial });
       }
       if (req.method === 'POST') {
         const body = await parseBody(req);

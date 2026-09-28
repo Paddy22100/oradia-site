@@ -351,7 +351,8 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
 // filet de sécurité par invoice.payment_succeeded (cas d'un 1er prélèvement qui a
 // d'abord échoué puis réussi via une nouvelle tentative automatique de Stripe,
 // sans repasser par checkout.session.completed).
-async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId }) {
+// trialSource : 'oracle-qr' pour le mois d'essai offert avec l'oracle (lib/oracle-trial.js).
+async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId, trialSource = null }) {
     if (!email) { console.error('[webhook] activateToreSubscription: email manquant'); return; }
 
     // .ilike() (insensible à la casse) : email arrive normalisé en minuscules, mais une
@@ -454,7 +455,17 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         if (mcpErr) console.error('[webhook] must_change_password update (migration appliquée ?):', mcpErr.message);
     }
 
-    if (!isAccountingExcluded(email)) {
+    if (trialSource && savedRow?.id) {
+        const { error: trialErr } = await supabase
+            .from('tore_subscriptions')
+            .update({ trial_source: trialSource })
+            .eq('id', savedRow.id);
+        if (trialErr) console.error('[webhook] trial_source update:', trialErr.message);
+    }
+
+    // Essai gratuit : 0 € encaissé, pas de recette (la contrainte transactions.amount > 0
+    // la refuserait) — la première vraie recette arrive avec invoice.paid en fin d'essai.
+    if (!isAccountingExcluded(email) && (amountTotalCents || 0) > 0) {
         await supabase.from('transactions').insert({
             date: new Date().toISOString().split('T')[0],
             type: 'recette',
@@ -560,7 +571,8 @@ async function processEvent(event) {
                     stripeCustomerId: invoice.customer || null,
                     stripeSubscriptionId: invSubId,
                     amountTotalCents: invoice.amount_paid || 0,
-                    sourceRef: invoice.id
+                    sourceRef: invoice.id,
+                    trialSource: subscription?.metadata?.trial_source || null
                 });
                 console.log(`[webhook] Abonnement Tore activé en filet de sécurité (invoice.payment_succeeded) pour ${email}`);
                 break;
@@ -805,7 +817,8 @@ async function processEvent(event) {
                         stripeSubscriptionId: session.subscription || null,
                         amountTotalCents: extractedData.amount_total,
                         sourceRef: sessionId,
-                        paymentIntentId: extractedData.payment_intent_id
+                        paymentIntentId: extractedData.payment_intent_id,
+                        trialSource: session.metadata?.trial_source || null
                     });
 
                     console.log(`[webhook] Tore subscription traitée: ${sessionId}`);
