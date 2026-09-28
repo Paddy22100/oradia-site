@@ -5468,12 +5468,6 @@ video {
   background-color: rgb(234 179 8 / 0.3);
 }
 
-.hover\:from-gold\/30:hover {
-  --tw-gradient-from: rgb(212 175 55 / 0.3) var(--tw-gradient-from-position);
-  --tw-gradient-to: rgb(212 175 55 / 0) var(--tw-gradient-to-position);
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
-}
-
 .hover\:from-light-gold:hover {
   --tw-gradient-from: #f5e7a1 var(--tw-gradient-from-position);
   --tw-gradient-to: rgb(245 231 161 / 0) var(--tw-gradient-to-position);
@@ -5494,10 +5488,6 @@ video {
 
 .hover\:to-gold:hover {
   --tw-gradient-to: #d4af37 var(--tw-gradient-to-position);
-}
-
-.hover\:to-gold\/20:hover {
-  --tw-gradient-to: rgb(212 175 55 / 0.2) var(--tw-gradient-to-position);
 }
 
 .hover\:to-pink-500\/70:hover {
