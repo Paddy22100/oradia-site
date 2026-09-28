@@ -1,5 +1,5 @@
 /* Pages de vente de l'oracle (precommande-oracle.html, commande-oracle.html).
-   Chargée après assets/tailwind.css : lisibilité, section claire, comparatif, rassurance. */
+   Chargée après assets/tailwind.css : lisibilité et tableau comparatif. */
 
 /* ── Lisibilité : texte courant à 90 % d'opacité minimum, 16 px sur mobile ── */
 .sales-page .text-light-gold\/70,
@@ -13,43 +13,6 @@
   .sales-page #contenu p.text-sm,
   .sales-page #contenu figcaption { font-size: 1rem; line-height: 1.6; }
 }
-
-/* ── Section claire (parchemin) pour rompre la continuité bleu nuit ── */
-.section-light {
-  background: linear-gradient(180deg, #f7f0e1 0%, #efe4cc 100%) !important;
-  color: #2a2418;
-}
-.section-light .gold-gradient {
-  background: none !important;
-  -webkit-text-fill-color: #7a5c14 !important;
-  color: #7a5c14 !important;
-}
-.section-light .text-gold,
-.section-light [class*="text-gold/"] { color: #8a6a1c !important; }
-.section-light .text-light-gold,
-.section-light [class*="text-light-gold"] { color: #2f2819 !important; }
-.section-light [class*="bg-[rgba(5,20,40"] {
-  background-color: rgba(255, 255, 255, 0.6) !important;
-}
-.section-light [class*="border-gold"] { border-color: rgba(138, 106, 28, 0.35) !important; }
-.section-light #cartesCarousel .carousel-slide span { color: #f5e7a1 !important; }
-.section-light #carouselDots > div { background-color: #8a6a1c; }
-
-/* ── Frais de livraison et rassurance sous chaque offre ── */
-.offer-ship {
-  margin-top: 0.35rem;
-  font-size: 0.9rem;
-  color: rgb(245 231 161 / 0.9);
-}
-.offer-ship strong { color: #d4af37; font-weight: 600; }
-.pay-reassure {
-  margin-top: 0.85rem;
-  text-align: center;
-  font-size: 0.8rem;
-  line-height: 1.55;
-  color: rgb(245 231 161 / 0.85);
-}
-.pay-reassure i { color: #d4af37; margin-right: 0.3rem; }
 
 /* ── Tableau comparatif des offres ── */
 .offer-compare-wrap { margin-top: 3.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
