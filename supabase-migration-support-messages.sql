@@ -43,13 +43,3 @@ CREATE POLICY "support_messages_service_role" ON support_messages
 COMMENT ON TABLE support_messages IS
     'Messages de support, témoignages et suggestions reçus depuis l''espace membre. '
     'Miroir de l''email Brevo → contact@oradia.fr, consultable depuis le dashboard admin.';
-
--- ============================================================
--- NOTE : single_draw_credits dans tore_subscriptions
--- ============================================================
--- La colonne single_draw_credits existe déjà en production (ajoutée par le webhook).
--- Si elle est absente (nouvelle instance), l'ajouter avec :
---
--- ALTER TABLE tore_subscriptions
---   ADD COLUMN IF NOT EXISTS single_draw_credits INTEGER DEFAULT 0;
--- ============================================================

@@ -4609,7 +4609,7 @@ async function handleData(req, res) {
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
-      supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed').neq('status', 'single_draw') : r),
+      supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed') : r),
       supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1),
       // .catch : la table peut ne pas exister tant que la migration kickstarter_backers n'a pas été appliquée
       supabase.from('kickstarter_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r),
@@ -6917,20 +6917,24 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
       }
 
       // ── Liste brute des intentions (anonymisées, triées par date) ──
+      // Source unique : intentions_anonymes. Depuis le correctif d'août 2026 (voir
+      // tore.html, POST vers /api/admin/intentions), CHAQUE tirage avec intention y est
+      // enregistré, membre ou anonyme — le tirage d'un membre est déjà présent par
+      // ailleurs dans la table `tirages`, donc interroger aussi `tirages` ici doublait
+      // chacune de ses intentions (une fois par table, ~1s d'écart).
       if (action === 'list-intentions') {
         const nlSupa = createClient(
           process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
           process.env.SUPABASE_SERVICE_ROLE_KEY
         );
-        const [{ data: fromTirages }, { data: fromAnon }] = await Promise.all([
-          nlSupa.from('tirages').select('intention, cartes, created_at').not('intention', 'is', null).neq('intention', '').order('created_at', { ascending: false }).limit(200),
-          nlSupa.from('intentions_anonymes').select('intention, cartes, created_at').not('intention', 'is', null).neq('intention', '').order('created_at', { ascending: false }).limit(200)
-        ]);
-        const all = [
-          ...(fromTirages || []).map(r => ({ ...r, source: 'membre' })),
-          ...(fromAnon    || []).map(r => ({ ...r, source: 'anonyme' }))
-        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-        return res.status(200).json({ success: true, intentions: all });
+        const { data: fromAnon } = await nlSupa
+          .from('intentions_anonymes')
+          .select('intention, cartes, created_at')
+          .not('intention', 'is', null)
+          .neq('intention', '')
+          .order('created_at', { ascending: false })
+          .limit(200);
+        return res.status(200).json({ success: true, intentions: fromAnon || [] });
       }
 
       // ── Analyse des intentions de tirages (insights newsletter) ──
@@ -6942,28 +6946,18 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
           process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
           process.env.SUPABASE_SERVICE_ROLE_KEY
         );
-        const { data: tiragesWithIntent, error: tErr } = await nlSupabase2
-          .from('tirages')
-          .select('intention, cartes, created_at')
-          .not('intention', 'is', null)
-          .neq('intention', '')
-          .order('created_at', { ascending: false })
-          .limit(100);
-        if (tErr) throw tErr;
-
-        const { data: anonIntentions } = await nlSupabase2
+        // Source unique : intentions_anonymes couvre déjà membres ET anonymes depuis le
+        // correctif d'août 2026 (voir list-intentions ci-dessus) — interroger `tirages`
+        // en plus doublait les intentions et les cartes des membres dans ces stats.
+        const { data: anonIntentions, error: aErr } = await nlSupabase2
           .from('intentions_anonymes')
           .select('intention, cartes, created_at')
           .not('intention', 'is', null)
           .neq('intention', '')
           .order('created_at', { ascending: false })
           .limit(100);
+        if (aErr) throw aErr;
 
-        const { data: allTirages } = await nlSupabase2
-          .from('tirages')
-          .select('cartes')
-          .order('created_at', { ascending: false })
-          .limit(200);
         const { data: allAnon } = await nlSupabase2
           .from('intentions_anonymes')
           .select('cartes')
@@ -6971,7 +6965,7 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
           .limit(200);
 
         const carteCount = {};
-        [...(allTirages || []), ...(allAnon || [])].forEach(t => {
+        (allAnon || []).forEach(t => {
           (t.cartes || []).forEach(c => { if (c) carteCount[c] = (carteCount[c] || 0) + 1; });
         });
         const topCartes = Object.entries(carteCount)
@@ -6979,10 +6973,8 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
           .slice(0, 10)
           .map(([name, nb]) => `${name.replace(/_/g, ' ')} (${nb}x)`);
 
-        const intentions = [
-          ...(tiragesWithIntent || []),
-          ...(anonIntentions || [])
-        ].map(t => t.intention.trim()).filter(Boolean);
+        const intentions = (anonIntentions || [])
+          .map(t => t.intention.trim()).filter(Boolean);
         if (intentions.length === 0) {
           return res.status(200).json({ success: true, result: null, message: 'Aucune intention enregistrée' });
         }
