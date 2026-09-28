@@ -311,6 +311,44 @@ class FreemiumTracker {
 
     showToreLimitReached() {
         if (document.getElementById('tore-limit-modal')) return;
+        // Textes selon la langue de la page (<html lang="en"> sur /en/) : ce script est
+        // partagé entre le tirage français et le tirage anglais.
+        const isEN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
+        const T = isEN ? {
+            ariaLabel: 'Free draws used', close: 'Close', tagline: 'The Inner Compass',
+            oldPrice: '€8', newPrice: '€5',
+            title: "You've explored your two free draws",
+            intro: "Your guidance journey doesn't end here — here's how to continue.",
+            ribbon: 'Recommended', offer: 'Full access · Launch offer',
+            firstMonth: ' /1st month', then: 'then €8/month · no commitment',
+            unlimited: 'Unlimited draws', history: 'Full history', members: "Members' area",
+            cta: 'Start now', reassure: 'Secure payment · Cancel in one click',
+            preorderAlt: 'Oradia Oracle — pre-orders open', physical: 'The oracle in physical form',
+            physicalSub: '64 cards · Booklet · Box set', preorder: 'Pre-order',
+            gift: 'Give a draw', giftSub: 'Your link: a free draw for both of you.',
+            copy: 'Copy', share: 'Share',
+            newsletter: "By subscribing, you'll be added to our newsletter. You can unsubscribe at any time.",
+            later: 'Maybe later',
+            error: 'Something went wrong. Please try again.', loading: 'Loading…', subscribe: 'Subscribe',
+            consentLabel: 'The Tore subscription'
+        } : {
+            ariaLabel: 'Tirages offerts utilisés', close: 'Fermer', tagline: 'La Boussole Intérieure',
+            oldPrice: '8€', newPrice: '5€',
+            title: 'Vos deux tirages offerts ont été explorés',
+            intro: "Votre chemin de guidance ne s'arrête pas là — voici comment continuer.",
+            ribbon: 'Recommandé', offer: 'Accès complet · Offre de lancement',
+            firstMonth: ' /1er mois', then: 'puis 8€/mois · sans engagement',
+            unlimited: 'Tirages illimités', history: 'Historique complet', members: 'Espace membres',
+            cta: 'Commencer maintenant', reassure: 'Paiement sécurisé · Résiliable en un clic',
+            preorderAlt: 'Oracle Oradia — précommandes ouvertes', physical: "L'oracle en version physique",
+            physicalSub: '64 cartes · Livret · Coffret', preorder: 'Précommander',
+            gift: 'Offrez un tirage', giftSub: 'Votre lien : un tirage gratuit pour vous deux.',
+            copy: 'Copier', share: 'Partager',
+            newsletter: 'En vous abonnant, vous serez ajouté(e) à notre newsletter. Désabonnement possible à tout moment.',
+            later: 'Peut-être plus tard',
+            error: 'Une erreur est survenue. Réessayez.', loading: 'Chargement…', subscribe: "S'abonner",
+            consentLabel: "L'abonnement Tore"
+        };
         if (!document.getElementById('tore-limit-modal-styles')) {
             const style = document.createElement('style');
             style.id = 'tore-limit-modal-styles';
@@ -354,7 +392,7 @@ class FreemiumTracker {
         bgOverlay.style.cssText = 'position:fixed;inset:0;z-index:-1;background:rgba(2,6,20,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);';
         modal.appendChild(bgOverlay);
         modal.innerHTML = `
-            <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
+            <div class="tlm-card" role="dialog" aria-modal="true" aria-label="${T.ariaLabel}"
                  style="position:relative;margin:auto;width:100%;max-width:min(900px, calc(100vw - 24px));border-radius:18px;overflow:hidden;
                         border:1px solid rgba(212,175,55,0.3);
                         box-shadow:0 32px 90px rgba(0,0,0,0.8),0 0 70px rgba(212,175,55,0.1);
@@ -362,16 +400,16 @@ class FreemiumTracker {
 
                 <!-- ── HEADER style email ── -->
                 <div style="background:radial-gradient(120% 160% at 50% -20%, rgba(240,199,94,0.28) 0%, rgba(15,37,69,0.6) 45%, #0a1930 100%);padding:26px 28px 22px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.22);position:relative;">
-                    <button data-close-limit-modal aria-label="Fermer"
+                    <button data-close-limit-modal aria-label="${T.close}"
                             style="position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.06);border:none;border-radius:50%;width:30px;height:30px;color:rgba(233,231,223,0.55);font-size:1.2rem;line-height:1;cursor:pointer;">×</button>
                     <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
                         <img src="/images/logo-hd-v2.webp" alt="O" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(212,175,55,0.45);">
                         <span style="color:#d4af37;font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:5px;text-transform:uppercase;line-height:1;">RADIA</span>
                     </div>
                     <h3 style="margin:0 0 6px;color:#f8dfa0;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.7rem;font-weight:700;letter-spacing:0.3px;line-height:1.25;">
-                        Vos deux tirages offerts ont été explorés
+                        ${T.title}
                     </h3>
-                    <p style="margin:0;color:rgba(212,175,55,0.5);font-size:0.72rem;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
+                    <p style="margin:0;color:rgba(212,175,55,0.5);font-size:0.72rem;letter-spacing:3px;text-transform:uppercase;">${T.tagline}</p>
                 </div>
 
                 <!-- ── CORPS ── -->
@@ -379,7 +417,7 @@ class FreemiumTracker {
                 <div style="position:relative;">
 
                     <p style="color:rgba(233,231,223,0.72);font-size:0.95rem;line-height:1.6;margin:0 auto 18px;text-align:center;font-style:italic;max-width:440px;">
-                        Votre chemin de guidance ne s'arrête pas là — voici comment continuer.
+                        ${T.intro}
                     </p>
 
                     <!-- Offre en vedette à gauche / précommande + parrainage à droite -->
@@ -388,19 +426,19 @@ class FreemiumTracker {
                         <!-- Colonne gauche : offre complète, mise en avant -->
                         <div class="tlm-col-left">
                             <div class="tlm-hero">
-                                <span class="tlm-ribbon"><i class="fas fa-star"></i> Recommandé</span>
-                                <p style="position:relative;color:#f0c75e;font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 10px;">Accès complet · Offre de lancement</p>
+                                <span class="tlm-ribbon"><i class="fas fa-star"></i> ${T.ribbon}</span>
+                                <p style="position:relative;color:#f0c75e;font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 10px;">${T.offer}</p>
                                 <p style="position:relative;margin:0 0 4px;line-height:1;font-family:'Cormorant Garamond',Georgia,serif;">
-                                    <span style="color:rgba(240,199,94,0.4);font-size:1.3rem;font-weight:700;text-decoration:line-through;margin-right:8px;">8€</span>
-                                    <span style="color:#fff3d6;font-size:2.9rem;font-weight:700;">5€</span>
-                                    <span style="font-size:0.85rem;color:rgba(240,199,94,0.6);font-weight:400;font-family:Georgia,serif;"> /1er mois</span>
+                                    <span style="color:rgba(240,199,94,0.4);font-size:1.3rem;font-weight:700;text-decoration:line-through;margin-right:8px;">${T.oldPrice}</span>
+                                    <span style="color:#fff3d6;font-size:2.9rem;font-weight:700;">${T.newPrice}</span>
+                                    <span style="font-size:0.85rem;color:rgba(240,199,94,0.6);font-weight:400;font-family:Georgia,serif;">${T.firstMonth}</span>
                                 </p>
-                                <p style="position:relative;color:rgba(240,199,94,0.55);font-size:0.75rem;letter-spacing:0.5px;margin:0 0 16px;">puis 8€/mois · sans engagement</p>
+                                <p style="position:relative;color:rgba(240,199,94,0.55);font-size:0.75rem;letter-spacing:0.5px;margin:0 0 16px;">${T.then}</p>
                                 <div style="position:relative;height:1px;background:rgba(212,175,55,0.25);margin:0 0 16px;"></div>
                                 <ul style="position:relative;list-style:none;padding:0;margin:0 0 20px;text-align:left;color:rgba(255,251,240,0.9);font-size:0.9rem;line-height:2.1;max-width:220px;margin-left:auto;margin-right:auto;">
-                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>Tirages illimités</li>
-                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>Historique complet</li>
-                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>Espace membres</li>
+                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>${T.unlimited}</li>
+                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>${T.history}</li>
+                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>${T.members}</li>
                                 </ul>
                                 <button id="tlm-btn-complet" class="tlm-cta"
                                         style="position:relative;width:100%;padding:14px;border-radius:50px;
@@ -408,25 +446,25 @@ class FreemiumTracker {
                                                color:#050f23;font-size:0.9rem;font-weight:700;
                                                border:none;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
                                                box-shadow:0 6px 22px rgba(212,175,55,0.45);margin-top:auto;">
-                                    Commencer maintenant
+                                    ${T.cta}
                                 </button>
-                                <p class="tlm-reassure"><i class="fas fa-lock" style="margin-right:5px;font-size:0.6rem;"></i>Paiement sécurisé · Résiliable en un clic</p>
+                                <p class="tlm-reassure"><i class="fas fa-lock" style="margin-right:5px;font-size:0.6rem;"></i>${T.reassure}</p>
                             </div>
                         </div>
 
                         <!-- Colonne droite : pub précommande + parrainage, secondaires -->
                         <div class="tlm-col-right">
                             <a href="/precommande-oracle.html" class="tlm-preorder tlm-side-card" style="border:1px solid rgba(212,175,55,0.22);">
-                                <img src="/images/medias/banniere-facebook.webp" srcset="/images/medias/banniere-facebook-640.webp 640w, /images/medias/banniere-facebook-1280.webp 1280w, /images/medias/banniere-facebook.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" width="2034" height="773" decoding="async" alt="Oracle Oradia — précommandes ouvertes"
+                                <img src="/images/medias/banniere-facebook.webp" srcset="/images/medias/banniere-facebook-640.webp 640w, /images/medias/banniere-facebook-1280.webp 1280w, /images/medias/banniere-facebook.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" width="2034" height="773" decoding="async" alt="${T.preorderAlt}"
                                      style="width:100%;height:auto;display:block;">
                                 <div style="padding:12px 14px;background:rgba(212,175,55,0.06);display:flex;align-items:center;gap:10px;">
                                     <span class="tlm-icon-badge"><i class="fas fa-box-open"></i></span>
                                     <div style="flex:1;min-width:0;">
-                                        <p style="margin:0;color:#f5e7a1;font-size:0.8rem;font-weight:700;font-family:'Cormorant Garamond',Georgia,serif;">L'oracle en version physique</p>
-                                        <p style="margin:0;color:rgba(212,175,55,0.6);font-size:0.68rem;">64 cartes · Livret · Coffret</p>
+                                        <p style="margin:0;color:#f5e7a1;font-size:0.8rem;font-weight:700;font-family:'Cormorant Garamond',Georgia,serif;">${T.physical}</p>
+                                        <p style="margin:0;color:rgba(212,175,55,0.6);font-size:0.68rem;">${T.physicalSub}</p>
                                     </div>
                                     <span style="flex-shrink:0;display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.7rem;font-weight:700;letter-spacing:0.5px;padding:7px 12px;border-radius:50px;white-space:nowrap;">
-                                        Précommander
+                                        ${T.preorder}
                                     </span>
                                 </div>
                             </a>
@@ -434,20 +472,20 @@ class FreemiumTracker {
                             <!-- Parrainage : alternative gratuite au paiement -->
                             <div class="tlm-referral tlm-side-card" style="text-align:center;">
                                 <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:1rem;font-weight:700;margin:0 0 6px;display:flex;align-items:center;justify-content:center;gap:8px;">
-                                    <span class="tlm-icon-badge"><i class="fas fa-gift"></i></span>Offrez un tirage
+                                    <span class="tlm-icon-badge"><i class="fas fa-gift"></i></span>${T.gift}
                                 </p>
                                 <p style="color:rgba(233,231,223,0.6);font-size:0.75rem;line-height:1.5;margin:0 0 12px;">
-                                    Votre lien : un tirage gratuit pour vous deux.
+                                    ${T.giftSub}
                                 </p>
                                 <div style="display:flex;flex-direction:column;gap:8px;">
                                     <input id="tlm-referral-link-input" type="text" readonly
                                         style="width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12px;padding:10px;outline:none;box-sizing:border-box;text-align:center;">
                                     <button id="tlm-referral-copy-btn" class="tlm-secondary"
                                         style="width:100%;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:10px;font-family:Georgia,serif;font-size:0.8rem;font-weight:700;cursor:pointer;">
-                                        <i class="fas fa-copy" style="margin-right:6px;font-size:11px;"></i>Copier
+                                        <i class="fas fa-copy" style="margin-right:6px;font-size:11px;"></i>${T.copy}
                                     </button>
                                     <button id="tlm-referral-share-btn" class="tlm-secondary" style="display:none;width:100%;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:10px;font-family:Georgia,serif;font-size:0.8rem;font-weight:700;cursor:pointer;">
-                                        <i class="fas fa-share-nodes" style="margin-right:6px;font-size:11px;"></i>Partager
+                                        <i class="fas fa-share-nodes" style="margin-right:6px;font-size:11px;"></i>${T.share}
                                     </button>
                                 </div>
                             </div>
@@ -455,13 +493,13 @@ class FreemiumTracker {
                     </div>
 
                     <p style="color:rgba(233,231,223,0.32);font-size:0.7rem;text-align:center;margin:14px 0 6px;font-style:italic;">
-                        En vous abonnant, vous serez ajouté(e) à notre newsletter. Désabonnement possible à tout moment.
+                        ${T.newsletter}
                     </p>
                     <button data-close-limit-modal class="tlm-close"
                             style="display:block;width:100%;padding:6px;background:none;border:none;
                                    color:rgba(233,231,223,0.3);font-size:0.85rem;cursor:pointer;
                                    font-style:italic;text-align:center;letter-spacing:0.05em;">
-                        Peut-être plus tard
+                        ${T.later}
                     </button>
                 </div></div>
             </div>
@@ -508,13 +546,13 @@ class FreemiumTracker {
             try {
                 consent = await ensureWithdrawalConsent();
             } catch (_) {
-                alert('Une erreur est survenue. Réessayez.');
+                alert(T.error);
                 return;
             }
-            const consented = await consent.confirm({ label: "L'abonnement Tore" });
+            const consented = await consent.confirm({ label: T.consentLabel });
             if (!consented) return;
 
-            if (btnC) { btnC.disabled = true; btnC.textContent = 'Chargement…'; btnC.style.opacity = '0.6'; btnC.style.cursor = 'default'; }
+            if (btnC) { btnC.disabled = true; btnC.textContent = T.loading; btnC.style.opacity = '0.6'; btnC.style.cursor = 'default'; }
 
             try {
                 const resp = await fetch('/api/create-checkout-session', {
@@ -529,8 +567,8 @@ class FreemiumTracker {
                     throw new Error('No URL returned');
                 }
             } catch (_) {
-                if (btnC) { btnC.disabled = false; btnC.style.opacity = '1'; btnC.style.cursor = 'pointer'; btnC.textContent = "S'abonner"; }
-                alert('Une erreur est survenue. Réessayez.');
+                if (btnC) { btnC.disabled = false; btnC.style.opacity = '1'; btnC.style.cursor = 'pointer'; btnC.textContent = T.subscribe; }
+                alert(T.error);
             }
         };
 
