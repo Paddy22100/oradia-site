@@ -1319,11 +1319,11 @@
                     </div>
                     <div class="flex flex-col items-center gap-3 w-full">
                         <div class="flex gap-2 w-full" role="group" aria-label="Montants suggérés">
+                            <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="10">10 €</button>
                             <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="20">20 €</button>
-                            <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="30">30 €</button>
                             <button type="button" class="contrib-amount flex-1 border border-gold/50 text-gold font-semibold py-2 rounded-full hover:bg-gold/10" data-amount="50">50 €</button>
                         </div>
-                        <input type="text" inputmode="numeric" id="customAmount" aria-label="Montant libre (minimum 20 €)" placeholder="Autre montant (min. 20 €)" class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
+                        <input type="text" inputmode="numeric" id="customAmount" aria-label="Montant libre (minimum 5 €)" placeholder="Autre montant (min. 5 €)" class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
                         <input type="email" id="contributionEmail" aria-label="Votre email" placeholder="Votre email" required class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
                         <input type="text" id="contributionName" aria-label="Votre nom (optionnel)" placeholder="Votre nom (optionnel)" class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none placeholder:text-light-gold/60">
                         <button type="button" onclick="startCustomCheckout()" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
@@ -2270,8 +2270,8 @@ La production est lancée grâce aux premières commandes.</p>
             }
 
             // Validation montant
-            if (!amount || amount < 20) {
-                alert("Minimum 20€");
+            if (!amount || amount < 5) {
+                alert("Montant minimum : 5 €");
                 return;
             }
 

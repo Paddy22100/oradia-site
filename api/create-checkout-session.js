@@ -211,13 +211,13 @@ module.exports = async (req, res) => {
 
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
-            // Validate minimum amount (20€ = 2000 centimes)
-            if (!req.body.customAmount || req.body.customAmount < 2000) {
+            // Montant minimum : 5 € (500 centimes)
+            if (!req.body.customAmount || req.body.customAmount < 500) {
                 console.error('Validation failed: amount too low');
                 return res.status(400).json({ 
                     success: false,
                     error: 'Validation failed',
-                    message: 'Le montant minimum est de 20€'
+                    message: 'Le montant minimum est de 5 €'
                 });
             }
 
