@@ -43,8 +43,7 @@
     <link rel="icon" type="image/jpeg" href="images/logo-hd-v2.webp" />
     <link rel="apple-touch-icon" sizes="180x180" href="images/logo-hd-v2.webp" />
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="responsive.css">
     
@@ -137,27 +136,7 @@
     
     <!-- Stripe -->
 
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: {
-                        'night-blue': '#0a192f',
-                        'gold': '#d4af37',
-                        'light-gold': '#f5e7a1',
-                        'dark-blue': '#051428',
-                        'celtic-blue': '#1a365d'
-                    },
-                    fontFamily: {
-                        'cormorant': ['Cormorant Garamond', 'serif'],
-                        'poppins': ['Poppins', 'sans-serif']
-                    }
-                }
-            }
-        }
-    </script>
-
-    <style>
+<style>
         @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
         
         .gold-gradient {
@@ -332,15 +311,17 @@
             transform: scale(1.2);
         }
     </style>
+    <link rel="stylesheet" href="/assets/tailwind.css">
+    <link rel="stylesheet" href="/assets/sales-page.css">
 </head>
-<body class="bg-night-blue text-light-gold">
+<body class="bg-night-blue text-light-gold sales-page">
     <div id="header-placeholder"></div>
 
     <!-- ── Héro ─────────────────────────────────────────────── -->
     <section id="oracle" class="hero-section py-12 sm:py-16 md:py-20">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="max-w-6xl mx-auto mb-8">
-                <img src="images/medias/banniere-facebook.webp" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="w-full rounded-2xl shadow-2xl shadow-gold/10 border border-gold/20" width="2034" height="773" fetchpriority="high">
+                <img src="images/medias/banniere-facebook.webp" srcset="images/medias/banniere-facebook-640.webp 640w, images/medias/banniere-facebook-1280.webp 1280w, images/medias/banniere-facebook.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" decoding="async" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="w-full rounded-2xl shadow-2xl shadow-gold/10 border border-gold/20" width="2034" height="773" fetchpriority="high">
             </div>
             <div class="max-w-3xl mx-auto text-center">
                 <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl font-bold gold-gradient mb-4 leading-tight">
@@ -363,15 +344,15 @@
     </section>
 
     <!-- ── Contenu du coffret ───────────────────────────────── -->
-    <section id="contenu" class="py-16 bg-[rgba(5,20,40,0.6)]">
+    <section id="contenu" class="py-16 section-light">
         <div class="container mx-auto px-4 sm:px-6">
             <div class="max-w-6xl mx-auto">
                 <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-10">Dans le coffret</h2>
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4 mb-10">
                     <figure class="text-center"><img src="/images/emotions/joie.webp" alt="Carte Émotions — Joie" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">64 cartes illustrées</figcaption></figure>
                     <figure class="text-center"><img src="/images/memoire_cosmos/souvenir_d_ame.webp" alt="Carte Mémoire Cosmos — Souvenir d'Âme" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">6 familles de cartes</figcaption></figure>
-                    <figure class="text-center"><img src="/images/apercu-hd.webp" alt="Livret d'accompagnement ORADIA" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">Livret de 200 pages et conte initiatique</figcaption></figure>
-                    <figure class="text-center"><img src="/images/coin.webp" alt="Pièce de tirage ORADIA" loading="lazy" class="w-full aspect-[2/3] object-contain rounded-xl border border-gold/20 bg-[rgba(5,20,40,0.6)]"><figcaption class="text-light-gold/80 text-sm mt-2">Pièce de tirage en métal</figcaption></figure>
+                    <figure class="text-center"><img src="/images/apercu-hd.webp" srcset="/images/apercu-hd-640.webp 640w, /images/apercu-hd.webp 958w" sizes="(max-width: 768px) 100vw, 60vw" width="958" height="1120" decoding="async" alt="Livret d'accompagnement ORADIA" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">Livret de 200 pages et conte initiatique</figcaption></figure>
+                    <figure class="text-center"><img src="/images/coin.webp" srcset="/images/coin-640.webp 640w, /images/coin-1280.webp 1280w, /images/coin.webp 1376w" sizes="(max-width: 768px) 100vw, 60vw" width="1376" height="768" decoding="async" alt="Pièce de tirage ORADIA" loading="lazy" class="w-full aspect-[2/3] object-contain rounded-xl border border-gold/20 bg-[rgba(5,20,40,0.6)]"><figcaption class="text-light-gold/80 text-sm mt-2">Pièce de tirage en métal</figcaption></figure>
                     <figure class="text-center col-span-2 md:col-span-1"><img src="/images/Coffret.webp" alt="Coffret de protection ORADIA" loading="lazy" class="w-full aspect-[2/3] object-cover rounded-xl border border-gold/20"><figcaption class="text-light-gold/80 text-sm mt-2">Coffret rigide doré, pochette incluse</figcaption></figure>
                 </div>
                 <div class="grid md:grid-cols-3 gap-6 text-center">
@@ -415,6 +396,7 @@
                             <h3 class="cormorant text-2xl font-bold text-gold mb-2">STANDARD</h3>
                             <div class="flex items-baseline justify-center gap-2 mb-2"><span class="text-5xl font-bold text-gold" data-price="standard">42</span><span class="text-2xl text-gold">€</span></div>
                             <p class="text-light-gold/90">L'oracle complet</p>
+                            <p class="offer-ship">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                         </div>
                         <ul class="space-y-3 text-light-gold/90 mb-8 flex-1">
                             <li><i class="fas fa-check text-gold mr-2"></i>64 cartes oracle</li>
@@ -425,6 +407,7 @@
                         </ul>
                         <button type="button" class="buy-now w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full mb-3" data-offer="standard"><i class="fas fa-bolt mr-2"></i>Commander</button>
                         <button type="button" class="add-cart w-full border border-gold/50 text-gold font-semibold py-3 rounded-full hover:bg-gold/10" data-offer="standard"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                        <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>14 jours pour changer d'avis</p>
                     </div>
 
                     <!-- Guidance Offerte -->
@@ -435,6 +418,7 @@
                             <div class="flex items-baseline justify-center gap-2 mb-2"><span class="text-5xl sm:text-6xl font-bold text-gold" data-price="guidance-incluse">52</span><span class="text-3xl text-gold">€</span></div>
                             <p class="text-gold/90 text-sm font-medium">30 min de guidance offerte (valeur réelle 30 €)</p>
                             <p class="text-light-gold/70 text-sm">Nombre de places limité</p>
+                            <p class="offer-ship">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                         </div>
                         <ul class="space-y-3 text-light-gold/90 mb-8 flex-1">
                             <li><i class="fas fa-check text-gold mr-2"></i>L'oracle complet</li>
@@ -443,6 +427,7 @@
                         </ul>
                         <button type="button" class="buy-now w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full mb-3" data-offer="guidance-incluse"><i class="fas fa-bolt mr-2"></i>Commander</button>
                         <button type="button" class="add-cart w-full border border-gold/50 text-gold font-semibold py-3 rounded-full hover:bg-gold/10" data-offer="guidance-incluse"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                        <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>14 jours pour changer d'avis</p>
                     </div>
 
                     <!-- Édition Signature -->
@@ -453,6 +438,7 @@
                             <p class="text-light-gold/80 text-sm mb-2">Limitée à 100 exemplaires</p>
                             <div class="flex items-baseline justify-center gap-2 mb-2"><span class="text-5xl font-bold text-gold" data-price="edition-signature">46</span><span class="text-2xl text-gold">€</span></div>
                             <p class="text-gold/90 text-sm font-semibold hidden" data-stock="edition-signature"></p>
+                            <p class="offer-ship">+ livraison dès <strong><span data-ship-from>5,99</span> €</strong><br>offerte en point relais dès 2 coffrets</p>
                         </div>
                         <ul class="space-y-3 text-light-gold/90 mb-8 flex-1">
                             <li><i class="fas fa-check text-gold mr-2"></i>L'oracle complet</li>
@@ -460,7 +446,25 @@
                         </ul>
                         <button type="button" class="buy-now w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full mb-3" data-offer="edition-signature"><i class="fas fa-bolt mr-2"></i>Commander</button>
                         <button type="button" class="add-cart w-full border border-gold/50 text-gold font-semibold py-3 rounded-full hover:bg-gold/10" data-offer="edition-signature"><i class="fas fa-cart-plus mr-2"></i>Ajouter au panier</button>
+                        <p class="pay-reassure"><i class="fas fa-lock"></i>Paiement sécurisé Stripe · CB, Apple Pay<br><i class="fas fa-rotate-left"></i>14 jours pour changer d'avis</p>
                     </div>
+                </div>
+
+
+                <!-- Comparatif des offres -->
+                <div class="offer-compare-wrap" id="offer-compare">
+                    <table class="offer-compare">
+                        <caption>Comparer les coffrets</caption>
+                        <thead><tr><th scope="col"></th><th scope="col">Standard</th><th scope="col" class="col-featured">Guidance offerte</th><th scope="col">Édition Signature</th></tr></thead>
+                        <tbody>
+                            <tr><th scope="row">Prix</th><td class="price"><span data-price="standard">42</span> €</td><td class="price col-featured"><span data-price="guidance-incluse">52</span> €</td><td class="price"><span data-price="edition-signature">46</span> €</td></tr>
+                            <tr><th scope="row">64 cartes, livret de 200 pages, conte initiatique</th><td class="yes"><span aria-label="inclus">✓</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
+                            <tr><th scope="row">Pièce de tirage en métal et coffret rigide doré</th><td class="yes"><span aria-label="inclus">✓</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
+                            <tr><th scope="row">Dédicace personnalisée</th><td class="no"><span aria-label="non inclus">–</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="yes"><span aria-label="inclus">✓</span></td></tr>
+                            <tr><th scope="row">Séance de guidance en visio (30 min)</th><td class="no"><span aria-label="non inclus">–</span></td><td class="yes col-featured"><span aria-label="inclus">✓</span></td><td class="no"><span aria-label="non inclus">–</span></td></tr>
+                            <tr><th scope="row">Tirage limité</th><td class="no"><span aria-label="non inclus">–</span></td><td class="no col-featured"><span aria-label="non inclus">–</span></td><td class="yes">100 exemplaires</td></tr>
+                        </tbody>
+                    </table>
                 </div>
 
                 <!-- Réassurance -->
@@ -470,17 +474,6 @@
                     <div><i class="fas fa-location-dot text-gold text-xl mb-2 block"></i>Point relais dès <span data-ship-from>5,99</span> € ou domicile</div>
                     <div><i class="fas fa-rotate-left text-gold text-xl mb-2 block"></i>14 jours pour changer d'avis</div>
                 </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- ── Essayer en ligne ───────────────────────────────── -->
-    <section class="py-16">
-        <div class="container mx-auto px-4 sm:px-6">
-            <div class="max-w-3xl mx-auto text-center rounded-2xl border border-gold/30 bg-[rgba(5,20,40,0.6)] p-8 sm:p-10">
-                <h2 class="cormorant text-3xl sm:text-4xl font-bold gold-gradient mb-4">Essayez l'oracle avant de le commander</h2>
-                <p class="text-light-gold/90 mb-6">Le tirage du Tore est disponible en ligne, gratuitement, avec les mêmes 64 cartes. Faites l'expérience d'un tirage complet et de son interprétation.</p>
-                <a href="/tore.html" class="inline-flex items-center gap-2 border-2 border-gold text-gold font-bold py-3 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all"><i class="fas fa-circle-nodes"></i>Faire un tirage gratuit</a>
             </div>
         </div>
     </section>
@@ -498,6 +491,17 @@
                     <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Quelle différence avec le Tore en ligne ?</summary><p class="mt-4 text-light-gold/90">Le Tore en ligne permet de faire des tirages avec les mêmes cartes et une interprétation générée. L'oracle physique, c'est l'expérience complète : les cartes en main, le livret de 200 pages, la pièce de tirage, et un rituel qui vous appartient.</p></details>
                     <details class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30"><summary class="text-gold font-semibold text-lg cursor-pointer">Livrez-vous hors de France ?</summary><p class="mt-4 text-light-gold/90">Nous livrons en France et en Belgique. Pour un autre pays, <a href="/contact.html" class="text-gold underline">contactez-nous</a> avant de commander.</p></details>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ── Essayer en ligne ───────────────────────────────── -->
+    <section class="py-16">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-3xl mx-auto text-center rounded-2xl border border-gold/30 bg-[rgba(5,20,40,0.6)] p-8 sm:p-10">
+                <h2 class="cormorant text-3xl sm:text-4xl font-bold gold-gradient mb-4">Essayez l'oracle avant de le commander</h2>
+                <p class="text-light-gold/90 mb-6">Le tirage du Tore est disponible en ligne, gratuitement, avec les mêmes 64 cartes. Faites l'expérience d'un tirage complet et de son interprétation.</p>
+                <a href="/tore.html" class="inline-flex items-center gap-2 border-2 border-gold text-gold font-bold py-3 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all"><i class="fas fa-circle-nodes"></i>Faire un tirage gratuit</a>
             </div>
         </div>
     </section>
@@ -614,8 +618,7 @@
                         var o = cat.offers[id];
                         if (o.price && o.price.order) PRICES[id] = o.price.order;
                         REMAINING[id] = o.remaining;
-                        var el = document.querySelector('[data-price="' + id + '"]');
-                        if (el) el.textContent = fmt(PRICES[id]);
+                        document.querySelectorAll('[data-price="' + id + '"]').forEach(function (el) { el.textContent = fmt(PRICES[id]); });
                         var st = document.querySelector('[data-stock="' + id + '"]');
                         if (st && o.remaining != null) {
                             st.classList.remove('hidden');
@@ -641,6 +644,7 @@
                     // Vente ferme fermée : pas d'achat possible depuis cette page.
                     document.getElementById('offers-grid').classList.add('hidden');
                     document.getElementById('reassurance').classList.add('hidden');
+                    document.getElementById('offer-compare').classList.add('hidden');
                     document.getElementById('cart-bar').classList.add('hidden');
                     document.body.style.paddingBottom = '';
                     document.getElementById('shop-closed').classList.remove('hidden');

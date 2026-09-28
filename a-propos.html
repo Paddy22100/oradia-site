@@ -20,32 +20,10 @@
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="Oradia" />
   <meta property="og:locale" content="fr_FR" />
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'night-blue': '#0a192f',
-            'gold': '#d4af37',
-            'light-gold': '#f5e7a1',
-            'dark-blue': '#051428',
-            'celtic-blue': '#1a365d'
-          },
-          fontFamily: {
-            'cormorant': ['Cormorant Garamond', 'serif'],
-            'poppins': ['Poppins', 'sans-serif']
-          }
-        }
-      }
-    }
-  </script>
-
-  
-  <style>
+<style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
@@ -478,6 +456,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   overflow-y: auto;
 }
   </style>
+    <link rel="stylesheet" href="/assets/tailwind.css">
 </head>
 
 <body class="bg-night-blue text-light-gold">
@@ -528,7 +507,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           
           <div class="text-center">
             <div class="w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-gold/30 shadow-xl">
-              <img src="images/medias/photo_a_propos.webp" alt="Photo du créateur d'Oradia" class="w-full h-full object-cover">
+              <img src="images/medias/photo_a_propos.webp" srcset="images/medias/photo_a_propos-640.webp 640w, images/medias/photo_a_propos.webp 1024w" sizes="(max-width: 768px) 100vw, 60vw" width="1024" height="1536" decoding="async" alt="Photo du créateur d'Oradia" class="w-full h-full object-cover">
             </div>
           </div>
         </div>

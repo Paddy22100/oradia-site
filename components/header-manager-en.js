@@ -148,7 +148,7 @@ class HeaderManagerEN {
           <div class="max-w-7xl mx-auto">
             <div class="flex items-center justify-between">
               <a href="/en/" class="flex items-center">
-                <img src="/images/logo-hd-v2.webp" alt="Oradia Logo" class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16">
+                <img src="/images/logo-160.webp" alt="Oradia Logo" class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16">
                 <span class="cormorant text-2xl sm:text-3xl font-bold gold-gradient ml-3">ORADIA</span>
               </a>
             </div>

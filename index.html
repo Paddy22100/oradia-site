@@ -126,40 +126,13 @@
   <link rel="icon" type="image/jpeg" href="images/logo-hd-v2.webp" />
   <link rel="apple-touch-icon" sizes="180x180" href="images/logo-hd-v2.webp" />
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="responsive.css">
   <link rel="stylesheet" href="production-mode.css">
   <script src="security.js"></script>
 
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'night-blue': '#0a192f',
-            'gold': '#d4af37',
-            'light-gold': '#f5e7a1',
-            'dark-blue': '#051428',
-            'celtic-blue': '#1a365d'
-          },
-          fontFamily: {
-            'cormorant': ['Cormorant Garamond', 'serif'],
-            'cinzel': ['Cinzel', 'serif'],
-            'lora': ['Lora', 'serif']
-          },
-          animation: {
-            'float': 'float 6s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s ease-in-out infinite',
-            'shimmer': 'shimmer 3s ease-in-out infinite',
-          }
-        }
-      }
-    }
-  </script>
-
-  <style>
+<style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
     
     .font-cormorant {
@@ -210,6 +183,7 @@
       50% { opacity: 1; }
     }
   </style>
+    <link rel="stylesheet" href="/assets/tailwind.css">
 </head>
 
 <body class="relative">
@@ -344,7 +318,7 @@
 <section id="app-mobile-beta" class="py-5 px-4 sm:px-6 lg:px-8 bg-night-blue relative">
     <div class="max-w-3xl mx-auto">
         <a href="app-beta-inscription.html" class="block group" aria-label="Oradia bêta — Découvrez l'application mobile en avant-première, rejoindre la liste d'attente">
-            <img src="images/medias/banniere_pub_app_mobile.webp" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play"
+            <img src="images/medias/banniere_pub_app_mobile.webp" srcset="images/medias/banniere_pub_app_mobile-640.webp 640w, images/medias/banniere_pub_app_mobile-1280.webp 1280w, images/medias/banniere_pub_app_mobile.webp 1774w" sizes="(max-width: 768px) 100vw, 60vw" width="1774" height="887" decoding="async" alt="Oradia bêta — Découvrez l'application mobile en avant-première, tester la bêta sur Google Play"
                  class="w-full h-auto rounded-lg shadow-md shadow-gold/10 border border-gold/20 opacity-90 transition-opacity duration-300 group-hover:opacity-100" loading="lazy">
         </a>
     </div>
@@ -631,7 +605,7 @@ backToTopBtn.addEventListener('click', () => {
 
     <!-- Colonne image (cachée sur mobile) -->
     <div style="flex:0 0 45%;position:relative;min-height:380px;display:none;" id="popup-img-col">
-      <img src="/images/medias/newsletter_image.webp" alt="Newsletter Oradia" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+      <img src="/images/medias/newsletter_image.webp" srcset="/images/medias/newsletter_image-640.webp 640w, /images/medias/newsletter_image.webp 957w" sizes="(max-width: 768px) 100vw, 60vw" width="957" height="1120" decoding="async" alt="Newsletter Oradia" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
       <!-- Voile dégradé -->
       <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent 60%,rgba(5,20,40,0.75) 100%);"></div>
     </div>

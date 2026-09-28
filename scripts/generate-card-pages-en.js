@@ -245,9 +245,9 @@ function buildPage({ frName, enName, familyLabel, polarity, quote, meaning, mirr
     .mirror-link p { font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(212,175,55,0.5); margin-bottom: 10px; }
     .mirror-link a { color: #d4af37; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 2px; }
   </style>
-  <script src="https://cdn.tailwindcss.com"><\/script>
   <link rel="stylesheet" href="/style.css">
   <script src="/security.js"><\/script>
+    <link rel="stylesheet" href="/assets/tailwind-default.css">
 </head>
 <body>
   <div id="header-placeholder"></div>
