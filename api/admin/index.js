@@ -416,7 +416,9 @@ function buildUnsubUrl(email) {
 }
 
 // Mail de rappel doux avant renouvellement d'abonnement Tore (une fois par cycle).
-async function sendRenewalReminderEmail(email, expiresAt) {
+// trial=true : fin du mois d'essai offert avec l'oracle (QR code du livret) — même
+// template, texte adapté : c'est le premier prélèvement, pas un renouvellement.
+async function sendRenewalReminderEmail(email, expiresAt, { trial = false } = {}) {
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
   if (!BREVO_API_KEY) return false;
@@ -428,9 +430,11 @@ async function sendRenewalReminderEmail(email, expiresAt) {
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="max-width:600px;margin:0 auto;background-color:#0a192f;border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;">
   <tr><td style="padding:0;line-height:0;"><img src="https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp" alt="Le Tore" width="600" style="display:block;width:100%;height:auto;"></td></tr>
   <tr><td style="padding:32px 40px 12px;">
-    <h1 style="margin:0 0 18px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:400;">Votre abonnement se renouvelle bientôt</h1>
-    <p style="margin:0 0 16px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Bonjour,<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> se renouvellera automatiquement le <strong style="color:#f0c75e;">${dateStr}</strong>. Vous n'avez rien à faire : vos tirages continuent sans interruption.</p>
-    <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Pensez simplement à vérifier que votre moyen de paiement est toujours valide, pour éviter toute coupure d'accès.</p>
+    ${trial ? `<h1 style="margin:0 0 18px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:400;">Votre mois offert se termine bientôt</h1>
+    <p style="margin:0 0 16px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Bonjour,<br><br>Votre mois d'abonnement au tirage du <strong style="color:#f0c75e;">Tore</strong> offert avec l'oracle se termine le <strong style="color:#f0c75e;">${dateStr}</strong>. À cette date, votre abonnement se poursuivra automatiquement à <strong style="color:#f0c75e;">8 € par mois</strong> (premier prélèvement le ${dateStr}), et vos tirages continueront sans interruption.</p>
+    <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Si vous ne souhaitez pas continuer, il suffit de résilier avant cette date depuis votre espace membre : aucun montant ne vous sera prélevé.</p>` : `<h1 style="margin:0 0 18px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:400;">Votre abonnement se renouvelle bientôt</h1>
+    <p style="margin:0 0 16px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Bonjour,<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> se renouvellera automatiquement le <strong style="color:#f0c75e;">${dateStr}</strong>. Vous n'avez rien à faire : vos tirages continuent sans interruption.</p>
+    <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Pensez simplement à vérifier que votre moyen de paiement est toujours valide, pour éviter toute coupure d'accès.</p>`}
   </td></tr>
   <tr><td align="center" style="padding:0 40px 36px;">
     <a href="https://oradia.fr/member/login.html?returnTo=abonnements.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:14px 36px;border-radius:50px;font-weight:700;font-size:15px;font-family:Georgia,serif;">Gérer mon abonnement</a>
@@ -450,7 +454,7 @@ async function sendRenewalReminderEmail(email, expiresAt) {
         sender: { email: senderEmail, name: "Rudy d'Oradia" },
         to: [{ email }],
         replyTo: { email: 'contact@oradia.fr', name: "Rudy d'Oradia" },
-        subject: "Rudy d'Oradia - Votre abonnement Le Tore se renouvelle bientôt",
+        subject: trial ? "Rudy d'Oradia - Votre mois offert au Tore se termine bientôt" : "Rudy d'Oradia - Votre abonnement Le Tore se renouvelle bientôt",
         htmlContent: html
       })
     });
@@ -551,6 +555,12 @@ async function reconcileStripeSubscriptions(supabase) {
       if (!row) continue;
 
       const currentExp = row.expires_at ? new Date(row.expires_at).getTime() : null;
+      // Résiliation programmée (portail Stripe ou espace membre) : reflétée pour l'affichage
+      // de l'interrupteur « renouvellement automatique » de l'espace membre.
+      await supabase.from('tore_subscriptions')
+        .update({ cancel_at_period_end: !!sub.cancel_at_period_end }).eq('id', row.id)
+        .then(({ error }) => { if (error) console.warn('[reconcile] cancel_at_period_end:', error.message); });
+
       if (expiresAt && currentExp !== expiresAt.getTime()) {
         await supabase.from('tore_subscriptions').update({
           status: mappedStatus,
@@ -573,7 +583,7 @@ async function reconcileStripeSubscriptions(supabase) {
             const already = rr?.renewal_reminder_for
               && Math.abs(new Date(rr.renewal_reminder_for).getTime() - expiresAt.getTime()) < 86400000;
             if (!already) {
-              const ok = await sendRenewalReminderEmail(email, expiresAt);
+              const ok = await sendRenewalReminderEmail(email, expiresAt, { trial: st === 'trialing' });
               if (ok) {
                 await supabase.from('tore_subscriptions')
                   .update({ renewal_reminder_for: expiresAt.toISOString() }).eq('id', row.id);
@@ -3283,9 +3293,9 @@ async function handleData(req, res) {
         const type = body.type || 'payment_failed';
         const toEmail = body.email || 'contact@oradia.fr';
         // Rappel de renouvellement (~3 jours avant échéance) : template dédié
-        if (type === 'renewal-reminder') {
+        if (type === 'renewal-reminder' || type === 'trial-reminder') {
           const sample = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-          const ok = await sendRenewalReminderEmail(toEmail, sample);
+          const ok = await sendRenewalReminderEmail(toEmail, sample, { trial: type === 'trial-reminder' });
           if (!ok) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, email: toEmail, type });
         }
@@ -3370,9 +3380,8 @@ async function handleData(req, res) {
             shipping: {
               method: 'home', priceCents: 1099
             },
-            // Aperçu des blocs facultatifs : option cadeau et code « 1 mois de Tore offert ».
+            // Aperçu du bloc facultatif « option cadeau ».
             gift: { message: 'Joyeux anniversaire, que cet oracle t\'accompagne !' },
-            toreGiftCode: 'ORADIA-EXEMPLE',
             amountTotal: '98.99'
           });
           if (!emailSentOrder) return res.status(502).json({ error: 'Envoi Brevo échoué' });
@@ -8937,7 +8946,13 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (req.method === 'GET') {
         const { data, error } = await sbFeat.from('feature_flags').select('*').order('category').order('label');
         if (error) return res.status(200).json({ success: true, features: [] }); // migration pas encore exécutée
-        return res.status(200).json({ success: true, features: data || [] });
+        // Compteur du mois d'essai offert (QR code du livret), affiché sous son interrupteur.
+        let oracleTrial = null;
+        try {
+          const { countOracleTrials, getOracleTrialSettings } = require('../../lib/oracle-trial.js');
+          oracleTrial = { used: await countOracleTrials(sbFeat), max: (await getOracleTrialSettings(sbFeat)).max };
+        } catch (e) { /* colonne trial_source absente : pas de compteur */ }
+        return res.status(200).json({ success: true, features: data || [], oracleTrial });
       }
       if (req.method === 'POST') {
         const body = await parseBody(req);
@@ -8948,6 +8963,32 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Sans ce contrôle, une clé absente de la table renvoyait "succès" sans rien changer.
         if (!updated || updated.length === 0) return res.status(404).json({ error: `Fonctionnalité inconnue : ${key}` });
         return res.status(200).json({ success: true });
+      }
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Mois offert via le QR code du livret : statistiques (GET) et réglage du plafond /
+    // seuil d'alerte (POST { max, alertPct }) — carte dédiée dans l'onglet Analytique.
+    if (path === '/oracle-trial' || path === '/oracle-trial/') {
+      verifyAdminAuth(req);
+      const sbTrial = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const trialLib = require('../../lib/oracle-trial.js');
+      if (req.method === 'GET') {
+        try {
+          return res.status(200).json({ success: true, ...(await trialLib.getOracleTrialStats(sbTrial)) });
+        } catch (e) { return res.status(500).json({ error: e.message }); }
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        try {
+          const saved = await trialLib.setOracleTrialSettings(sbTrial, body);
+          // Le nouveau plafond peut déjà être proche : alerte immédiate le cas échéant.
+          await trialLib.checkOracleTrialAlert(sbTrial);
+          return res.status(200).json({ success: true, ...saved });
+        } catch (e) { return res.status(400).json({ error: e.message }); }
       }
       return res.status(405).json({ error: 'Method not allowed' });
     }

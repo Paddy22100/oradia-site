@@ -4,7 +4,6 @@ const { sendBrevoEmail, shippingFromOrder } = require('../lib/brevo-order-email.
 const { sendToreSubscriptionEmail } = require('../lib/tore-subscription-email.js');
 const { sendGuidanceConfirmationEmail } = require('../lib/guidance-email.js');
 const { hitRateLimit } = require('../lib/rate-limit.js');
-const { isToreGiftEnabled, createToreGiftCode } = require('../lib/tore-gift.js');
 
 // Échec d'écriture en base pendant le traitement d'un paiement : l'erreur remonte
 // jusqu'au handler, qui répond 500 pour que Stripe relivre l'événement (il réessaie
@@ -351,7 +350,8 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
 // filet de sécurité par invoice.payment_succeeded (cas d'un 1er prélèvement qui a
 // d'abord échoué puis réussi via une nouvelle tentative automatique de Stripe,
 // sans repasser par checkout.session.completed).
-async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId }) {
+// trialSource : 'oracle-qr' pour le mois d'essai offert avec l'oracle (lib/oracle-trial.js).
+async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId, trialSource = null }) {
     if (!email) { console.error('[webhook] activateToreSubscription: email manquant'); return; }
 
     // .ilike() (insensible à la casse) : email arrive normalisé en minuscules, mais une
@@ -454,7 +454,18 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         if (mcpErr) console.error('[webhook] must_change_password update (migration appliquée ?):', mcpErr.message);
     }
 
-    if (!isAccountingExcluded(email)) {
+    if (trialSource && savedRow?.id) {
+        const { error: trialErr } = await supabase
+            .from('tore_subscriptions')
+            .update({ trial_source: trialSource })
+            .eq('id', savedRow.id);
+        if (trialErr) console.error('[webhook] trial_source update:', trialErr.message);
+        else await require('../lib/oracle-trial.js').checkOracleTrialAlert(supabase);
+    }
+
+    // Essai gratuit : 0 € encaissé, pas de recette (la contrainte transactions.amount > 0
+    // la refuserait) — la première vraie recette arrive avec invoice.paid en fin d'essai.
+    if (!isAccountingExcluded(email) && (amountTotalCents || 0) > 0) {
         await supabase.from('transactions').insert({
             date: new Date().toISOString().split('T')[0],
             type: 'recette',
@@ -560,7 +571,8 @@ async function processEvent(event) {
                     stripeCustomerId: invoice.customer || null,
                     stripeSubscriptionId: invSubId,
                     amountTotalCents: invoice.amount_paid || 0,
-                    sourceRef: invoice.id
+                    sourceRef: invoice.id,
+                    trialSource: subscription?.metadata?.trial_source || null
                 });
                 console.log(`[webhook] Abonnement Tore activé en filet de sécurité (invoice.payment_succeeded) pour ${email}`);
                 break;
@@ -655,6 +667,21 @@ async function processEvent(event) {
         }
 
         // ── Annulation d'abonnement ──────────────────────────────────────────
+        // Résiliation programmée / annulée (espace membre ou portail Stripe) : reflétée
+        // dans tore_subscriptions pour l'interrupteur « renouvellement automatique ».
+        case 'customer.subscription.updated': {
+            const subscription = event.data.object;
+            const prev = event.data.previous_attributes || {};
+            if (!('cancel_at_period_end' in prev)) break;
+            const supabase = getSupabaseClient();
+            const { error: capeError } = await supabase
+                .from('tore_subscriptions')
+                .update({ cancel_at_period_end: !!subscription.cancel_at_period_end, updated_at: new Date().toISOString() })
+                .eq('stripe_subscription_id', subscription.id);
+            if (capeError) console.error('[webhook] cancel_at_period_end:', capeError.message);
+            break;
+        }
+
         case 'customer.subscription.deleted': {
             const stripe = getStripeClient();
             const supabase = getSupabaseClient();
@@ -805,7 +832,8 @@ async function processEvent(event) {
                         stripeSubscriptionId: session.subscription || null,
                         amountTotalCents: extractedData.amount_total,
                         sourceRef: sessionId,
-                        paymentIntentId: extractedData.payment_intent_id
+                        paymentIntentId: extractedData.payment_intent_id,
+                        trialSource: session.metadata?.trial_source || null
                     });
 
                     console.log(`[webhook] Tore subscription traitée: ${sessionId}`);
@@ -973,27 +1001,12 @@ async function processEvent(event) {
                         }
                     }
                     
-                    // « 1 mois de Tore offert » (interrupteur oracle_tore_gift, désactivé par
-                    // défaut) : code unique créé une seule fois par commande. Un échec Stripe
-                    // n'empêche pas la confirmation de commande.
-                    let toreGiftCode = upsertData.tore_gift_code || null;
-                    if (!toreGiftCode && await isToreGiftEnabled(supabase)) {
-                        try {
-                            toreGiftCode = await createToreGiftCode(stripe, { sessionId, email: upsertData.email });
-                            await supabase.from('preorders').update({ tore_gift_code: toreGiftCode }).eq('stripe_session_id', sessionId);
-                        } catch (giftError) {
-                            console.error('[webhook] Code Tore offert non créé:', giftError.message);
-                            toreGiftCode = null;
-                        }
-                    }
-
                     emailSent = await sendBrevoEmail({
                         toEmail: upsertData.email,
                         toName: upsertData.full_name || 'Ami(e) d\'ORADIA',
                         offer: upsertData.offer,
                         amountTotal: Number(upsertData.amount_total).toFixed(2),
                         invoiceUrl: invoiceUrl,
-                        toreGiftCode,
                         // Panier détaillé (enregistré à la création de la session Stripe)
                         items: upsertData.items,
                         shipping: shippingFromOrder(upsertData),

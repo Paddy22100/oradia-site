@@ -3687,6 +3687,8 @@
                 </div>
             </div>
             <p id="analytics-error" class="hidden text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 mb-4"></p>
+            <!-- Alerte plafond du mois offert (QR code oracle), visible quel que soit le sous-onglet -->
+            <div id="oracle-trial-alert" class="hidden rounded-lg px-4 py-3 mb-4 text-sm flex items-center justify-between gap-3"></div>
 
             <!-- Sous-onglets : tout se charge en un seul passage (loadAnalytics), ce ne sont
                  que des groupes d'affichage pour ne pas tout avoir dans un seul long scroll. -->
@@ -3909,6 +3911,41 @@
 
             <!-- ══ SOUS-ONGLET : CONVERSION ══ -->
             <div id="analytics-subtab-conversion" class="analytics-subtab hidden">
+            <!-- Mois offert via le QR code du livret de l'oracle -->
+            <div id="oracle-trial-card" class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex flex-wrap items-start justify-between gap-3 mb-4">
+                    <div>
+                        <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-qrcode text-gold/60"></i> Mois offert (QR code oracle)</h4>
+                        <p class="text-gold/40 text-xs">Abonnements créés avec le mois d'abonnement au tirage du Tore offert, via oradia.fr/oracle-offert (depuis le lancement, toutes périodes).</p>
+                    </div>
+                    <span id="oracle-trial-badge" class="text-xs px-2 py-1 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">—</span>
+                </div>
+                <div class="flex items-end gap-3 mb-2">
+                    <span id="oracle-trial-used" class="cormorant text-4xl font-bold text-gold">—</span>
+                    <span class="text-gold/50 text-sm mb-1">/ <span id="oracle-trial-max">—</span> essais · <span id="oracle-trial-remaining">—</span> restants</span>
+                </div>
+                <div class="relative w-full h-3 bg-white/5 rounded-full overflow-hidden mb-1">
+                    <div id="oracle-trial-bar" class="h-full rounded-full bg-gold/70 transition-all" style="width:0%"></div>
+                    <div id="oracle-trial-threshold" class="absolute top-0 h-full w-0.5 bg-orange-400" style="left:80%" title="Seuil d'alerte"></div>
+                </div>
+                <p class="text-gold/40 text-xs mb-5">Trait orange : seuil d'alerte (<span id="oracle-trial-alertpct-label">80</span> %). Un email est envoyé à contact@oradia.fr au seuil, puis au plafond.</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+                    <div class="bg-white/5 rounded-lg p-3"><p class="text-gold/50 text-xs">Visites de la page du QR code</p><p class="text-gold text-xl font-semibold" id="oracle-trial-scans">—</p><p class="text-gold/30 text-xs" id="oracle-trial-scan-visitors"></p></div>
+                    <div class="bg-white/5 rounded-lg p-3"><p class="text-gold/50 text-xs">En cours d'essai</p><p class="text-gold text-xl font-semibold" id="oracle-trial-intrial">—</p></div>
+                    <div class="bg-white/5 rounded-lg p-3"><p class="text-gold/50 text-xs">Poursuivis en payant</p><p class="text-green-300 text-xl font-semibold" id="oracle-trial-converted">—</p></div>
+                    <div class="bg-white/5 rounded-lg p-3"><p class="text-gold/50 text-xs">Résiliés / arrêtés</p><p class="text-red-300 text-xl font-semibold" id="oracle-trial-stopped">—</p></div>
+                </div>
+                <div class="flex flex-wrap items-end gap-3">
+                    <label class="text-xs text-gold/60">Plafond d'essais
+                        <input id="oracle-trial-max-input" type="number" min="0" max="100000" step="1" class="block mt-1 w-32 bg-white/5 border border-gold/20 text-gold rounded-lg px-3 py-2 text-sm">
+                    </label>
+                    <label class="text-xs text-gold/60">Seuil d'alerte (%)
+                        <input id="oracle-trial-alertpct-input" type="number" min="1" max="100" step="1" class="block mt-1 w-24 bg-white/5 border border-gold/20 text-gold rounded-lg px-3 py-2 text-sm">
+                    </label>
+                    <button onclick="saveOracleTrialSettings()" id="oracle-trial-save" class="bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition"><i class="fas fa-save mr-1"></i>Enregistrer</button>
+                    <span id="oracle-trial-save-msg" class="text-xs text-gold/50"></span>
+                </div>
+            </div>
             <!-- Funnel de conversion -->
             <div class="stat-card rounded-2xl p-6">
                 <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-filter text-gold/60"></i> Funnel de conversion — Tirage Tore</h4>
@@ -4570,6 +4607,17 @@
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé ~3 jours avant le renouvellement automatique · bandeau_rappel_abonnement_tore</p>
                     </div>
                     <button onclick="sendMailTest('renewal-reminder')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                    </button>
+                </div>
+
+                <!-- Rappel de fin d'essai (mois offert avec l'oracle) -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Rappel de fin du mois offert (QR code oracle)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé ~3 jours avant la fin de l'essai gratuit · même template que le rappel de renouvellement</p>
+                    </div>
+                    <button onclick="sendMailTest('trial-reminder')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
                         <i class="fas fa-paper-plane text-xs"></i> Envoyer test
                     </button>
                 </div>
@@ -11211,11 +11259,11 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ type: 'payment_failed', email: 'contact@oradia.fr' })
                     });
-                } else if (type === 'renewal-reminder') {
+                } else if (type === 'renewal-reminder' || type === 'trial-reminder') {
                     res = await adminFetch('/api/admin/data?action=test-subscription-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'renewal-reminder', email: 'contact@oradia.fr' })
+                        body: JSON.stringify({ type, email: 'contact@oradia.fr' })
                     });
                 } else {
                     res = await adminFetch('/api/admin/data?action=test-email', {
@@ -14771,6 +14819,7 @@
                             <div class="min-w-0">
                                 <p class="text-light-gold font-semibold text-sm">${f.label}</p>
                                 ${f.description ? `<p class="text-light-gold/40 text-xs mt-0.5">${f.description}</p>` : ''}
+                                ${f.key === 'oracle_qr_trial' && data.oracleTrial ? `<p class="text-gold/70 text-xs mt-1">Essais utilisés : ${data.oracleTrial.used} / ${data.oracleTrial.max} · lien du QR code : oradia.fr/oracle-offert · plafond et alerte : Analytique › Conversion</p>` : ''}
                             </div>
                             <button onclick="toggleFeatureFlag('${f.key}', ${!f.enabled})" class="shrink-0 relative inline-flex h-7 w-13 items-center rounded-full transition ${f.enabled ? 'bg-gold' : 'bg-white/10'}" style="width:52px;">
                                 <span class="inline-block h-5 w-5 transform rounded-full bg-night-blue transition ${f.enabled ? 'translate-x-7' : 'translate-x-1'}"></span>
@@ -16020,6 +16069,78 @@
             }
         }
 
+        // ── Mois offert via le QR code du livret (carte Analytique > Conversion) ──
+        function renderOracleTrial(d) {
+            const pct = d.max > 0 ? Math.min(100, d.used / d.max * 100) : 100;
+            setEl('oracle-trial-used', d.used);
+            setEl('oracle-trial-max', d.max);
+            setEl('oracle-trial-remaining', d.remaining);
+            setEl('oracle-trial-alertpct-label', d.alertPct);
+            setEl('oracle-trial-intrial', d.inTrial);
+            setEl('oracle-trial-converted', d.converted);
+            setEl('oracle-trial-stopped', d.stopped);
+            setEl('oracle-trial-scans', d.scans ?? '—');
+            setEl('oracle-trial-scan-visitors', d.scanVisitors != null ? `${d.scanVisitors} visiteur(s) distinct(s)` : '');
+            const bar = document.getElementById('oracle-trial-bar');
+            if (bar) {
+                bar.style.width = pct.toFixed(1) + '%';
+                bar.className = 'h-full rounded-full transition-all ' + (d.level === 'full' ? 'bg-red-400' : d.level === 'warn' ? 'bg-orange-400' : 'bg-gold/70');
+            }
+            const th = document.getElementById('oracle-trial-threshold');
+            if (th) th.style.left = Math.min(100, d.alertPct) + '%';
+            const badge = document.getElementById('oracle-trial-badge');
+            if (badge) {
+                const cfg = d.level === 'full' ? ['Plafond atteint', 'bg-red-500/15 text-red-300 border-red-500/30']
+                    : d.level === 'warn' ? ['Seuil d\'alerte dépassé', 'bg-orange-500/15 text-orange-300 border-orange-500/30']
+                    : [pct.toFixed(0) + ' % utilisés', 'bg-green-500/15 text-green-300 border-green-500/30'];
+                badge.textContent = cfg[0];
+                badge.className = 'text-xs px-2 py-1 rounded-full border ' + cfg[1];
+            }
+            const maxIn = document.getElementById('oracle-trial-max-input');
+            const pctIn = document.getElementById('oracle-trial-alertpct-input');
+            if (maxIn && document.activeElement !== maxIn) maxIn.value = d.max;
+            if (pctIn && document.activeElement !== pctIn) pctIn.value = d.alertPct;
+            const alertEl = document.getElementById('oracle-trial-alert');
+            if (alertEl) {
+                if (d.level) {
+                    alertEl.className = 'rounded-lg px-4 py-3 mb-4 text-sm flex items-center justify-between gap-3 border ' + (d.level === 'full' ? 'bg-red-500/10 border-red-500/30 text-red-200' : 'bg-orange-500/10 border-orange-500/30 text-orange-200');
+                    alertEl.innerHTML = `<span><i class="fas fa-qrcode mr-2"></i>Mois offert (QR code oracle) : <strong>${d.used} / ${d.max}</strong> essais utilisés${d.level === 'full' ? ' — plafond atteint, plus aucun mois offert n\'est accordé.' : ` — il en reste ${d.remaining}.`}</span><button onclick="showAnalyticsSubTab('conversion')" class="underline text-xs whitespace-nowrap">Voir / modifier le plafond</button>`;
+                } else {
+                    alertEl.className = 'hidden';
+                }
+            }
+        }
+
+        async function loadOracleTrialStats() {
+            try {
+                const res = await adminFetch('/api/admin/oracle-trial');
+                const d = await res.json();
+                if (!res.ok || !d.success) throw new Error(d.error || `HTTP ${res.status}`);
+                renderOracleTrial(d);
+            } catch (e) {
+                setEl('oracle-trial-save-msg', 'Statistiques indisponibles : ' + e.message);
+            }
+        }
+
+        async function saveOracleTrialSettings() {
+            const max = parseInt(document.getElementById('oracle-trial-max-input')?.value, 10);
+            const alertPct = parseInt(document.getElementById('oracle-trial-alertpct-input')?.value, 10);
+            const msg = document.getElementById('oracle-trial-save-msg');
+            if (!Number.isFinite(max) || max < 0) { msg.textContent = 'Plafond invalide.'; return; }
+            if (!Number.isFinite(alertPct) || alertPct < 1 || alertPct > 100) { msg.textContent = 'Seuil entre 1 et 100 %.'; return; }
+            msg.textContent = 'Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/oracle-trial', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ max, alertPct })
+                });
+                const d = await res.json();
+                if (!res.ok || !d.success) throw new Error(d.error || `HTTP ${res.status}`);
+                msg.textContent = 'Enregistré ✓';
+                loadOracleTrialStats();
+            } catch (e) { msg.textContent = 'Erreur : ' + e.message; }
+        }
+
         async function loadAnalytics() {
             const range = document.getElementById('analytics-range')?.value || '7d';
             const btn = document.getElementById('btn-analytics-refresh');
@@ -16031,6 +16152,7 @@
             const btnOriginal = btn ? btn.innerHTML : '';
             if (btn) { btn.disabled = true; btn.classList.add('opacity-60'); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Actualisation...'; }
             loadQrngQuota();
+            loadOracleTrialStats();
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`);
                 let data;

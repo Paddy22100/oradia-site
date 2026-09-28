@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Votre mois d'abonnement au tirage du Tore offert — Oracle Oradia</title>
+    <meta name="description" content="Vous avez l'oracle Oradia entre les mains : profitez d'un mois d'abonnement au Tore offert, les tirages en ligne illimités.">
+    <meta name="robots" content="noindex, follow" />
+    <link rel="canonical" href="https://oradia.fr/oracle-offert" />
+    <!-- Page du QR code imprimé dans le livret de l'oracle physique : mois d'essai
+         gratuit de l'abonnement Tore (lib/oracle-trial.js, interrupteur oracle_qr_trial). -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    
+    <!-- Couleurs ORADIA additionnelles -->
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        #offres {
+            scroll-margin-top: 100px;
+        }
+        
+        #cart-section {
+            scroll-margin-top: 100px;
+        }
+        
+        .text-gold {
+            color: #d4af37 !important;
+        }
+        
+        .text-light-gold {
+            color: #f5e7a1 !important;
+        }
+        
+        .text-night-blue {
+            color: #0a192f !important;
+        }
+        
+        .text-dark-blue {
+            color: #051428 !important;
+        }
+        
+        .bg-night-blue {
+            background-color: #0a192f !important;
+        }
+        
+        .bg-dark-blue {
+            background-color: #051428 !important;
+        }
+        
+        .border-gold {
+            border-color: #d4af37 !important;
+        }
+        
+        .border-gold\/20 {
+            border-color: rgba(212, 175, 55, 0.2) !important;
+        }
+        
+        .border-gold\/30 {
+            border-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .border-gold\/40 {
+            border-color: rgba(212, 175, 55, 0.4) !important;
+        }
+        
+        .border-gold\/50 {
+            border-color: rgba(212, 175, 55, 0.5) !important;
+        }
+        
+        .bg-gold\/10 {
+            background-color: rgba(212, 175, 55, 0.1) !important;
+        }
+        
+        .bg-gold\/20 {
+            background-color: rgba(212, 175, 55, 0.2) !important;
+        }
+        
+        .bg-gold\/30 {
+            background-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .text-gold\/60 {
+            color: rgba(212, 175, 55, 0.6) !important;
+        }
+        
+        .text-light-gold\/70 {
+            color: rgba(245, 231, 161, 0.7) !important;
+        }
+        
+        .text-light-gold\/80 {
+            color: rgba(245, 231, 161, 0.8) !important;
+        }
+        
+        .text-light-gold\/90 {
+            color: rgba(245, 231, 161, 0.9) !important;
+        }
+    </style>
+    
+    <!-- Stripe -->
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("images/oradia-hero-4k.webp") center/cover;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .offer-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .offer-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #d4af37, #f4e4c1);
+            transition: width 0.5s ease;
+        }
+        
+        .early-bird-badge {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            color: #0a192f;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* FAQ Styles */
+        .faq-answer {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question i.rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        .faq-question {
+            transition: background-color 0.2s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-radius: 0.5rem;
+        }
+        
+        /* Carrousel Styles */
+        .carousel-slide {
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        #carouselDots div {
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Bouton backToTop - positionnement optimisé */
+        #backToTop {
+            position: fixed !important;
+            right: 24px !important;
+            bottom: 24px !important;
+            z-index: 999 !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Mobile - marges réduites */
+        @media (max-width: 768px) {
+            #backToTop {
+                right: 16px !important;
+                bottom: 88px !important;
+            }
+        }
+        
+        /* Safe areas pour mobiles modernes */
+        @supports (padding: max(0px)) {
+            #backToTop {
+                right: max(24px, env(safe-area-inset-right)) !important;
+                bottom: max(24px, env(safe-area-inset-bottom)) !important;
+            }
+            
+            @media (max-width: 768px) {
+                #backToTop {
+                    right: max(16px, env(safe-area-inset-right)) !important;
+                    bottom: max(88px, env(safe-area-inset-bottom)) !important;
+                }
+            }
+        }
+
+        /* CTA mobile sticky discret */
+        #mobileStickyCta {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 998;
+            width: calc(100% - 24px);
+            max-width: 420px;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        #mobileStickyCta.mobile-cta-hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            pointer-events: none;
+        }
+
+        @media (min-width: 769px) {
+            #mobileStickyCta {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .animate-pulse,
+            .floating,
+            .early-bird-badge {
+                animation: none !important;
+            }
+
+            .blur-3xl,
+            .blur-2xl {
+                filter: blur(10px) !important;
+            }
+
+            .hover\:scale-105:hover,
+            .group:hover .group-hover\:scale-110 {
+                transform: none !important;
+            }
+        }
+        
+        #carouselDots div:hover {
+            transform: scale(1.2);
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <div id="header-placeholder"></div>
+
+    <section class="hero-section py-14 sm:py-20">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <p class="text-gold/80 uppercase tracking-widest text-sm mb-3">Un cadeau glissé dans votre coffret</p>
+                <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl font-bold gold-gradient mb-5 leading-tight">Votre mois d'abonnement au tirage du Tore offert</h1>
+                <p class="text-light-gold/90 text-lg mb-8">
+                    Vous avez l'oracle Oradia entre les mains. Prolongez l'expérience en ligne : pendant 30 jours, des tirages
+                    du Tore illimités, avec l'interprétation de chaque tirage et l'historique de vos tirages dans votre espace personnel.
+                </p>
+            </div>
+
+            <div class="max-w-xl mx-auto rounded-2xl border border-gold/40 bg-[rgba(5,20,40,0.85)] p-6 sm:p-8">
+                <div id="trial-closed" class="hidden text-center">
+                    <p class="text-light-gold/90 mb-5" id="trial-closed-text">L'offre du mois gratuit n'est pas disponible pour le moment.</p>
+                    <a href="/tore-abonnement.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full">Découvrir l'abonnement</a>
+                </div>
+                <form id="trial-form" class="space-y-4">
+                    <div>
+                        <label for="trial-name" class="block text-gold mb-2">Prénom et nom</label>
+                        <input id="trial-name" type="text" autocomplete="name" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
+                    </div>
+                    <div>
+                        <label for="trial-email" class="block text-gold mb-2">Email</label>
+                        <input id="trial-email" type="email" required autocomplete="email" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
+                        <p class="text-light-gold/50 text-xs mt-1">Ce sera l'identifiant de votre espace membre.</p>
+                    </div>
+                    <p id="trial-error" class="hidden text-red-300 text-sm"></p>
+                    <button type="submit" id="trial-submit" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 rounded-full text-lg">Activer mon mois offert</button>
+                    <ul class="text-light-gold/80 text-sm space-y-1.5 pt-2">
+                        <li><i class="fas fa-check text-gold mr-2"></i>0 € aujourd'hui, 30 jours de tirages illimités</li>
+                        <li><i class="fas fa-check text-gold mr-2"></i>Ensuite 8 €/mois, résiliable à tout moment depuis votre espace membre</li>
+                        <li><i class="fas fa-check text-gold mr-2"></i>Carte bancaire demandée par Stripe pour la suite de l'abonnement ; aucun prélèvement pendant l'essai</li>
+                        <li><i class="fas fa-check text-gold mr-2"></i>Réservé aux nouveaux abonnés, une fois par personne</li>
+                    </ul>
+                </form>
+            </div>
+
+            <p class="text-center text-light-gold/50 text-xs mt-6 max-w-xl mx-auto">
+                Un rappel vous est envoyé avant la fin de l'essai. Voir les <a href="/cgv.html" class="underline hover:text-gold">conditions générales de vente</a>.
+            </p>
+        </div>
+    </section>
+
+    <section class="py-14 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-4 sm:px-6">
+            <div class="max-w-4xl mx-auto grid md:grid-cols-3 gap-6 text-center">
+                <div class="rounded-2xl border border-gold/20 bg-[rgba(5,20,40,0.6)] p-6">
+                    <i class="fas fa-circle-nodes text-3xl text-gold mb-3"></i>
+                    <h2 class="text-gold font-semibold text-lg mb-2">Les mêmes 64 cartes</h2>
+                    <p class="text-light-gold/90 text-sm">Le Tore en ligne utilise les cartes de votre coffret, tirées par un hasard quantique.</p>
+                </div>
+                <div class="rounded-2xl border border-gold/20 bg-[rgba(5,20,40,0.6)] p-6">
+                    <i class="fas fa-feather text-3xl text-gold mb-3"></i>
+                    <h2 class="text-gold font-semibold text-lg mb-2">Une interprétation à chaque tirage</h2>
+                    <p class="text-light-gold/90 text-sm">Une lecture générée pour votre intention, à relire quand vous le souhaitez.</p>
+                </div>
+                <div class="rounded-2xl border border-gold/20 bg-[rgba(5,20,40,0.6)] p-6">
+                    <i class="fas fa-book-open text-3xl text-gold mb-3"></i>
+                    <h2 class="text-gold font-semibold text-lg mb-2">Votre historique</h2>
+                    <p class="text-light-gold/90 text-sm">Vos tirages sont conservés dans votre espace personnel pour observer ce qui revient.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <div id="footer-placeholder"></div>
+
+    <script src="js/withdrawal-consent.js"></script>
+    <script>
+    (function () {
+        var form = document.getElementById('trial-form');
+        var errorEl = document.getElementById('trial-error');
+        var btn = document.getElementById('trial-submit');
+
+        function showError(msg) { errorEl.textContent = msg; errorEl.classList.remove('hidden'); }
+        function closeOffer(msg) {
+            form.classList.add('hidden');
+            if (msg) document.getElementById('trial-closed-text').textContent = msg;
+            document.getElementById('trial-closed').classList.remove('hidden');
+        }
+
+        if (new URLSearchParams(window.location.search).get('cancelled')) {
+            showError("Activation annulée : vous pouvez réessayer quand vous voulez.");
+        }
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            errorEl.classList.add('hidden');
+            var email = document.getElementById('trial-email').value.trim();
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showError('Veuillez entrer une adresse email valide.'); return; }
+            // Renonciation expresse au droit de rétractation (contenu numérique à exécution
+            // immédiate), comme pour les autres abonnements Tore.
+            if (window.OradiaWithdrawalConsent) {
+                var ok = await window.OradiaWithdrawalConsent.confirm({ label: "L'abonnement au Tore (mois d'essai offert)" });
+                if (!ok) return;
+            }
+            btn.disabled = true; btn.textContent = 'Redirection vers le paiement sécurisé…';
+            try {
+                var res = await fetch('/api/create-checkout-session', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'tore-oracle-trial', email: email, fullName: document.getElementById('trial-name').value.trim() })
+                });
+                var data = await res.json().catch(function () { return {}; });
+                if (res.ok && data.url) { window.location.href = data.url; return; }
+                if (data.error === 'trial_closed' || data.error === 'trial_exhausted') { closeOffer(data.message); return; }
+                showError(data.message || 'Une erreur est survenue, merci de réessayer.');
+            } catch (err) {
+                showError('Connexion impossible, merci de réessayer.');
+            }
+            btn.disabled = false; btn.textContent = 'Activer mon mois offert';
+        });
+    })();
+    </script>
+    <script src="components/header-manager.js" defer></script>
+    <script src="components/footer-manager.js" defer></script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script src="js/page-tracker.js" defer></script>
+</body>
+</html>

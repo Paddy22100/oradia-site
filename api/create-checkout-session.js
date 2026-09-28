@@ -92,25 +92,62 @@ module.exports = async (req, res) => {
         // que dans une route dédiée : le projet est déjà à 12/12 fonctions Vercel (limite
         // du plan Hobby, voir CLAUDE.md), et cette route gère déjà la création de sessions
         // Stripe côté abonnement.
+        // Authentifié par le jeton de session membre : auparavant, n'importe qui
+        // connaissant l'email d'un abonné pouvait ouvrir son portail de facturation.
         if (req.body.type === 'billing-portal') {
-            const email = (req.body.email || '').trim().toLowerCase();
-            if (!email) return res.status(400).json({ error: 'email requis' });
-            const { data: sub } = await supabase
-                .from('tore_subscriptions')
-                .select('stripe_customer_id')
-                .ilike('email', email)
-                .not('stripe_customer_id', 'is', null)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const { getMemberFromRequest, getStripeRow, getPortalConfigurationId } = require('../lib/member-subscription.js');
+            const member = await getMemberFromRequest(supabase, req);
+            if (!member) return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
+            const sub = await getStripeRow(supabase, member.email);
             if (!sub?.stripe_customer_id) {
-                return res.status(404).json({ error: 'Aucun abonnement Stripe trouvé pour cet email' });
+                return res.status(404).json({ error: 'Aucun abonnement Stripe trouvé pour ce compte' });
             }
             const portalSession = await stripe.billingPortal.sessions.create({
                 customer: sub.stripe_customer_id,
+                configuration: await getPortalConfigurationId(stripe),
                 return_url: `${frontendUrl}/member/abonnements.html`
             });
             return res.json({ success: true, url: portalSession.url });
+        }
+
+        // ── Mois d'essai offert avec l'oracle physique (QR code du livret) ────────
+        // Page /oracle-offert → abonnement Tore avec 30 jours d'essai, nouveaux abonnés
+        // uniquement, plafonné (voir lib/oracle-trial.js).
+        if (req.body.type === 'tore-oracle-trial') {
+            const trial = require('../lib/oracle-trial.js');
+            const email    = (req.body.email || '').trim().toLowerCase();
+            const fullName = (req.body.fullName || '').trim().slice(0, 120);
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return res.status(400).json({ success: false, message: 'Adresse email invalide' });
+            }
+            const priceId = process.env.STRIPE_PRICE_COMPLET;
+            if (!priceId) return res.status(500).json({ success: false, message: 'Abonnement indisponible pour le moment' });
+            if (!(await trial.isOracleTrialEnabled(supabase))) {
+                return res.status(403).json({ success: false, error: 'trial_closed', message: "L'offre du mois gratuit n'est pas disponible pour le moment." });
+            }
+            const refusal = await trial.oracleTrialRefusal(supabase, email);
+            if (refusal) return res.status(409).json({ success: false, error: 'trial_not_eligible', message: refusal });
+            const trialSettings = await trial.getOracleTrialSettings(supabase);
+            if ((await trial.countOracleTrials(supabase)) >= trialSettings.max) {
+                return res.status(410).json({ success: false, error: 'trial_exhausted', message: "Tous les mois offerts ont été attribués. Vous pouvez tout de même vous abonner au Tore." });
+            }
+            const meta = { email, full_name: fullName, plan: 'complet', trial_source: trial.ORACLE_TRIAL_SOURCE };
+            const session = await stripe.checkout.sessions.create({
+                mode: 'subscription',
+                line_items: [{ price: priceId, quantity: 1 }],
+                customer_email: email,
+                subscription_data: {
+                    trial_period_days: trial.ORACLE_TRIAL_DAYS,
+                    metadata: meta
+                },
+                // Carte demandée dès l'inscription : l'abonnement démarre seul à la fin de
+                // l'essai (résiliable à tout moment depuis l'espace membre).
+                payment_method_collection: 'always',
+                success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}&essai=oracle`,
+                cancel_url:  `${frontendUrl}/oracle-offert?cancelled=1`,
+                metadata: { offer: 'tore-subscription', ...meta }
+            });
+            return res.json({ success: true, url: session.url });
         }
 
         // ── Abonnement Complet (8€/mois) ─────────────────────────────────────────
@@ -156,8 +193,7 @@ module.exports = async (req, res) => {
             if (promoCode) {
                 sessionParams.discounts = [{ promotion_code: promoCode }];
             } else {
-                // Champ « code promo » sur la page Stripe : permet notamment d'utiliser le code
-                // « 1 mois de Tore offert » reçu avec l'oracle physique (lib/tore-gift.js).
+                // Champ « code promo » sur la page Stripe (codes promo créés dans Stripe).
                 // Stripe interdit discounts et allow_promotion_codes ensemble.
                 sessionParams.allow_promotion_codes = true;
             }

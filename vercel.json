@@ -63,7 +63,7 @@
       "dest": "/api/admin/index.js"
     },
     {
-      "src": "/api/auth/(login|forgot-password|check-subscription|check-newsletter|refresh-session|save-tore-email|save-guidance-tore|save-birth-info|mark-password-changed|save-newsletter-prefs)(.*)",
+      "src": "/api/auth/(login|forgot-password|check-subscription|check-newsletter|refresh-session|save-tore-email|save-guidance-tore|save-birth-info|mark-password-changed|save-newsletter-prefs|update-auto-renew)(.*)",
       "dest": "/api/auth/index.js"
     },
     {
@@ -105,6 +105,7 @@
     { "src": "/precommande-oracle",            "dest": "/precommande-oracle.html" },
     { "src": "/precommande",                   "dest": "/precommande-oracle.html" },
     { "src": "/commander",                     "dest": "/commande-oracle.html" },
+    { "src": "/oracle-offert",                 "dest": "/oracle-offert.html" },
     { "src": "/boutique",                      "dest": "/commande-oracle.html" },
     { "src": "/commande-oracle",               "dest": "/commande-oracle.html" },
     { "src": "/accompagnements",               "dest": "/accompagnements.html" },

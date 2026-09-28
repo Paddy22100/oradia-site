@@ -826,6 +826,9 @@
         };
         Object.keys(OFFER_CONFIG).forEach(id => { OFFER_CONFIG[id].priceEuros = FALLBACK_PRICES[SALE_MODE][id]; });
         const FREE_RELAY = { minQty: 2, price: 0.01 };
+        // Grilles de port par pays de destination (remplacées par celles de l'API au
+        // chargement, voir loadShopCatalog). Repli : grille France pour tous les pays.
+        const SHIPPING_RATES = {};
         const SHOP_PAGE_URL = SALE_MODE === 'order' ? '/commander' : 'precommande-oracle.html#cart-section';
 
         async function loadShopCatalog() {
@@ -841,6 +844,10 @@
                     if (OFFER_CONFIG[id] && Number.isFinite(price)) OFFER_CONFIG[id].priceEuros = price;
                 });
                 const cat = data?.shop?.catalog;
+                const toLegacy = grid => (grid || []).map(r => ({ max_weight: r.maxWeight, price: r.price }));
+                Object.entries(cat?.shippingRates || {}).forEach(([country, grids]) => {
+                    SHIPPING_RATES[country] = { relay: toLegacy(grids.relay), home: toLegacy(grids.home) };
+                });
                 if (cat && 'freeRelayShippingMinQty' in cat) {
                     FREE_RELAY.minQty = cat.freeRelayShippingMinQty;
                     FREE_RELAY.price = Number(cat.freeRelayShippingPrice) || 0.01;
@@ -980,6 +987,7 @@
         function saveRelayPoint(point) {
             selectedRelayPoint = point;
             renderRelayPoint();
+            refreshDeliveryPricing(); // tarif du pays du point relais (France / Belgique)
         }
 
         function loadRelayPoint() {
@@ -1043,6 +1051,24 @@
             return Object.values(cart).reduce((sum, item) => sum + (Number(item.quantity) || 0), 0);
         }
 
+        // Pays de destination : celui du point relais choisi (ou de la recherche), sinon
+        // celui de l'adresse de livraison.
+        function deliveryCountry(deliveryMethod) {
+            if (deliveryMethod === 'relay') {
+                return selectedRelayPoint?.country || document.getElementById('relaySearchCountry')?.value || 'FR';
+            }
+            return document.querySelector('[name="country"]')?.value || 'FR';
+        }
+
+        // Recalcule prix affichés et total quand le pays ou le point relais change.
+        function refreshDeliveryPricing() {
+            updateDeliveryPrices();
+            if (selectedDelivery) {
+                deliveryPrice = calculateDeliveryPrice(calculateTotalWeight(), selectedDelivery);
+                updateOrderSummary();
+            }
+        }
+
         function calculateDeliveryPrice(weight, deliveryMethod) {
             if (deliveryMethod === 'hand_delivery') {
                 return 0;
@@ -1053,7 +1079,8 @@
                 return FREE_RELAY.price;
             }
             
-            const rates = MONDIAL_RELAY_RATES[deliveryMethod];
+            const countryRates = SHIPPING_RATES[deliveryCountry(deliveryMethod)] || MONDIAL_RELAY_RATES;
+            const rates = countryRates[deliveryMethod] || MONDIAL_RELAY_RATES[deliveryMethod];
             if (!rates) {
                 console.error('Mode de livraison non trouvé:', deliveryMethod);
                 return 0;
@@ -1657,6 +1684,8 @@
         // Initialisation unique au chargement de la page
         document.addEventListener('DOMContentLoaded', async () => {
             applySaleModeTexts();
+            document.querySelector('[name="country"]')?.addEventListener('change', refreshDeliveryPricing);
+            document.getElementById('relaySearchCountry')?.addEventListener('change', refreshDeliveryPricing);
             const giftBox = document.getElementById('giftOption');
             const giftMsg = document.getElementById('giftMessage');
             giftBox?.addEventListener('change', () => document.getElementById('giftMessageWrap').classList.toggle('hidden', !giftBox.checked));
