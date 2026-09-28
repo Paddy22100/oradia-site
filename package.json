@@ -20,7 +20,7 @@
   "scripts": {
     "dev-static": "npx serve .",
     "dev-vercel": "vercel dev",
-    "build:css": "for v in main guidance livraison default; do f=$([ $v = main ] && echo tailwind || echo tailwind-$v); TW_VARIANT=$v npx tailwindcss -c tailwind.config.js -i assets/css-src/tailwind.css -o assets/$f.css --minify; done"
+    "build:css": "for v in main guidance livraison default; do f=$([ $v = main ] && echo tailwind || echo tailwind-$v); TW_VARIANT=$v npx tailwindcss -c tailwind.config.js -i assets/css-src/tailwind.css -o assets/$f.css; done"
   },
   "keywords": [
     "stripe",
