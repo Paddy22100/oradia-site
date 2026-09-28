@@ -1491,7 +1491,19 @@ async function handleData(req, res) {
         const sb = supabase;
         try {
           const crypto = require('crypto');
-          const out = { filled: 0, resolved: 0, source: null };
+          const out = { filled: 0, resolved: 0, purged: 0, source: null };
+
+          // (0) Purge fraîcheur — un nombre non consommé ne doit jamais rester en stock
+          // plus de 7 jours (au-delà, il vieillit sans raison : sa validité comme "passé"
+          // ne dépend que de committed_at < intention_at, pas de son ancienneté absolue).
+          // Constaté en 2026-09 : un lot de départ (~4500) traînait depuis 55 jours, la
+          // consommation réelle (~5/jour, ~31/semaine, mesuré en base) étant bien trop
+          // lente pour jamais l'épuiser naturellement.
+          const MAX_AGE_DAYS = 7;
+          const staleCutoff = new Date(Date.now() - MAX_AGE_DAYS * 24 * 3600 * 1000).toISOString();
+          const { data: purgedRows } = await sb.from('retro_pool')
+            .delete().is('consumed_at', null).lt('committed_at', staleCutoff).select('id');
+          out.purged = (purgedRows || []).length;
 
           // (1) Remplissage — uniquement du vrai quantique (ANU ou Outshift/Cisco),
           //     jamais de pseudo-hasard local (sinon l'étude serait polluée).
@@ -1505,10 +1517,15 @@ async function handleData(req, res) {
           // plus lente que l'apport) — inutile et pas souhaitable. On n'ajoute donc un
           // petit lot "fraîcheur" que si le nombre le plus récent en stock date de plus
           // de 20h (~pas de commit aujourd'hui) ET que le stock reste sous un plafond.
+          //
+          // Seuils recalibrés sur la consommation réelle (~5/jour) plutôt que sur un
+          // stock-tampon de plusieurs milliers : avec la purge à 7 jours ci-dessus, un
+          // stock aussi large n'aurait de toute façon jamais pu s'écouler avant d'être
+          // périmé — marge ~8-10x conservée sur la conso mesurée.
           const { count: available } = await sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null);
           const { data: newestRows } = await sb.from('retro_pool').select('committed_at').is('consumed_at', null).order('committed_at', { ascending: false }).limit(1);
           const newestAgeHours = (newestRows && newestRows[0]) ? (Date.now() - new Date(newestRows[0].committed_at).getTime()) / 3600000 : Infinity;
-          const LOW = 200, BATCH = 1024, TOPUP = 80, HARD_CAP = 5000;
+          const LOW = 60, BATCH = 150, TOPUP = 40, HARD_CAP = 300;
           const isLow = (available || 0) < LOW;
           const needsFreshBatch = newestAgeHours > 20;
           const overCap = (available || 0) >= HARD_CAP;
@@ -1594,7 +1611,7 @@ async function handleData(req, res) {
             status_code: fillFailed ? 500 : 200,
             message: fillFailed
               ? `Échec remplissage pool rétrocausalité (stock avant : ${available || 0}, raison : ${out.source})`
-              : `Pool rétrocausalité : ${out.filled} ajouté(s) (${out.source || 'stock suffisant, pas de remplissage'}), ${out.resolved} futur(s) résolu(s)`,
+              : `Pool rétrocausalité : ${out.filled} ajouté(s) (${out.source || 'stock suffisant, pas de remplissage'}), ${out.purged} périmé(s) (>7j) supprimé(s), ${out.resolved} futur(s) résolu(s)`,
             details: { available_before: available || 0, ...out }
           });
 
