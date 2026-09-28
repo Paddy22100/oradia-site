@@ -55,7 +55,7 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 | `preorders` | Précommandes physiques (Stripe) | colonnes relay ajoutées par `mondial-relay-migration.sql` |
 | `donors` | Dons libres (contribution-libre) | — |
 | `newsletter_contacts` | Inscriptions newsletter/waitlist → Brevo list 5 + contacts ajoutés manuellement (catégories `tags`) | migrations : `supabase-migration-missing-tables.sql`, `supabase-migration-contact-tags.sql` |
-| `tore_subscriptions` | Membres actifs pour tirages en ligne | migration : `supabase-migration-missing-tables.sql` |
+| `tore_subscriptions` | Membres actifs pour tirages en ligne | migration : `supabase-migration-missing-tables.sql` ; colonne `lang` ('fr'/'en', langue des emails de l'abonné) : `supabase-migration-subscription-lang.sql` |
 | `tirages` | Historique des tirages par user (RLS stricte) | purge auto : 20 max par user |
 | `newsletter_drafts` | Brouillons de newsletter (5 lignes) | géré par le dashboard admin |
 | `newsletter_ideas` | Idées de newsletter (0 ligne) | table feature, à garder |
@@ -144,9 +144,12 @@ construit son propre HTML au lieu d'appeler une fonction partagée, c'est un
 problème à signaler en priorité (catégorie "Problèmes importants").
 
 Emails bilingues : une langue = un paramètre de la même fonction, jamais une copie du template.
-L'email de bienvenue abonné (`sendToreSubscriptionEmail`, `lib/tore-subscription-email.js`) accepte
-`lang: 'en'` — transmis par la fenêtre de limite de `/en/tore.html` → `create-checkout-session`
-(métadonnées Stripe `lang`) → `stripe-webhook.js`. Bouton « Test EN » dans l'onglet Mails.
+Les emails abonnés de `lib/tore-subscription-email.js` (bienvenue/réparation d'accès, échec de
+paiement, fin d'abonnement, relance « pas encore de tirage ») acceptent `lang: 'en'`. La langue part
+de la fenêtre de limite de `/en/tore.html` → `create-checkout-session` (métadonnées Stripe `lang`)
+→ `stripe-webhook.js`, qui l'enregistre dans `tore_subscriptions.lang` ; les envois ultérieurs
+(webhook, cron, dashboard) lisent cette colonne. Visuel de précommande anglais :
+`images/medias/banniere-facebook-en*.webp`. Boutons « Test EN » dans l'onglet Mails.
 
 ### 5. LOGIQUE FREEMIUM — localStorage
 

@@ -4656,9 +4656,14 @@
                         <p class="text-gold font-semibold text-sm">Abonnement Tore expiré</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé à l'expiration de l'abonnement</p>
                     </div>
-                    <button onclick="sendMailTest('tore-expired')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('tore-expired')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('tore-expired', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Paiement échoué -->
@@ -4667,9 +4672,14 @@
                         <p class="text-gold font-semibold text-sm">Paiement Tore échoué</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé si le renouvellement Stripe échoue</p>
                     </div>
-                    <button onclick="sendMailTest('tore-payment-failed')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('tore-payment-failed')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('tore-payment-failed', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Check-in J+7 : pas de tirage depuis le paiement -->
@@ -4684,6 +4694,9 @@
                         </button>
                         <button onclick="sendMailTest('tore-checkin', 'changed')" class="mail-test-btn bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2" title="Version sans mot de passe (déjà changé)">
                             <i class="fas fa-paper-plane text-xs"></i> Test (mdp changé)
+                        </button>
+                        <button onclick="sendMailTest('tore-checkin', undefined, 'en')" class="mail-test-btn bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2" title="Version anglaise (mot de passe provisoire)">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
                         </button>
                     </div>
                 </div>
@@ -11279,13 +11292,13 @@
                     res = await adminFetch('/api/admin/data?action=test-subscription-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'expired', email: 'contact@oradia.fr' })
+                        body: JSON.stringify({ type: 'expired', email: 'contact@oradia.fr', lang })
                     });
                 } else if (type === 'tore-payment-failed') {
                     res = await adminFetch('/api/admin/data?action=test-subscription-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'payment_failed', email: 'contact@oradia.fr' })
+                        body: JSON.stringify({ type: 'payment_failed', email: 'contact@oradia.fr', lang })
                     });
                 } else if (type === 'renewal-reminder' || type === 'trial-reminder') {
                     res = await adminFetch('/api/admin/data?action=test-subscription-email', {

@@ -620,7 +620,7 @@ async function findAuthUserByEmail(supabase, email) {
 async function sendToreCheckinForSubscription(supabase, subscriptionId, { force = false } = {}) {
   const { data: sub, error: fetchErr } = await supabase
     .from('tore_subscriptions')
-    .select('id, email, full_name, plan, created_at, must_change_password, checkin_email_sent_at, status')
+    .select('id, email, full_name, plan, created_at, must_change_password, checkin_email_sent_at, status, lang')
     .eq('id', subscriptionId)
     .single();
   if (fetchErr || !sub?.email) return { sent: false, reason: 'not_found' };
@@ -668,7 +668,8 @@ async function sendToreCheckinForSubscription(supabase, subscriptionId, { force 
   const emailSent = await sendToreCheckinReminderEmail({
     toEmail: sub.email,
     toName: sub.full_name || '',
-    tempPassword
+    tempPassword,
+    lang: sub.lang
   });
 
   // Si un nouveau mot de passe provisoire a été émis, synchroniser l'indicateur
@@ -2300,7 +2301,7 @@ async function handleData(req, res) {
       if (action === 'repair-access' && subscriptionId) {
         const { data: sub, error: subFetchError } = await supabase
           .from('tore_subscriptions')
-          .select('email, full_name, plan')
+          .select('email, full_name, plan, lang')
           .eq('id', subscriptionId)
           .single();
         if (subFetchError || !sub?.email) {
@@ -2359,7 +2360,8 @@ async function handleData(req, res) {
           toName: sub.full_name || '',
           tempPassword,
           resetLink,
-          plan: sub.plan || 'complet'
+          plan: sub.plan || 'complet',
+          lang: sub.lang // email de réparation dans la langue de l'abonné
         });
 
         return res.status(200).json({ success: true, emailSent, mode });
@@ -3308,7 +3310,7 @@ async function handleData(req, res) {
         // webhook Stripe — avant ce correctif, ce test envoyait une copie figée du
         // template, qui divergeait au fil des évolutions du vrai email envoyé aux abonnés.
         // type attendu ici : 'payment_failed' ou 'expired' (mappé sur 'cancelled').
-        const emailSentSub = await sendSubscriptionEmail(toEmail, body.name || '', type === 'payment_failed' ? 'payment_failed' : 'cancelled');
+        const emailSentSub = await sendSubscriptionEmail(toEmail, body.name || '', type === 'payment_failed' ? 'payment_failed' : 'cancelled', body.lang === 'en' ? 'en' : 'fr');
         if (!emailSentSub) return res.status(502).json({ error: 'Envoi Brevo échoué' });
         return res.status(200).json({ success: true, email: toEmail, type });
       }
@@ -3427,7 +3429,8 @@ async function handleData(req, res) {
           const emailSentCheckin = await sendToreCheckinReminderEmail({
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
-            tempPassword: body.mode === 'changed' ? null : 'ExempleMdp123'
+            tempPassword: body.mode === 'changed' ? null : 'ExempleMdp123',
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSentCheckin) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });

@@ -315,7 +315,7 @@ class FreemiumTracker {
         // partagé entre le tirage français et le tirage anglais.
         const isEN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
         const T = isEN ? {
-            ariaLabel: 'Free draws used', close: 'Close', tagline: 'The Inner Compass',
+            ariaLabel: 'Free draws used', close: 'Close', banner: 'banniere-facebook-en', tagline: 'The Inner Compass',
             oldPrice: '€8', newPrice: '€5',
             title: "You've explored your two free draws",
             intro: "Your guidance journey doesn't end here — here's how to continue.",
@@ -332,7 +332,7 @@ class FreemiumTracker {
             error: 'Something went wrong. Please try again.', loading: 'Loading…', subscribe: 'Subscribe',
             consentLabel: 'The Tore subscription'
         } : {
-            ariaLabel: 'Tirages offerts utilisés', close: 'Fermer', tagline: 'La Boussole Intérieure',
+            ariaLabel: 'Tirages offerts utilisés', close: 'Fermer', banner: 'banniere-facebook', tagline: 'La Boussole Intérieure',
             oldPrice: '8€', newPrice: '5€',
             title: 'Vos deux tirages offerts ont été explorés',
             intro: "Votre chemin de guidance ne s'arrête pas là — voici comment continuer.",
@@ -455,7 +455,7 @@ class FreemiumTracker {
                         <!-- Colonne droite : pub précommande + parrainage, secondaires -->
                         <div class="tlm-col-right">
                             <a href="/precommande-oracle.html" class="tlm-preorder tlm-side-card" style="border:1px solid rgba(212,175,55,0.22);">
-                                <img src="/images/medias/banniere-facebook.webp" srcset="/images/medias/banniere-facebook-640.webp 640w, /images/medias/banniere-facebook-1280.webp 1280w, /images/medias/banniere-facebook.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" width="2034" height="773" decoding="async" alt="${T.preorderAlt}"
+                                <img src="/images/medias/${T.banner}.webp" srcset="/images/medias/${T.banner}-640.webp 640w, /images/medias/${T.banner}-1280.webp 1280w, /images/medias/${T.banner}.webp 2034w" sizes="(max-width: 768px) 100vw, 60vw" width="2034" height="773" decoding="async" alt="${T.preorderAlt}"
                                      style="width:100%;height:auto;display:block;">
                                 <div style="padding:12px 14px;background:rgba(212,175,55,0.06);display:flex;align-items:center;gap:10px;">
                                     <span class="tlm-icon-badge"><i class="fas fa-box-open"></i></span>
