@@ -6723,6 +6723,27 @@ function showArrowForStep(stepIndex, isMatch) {
   const toreIntentionInput = el('tore-intention-input');
   const toreSubmitBtn = el('tore-submit-btn');
 
+  const OPEN_STARTERS = [
+    'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
+    'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
+  ];
+
+  // Inversion sujet-verbe (suis-je, peux-tu, sera-t-il, avez-vous…) : la forme
+  // interrogative fermée (oui/non) la plus courante en français. Plutôt qu'une
+  // liste de préfixes énumérés au cas par cas — forcément incomplète, elle avait
+  // par exemple oublié "suis-je" — on détecte le motif générique verbe-(t-)pronom
+  // en tout début de phrase, qui les couvre toutes. Le trait d'union grammaticalement
+  // correct ("vais-je") ou un simple espace ("vais je", très fréquent à la saisie)
+  // sont acceptés indifféremment comme séparateur.
+  // Exclusion préalable des amorces ouvertes : "pourquoi je culpabilise ?" ressemble
+  // au même motif (mot + "je") sans être une inversion — "pourquoi" n'est jamais un
+  // verbe — donc jamais signalée comme fermée à tort.
+  function isClosedQuestionStart(lower) {
+    if (OPEN_STARTERS.some(p => lower.startsWith(p))) return false;
+    if (lower.startsWith('est-ce que') || lower.startsWith('est ce que')) return true;
+    return /^\S+[\s-](t[\s-])?(je|tu|il|elle|on|nous|vous|ils|elles)\b/i.test(lower);
+  }
+
   function isOpenQuestion(txt) {
     const s = (txt || '').trim();
     if (!s.endsWith('?')) return false;
@@ -6730,18 +6751,10 @@ function showArrowForStep(stepIndex, isMatch) {
     const lower = s.toLowerCase();
 
     // Formulations fermées (oui/non) → refuser
-    const closedStarters = [
-      'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
-      'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
-    ];
-    if (closedStarters.some(p => lower.startsWith(p))) return false;
+    if (isClosedQuestionStart(lower)) return false;
 
     // Formulations ouvertes → accepter
-    const openStarters = [
-      'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
-      'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
-    ];
-    if (openStarters.some(p => lower.startsWith(p))) return true;
+    if (OPEN_STARTERS.some(p => lower.startsWith(p))) return true;
 
     // Filet de sécurité : assez de mots + « ? »
     return s.split(/\s+/).length >= 3;
@@ -6808,10 +6821,8 @@ function showArrowForStep(stepIndex, isMatch) {
     const raw = (rawValue || '').trim();
     const has = raw.length > 0;
     const lower = raw.toLowerCase();
-    const closedStarters = ['est-ce que','peux-tu','puis-je','as-tu','avez-vous','es-tu','êtes-vous','dois-je','peut-on','sera-t-il','serait-il'];
-    const openStarters = ['comment','pourquoi','quel ','quelle ','quels ','quelles ','quoi','de quelle manière','dans quelle mesure','à quoi','vers quoi'];
     const endsQ = raw.endsWith('?');
-    const openForm = has && !closedStarters.some(p => lower.startsWith(p)) && (openStarters.some(p => lower.startsWith(p)) || raw.split(/\s+/).length >= 3);
+    const openForm = has && !isClosedQuestionStart(lower) && (OPEN_STARTERS.some(p => lower.startsWith(p)) || raw.split(/\s+/).length >= 3);
     const single = has && !multiple;
     setChk('chk-open',   !has ? 'pending' : (openForm ? 'ok' : 'ko'));
     setChk('chk-q',      !has ? 'pending' : (endsQ ? 'ok' : 'ko'));
