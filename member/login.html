@@ -257,7 +257,20 @@
                 sessionStorage.setItem('rememberMe', 'false');
             }
             flash('Connexion réussie ! Redirection…', 'success');
-            const returnTo = new URLSearchParams(window.location.search).get('returnTo') || sessionStorage.getItem('oradia_login_return');
+            // returnTo vient de l'URL : n'accepter qu'une page de ce site (chemin relatif ou
+            // absolu sur la même origine). Sans ce contrôle, un lien piégé
+            // (…/login.html?returnTo=https://faux-site.example) redirigeait vers un site externe
+            // juste après la connexion (open redirect). Refusé → retour par défaut.
+            function safeReturnTo(raw) {
+                if (!raw) return null;
+                try {
+                    const url = new URL(raw, window.location.href);
+                    if (url.origin !== window.location.origin) return null;
+                    if (url.protocol !== 'http:' && url.protocol !== 'https:' && url.protocol !== 'capacitor:') return null;
+                    return url.pathname + url.search + url.hash;
+                } catch (_) { return null; }
+            }
+            const returnTo = safeReturnTo(new URLSearchParams(window.location.search).get('returnTo') || sessionStorage.getItem('oradia_login_return'));
             sessionStorage.removeItem('oradia_login_return');
             // Dans l'app mobile native, il n'y a pas de "site" à proprement parler : on revient
             // sur l'écran d'accueil de l'app plutôt que sur index.html.
