@@ -4,7 +4,6 @@ const { sendBrevoEmail, shippingFromOrder } = require('../lib/brevo-order-email.
 const { sendToreSubscriptionEmail } = require('../lib/tore-subscription-email.js');
 const { sendGuidanceConfirmationEmail } = require('../lib/guidance-email.js');
 const { hitRateLimit } = require('../lib/rate-limit.js');
-const { isToreGiftEnabled, createToreGiftCode } = require('../lib/tore-gift.js');
 
 // Échec d'écriture en base pendant le traitement d'un paiement : l'erreur remonte
 // jusqu'au handler, qui répond 500 pour que Stripe relivre l'événement (il réessaie
@@ -668,6 +667,21 @@ async function processEvent(event) {
         }
 
         // ── Annulation d'abonnement ──────────────────────────────────────────
+        // Résiliation programmée / annulée (espace membre ou portail Stripe) : reflétée
+        // dans tore_subscriptions pour l'interrupteur « renouvellement automatique ».
+        case 'customer.subscription.updated': {
+            const subscription = event.data.object;
+            const prev = event.data.previous_attributes || {};
+            if (!('cancel_at_period_end' in prev)) break;
+            const supabase = getSupabaseClient();
+            const { error: capeError } = await supabase
+                .from('tore_subscriptions')
+                .update({ cancel_at_period_end: !!subscription.cancel_at_period_end, updated_at: new Date().toISOString() })
+                .eq('stripe_subscription_id', subscription.id);
+            if (capeError) console.error('[webhook] cancel_at_period_end:', capeError.message);
+            break;
+        }
+
         case 'customer.subscription.deleted': {
             const stripe = getStripeClient();
             const supabase = getSupabaseClient();
@@ -987,27 +1001,12 @@ async function processEvent(event) {
                         }
                     }
                     
-                    // « 1 mois de Tore offert » (interrupteur oracle_tore_gift, désactivé par
-                    // défaut) : code unique créé une seule fois par commande. Un échec Stripe
-                    // n'empêche pas la confirmation de commande.
-                    let toreGiftCode = upsertData.tore_gift_code || null;
-                    if (!toreGiftCode && await isToreGiftEnabled(supabase)) {
-                        try {
-                            toreGiftCode = await createToreGiftCode(stripe, { sessionId, email: upsertData.email });
-                            await supabase.from('preorders').update({ tore_gift_code: toreGiftCode }).eq('stripe_session_id', sessionId);
-                        } catch (giftError) {
-                            console.error('[webhook] Code Tore offert non créé:', giftError.message);
-                            toreGiftCode = null;
-                        }
-                    }
-
                     emailSent = await sendBrevoEmail({
                         toEmail: upsertData.email,
                         toName: upsertData.full_name || 'Ami(e) d\'ORADIA',
                         offer: upsertData.offer,
                         amountTotal: Number(upsertData.amount_total).toFixed(2),
                         invoiceUrl: invoiceUrl,
-                        toreGiftCode,
                         // Panier détaillé (enregistré à la création de la session Stripe)
                         items: upsertData.items,
                         shipping: shippingFromOrder(upsertData),

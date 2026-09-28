@@ -521,6 +521,11 @@
                         localStorage.setItem('oradia_was_subscribed', 'true');
                     } catch(e) {}
 
+                    // État réel du renouvellement (Stripe cancel_at_period_end), prioritaire sur
+                    // la valeur mémorisée localement dans ce navigateur.
+                    if (typeof data.auto_renew === 'boolean') {
+                        try { localStorage.setItem('oradia_auto_renew', String(data.auto_renew)); } catch(e) {}
+                    }
                     // Date de prochaine facturation = date d'expiration de l'abonnement
                     const autoRenew = localStorage.getItem('oradia_auto_renew') !== 'false';
                     const billingEl = document.getElementById('nextBillingDate');
@@ -839,18 +844,45 @@
         // Ouvre le portail de facturation Stripe pour l'abonnement existant (mise à jour
         // du moyen de paiement) — voir le nouveau type 'billing-portal' dans
         // api/create-checkout-session.js.
+        // Appel authentifié par le jeton de session membre, renouvelé une fois via le
+        // refresh_token si le serveur répond 401 (jeton Supabase expiré au bout d'~1 h).
+        async function memberFetch(url, options) {
+            const storage = sessionStorage.getItem(SESSION_KEY) ? sessionStorage : localStorage;
+            const sess = JSON.parse(storage.getItem(SESSION_KEY) || '{}');
+            const call = (token) => fetch(url, {
+                ...options,
+                headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) }
+            });
+            let res = await call(sess.access_token);
+            if (res.status === 401 && sess.refresh_token) {
+                try {
+                    const r = await fetch('/api/auth/refresh-session', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refresh_token: sess.refresh_token })
+                    });
+                    const d = await r.json();
+                    if (d.success && d.session) {
+                        sess.access_token = d.session.access_token;
+                        sess.refresh_token = d.session.refresh_token;
+                        storage.setItem(SESSION_KEY, JSON.stringify(sess));
+                        res = await call(sess.access_token);
+                    }
+                } catch (e) {}
+            }
+            return res;
+        }
+
         async function openBillingPortal(btn) {
             const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
-            const email = sess.email;
-            if (!email) { window.location.href = 'login.html'; return; }
+            if (!sess.email) { window.location.href = 'login.html'; return; }
             const original = btn.innerHTML;
             btn.disabled = true; btn.innerHTML = 'Redirection…';
             try {
-                const res = await fetch('/api/create-checkout-session', {
+                const res = await memberFetch('/api/create-checkout-session', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'billing-portal', email })
+                    body: JSON.stringify({ type: 'billing-portal' })
                 });
+                if (res.status === 401) { window.location.href = 'login.html?returnTo=abonnements.html'; return; }
                 const data = await res.json();
                 if (data.url) { window.location.href = data.url; }
                 else { btn.disabled = false; btn.innerHTML = original; alert('Erreur : ' + (data.error || 'Réessayez.')); }
@@ -875,21 +907,41 @@
                 : "Le renouvellement est désactivé. Votre accès sera maintenu jusqu'à la fin de la période en cours, puis s'arrêtera.";
         }
 
+        let autoRenewBusy = false;
         async function toggleAutoRenew() {
+            if (autoRenewBusy) return;
             const current = localStorage.getItem('oradia_auto_renew') !== 'false';
             const newVal = !current;
-            localStorage.setItem('oradia_auto_renew', String(newVal));
-            updateToggleUI(newVal);
-            document.getElementById('nextBillingDate').textContent = newVal ? 'Automatique (mensuel)' : 'Non renouvelé';
+            if (!newVal && !confirm("Désactiver le renouvellement ? Votre abonnement s'arrêtera à la fin de la période en cours (aucun nouveau prélèvement), et vous gardez l'accès jusque-là.")) return;
 
-            // Appel API pour synchroniser avec Stripe
+            // La résiliation est d'abord faite chez Stripe ; l'interrupteur ne change
+            // qu'une fois Stripe confirmé (auparavant il basculait sans rien envoyer).
+            autoRenewBusy = true;
+            const toggleBtn = document.getElementById('autoRenewToggle');
+            if (toggleBtn) toggleBtn.style.opacity = '0.5';
+            let data = null;
             try {
-                await fetch('/api/auth/update-auto-renew', {
+                const res = await memberFetch('/api/auth/update-auto-renew', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ autoRenew: newVal })
                 });
-            } catch(e) {}
+                data = await res.json().catch(() => null);
+                if (res.status === 401) { alert('Votre session a expiré : reconnectez-vous puis réessayez.'); window.location.href = 'login.html?returnTo=abonnements.html'; return; }
+                if (!res.ok || !data?.success) throw new Error(data?.error || 'Erreur ' + res.status);
+            } catch (e) {
+                alert("Le changement n'a pas pu être enregistré : " + e.message + "\nRéessayez, ou écrivez à contact@oradia.fr.");
+                return;
+            } finally {
+                autoRenewBusy = false;
+                if (toggleBtn) toggleBtn.style.opacity = '';
+            }
+
+            localStorage.setItem('oradia_auto_renew', String(data.autoRenew));
+            updateToggleUI(data.autoRenew);
+            const endStr = data.periodEnd ? new Date(data.periodEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+            document.getElementById('nextBillingDate').textContent = data.autoRenew
+                ? (endStr || 'Automatique (mensuel)')
+                : (endStr ? 'Non renouvelé — accès jusqu\'au ' + endStr : 'Non renouvelé');
 
             // Toast de confirmation
             const toast = document.createElement('div');

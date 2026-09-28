@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js');
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type'
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization'
 };
 
 // Simple in-memory rate limiter
@@ -267,7 +267,7 @@ async function handleCheckSubscription(req, res) {
     // abonnement) de "abonnement résilié" (nouveau checkout) — voir member/abonnements.html.
     const { data: subData } = await supabase
       .from('tore_subscriptions')
-      .select('status, expires_at, created_at, birth_date, birth_place')
+      .select('status, expires_at, created_at, birth_date, birth_place, cancel_at_period_end')
       .ilike('email', email)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -284,6 +284,8 @@ async function handleCheckSubscription(req, res) {
       status: subData?.status || null,
       expires_at: subData?.expires_at,
       subscription_start: subData?.created_at,
+      // false = résiliation programmée en fin de période (Stripe cancel_at_period_end)
+      auto_renew: subData ? subData.cancel_at_period_end !== true : null,
       birth_date: subData?.birth_date || null,
       birth_place: subData?.birth_place || null
     }));
@@ -560,6 +562,42 @@ async function handleMarkPasswordChanged(req, res) {
   return res.end(JSON.stringify({ success: true }));
 }
 
+// ============ RENOUVELLEMENT AUTOMATIQUE (résiliation depuis l'espace membre) ============
+// POST /update-auto-renew { autoRenew } — authentifié par le jeton de session membre.
+// Avant ce correctif, l'interrupteur de member/abonnements.html appelait une route qui
+// n'existait pas : le membre croyait avoir résilié alors que Stripe continuait de prélever.
+async function handleUpdateAutoRenew(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => data += c);
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+  if (typeof body.autoRenew !== 'boolean') {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'autoRenew (boolean) requis' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { getMemberFromRequest, setAutoRenew } = require('../../lib/member-subscription.js');
+  const member = await getMemberFromRequest(supabase, req);
+  if (!member) {
+    res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Session expirée, reconnectez-vous' }));
+  }
+  const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  const result = await setAutoRenew(stripe, supabase, member.email, body.autoRenew);
+  if (result.status !== 200) {
+    res.writeHead(result.status, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: result.error }));
+  }
+  console.log('[auto-renew]', member.email, '→', result.autoRenew ? 'renouvellement actif' : 'résiliation en fin de période');
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true, ...result }));
+}
+
 // ============ FORGOT PASSWORD ============
 async function handleForgotPassword(req, res) {
   // Sans limite, n'importe qui peut spammer un email arbitraire de demandes de
@@ -716,6 +754,11 @@ module.exports = async (req, res) => {
     // POST /mark-password-changed — synchronise l'indicateur dashboard après changement de mdp
     if (path.includes('mark-password-changed') || fullUrl.includes('mark-password-changed')) {
       return await handleMarkPasswordChanged(req, res);
+    }
+
+    // POST /update-auto-renew — résiliation / réactivation du renouvellement (Stripe)
+    if (path.includes('update-auto-renew') || fullUrl.includes('update-auto-renew')) {
+      return await handleUpdateAutoRenew(req, res);
     }
 
     // POST /save-newsletter-prefs — préférences newsletter par catégorie (member/parametres.html)

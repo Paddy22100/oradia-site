@@ -555,6 +555,12 @@ async function reconcileStripeSubscriptions(supabase) {
       if (!row) continue;
 
       const currentExp = row.expires_at ? new Date(row.expires_at).getTime() : null;
+      // Résiliation programmée (portail Stripe ou espace membre) : reflétée pour l'affichage
+      // de l'interrupteur « renouvellement automatique » de l'espace membre.
+      await supabase.from('tore_subscriptions')
+        .update({ cancel_at_period_end: !!sub.cancel_at_period_end }).eq('id', row.id)
+        .then(({ error }) => { if (error) console.warn('[reconcile] cancel_at_period_end:', error.message); });
+
       if (expiresAt && currentExp !== expiresAt.getTime()) {
         await supabase.from('tore_subscriptions').update({
           status: mappedStatus,
@@ -3355,9 +3361,8 @@ async function handleData(req, res) {
             shipping: {
               method: 'home', priceCents: 1099
             },
-            // Aperçu des blocs facultatifs : option cadeau et code « 1 mois de Tore offert ».
+            // Aperçu du bloc facultatif « option cadeau ».
             gift: { message: 'Joyeux anniversaire, que cet oracle t\'accompagne !' },
-            toreGiftCode: 'ORADIA-EXEMPLE',
             amountTotal: '98.99'
           });
           if (!emailSentOrder) return res.status(502).json({ error: 'Envoi Brevo échoué' });

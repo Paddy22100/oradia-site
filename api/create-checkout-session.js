@@ -92,22 +92,19 @@ module.exports = async (req, res) => {
         // que dans une route dédiée : le projet est déjà à 12/12 fonctions Vercel (limite
         // du plan Hobby, voir CLAUDE.md), et cette route gère déjà la création de sessions
         // Stripe côté abonnement.
+        // Authentifié par le jeton de session membre : auparavant, n'importe qui
+        // connaissant l'email d'un abonné pouvait ouvrir son portail de facturation.
         if (req.body.type === 'billing-portal') {
-            const email = (req.body.email || '').trim().toLowerCase();
-            if (!email) return res.status(400).json({ error: 'email requis' });
-            const { data: sub } = await supabase
-                .from('tore_subscriptions')
-                .select('stripe_customer_id')
-                .ilike('email', email)
-                .not('stripe_customer_id', 'is', null)
-                .order('created_at', { ascending: false })
-                .limit(1)
-                .maybeSingle();
+            const { getMemberFromRequest, getStripeRow, getPortalConfigurationId } = require('../lib/member-subscription.js');
+            const member = await getMemberFromRequest(supabase, req);
+            if (!member) return res.status(401).json({ error: 'Session expirée, reconnectez-vous' });
+            const sub = await getStripeRow(supabase, member.email);
             if (!sub?.stripe_customer_id) {
-                return res.status(404).json({ error: 'Aucun abonnement Stripe trouvé pour cet email' });
+                return res.status(404).json({ error: 'Aucun abonnement Stripe trouvé pour ce compte' });
             }
             const portalSession = await stripe.billingPortal.sessions.create({
                 customer: sub.stripe_customer_id,
+                configuration: await getPortalConfigurationId(stripe),
                 return_url: `${frontendUrl}/member/abonnements.html`
             });
             return res.json({ success: true, url: portalSession.url });
@@ -196,8 +193,7 @@ module.exports = async (req, res) => {
             if (promoCode) {
                 sessionParams.discounts = [{ promotion_code: promoCode }];
             } else {
-                // Champ « code promo » sur la page Stripe : permet notamment d'utiliser le code
-                // « 1 mois de Tore offert » reçu avec l'oracle physique (lib/tore-gift.js).
+                // Champ « code promo » sur la page Stripe (codes promo créés dans Stripe).
                 // Stripe interdit discounts et allow_promotion_codes ensemble.
                 sessionParams.allow_promotion_codes = true;
             }
