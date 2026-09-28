@@ -43,8 +43,14 @@
     return code;
   }
 
+  // Langue de la page (<html lang="en"> sur /en/) : lien et textes de partage dans la
+  // langue du parrain — la page anglaise du tirage traite aussi ?ref= (captureReferredBy).
+  function isEnglishPage() {
+    return (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
+  }
+
   function buildShareLink() {
-    return 'https://oradia.fr/tore.html?ref=' + getOrCreateCode();
+    return 'https://oradia.fr/' + (isEnglishPage() ? 'en/' : '') + 'tore.html?ref=' + getOrCreateCode();
   }
 
   // À appeler au chargement de tore.html : mémorise le code de parrainage
@@ -129,7 +135,7 @@
       navigator.clipboard.writeText(input.value).then(function () {
         if (!copyBtn) return;
         const orig = copyBtn.innerHTML;
-        copyBtn.innerHTML = '<i class="fas fa-check" style="margin-right:6px;font-size:12px;"></i>Copié';
+        copyBtn.innerHTML = '<i class="fas fa-check" style="margin-right:6px;font-size:12px;"></i>' + (isEnglishPage() ? 'Copied' : 'Copié');
         setTimeout(function () { copyBtn.innerHTML = orig; }, 2000);
       }).catch(function () {
         input.select();
@@ -145,8 +151,8 @@
         shareBtn.style.display = '';
         shareBtn.addEventListener('click', function () {
           navigator.share({
-            title: 'Oradia — Tirage du Tore',
-            text: 'Je t\'offre un tirage gratuit du Tore sur Oradia 🎁',
+            title: isEnglishPage() ? 'Oradia — Tore draw' : 'Oradia — Tirage du Tore',
+            text: isEnglishPage() ? 'I\'m giving you a free Tore draw on Oradia 🎁' : 'Je t\'offre un tirage gratuit du Tore sur Oradia 🎁',
             url: input.value
           }).catch(function () {});
         });

@@ -6686,10 +6686,19 @@ function showArrowForStep(stepIndex, isMatch) {
   const toreIntentionInput = el('tore-intention-input');
   const toreSubmitBtn = el('tore-submit-btn');
 
+  // Page anglaise : amorces ouvertes anglaises, plus les françaises (un visiteur
+  // francophone peut formuler sa question en français sur cette page).
   const OPEN_STARTERS = [
+    'how ', "how's", 'why ', 'what ', "what's", 'which ', 'where ', 'when ', 'who ', 'whom ',
+    'in what ', 'in which ', 'to what ', 'towards what ', 'toward what ',
     'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
     'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
   ];
+
+  // Question fermée (oui/non) en anglais : elle commence par un auxiliaire ou un
+  // modal ("Is he…?", "Should I…?", "Do you…?", "Can't I…?"). Les questions
+  // ouvertes commencent, elles, par un mot interrogatif (How, Why, What…).
+  const EN_CLOSED_START = /^(is|are|am|was|were|do|does|did|can|could|will|would|shall|should|may|might|must|have|has|had|isn't|aren't|wasn't|weren't|don't|doesn't|didn't|can't|cannot|couldn't|won't|wouldn't|shouldn't|haven't|hasn't|hadn't|mustn't)\b/i;
 
   // Inversion sujet-verbe (suis-je, peux-tu, sera-t-il, avez-vous…) : la forme
   // interrogative fermée (oui/non) la plus courante en français. Plutôt qu'une
@@ -6703,8 +6712,13 @@ function showArrowForStep(stepIndex, isMatch) {
   // verbe — donc jamais signalée comme fermée à tort.
   function isClosedQuestionStart(lower) {
     if (OPEN_STARTERS.some(p => lower.startsWith(p))) return false;
+    if (EN_CLOSED_START.test(lower)) return true;
     if (lower.startsWith('est-ce que') || lower.startsWith('est ce que')) return true;
-    return /^\S+[\s-](t[\s-])?(je|tu|il|elle|on|nous|vous|ils|elles)\b/i.test(lower);
+    // Inversion française : trait d'union pour tous les pronoms ; avec un simple espace,
+    // "on" est exclu sur cette page — c'est aussi un mot anglais courant ("Working on
+    // my career, …" n'est pas une question fermée).
+    return /^\S+-(t-)?(je|tu|il|elle|on|nous|vous|ils|elles)\b/i.test(lower)
+      || /^\S+\s(t\s)?(je|tu|il|elle|nous|vous|ils|elles)\b/i.test(lower);
   }
 
   function isOpenQuestion(txt) {
@@ -6741,6 +6755,12 @@ function showArrowForStep(stepIndex, isMatch) {
     // "Qui" n'est compté comme amorce interrogative que s'il ouvre la phrase
     // (ex. "Qui suis-je ?"), jamais en milieu de phrase où il est quasi toujours relatif.
     if (/^qui\s/.test(s)) count++;
+    // Anglais : amorce interrogative en début de phrase ou après une ponctuation,
+    // éventuellement suivie de "and"/"or" ("What do I need, and how do I get there?").
+    // Volontairement pas après un simple "and" sans ponctuation : "How do I know what
+    // I want and what I need?" reste UNE question.
+    const reEn = /(^|[,;.?]\s*(?:and\s+|or\s+)?)(why|how|what|when|where|which)\b/g;
+    while (reEn.exec(s)) count++;
     return count >= 2;
   }
 
@@ -7601,6 +7621,13 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
 
   </footer>
+
+  <!-- Bandeau discret : information IA + non-substitution avis médical/psychologique -->
+  <div style="background:#050f1f;padding:14px 24px;text-align:center;">
+    <p style="max-width:760px;margin:0 auto;color:rgba(212,175,55,0.5);font-size:11.5px;line-height:1.6;font-family:Georgia,serif;">
+      <i class="fas fa-circle-info" style="margin-right:5px;"></i>The interpretations offered on ORADIA are generated with the assistance of artificial intelligence. They are a tool for introspection and are in no way a substitute for medical, psychological, legal or financial advice.
+    </p>
+  </div>
 
   <script>
     // Bouton retour en haut — désactivé sur la page Tore (expérience immersive)
