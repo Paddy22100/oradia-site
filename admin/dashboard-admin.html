@@ -13352,11 +13352,17 @@
                     ctx.stroke();
                     ctx.restore();
                     // Logo recadré en cercle (cohérent avec son usage ailleurs sur le site).
+                    // Le fichier logo n'est pas carré (160x186) : on rogne un carré centré à la
+                    // source avant de dessiner, sinon drawImage étire l'image et l'écrase (logo
+                    // "tassé" verticalement).
                     ctx.save();
                     ctx.beginPath();
                     ctx.arc(cx, cy, logoSize / 2, 0, Math.PI * 2);
                     ctx.clip();
-                    ctx.drawImage(logo, cx - logoSize / 2, cy - logoSize / 2, logoSize, logoSize);
+                    const side = Math.min(logo.naturalWidth, logo.naturalHeight);
+                    const sx = (logo.naturalWidth - side) / 2;
+                    const sy = (logo.naturalHeight - side) / 2;
+                    ctx.drawImage(logo, sx, sy, side, side, cx - logoSize / 2, cy - logoSize / 2, logoSize, logoSize);
                     ctx.restore();
                     // qrcodejs affiche en réalité un <img> (snapshot pris avant notre montage),
                     // le <canvas> lui-même restant caché : sans ceci, le logo serait bien présent
