@@ -192,6 +192,9 @@ module.exports = async (req, res) => {
             const sessionParams = {
                 payment_method_types: ['card'],
                 mode: 'subscription',
+                // Page de paiement Stripe en anglais depuis le tirage anglais ; sinon Stripe
+                // suit la langue du navigateur (comportement inchangé pour le français).
+                locale: lang === 'en' ? 'en' : 'auto',
                 line_items: [{ price: priceId, quantity: 1 }],
                 success_url: `${frontendUrl}${langPrefix}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url:  `${frontendUrl}${langPrefix}/tore.html?cancelled=1`,
