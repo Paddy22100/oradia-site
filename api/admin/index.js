@@ -11,7 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, sendAbandonedCartEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
-const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail, sendOracleGiftInviteEmail } = require('../../lib/tore-subscription-email.js');
+const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail, sendOracleGiftInviteEmail, sendRenewalReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
@@ -415,53 +415,6 @@ function buildUnsubUrl(email) {
   return `https://oradia.fr/unsubscribe.html?email=${encodeURIComponent(email)}&token=${token}`;
 }
 
-// Mail de rappel doux avant renouvellement d'abonnement Tore (une fois par cycle).
-// trial=true : fin du mois d'essai offert avec l'oracle (QR code du livret) — même
-// template, texte adapté : c'est le premier prélèvement, pas un renouvellement.
-async function sendRenewalReminderEmail(email, expiresAt, { trial = false } = {}) {
-  const BREVO_API_KEY = process.env.BREVO_API_KEY;
-  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
-  if (!BREVO_API_KEY) return false;
-  const dateStr = expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
-  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
-<tr><td align="center" style="padding:32px 12px;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="max-width:600px;margin:0 auto;background-color:#0a192f;border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;">
-  <tr><td style="padding:0;line-height:0;"><img src="https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp" alt="Le Tore" width="600" style="display:block;width:100%;height:auto;"></td></tr>
-  <tr><td style="padding:32px 40px 12px;">
-    ${trial ? `<h1 style="margin:0 0 18px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:400;">Votre mois offert se termine bientôt</h1>
-    <p style="margin:0 0 16px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Bonjour,<br><br>Votre mois d'abonnement au tirage du <strong style="color:#f0c75e;">Tore</strong> offert avec l'oracle se termine le <strong style="color:#f0c75e;">${dateStr}</strong>. À cette date, votre abonnement se poursuivra automatiquement à <strong style="color:#f0c75e;">8 € par mois</strong> (premier prélèvement le ${dateStr}), et vos tirages continueront sans interruption.</p>
-    <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Si vous ne souhaitez pas continuer, il suffit de résilier avant cette date depuis votre espace membre : aucun montant ne vous sera prélevé.</p>` : `<h1 style="margin:0 0 18px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:400;">Votre abonnement se renouvelle bientôt</h1>
-    <p style="margin:0 0 16px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Bonjour,<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> se renouvellera automatiquement le <strong style="color:#f0c75e;">${dateStr}</strong>. Vous n'avez rien à faire : vos tirages continuent sans interruption.</p>
-    <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Pensez simplement à vérifier que votre moyen de paiement est toujours valide, pour éviter toute coupure d'accès.</p>`}
-  </td></tr>
-  <tr><td align="center" style="padding:0 40px 36px;">
-    <a href="https://oradia.fr/member/login.html?returnTo=abonnements.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:14px 36px;border-radius:50px;font-weight:700;font-size:15px;font-family:Georgia,serif;">Gérer mon abonnement</a>
-  </td></tr>
-  <tr><td align="center" style="padding:24px 40px;border-top:1px solid rgba(212,175,55,0.15);">
-    <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
-    <p style="margin:0;color:#d4af37;font-size:40px;font-family:'Dancing Script','Brush Script MT',cursive;line-height:1.1;">Rudy</p>
-    <p style="margin:12px 0 14px;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:12px;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
-  </td></tr>
-</table></td></tr></table></body></html>`;
-  try {
-    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sender: { email: senderEmail, name: "Rudy d'Oradia" },
-        to: [{ email }],
-        replyTo: { email: 'contact@oradia.fr', name: "Rudy d'Oradia" },
-        subject: trial ? "Rudy d'Oradia - Votre mois offert au Tore se termine bientôt" : "Rudy d'Oradia - Votre abonnement Le Tore se renouvelle bientôt",
-        htmlContent: html
-      })
-    });
-    return r.ok;
-  } catch (e) { console.error('[renewal-reminder] envoi échoué:', e.message); return false; }
-}
-
 // Publie les posts sociaux programmés arrivés à échéance (Facebook + Instagram
 // ensemble via Make.com). Utilisé par le cron quotidien ET le cron horaire.
 async function sendDueSocialPosts(supabase) {
@@ -546,7 +499,7 @@ async function reconcileStripeSubscriptions(supabase) {
       const trySelect = async (col, val) => {
         if (!val) return null;
         const { data } = await supabase.from('tore_subscriptions')
-          .select('id, email, is_free, expires_at').eq(col, val).limit(1);
+          .select('id, email, is_free, expires_at, lang').eq(col, val).limit(1);
         return Array.isArray(data) && data[0] ? data[0] : null;
       };
       const row = await trySelect('stripe_subscription_id', sub.id)
@@ -583,7 +536,7 @@ async function reconcileStripeSubscriptions(supabase) {
             const already = rr?.renewal_reminder_for
               && Math.abs(new Date(rr.renewal_reminder_for).getTime() - expiresAt.getTime()) < 86400000;
             if (!already) {
-              const ok = await sendRenewalReminderEmail(email, expiresAt, { trial: st === 'trialing' });
+              const ok = await sendRenewalReminderEmail(email, expiresAt, { trial: st === 'trialing', lang: row.lang });
               if (ok) {
                 await supabase.from('tore_subscriptions')
                   .update({ renewal_reminder_for: expiresAt.toISOString() }).eq('id', row.id);
@@ -620,7 +573,7 @@ async function findAuthUserByEmail(supabase, email) {
 async function sendToreCheckinForSubscription(supabase, subscriptionId, { force = false } = {}) {
   const { data: sub, error: fetchErr } = await supabase
     .from('tore_subscriptions')
-    .select('id, email, full_name, plan, created_at, must_change_password, checkin_email_sent_at, status')
+    .select('id, email, full_name, plan, created_at, must_change_password, checkin_email_sent_at, status, lang')
     .eq('id', subscriptionId)
     .single();
   if (fetchErr || !sub?.email) return { sent: false, reason: 'not_found' };
@@ -668,7 +621,8 @@ async function sendToreCheckinForSubscription(supabase, subscriptionId, { force 
   const emailSent = await sendToreCheckinReminderEmail({
     toEmail: sub.email,
     toName: sub.full_name || '',
-    tempPassword
+    tempPassword,
+    lang: sub.lang
   });
 
   // Si un nouveau mot de passe provisoire a été émis, synchroniser l'indicateur
@@ -1537,7 +1491,19 @@ async function handleData(req, res) {
         const sb = supabase;
         try {
           const crypto = require('crypto');
-          const out = { filled: 0, resolved: 0, source: null };
+          const out = { filled: 0, resolved: 0, purged: 0, source: null };
+
+          // (0) Purge fraîcheur — un nombre non consommé ne doit jamais rester en stock
+          // plus de 7 jours (au-delà, il vieillit sans raison : sa validité comme "passé"
+          // ne dépend que de committed_at < intention_at, pas de son ancienneté absolue).
+          // Constaté en 2026-09 : un lot de départ (~4500) traînait depuis 55 jours, la
+          // consommation réelle (~5/jour, ~31/semaine, mesuré en base) étant bien trop
+          // lente pour jamais l'épuiser naturellement.
+          const MAX_AGE_DAYS = 7;
+          const staleCutoff = new Date(Date.now() - MAX_AGE_DAYS * 24 * 3600 * 1000).toISOString();
+          const { data: purgedRows } = await sb.from('retro_pool')
+            .delete().is('consumed_at', null).lt('committed_at', staleCutoff).select('id');
+          out.purged = (purgedRows || []).length;
 
           // (1) Remplissage — uniquement du vrai quantique (ANU ou Outshift/Cisco),
           //     jamais de pseudo-hasard local (sinon l'étude serait polluée).
@@ -1551,10 +1517,15 @@ async function handleData(req, res) {
           // plus lente que l'apport) — inutile et pas souhaitable. On n'ajoute donc un
           // petit lot "fraîcheur" que si le nombre le plus récent en stock date de plus
           // de 20h (~pas de commit aujourd'hui) ET que le stock reste sous un plafond.
+          //
+          // Seuils recalibrés sur la consommation réelle (~5/jour) plutôt que sur un
+          // stock-tampon de plusieurs milliers : avec la purge à 7 jours ci-dessus, un
+          // stock aussi large n'aurait de toute façon jamais pu s'écouler avant d'être
+          // périmé — marge ~8-10x conservée sur la conso mesurée.
           const { count: available } = await sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null);
           const { data: newestRows } = await sb.from('retro_pool').select('committed_at').is('consumed_at', null).order('committed_at', { ascending: false }).limit(1);
           const newestAgeHours = (newestRows && newestRows[0]) ? (Date.now() - new Date(newestRows[0].committed_at).getTime()) / 3600000 : Infinity;
-          const LOW = 200, BATCH = 1024, TOPUP = 80, HARD_CAP = 5000;
+          const LOW = 60, BATCH = 150, TOPUP = 40, HARD_CAP = 300;
           const isLow = (available || 0) < LOW;
           const needsFreshBatch = newestAgeHours > 20;
           const overCap = (available || 0) >= HARD_CAP;
@@ -1640,7 +1611,7 @@ async function handleData(req, res) {
             status_code: fillFailed ? 500 : 200,
             message: fillFailed
               ? `Échec remplissage pool rétrocausalité (stock avant : ${available || 0}, raison : ${out.source})`
-              : `Pool rétrocausalité : ${out.filled} ajouté(s) (${out.source || 'stock suffisant, pas de remplissage'}), ${out.resolved} futur(s) résolu(s)`,
+              : `Pool rétrocausalité : ${out.filled} ajouté(s) (${out.source || 'stock suffisant, pas de remplissage'}), ${out.purged} périmé(s) (>7j) supprimé(s), ${out.resolved} futur(s) résolu(s)`,
             details: { available_before: available || 0, ...out }
           });
 
@@ -1899,6 +1870,8 @@ async function handleData(req, res) {
         // ligne tore_subscriptions existe déjà à ce moment-là, api/waitlist.js (action
         // signup) ne fait alors que créer le compte, sans écraser expires_at.
         const months = isFree ? Math.max(1, parseInt(body.months, 10) || 1) : null;
+        // Langue des emails de cet abonné (invitation puis rappels) : choisie dans le formulaire.
+        const subLang = body.lang === 'en' ? 'en' : 'fr';
         let finalExpiresAt = expiresAt || null;
         if (isFree) {
           const d = new Date();
@@ -1916,6 +1889,7 @@ async function handleData(req, res) {
             status: 'active',
             is_free: !!isFree,
             trial_source: isFree ? 'admin-gift' : undefined,
+            lang: subLang,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }, { onConflict: 'email' });
@@ -1925,7 +1899,7 @@ async function handleData(req, res) {
         if (isFree) {
           const claimUrl = `https://oradia.fr/inscription?email=${encodeURIComponent(cleanEmail)}&gift=1&months=${months}`;
           inviteEmailSent = await sendOracleGiftInviteEmail({
-            toEmail: cleanEmail, toName: fullName || '', months, claimUrl
+            toEmail: cleanEmail, toName: fullName || '', months, claimUrl, lang: subLang
           });
         }
         return res.status(200).json({ success: true, emailSent: inviteEmailSent });
@@ -2300,7 +2274,7 @@ async function handleData(req, res) {
       if (action === 'repair-access' && subscriptionId) {
         const { data: sub, error: subFetchError } = await supabase
           .from('tore_subscriptions')
-          .select('email, full_name, plan')
+          .select('email, full_name, plan, lang')
           .eq('id', subscriptionId)
           .single();
         if (subFetchError || !sub?.email) {
@@ -2359,7 +2333,8 @@ async function handleData(req, res) {
           toName: sub.full_name || '',
           tempPassword,
           resetLink,
-          plan: sub.plan || 'complet'
+          plan: sub.plan || 'complet',
+          lang: sub.lang // email de réparation dans la langue de l'abonné
         });
 
         return res.status(200).json({ success: true, emailSent, mode });
@@ -3300,7 +3275,7 @@ async function handleData(req, res) {
         // Rappel de renouvellement (~3 jours avant échéance) : template dédié
         if (type === 'renewal-reminder' || type === 'trial-reminder') {
           const sample = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
-          const ok = await sendRenewalReminderEmail(toEmail, sample, { trial: type === 'trial-reminder' });
+          const ok = await sendRenewalReminderEmail(toEmail, sample, { trial: type === 'trial-reminder', lang: body.lang === 'en' ? 'en' : 'fr' });
           if (!ok) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, email: toEmail, type });
         }
@@ -3308,7 +3283,7 @@ async function handleData(req, res) {
         // webhook Stripe — avant ce correctif, ce test envoyait une copie figée du
         // template, qui divergeait au fil des évolutions du vrai email envoyé aux abonnés.
         // type attendu ici : 'payment_failed' ou 'expired' (mappé sur 'cancelled').
-        const emailSentSub = await sendSubscriptionEmail(toEmail, body.name || '', type === 'payment_failed' ? 'payment_failed' : 'cancelled');
+        const emailSentSub = await sendSubscriptionEmail(toEmail, body.name || '', type === 'payment_failed' ? 'payment_failed' : 'cancelled', body.lang === 'en' ? 'en' : 'fr');
         if (!emailSentSub) return res.status(502).json({ error: 'Envoi Brevo échoué' });
         return res.status(200).json({ success: true, email: toEmail, type });
       }
@@ -3329,7 +3304,8 @@ async function handleData(req, res) {
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
             tempPassword: body.mode === 'existing' ? null : 'ExempleMdp123',
-            plan: 'complet'
+            plan: 'complet',
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
@@ -3342,7 +3318,8 @@ async function handleData(req, res) {
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
             months: 2,
-            claimUrl: `https://oradia.fr/inscription?email=${encodeURIComponent(dest)}&gift=1&months=2`
+            claimUrl: `https://oradia.fr/inscription?email=${encodeURIComponent(dest)}&gift=1&months=2`,
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
@@ -3426,7 +3403,8 @@ async function handleData(req, res) {
           const emailSentCheckin = await sendToreCheckinReminderEmail({
             toEmail: dest,
             toName: 'Prénom Nom (exemple)',
-            tempPassword: body.mode === 'changed' ? null : 'ExempleMdp123'
+            tempPassword: body.mode === 'changed' ? null : 'ExempleMdp123',
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSentCheckin) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
