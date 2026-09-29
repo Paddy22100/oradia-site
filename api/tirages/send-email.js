@@ -44,9 +44,16 @@ async function withGatewayTimeoutRetry(queryFn, maxRetries = 2, delaysMs = [1500
 }
 
 // Délai max avant de répondre au cron externe (cron-job.org coupe à 30s, non
-// configurable sur le compte gratuit) : marge de ~10s pour le démarrage à froid
-// de la fonction et le réseau.
-const CRON_ACK_DEADLINE_MS = 20000;
+// configurable sur le compte gratuit) : marge de ~18s pour le démarrage à froid
+// de la fonction et le réseau. Portée de 20s à 12s après l'échec « Timeout » du
+// 2026-09-28 23:00 GMT sur run-scheduled-draws : les logs Vercel de cet
+// incident ne montrent aucune erreur applicative (RAS avant/après), donc très
+// probablement un aléa ponctuel (cold start / latence réseau) qui a, à lui
+// seul, mangé une bonne partie de la marge de 10s alors en place. Rien
+// n'indique que ce délai plus court dégrade quoi que ce soit : la réponse
+// anticipée (`onLate`, en arrière-plan via waitUntil) fait exactement le même
+// travail, juste un peu plus souvent.
+const CRON_ACK_DEADLINE_MS = 12000;
 
 // Même une requête triviale peut rester bloquée côté Supabase : le 2026-09-24 à
 // 22:45 GMT, PostgREST a mis 46s à renvoyer un résultat vide pour
