@@ -889,6 +889,7 @@ async function handleCollectEmail(req, res) {
     const promoAlreadySent = existing?.promo_sent_at;
     await supabase.from('tore_emails').upsert({
       email,
+      lang: emailPayload.lang === 'en' ? 'en' : 'fr', // langue des relances J+3 / J+7
       consent_marketing: !!consentMarketing,
       consent_date: consentMarketing ? new Date().toISOString() : null,
     }, { onConflict: 'email', ignoreDuplicates: false });
@@ -915,9 +916,16 @@ async function handleCollectEmail(req, res) {
 }
 
 // ============ EMAIL PROMO ABONNEMENT TORE ============
-function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
-  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
-  const paragraphs = [
+function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false, lang = 'fr') {
+  const bandeau = lang === 'en'
+    ? 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore-en.webp'
+    : 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
+  const paragraphs = lang === 'en' ? [
+    `You made your first Tore draw. If something in it touched you, it's because the connection was real.`,
+    `The two free draws offer a glimpse. The Tore subscription opens something deeper: unlimited draws, observation windows to follow synchronicities over time, access to your personal history, and soon in-depth personalised analyses...`,
+    `It isn't a tool for entertainment. It's a practice: turning back towards yourself regularly, noting what resonates, observing how the cards speak through the events of your life.`,
+    `If you feel you want to go further, I invite you to join the adventure.`
+  ] : [
     `Vous avez fait votre premier tirage du Tore. Si quelque chose vous a touché là-dedans, c'est que la connexion était réelle.`,
     `Les deux tirages gratuits donnent un aperçu. L'abonnement Tore ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à votre historique personnel, et bientôt des analyses personnalisées poussées...`,
     `Ce n'est pas un outil de divertissement. C'est une pratique : celle de se retourner vers soi avec régularité, de noter ce qui résonne, d'observer comment les cartes parlent à travers les événements de votre vie.`,
@@ -936,7 +944,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
   </td></tr>`;
 
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
 </head>
@@ -945,41 +953,41 @@ function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
-    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">Et si vous alliez plus loin ?</h2>
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${lang === 'en' ? `What if you went further?` : `Et si vous alliez plus loin ?`}</h2>
   </td></tr>
   ${bodyRows}
   ${separator}
   <tr><td style="padding:20px 32px 40px; text-align:center;">
-    <a href="https://oradia.fr/tore-abonnement.html?discount=email24h" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Accéder à l'abonnement</a>
+    <a href="${lang === 'en' ? 'https://oradia.fr/en/tore.html' : 'https://oradia.fr/tore-abonnement.html?discount=email24h'}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${lang === 'en' ? `Explore the Tore` : `Accéder à l'abonnement`}</a>
   </td></tr>
   ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
       <tr><td style="padding:0;line-height:0;font-size:0;">
-        <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+        <img src="https://oradia.fr/images/medias/${lang === 'en' ? 'banniere-facebook-en' : 'banniere-facebook'}.webp" alt="${lang === 'en' ? 'Oradia Oracle — Pre-orders open' : 'Oracle Oradia — Précommandes ouvertes'}" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
       </td></tr>
       <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">${lang === 'en' ? `Pre-orders open` : `Précommandes ouvertes`}</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">${lang === 'en' ? `The Oradia Oracle` : `L'Oracle Oradia`}</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">${lang === 'en' ? `64 cards · Booklet · Initiatory tale · Handcrafted coin` : `64 cartes · Livret · Conte initiatique · Pièce artisanale`}</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${lang === 'en' ? `Pre-order` : `Précommander`}</a>
       </td></tr>
     </table>
   </td></tr>`}
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
       <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
-        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton tirage sur le Tore. Pour recevoir mes prochains messages :</p>
-        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
+        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">${lang === 'en' ? `By the way: you're not subscribed to the Oradia newsletter — this email was simply sent to you after your Tore draw. To receive my next messages:` : `Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton tirage sur le Tore. Pour recevoir mes prochains messages :`}</p>
+        <a href="https://oradia.fr/${lang === 'en' ? 'en/index.html' : ''}#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${lang === 'en' ? `Subscribe to the newsletter` : `S'inscrire à la newsletter`}</a>
       </td></tr>
     </table>
   </td></tr>`}
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
-    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">${lang === 'en' ? `With gratitude,` : `Avec gratitude,`}</p>
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">${lang === 'en' ? `Founder of Oradia` : `Fondateur d'Oradia`}</p>
     <p style="margin:0 0 20px; text-align:center;">
       <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
       <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
@@ -987,7 +995,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
     </p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
-    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">${lang === 'en' ? `You're receiving this email because you made a Tore draw on oradia.fr.` : `Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.`}</p>
   </td></tr>
 </table>
 </td></tr>
@@ -995,10 +1003,26 @@ function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
 </body></html>`;
 }
 
+// Objets des emails de suivi, selon la langue du destinataire (tore_emails.lang pour les
+// visiteurs du tirage gratuit, tore_subscriptions.lang pour les abonnés).
+const FOLLOWUP_SUBJECTS = {
+  checkin: { fr: "Rudy d'Oradia — Trois jours ont passé, avez-vous remarqué quelque chose ?", en: "Rudy from Oradia — Three days have passed, have you noticed anything?" },
+  promo:   { fr: "Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?", en: "Rudy from ORADIA — What if you went further with the Tore?" },
+  relance: { fr: "Rudy d'Oradia — Un petit signe de l'oracle", en: "Rudy from Oradia — A little sign from the oracle" }
+};
+const followupSubject = (kind, lang) => FOLLOWUP_SUBJECTS[kind][lang === 'en' ? 'en' : 'fr'];
+
 // ============ EMAIL CHECK-IN J+3 ============
-function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false) {
-  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
-  const paragraphs = [
+function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false, lang = 'fr') {
+  const bandeau = lang === 'en'
+    ? 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore-en.webp'
+    : 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
+  const paragraphs = lang === 'en' ? [
+    `Three days ago, you made a Tore draw with a question in mind.`,
+    `I'm simply writing to ask: have you noticed anything since? An event, an encounter, a recurring thought that echoes what the cards told you?`,
+    `It isn't a rhetorical question. It's often in the days following a draw that synchronicities reveal themselves, if you take the time to observe them.`,
+    `If you like, you can make another draw on oradia.fr to keep exploring.`
+  ] : [
     `Il y a trois jours, vous avez fait un tirage du Tore avec une question en tête.`,
     `Je vous écris juste pour vous demander : avez-vous remarqué quelque chose depuis ? Un événement, une rencontre, une pensée récurrente qui fait écho à ce que les cartes vous ont dit ?`,
     `Ce n'est pas une question rhétorique. C'est souvent dans les jours qui suivent un tirage que les synchronicités se révèlent, si on prend le temps de les observer.`,
@@ -1010,7 +1034,7 @@ function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false) {
   </td></tr>`).join('');
 
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
 </head>
@@ -1019,43 +1043,43 @@ function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false) {
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
-    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">Trois jours ont passé…</h2>
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">${lang === 'en' ? `Three days have passed…` : `Trois jours ont passé…`}</h2>
   </td></tr>
   ${bodyRows}
   <tr><td style="padding:8px 32px 40px; text-align:center;">
-    <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Refaire un tirage</a>
+    <a href="https://oradia.fr/${lang === 'en' ? 'en/' : ''}tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${lang === 'en' ? `Draw again` : `Refaire un tirage`}</a>
   </td></tr>
   ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
       <tr><td style="padding:0;line-height:0;font-size:0;">
-        <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+        <img src="https://oradia.fr/images/medias/${lang === 'en' ? 'banniere-facebook-en' : 'banniere-facebook'}.webp" alt="${lang === 'en' ? 'Oradia Oracle — Pre-orders open' : 'Oracle Oradia — Précommandes ouvertes'}" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
       </td></tr>
       <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">${lang === 'en' ? `Pre-orders open` : `Précommandes ouvertes`}</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">${lang === 'en' ? `The Oradia Oracle` : `L'Oracle Oradia`}</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">${lang === 'en' ? `64 cards · Booklet · Initiatory tale · Handcrafted coin` : `64 cartes · Livret · Conte initiatique · Pièce artisanale`}</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${lang === 'en' ? `Pre-order` : `Précommander`}</a>
       </td></tr>
     </table>
   </td></tr>`}
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
       <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
-        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton tirage sur le Tore. Pour recevoir mes prochains messages :</p>
-        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
+        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">${lang === 'en' ? `By the way: you're not subscribed to the Oradia newsletter — this email was simply sent to you after your Tore draw. To receive my next messages:` : `Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton tirage sur le Tore. Pour recevoir mes prochains messages :`}</p>
+        <a href="https://oradia.fr/${lang === 'en' ? 'en/index.html' : ''}#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${lang === 'en' ? `Subscribe to the newsletter` : `S'inscrire à la newsletter`}</a>
       </td></tr>
     </table>
   </td></tr>`}
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
-    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">${lang === 'en' ? `With gratitude,` : `Avec gratitude,`}</p>
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">${lang === 'en' ? `Founder of Oradia` : `Fondateur d'Oradia`}</p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
-    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">${lang === 'en' ? `You're receiving this email because you made a Tore draw on oradia.fr.` : `Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.`}</p>
   </td></tr>
 </table>
 </td></tr>
@@ -1063,21 +1087,21 @@ function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false) {
 </body></html>`;
 }
 
-async function sendCheckinEmail(email) {
+async function sendCheckinEmail(email, lang = 'fr') {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const { createClient } = require('@supabase/supabase-js');
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const alreadySub = await isBrevoSubscribed(email);
   const hidePreorder = await hasCompletedPreorder(supabase, email);
-  const html = buildCheckinEmailHtml(alreadySub, hidePreorder);
+  const html = buildCheckinEmailHtml(alreadySub, hidePreorder, lang);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
     body: JSON.stringify({
       sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
       to: [{ email }],
-      subject: "Rudy d'Oradia — Trois jours ont passé, avez-vous remarqué quelque chose ?",
+      subject: followupSubject('checkin', lang),
       htmlContent: html
     })
   });
@@ -1147,7 +1171,7 @@ async function prepareCheckinTargets(supabase) {
   const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
   const { data: rawTargets, error } = await withGatewayTimeoutRetry(() => supabase
     .from('tore_emails')
-    .select('email')
+    .select('email, lang')
     .is('checkin_sent_at', null)
     .gte('created_at', from)
     .lt('created_at', to)
@@ -1177,7 +1201,7 @@ async function sendCheckinBatch(targets) {
   let sent = 0, failed = 0;
   await runWithConcurrency(targets || [], 5, async (row) => {
     try {
-      await sendCheckinEmail(row.email);
+      await sendCheckinEmail(row.email, row.lang);
       sent++;
     } catch (e) {
       console.error('[cron-checkin] Failed for', row.email, e.message);
@@ -1192,9 +1216,15 @@ async function sendCheckinBatch(targets) {
 // nous manquez") — un simple signe de vie, l'abonnement reste actif de toute
 // façon. Envoyée une seule fois par période d'inactivité, jamais en rappel
 // récurrent (voir handleCronRelanceInactifs).
-function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = false) {
-  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
-  const paragraphs = [
+function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = false, lang = 'fr') {
+  const bandeau = lang === 'en'
+    ? 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore-en.webp'
+    : 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
+  const paragraphs = lang === 'en' ? [
+    `It's been a while since I've heard from you here. Nothing urgent, just a little sign.`,
+    `Your Tore subscription is still active, and the oracle is waiting for you, with no pressure at all, for a draw whenever the wish returns.`,
+    `We sometimes drift away for a while, and that's perfectly fine too. If a question is on your mind right now, even a vague one, this may be the moment to come back to it.`
+  ] : [
     `Ça fait un moment que je n'ai pas eu de nouvelles de vous par ici. Rien d'urgent, juste un petit signe.`,
     `Votre abonnement au Tore est toujours actif, et l'oracle vous attend, sans aucune pression, pour un tirage le jour où l'envie reviendra.`,
     `On s'éloigne parfois un temps, et c'est très bien aussi. Si une question se pose en ce moment, même vague, c'est peut-être l'occasion d'y revenir.`
@@ -1205,7 +1235,7 @@ function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = fals
   </td></tr>`).join('');
 
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<html lang="${lang}"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
 </head>
@@ -1214,43 +1244,43 @@ function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = fals
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
-    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">Un petit signe de l'oracle</h2>
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">${lang === 'en' ? `A little sign from the oracle` : `Un petit signe de l'oracle`}</h2>
   </td></tr>
   ${bodyRows}
   <tr><td style="padding:8px 32px 40px; text-align:center;">
-    <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Faire un tirage</a>
+    <a href="https://oradia.fr/${lang === 'en' ? 'en/' : ''}tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${lang === 'en' ? `Make a draw` : `Faire un tirage`}</a>
   </td></tr>
   ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
       <tr><td style="padding:0;line-height:0;font-size:0;">
-        <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+        <img src="https://oradia.fr/images/medias/${lang === 'en' ? 'banniere-facebook-en' : 'banniere-facebook'}.webp" alt="${lang === 'en' ? 'Oradia Oracle — Pre-orders open' : 'Oracle Oradia — Précommandes ouvertes'}" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
       </td></tr>
       <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">${lang === 'en' ? `Pre-orders open` : `Précommandes ouvertes`}</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">${lang === 'en' ? `The Oradia Oracle` : `L'Oracle Oradia`}</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">${lang === 'en' ? `64 cards · Booklet · Initiatory tale · Handcrafted coin` : `64 cartes · Livret · Conte initiatique · Pièce artisanale`}</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${lang === 'en' ? `Pre-order` : `Précommander`}</a>
       </td></tr>
     </table>
   </td></tr>`}
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
       <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
-        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton abonnement au Tore. Pour recevoir mes prochains messages :</p>
-        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
+        <p style="margin:0 0 18px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.75;">${lang === 'en' ? `By the way: you're not subscribed to the Oradia newsletter — this email was simply sent to you because of your Tore subscription. To receive my next messages:` : `Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ton abonnement au Tore. Pour recevoir mes prochains messages :`}</p>
+        <a href="https://oradia.fr/${lang === 'en' ? 'en/index.html' : ''}#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">${lang === 'en' ? `Subscribe to the newsletter` : `S'inscrire à la newsletter`}</a>
       </td></tr>
     </table>
   </td></tr>`}
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
-    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">${lang === 'en' ? `With gratitude,` : `Avec gratitude,`}</p>
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">${lang === 'en' ? `Founder of Oradia` : `Fondateur d'Oradia`}</p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
-    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu es abonné·e au Tore sur oradia.fr.</p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">${lang === 'en' ? `You're receiving this email because you're subscribed to the Tore on oradia.fr.` : `Tu reçois cet email car tu es abonné·e au Tore sur oradia.fr.`}</p>
   </td></tr>
 </table>
 </td></tr>
@@ -1258,21 +1288,21 @@ function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = fals
 </body></html>`;
 }
 
-async function sendRelanceInactifsEmail(email) {
+async function sendRelanceInactifsEmail(email, lang = 'fr') {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const { createClient } = require('@supabase/supabase-js');
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const alreadySub = await isBrevoSubscribed(email);
   const hidePreorder = await hasCompletedPreorder(supabase, email);
-  const html = buildRelanceInactifsEmailHtml(alreadySub, hidePreorder);
+  const html = buildRelanceInactifsEmailHtml(alreadySub, hidePreorder, lang);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
     body: JSON.stringify({
       sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
       to: [{ email }],
-      subject: "Rudy d'Oradia — Un petit signe de l'oracle",
+      subject: followupSubject('relance', lang),
       htmlContent: html
     })
   });
@@ -1308,7 +1338,7 @@ async function handleCronRelanceInactifs(req, res) {
 
     const { data: subs, error } = await withGatewayTimeoutRetry(() => supabase
       .from('tore_subscriptions')
-      .select('id, email, created_at')
+      .select('id, email, created_at, lang')
       .eq('status', 'active')
       .is('last_relance_sent_at', null)
       .limit(200));
@@ -1360,7 +1390,7 @@ async function handleCronRelanceInactifs(req, res) {
 
             if (new Date(lastActiveAt).getTime() > cutoff) { skipped++; return; } // encore actif
 
-            await sendRelanceInactifsEmail(sub.email);
+            await sendRelanceInactifsEmail(sub.email, sub.lang);
             await supabase.from('tore_subscriptions')
               .update({ last_relance_sent_at: new Date().toISOString() })
               .eq('id', sub.id);
@@ -1381,7 +1411,7 @@ async function handleCronRelanceInactifs(req, res) {
   }
 }
 
-async function sendPromoTirageEmail(email) {
+async function sendPromoTirageEmail(email, lang = 'fr') {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const { createClient } = require('@supabase/supabase-js');
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -1395,14 +1425,14 @@ async function sendPromoTirageEmail(email) {
 
   const alreadySub = await isBrevoSubscribed(email);
   const hidePreorder = await hasCompletedPreorder(supabase, email);
-  const html = buildPromoTirageEmailHtml(alreadySub, hidePreorder);
+  const html = buildPromoTirageEmailHtml(alreadySub, hidePreorder, lang);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
     body: JSON.stringify({
       sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
       to: [{ email }],
-      subject: "Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      subject: followupSubject('promo', lang),
       htmlContent: html
     })
   });
@@ -1435,14 +1465,15 @@ async function handleSendPromoPreview(req, res) {
   }
   const body = await parseJsonBody(req);
   const targetEmail = body.email || 'contact@oradia.fr';
-  const html = buildPromoTirageEmailHtml();
+  const lang = body.lang === 'en' ? 'en' : 'fr';
+  const html = buildPromoTirageEmailHtml(false, false, lang);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
     body: JSON.stringify({
       sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
       to: [{ email: targetEmail }],
-      subject: "[TEST] Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      subject: "[TEST] " + followupSubject('promo', lang),
       htmlContent: html
     })
   });
@@ -1467,14 +1498,15 @@ async function handleCheckinPreview(req, res) {
   }
   const body = await parseJsonBody(req);
   const targetEmail = body.email || 'contact@oradia.fr';
-  const html = buildCheckinEmailHtml();
+  const lang = body.lang === 'en' ? 'en' : 'fr';
+  const html = buildCheckinEmailHtml(false, false, lang);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
     body: JSON.stringify({
       sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
       to: [{ email: targetEmail }],
-      subject: "[TEST] Rudy d'ORADIA — Trois jours ont passé, avez-vous remarqué quelque chose ?",
+      subject: lang === 'en' ? "[TEST] " + followupSubject('checkin', 'en') : "[TEST] Rudy d'ORADIA — Trois jours ont passé, avez-vous remarqué quelque chose ?",
       htmlContent: html
     })
   });
@@ -1503,14 +1535,19 @@ async function handleSendPromoManual(req, res) {
   const email = (body.email || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'email requis' });
 
-  const html = buildPromoTirageEmailHtml();
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const { data: contact } = await supabase.from('tore_emails').select('lang').ilike('email', email).maybeSingle();
+  const lang = contact?.lang === 'en' ? 'en' : 'fr';
+  const html = buildPromoTirageEmailHtml(false, false, lang);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
     body: JSON.stringify({
       sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
       to: [{ email }],
-      subject: "Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      subject: followupSubject('promo', lang),
       htmlContent: html
     })
   });
@@ -1519,9 +1556,6 @@ async function handleSendPromoManual(req, res) {
     return res.status(500).json({ success: false, error: err.message || 'Erreur Brevo' });
   }
 
-  const { createClient } = require('@supabase/supabase-js');
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
   await supabase.from('tore_emails')
     .update({ promo_sent_at: new Date().toISOString(), promo_skipped: false })
     .ilike('email', email);
@@ -1726,7 +1760,7 @@ async function preparePromoTargets(supabase) {
   const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: targets, error } = await withGatewayTimeoutRetry(() => supabase
     .from('tore_emails')
-    .select('email')
+    .select('email, lang')
     .is('promo_sent_at', null)
     .or('promo_skipped.is.null,promo_skipped.eq.false')
     .lt('created_at', cutoff)
@@ -1740,7 +1774,7 @@ async function sendPromoBatch(targets) {
   let sent = 0, skipped = 0, failed = 0;
   await runWithConcurrency(targets || [], 5, async (row) => {
     try {
-      const result = await sendPromoTirageEmail(row.email);
+      const result = await sendPromoTirageEmail(row.email, row.lang);
       if (result.skipped) skipped++;
       else sent++;
     } catch (e) {

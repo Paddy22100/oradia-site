@@ -77,7 +77,7 @@ async function handleActivation(req, res) {
     return res.status(400).json({ success: false, message: 'Invalid JSON' });
   }
 
-  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource, synthese } = body;
+  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource, synthese, lang } = body;
 
   if (!email || !durationDays) {
     return res.status(400).json({ success: false, message: 'email et durationDays requis' });
@@ -101,6 +101,7 @@ async function handleActivation(req, res) {
       closes_at: closesAt.toISOString(),
       qrng_source: normalizedQrngSource,
       synthese: synthese || null,
+      lang: lang === 'en' ? 'en' : 'fr', // langue de l'email de clôture et du questionnaire
       // response_token généré automatiquement par la DB (DEFAULT gen_random_uuid())
     })
     .select('id')
@@ -169,7 +170,7 @@ async function handleClose(req, res) {
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: win.email }],
-          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme, qu'avez-vous perçu ?`,
+          subject: closingEmailSubject(win.lang),
           htmlContent: emailHTML,
         }),
       });
@@ -286,8 +287,62 @@ const FAMILY_LABELS_FENETRE = {
   archetypes: 'Archétypes', revelations: 'Révélations', memoire_cosmos: 'Mémoire Cosmos',
   transmutations: 'Transmutations', transmutation: 'Transmutation'
 };
+const FAMILY_LABELS_FENETRE_EN = {
+  emotions: 'Emotions', besoins: 'Needs', actions: 'Actions',
+  archetypes: 'Archetypes', revelations: 'Revelations', memoire_cosmos: 'Cosmic Memory',
+  transmutations: 'Transmutations', transmutation: 'Transmutation'
+};
+
+// Email de clôture d'une fenêtre d'observation, dans la langue de la fenêtre
+// (observation_windows.lang : 'en' si activée depuis /en/tore-analysis.html).
+function closingEmailSubject(lang) {
+  return lang === 'en'
+    ? `Rudy from Oradia - Your observation window is closing, what did you perceive?`
+    : `Rudy d'Oradia - Votre fenêtre d'observation se referme, qu'avez-vous perçu ?`;
+}
 
 function buildClosingEmail(win, responseToken, isSubscribed = false) {
+  const en = win.lang === 'en';
+  const familyLabel = f => (en ? FAMILY_LABELS_FENETRE_EN : FAMILY_LABELS_FENETRE)[f] || f || '';
+  const T = en ? {
+    bannerImg: 'https://oradia.fr/images/medias/bandeau_mail_fenetre_observation-en.webp', bannerAlt: 'Observation window — ORADIA',
+    h1: 'Your observation window is closing, what did you perceive?',
+    sub: `Your ${win.duration_days} day${win.duration_days > 1 ? 's' : ''} of observation have just come to an end`,
+    recall: 'Reminder of your draw', synth: 'Summary of your draw',
+    intro: 'Here are a few questions to close this window mindfully:',
+    q1: 'What resonated, even quietly, during these days?',
+    q2: 'Was there a conversation, an image, a moment that echoed your intention?',
+    q3: 'If nothing obvious appeared, what inside you may have shifted?',
+    observing: 'You were observing',
+    study: 'Your observations are valuable. By answering 5 quick questions,<br>you contribute to a study on synchronicities and retrocausality.',
+    studyBtn: 'Share my experience (5 min)', anon: 'Anonymous · No personal data is stored',
+    surveyUrl: 'https://oradia.fr/en/synchronicite.html', drawUrl: 'https://oradia.fr/en/tore.html', drawBtn: 'Make a new draw',
+    preImg: 'https://oradia.fr/images/medias/banniere-facebook-en.webp', preAlt: 'Oradia Oracle — Pre-orders open',
+    preKicker: 'Pre-orders open', preTitle: 'The Oradia Oracle', preSub: '64 cards · Booklet · Initiatory tale · Handcrafted coin', preBtn: 'Pre-order',
+    nl: "By the way: you're not subscribed to the Oradia newsletter — this email was simply sent to you after your observation window. To receive my next messages:",
+    nlBtn: 'Subscribe to the newsletter', nlUrl: 'https://oradia.fr/en/index.html#footer-newsletter-section',
+    gratitude: 'With gratitude,', founder: 'Founder of Oradia',
+    footer: "You're receiving this email because you activated an observation window on oradia.fr."
+  } : {
+    bannerImg: 'https://oradia.fr/images/medias/bandeau_mail_fenetre_observation.webp', bannerAlt: "Fenêtre d'observation — ORADIA",
+    h1: "Votre fenêtre d'observation se referme, qu'avez-vous perçu ?",
+    sub: `Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation viennent de s'achever`,
+    recall: 'Rappel de votre tirage', synth: 'Synthèse de votre tirage',
+    intro: 'Voici quelques questions pour clore cette fenêtre avec conscience :',
+    q1: "Qu'est-ce qui a résonné, même discrètement, pendant ces jours&nbsp;?",
+    q2: "Y a-t-il eu une conversation, une image, un moment qui a fait écho à votre intention&nbsp;?",
+    q3: "Si rien d'apparent n'est apparu, qu'est-ce qui, en vous, a peut-être bougé&nbsp;?",
+    observing: 'Vous observiez',
+    study: 'Vos observations ont de la valeur. En répondant à 5 questions rapides,<br>vous contribuez à une étude sur les synchronicités et la rétrocausalité.',
+    studyBtn: 'Partager mon vécu (5 min)', anon: "Anonyme · Aucune donnée personnelle n'est stockée",
+    surveyUrl: 'https://oradia.fr/synchronicite.html', drawUrl: 'https://oradia.fr/tore.html', drawBtn: 'Faire un nouveau tirage',
+    preImg: 'https://oradia.fr/images/medias/banniere-facebook.webp', preAlt: 'Oracle Oradia — Précommandes ouvertes',
+    preKicker: 'Précommandes ouvertes', preTitle: "L'Oracle Oradia", preSub: '64 cartes · Livret · Conte initiatique · Pièce artisanale', preBtn: 'Précommander',
+    nl: "Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ta fenêtre d'observation. Pour recevoir mes prochains messages :",
+    nlBtn: "S'inscrire à la newsletter", nlUrl: 'https://oradia.fr/#footer-newsletter-section',
+    gratitude: 'Avec gratitude,', founder: "Fondateur d'Oradia",
+    footer: "Tu reçois cet email car tu as activé une fenêtre d'observation sur oradia.fr."
+  };
   const attentionHTML = (win.attention_points || [])
     .map(p => `<li style="margin-bottom:10px;color:#e9e7df;line-height:1.7;">${escapeHtml(p)}</li>`)
     .join('');
@@ -296,7 +351,7 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
   // jours après son tirage ne se souvient souvent plus de son contenu, ce qui
   // n'incite pas à répondre au questionnaire de clôture.
   const cardsHTML = Array.isArray(win.cards) && win.cards.length
-    ? win.cards.map(c => `<span style="display:inline-block;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:6px 14px;margin:3px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;color:#f0c75e;">${escapeHtml(FAMILY_LABELS_FENETRE[c.family] || c.family || '')} — ${escapeHtml(c.name || '')}</span>`).join('')
+    ? win.cards.map(c => `<span style="display:inline-block;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:6px 14px;margin:3px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;color:#f0c75e;">${escapeHtml(familyLabel(c.family))} — ${escapeHtml(c.name || '')}</span>`).join('')
     : '';
 
   // Gabarit recalqué sur le design désormais commun aux emails ORADIA
@@ -304,7 +359,7 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
   // structure en <table> pleine largeur, fond dégradé #0a1628→#051428,
   // bordure dorée fine, image d'en-tête, polices Cormorant Garamond + Lora.
   return `<!DOCTYPE html>
-<html lang="fr">
+<html lang="${en ? 'en' : 'fr'}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -325,7 +380,7 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
           <tr>
             <td align="center" style="padding:0;position:relative;">
               <div style="position:relative;width:100%;height:200px;overflow:hidden;">
-                <img src="https://oradia.fr/images/medias/bandeau_mail_fenetre_observation.webp" alt="Fenêtre d'observation — ORADIA" width="600" style="display:block;width:100%;height:auto;max-height:220px;object-fit:cover;border:0;">
+                <img src="${T.bannerImg}" alt="${T.bannerAlt}" width="600" style="display:block;width:100%;height:auto;max-height:220px;object-fit:cover;border:0;">
                 <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(13,29,56,0) 0%, rgba(13,29,56,0.35) 60%, rgba(13,29,56,0.75) 100%);"></div>
               </div>
             </td>
@@ -335,11 +390,11 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
           <tr>
             <td align="center" style="padding:32px 40px 24px 40px;">
               <h1 style="margin:0;color:#ffe9a8;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:400;line-height:1.3;letter-spacing:1px;text-transform:uppercase;text-shadow:0 0 24px rgba(240,199,94,0.45);">
-                Votre fenêtre d'observation se referme, qu'avez-vous perçu ?
+                ${T.h1}
               </h1>
               <div style="width:80px;height:2px;background:linear-gradient(90deg, transparent 0%, #f0c75e 50%, transparent 100%);margin:20px auto;border-radius:2px;"></div>
               <p style="margin:0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:15px;font-style:italic;line-height:1.6;letter-spacing:0.5px;">
-Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation viennent de s'achever
+${T.sub}
               </p>
             </td>
           </tr>
@@ -350,27 +405,27 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
 
               ${win.intention ? `<p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
 
-              ${cardsHTML ? `<p style="margin:0 0 8px 0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-align:center;">Rappel de votre tirage</p>
+              ${cardsHTML ? `<p style="margin:0 0 8px 0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-align:center;">${T.recall}</p>
               <p style="margin:0 0 20px 0;text-align:center;">${cardsHTML}</p>` : ''}
 
               ${win.synthese ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:rgba(212,175,55,0.05);border-left:3px solid rgba(212,175,55,0.5);border-radius:0 10px 10px 0;">
                 <tr><td style="padding:16px 20px;">
-                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Synthèse de votre tirage</p>
+                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">${T.synth}</p>
                   <p style="margin:0;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.75;">${escapeHtml(win.synthese)}</p>
                 </td></tr>
               </table>` : ''}
 
               <p style="margin:0 0 20px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;text-align:center;">
-                Voici quelques questions pour clore cette fenêtre avec conscience :
+                ${T.intro}
               </p>
 
               <!-- Encadré questions -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;background:linear-gradient(145deg, rgba(212,175,55,0.10), rgba(212,175,55,0.04));border:1px solid rgba(212,175,55,0.4);border-radius:14px;">
                 <tr>
                   <td align="center" style="padding:26px 28px;text-align:center;">
-                    <p style="margin:0 0 16px 0;color:#fbe6b6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Qu'est-ce qui a résonné, même discrètement, pendant ces jours&nbsp;?</p>
-                    <p style="margin:0 0 16px 0;color:#fbe6b6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Y a-t-il eu une conversation, une image, un moment qui a fait écho à votre intention&nbsp;?</p>
-                    <p style="margin:0;color:#fbeeb6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Si rien d'apparent n'est apparu, qu'est-ce qui, en vous, a peut-être bougé&nbsp;?</p>
+                    <p style="margin:0 0 16px 0;color:#fbe6b6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">${T.q1}</p>
+                    <p style="margin:0 0 16px 0;color:#fbe6b6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">${T.q2}</p>
+                    <p style="margin:0;color:#fbeeb6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">${T.q3}</p>
                   </td>
                 </tr>
               </table>
@@ -380,7 +435,7 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:linear-gradient(145deg, rgba(26,54,93,0.5), rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
                 <tr>
                   <td align="center" style="padding:22px 28px;text-align:center;">
-                    <p style="margin:0 0 14px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Vous observiez</p>
+                    <p style="margin:0 0 14px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">${T.observing}</p>
                     <ul style="margin:0;padding:0;list-style:none;">${attentionHTML}</ul>
                   </td>
                 </tr>
@@ -392,13 +447,13 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
                 <tr>
                   <td style="background:linear-gradient(145deg, rgba(42,82,152,0.28), rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;padding:22px 24px;text-align:center;">
                     <p style="margin:0 0 14px;color:#e8e4d4;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.7;">
-                      Vos observations ont de la valeur. En répondant à 5 questions rapides,<br>vous contribuez à une étude sur les synchronicités et la rétrocausalité.
+                      ${T.study}
                     </p>
-                    <a href="https://oradia.fr/synchronicite.html?token=${responseToken}" style="display:inline-block;background:linear-gradient(135deg, #3a6bb0 0%, #5a8fd8 100%);color:#ffffff;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:8px;letter-spacing:0.5px;border:1px solid rgba(150,190,255,0.5);box-shadow:0 4px 16px rgba(90,143,216,0.35);">
-                      Partager mon vécu (5 min)
+                    <a href="${T.surveyUrl}?token=${responseToken}" style="display:inline-block;background:linear-gradient(135deg, #3a6bb0 0%, #5a8fd8 100%);color:#ffffff;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:8px;letter-spacing:0.5px;border:1px solid rgba(150,190,255,0.5);box-shadow:0 4px 16px rgba(90,143,216,0.35);">
+                      ${T.studyBtn}
                     </a>
                     <p style="margin:12px 0 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;font-style:italic;">
-                      Anonyme · Aucune donnée personnelle n'est stockée
+                      ${T.anon}
                     </p>
                   </td>
                 </tr>
@@ -409,8 +464,8 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:8px 0 32px;">
                 <tr>
                   <td align="center" style="padding:0;">
-                    <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg, #d4af37 0%, #f0c75e 100%);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:600;text-decoration:none;padding:16px 32px;border-radius:4px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(212,175,55,0.3);">
-                      Faire un nouveau tirage
+                    <a href="${T.drawUrl}" style="display:inline-block;background:linear-gradient(135deg, #d4af37 0%, #f0c75e 100%);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:600;text-decoration:none;padding:16px 32px;border-radius:4px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(212,175,55,0.3);">
+                      ${T.drawBtn}
                     </a>
                   </td>
                 </tr>
@@ -422,13 +477,13 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
               <!-- Bandeau précommande -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
                 <tr><td style="padding:0;line-height:0;font-size:0;">
-                  <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+                  <img src="${T.preImg}" alt="${T.preAlt}" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
                 </td></tr>
                 <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-                  <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-                  <p style="margin:0 0 16px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">Précommander</a>
+                  <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">${T.preKicker}</p>
+                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;">${T.preTitle}</p>
+                  <p style="margin:0 0 16px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.6;">${T.preSub}</p>
+                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">${T.preBtn}</a>
                 </td></tr>
               </table>
 
@@ -438,8 +493,8 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
           ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
               <tr><td align="center" style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
-                <p style="margin:0 0 18px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ta fenêtre d'observation. Pour recevoir mes prochains messages :</p>
-                <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">S'inscrire à la newsletter</a>
+                <p style="margin:0 0 18px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.75;">${T.nl}</p>
+                <a href="${T.nlUrl}" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">${T.nlBtn}</a>
               </td></tr>
             </table>
           </td></tr>`}
@@ -447,9 +502,9 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
           <!-- Signature -->
           <tr>
             <td align="center" style="padding:36px 40px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
-              <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
+              <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">${T.gratitude}</p>
               <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
-              <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
+              <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">${T.founder}</p>
               <p style="margin:0 0 20px;text-align:center;">
                 <span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span>
                 <span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span>
@@ -464,7 +519,7 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
           <tr>
             <td style="padding:20px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.1);text-align:center;">
               <p style="margin:0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;line-height:1.6;opacity:0.5;">
-                Tu reçois cet email car tu as activé une fenêtre d'observation sur oradia.fr.
+                ${T.footer}
               </p>
             </td>
           </tr>
@@ -559,6 +614,13 @@ export default async function handler(req, res) {
         intention: 'Trouver ma voie professionnelle et oser ce changement',
         attention_points: ['Les signes liés à un changement de direction', 'Les rencontres ou conversations inattendues', 'Les rêves et images récurrentes']
       };
+      // ?lang=en : aperçu de la version anglaise (bouton « Test EN » de l'onglet Mails).
+      const testLang = (req.query && req.query.lang === 'en') || /[?&]lang=en\b/.test(req.url || '') ? 'en' : 'fr';
+      if (testLang === 'en') {
+        testWin.lang = 'en';
+        testWin.intention = 'Find my professional path and dare to make this change';
+        testWin.attention_points = ['Signs of a change of direction', 'Unexpected encounters or conversations', 'Recurring dreams and images'];
+      }
       const emailHTML = buildClosingEmail(testWin, 'TOKEN-TEST-EXEMPLE-1234');
       const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
@@ -566,7 +628,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: 'contact@oradia.fr' }],
-          subject: '[TEST] Votre fenêtre d\'observation se referme, qu\'avez-vous perçu ?',
+          subject: testWin.lang === 'en' ? '[TEST] ' + closingEmailSubject('en') : '[TEST] Votre fenêtre d\'observation se referme, qu\'avez-vous perçu ?',
           htmlContent: emailHTML
         })
       });
@@ -613,7 +675,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: win.email }],
-          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme, qu'avez-vous perçu ?`,
+          subject: closingEmailSubject(win.lang),
           htmlContent: emailHTML,
         })
       });

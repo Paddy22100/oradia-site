@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer mon espace — ORADIA</title>
     <meta name="robots" content="noindex, nofollow">
@@ -394,6 +396,7 @@
                         password,
                         name,
                         birthdate,
+                        lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr',
                         _hp: document.getElementById('website_url')?.value || ''
                     })
                 });
