@@ -4526,9 +4526,14 @@
                         <p class="text-gold font-semibold text-sm">Clôture fenêtre d'observation</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé à l'échéance · bandeau_mail_fenetre_observation</p>
                     </div>
-                    <button onclick="sendMailTest('fenetre-closing')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('fenetre-closing')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('fenetre-closing', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Check-in J+3 -->
@@ -4537,9 +4542,14 @@
                         <p class="text-gold font-semibold text-sm">Check-in J+3 (synchronicité observée ?)</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé 3 jours après tirage freemium · 2ᵉ étape de la séquence post-tirage</p>
                     </div>
-                    <button onclick="sendMailTest('checkin-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('checkin-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('checkin-tirage', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Promo tirage / abonnement 5€ -->
@@ -4548,9 +4558,14 @@
                         <p class="text-gold font-semibold text-sm">Promo abonnement Tore (5€ le 1er mois)</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé 7 jours après tirage freemium · 3ᵉ étape de la séquence post-tirage</p>
                     </div>
-                    <button onclick="sendMailTest('promo-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('promo-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('promo-tirage', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Confirmation inscription newsletter -->
@@ -11298,18 +11313,18 @@
             try {
                 let res;
                 if (type === 'fenetre-closing') {
-                    res = await adminFetch('/api/fenetre/test-preview', { method: 'POST' });
+                    res = await adminFetch('/api/fenetre/test-preview' + (lang === 'en' ? '?lang=en' : ''), { method: 'POST' });
                 } else if (type === 'promo-tirage') {
                     res = await adminFetch('/api/tirages/send-email?action=send-promo-preview', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: 'contact@oradia.fr' })
+                        body: JSON.stringify({ email: 'contact@oradia.fr', lang })
                     });
                 } else if (type === 'checkin-tirage') {
                     res = await adminFetch('/api/tirages/send-email?action=send-checkin-preview', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ email: 'contact@oradia.fr' })
+                        body: JSON.stringify({ email: 'contact@oradia.fr', lang })
                     });
                 } else if (type === 'tore-expired') {
                     res = await adminFetch('/api/admin/data?action=test-subscription-email', {

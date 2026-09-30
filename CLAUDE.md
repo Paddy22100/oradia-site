@@ -59,7 +59,7 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 | `tirages` | Historique des tirages par user (RLS stricte) | purge auto : 20 max par user |
 | `newsletter_drafts` | Brouillons de newsletter (5 lignes) | géré par le dashboard admin |
 | `newsletter_ideas` | Idées de newsletter (0 ligne) | table feature, à garder |
-| `observation_windows` | Fenêtres d'observation actives (20 lignes) | liée aux tirages |
+| `observation_windows` | Fenêtres d'observation actives (20 lignes) | liée aux tirages ; colonne `lang` (email de clôture + questionnaire `/en/synchronicite.html`) : `supabase-migration-observation-windows-lang.sql` |
 | `users` | Profils membres (0 ligne — auth gérée par Supabase Auth) | table publique miroir de auth.users |
 | `support_messages` | Messages support / témoignages / suggestions | migration : `supabase-migration-support-messages.sql` |
 | `app_settings` | Réglages modifiables depuis le dashboard (ex. `oracle_trial` : plafond et seuil d'alerte du mois offert via le QR code) | migration : `supabase-migration-app-settings.sql`, service_role uniquement |
@@ -151,7 +151,13 @@ dashboard, la langue est choisie dans le formulaire « Offrir un mois ». La lan
 de la fenêtre de limite de `/en/tore.html` → `create-checkout-session` (métadonnées Stripe `lang`)
 → `stripe-webhook.js`, qui l'enregistre dans `tore_subscriptions.lang` ; les envois ultérieurs
 (webhook, cron, dashboard) lisent cette colonne. Visuels anglais :
-`images/medias/banniere-facebook-en*.webp` (précommande), `bandeau_rappel_abonnement_tore-en.webp` (rappel). Boutons « Test EN » dans l'onglet Mails.
+`images/medias/banniere-facebook-en*.webp` (précommande), `bandeau_rappel_abonnement_tore-en.webp` (rappel), `bandeau_mail_fenetre_observation-en.webp` (clôture fenêtre). Boutons « Test EN » dans l'onglet Mails.
+Emails post-tirage gratuit (`api/tirages/send-email.js` : promo, check-in J+3, relance inactifs) : même
+principe, langue stockée dans `tore_emails.lang` (`supabase-migration-tore-emails-lang.sql`) à la collecte
+de l'email depuis `/en/tore.html`. Email de clôture de fenêtre d'observation (`api/fenetre/index.js`) :
+langue stockée dans `observation_windows.lang` à l'activation depuis `/en/tore-analysis.html` ; le
+questionnaire anglais `en/synchronicite.html` envoie les **mêmes codes** de réponse que la version
+française (seuls les libellés sont traduits — ne jamais traduire les valeurs stockées).
 
 ### 5. LOGIQUE FREEMIUM — localStorage
 
