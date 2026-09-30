@@ -31,6 +31,13 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - `tore.html` a une copie anglaise **séparée** : `en/tore.html`. Toute modification de la logique du
   tirage doit être portée sur les deux fichiers (la sauvegarde du tirage en cours y utilise la clé
   `oradia_tore_draw_in_progress_en`, distincte de la version française).
+- **Espace membre bilingue sans copie** : les pages `member/*.html` (dont `/inscription`) restent en
+  un seul exemplaire français ; `js/member-i18n.js` (chargé en tête de chaque page membre) les traduit
+  pour les visiteurs anglais (langue retenue dans localStorage `oradia_lang`, via `?lang=en`, un
+  `returnTo` vers `/en/…` ou la page précédente `/en/…`). Tout nouveau texte affiché dans une page
+  membre (HTML ou message JS) doit être ajouté à son dictionnaire `D` (ou `RULES` si partie variable).
+  Les valeurs envoyées au serveur ne sont jamais traduites. `window.ORADIA_LANG` donne la langue
+  (transmise à Stripe et à l'email de bienvenue de l'inscription).
 - **Tailwind est compilé** (plus de `cdn.tailwindcss.com`, ne pas le réintroduire) : feuilles
   `assets/tailwind.css` (pages du site), `tailwind-guidance.css`, `tailwind-livraison.css`,
   `tailwind-default.css` (fiches cartes), générées par `npm run build:css` (config

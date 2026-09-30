@@ -392,7 +392,9 @@ async function sendWaitlistConfirmationEmail(email) {
   }
 }
 
-async function sendSignupConfirmationEmail(email, name) {
+// Bilingue : lang 'en' pour un compte créé depuis l'espace membre en anglais (js/member-i18n.js).
+async function sendSignupConfirmationEmail(email, name, lang = 'fr') {
+  const en = lang === 'en';
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || 'ORADIA';
@@ -413,9 +415,9 @@ async function sendSignupConfirmationEmail(email, name) {
         sender: { email: senderEmail, name: senderName },
         to: [{ email, name }],
         replyTo: { email: 'contact@oradia.fr', name: 'Oradia' },
-        subject: "Rudy d'Oradia - Bienvenue dans votre espace ORADIA ✨",
+        subject: en ? "Rudy from Oradia - Welcome to your ORADIA space ✨" : "Rudy d'Oradia - Bienvenue dans votre espace ORADIA ✨",
         htmlContent: `<!DOCTYPE html>
-<html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="${en ? 'en' : 'fr'}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -437,23 +439,23 @@ async function sendSignupConfirmationEmail(email, name) {
           </tr>
           <tr>
             <td class="pad" align="center" style="padding:32px 40px 20px;" bgcolor="#0a1628">
-              <h1 style="margin:0;color:#f0c75e;font-family:Georgia,serif;font-size:30px;font-weight:400;letter-spacing:2px;text-transform:uppercase;">Votre espace est prêt</h1>
+              <h1 style="margin:0;color:#f0c75e;font-family:Georgia,serif;font-size:30px;font-weight:400;letter-spacing:2px;text-transform:uppercase;">${en ? 'Your space is ready' : 'Votre espace est prêt'}</h1>
               <table role="presentation" width="60" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 14px;"><tr><td height="1" bgcolor="#d4af37" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table>
-              <p style="margin:0;color:#d8bf72;font-family:Georgia,serif;font-size:14px;font-style:italic;">Bienvenue, ${name}</p>
+              <p style="margin:0;color:#d8bf72;font-family:Georgia,serif;font-size:14px;font-style:italic;">${en ? 'Welcome' : 'Bienvenue'}, ${name}</p>
             </td>
           </tr>
           <tr>
             <td class="pad-body" style="padding:0 40px 32px;" bgcolor="#0a1628">
               <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:14px;line-height:1.9;">
-                Votre compte ORADIA a été créé avec succès. Vous pouvez dès maintenant accéder à votre espace membre et commencer vos tirages.
+                ${en ? 'Your ORADIA account has been created successfully. You can now access your member area and start your draws.' : 'Votre compte ORADIA a été créé avec succès. Vous pouvez dès maintenant accéder à votre espace membre et commencer vos tirages.'}
               </p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
                 <tr><td align="center">
-                  <a href="https://oradia.fr/member/login.html" style="display:inline-block;background-color:#d4af37;color:#0a1628;font-family:Georgia,serif;font-size:14px;font-weight:bold;text-decoration:none;padding:15px 32px;letter-spacing:0.5px;">Accéder à mon espace</a>
+                  <a href="https://oradia.fr/member/login.html${en ? '?lang=en' : ''}" style="display:inline-block;background-color:#d4af37;color:#0a1628;font-family:Georgia,serif;font-size:14px;font-weight:bold;text-decoration:none;padding:15px 32px;letter-spacing:0.5px;">${en ? 'Access my space' : 'Accéder à mon espace'}</a>
                 </td></tr>
               </table>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;"><tr><td height="1" bgcolor="#3a3010" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table>
-              <p style="margin:0 0 6px;color:#d1d5db;font-family:Georgia,serif;font-size:13px;">Avec gratitude,</p>
+              <p style="margin:0 0 6px;color:#d1d5db;font-family:Georgia,serif;font-size:13px;">${en ? 'With gratitude,' : 'Avec gratitude,'}</p>
               <p style="margin:0;color:#d8bf72;font-family:Georgia,serif;font-size:17px;font-weight:bold;letter-spacing:1px;">Rudy Boucheron</p>
             </td>
           </tr>
@@ -463,7 +465,7 @@ async function sendSignupConfirmationEmail(email, name) {
                 <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> &nbsp;&middot;&nbsp; <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a>
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:4px auto 12px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
-              <p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.</p>
+              <p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">${en ? 'ORADIA - The Inner Compass<br>Reveal. Transmute. Connect.' : 'ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.'}</p>
             </td>
           </tr>
         </table>
@@ -473,7 +475,7 @@ async function sendSignupConfirmationEmail(email, name) {
   </table>
 </body>
 </html>`,
-        textContent: `Bienvenue ${name}, votre espace ORADIA est prêt. Connectez-vous sur oradia.fr/member/login.html` 
+        textContent: en ? `Welcome ${name}, your ORADIA space is ready. Log in at oradia.fr/member/login.html?lang=en` : `Bienvenue ${name}, votre espace ORADIA est prêt. Connectez-vous sur oradia.fr/member/login.html` 
       })
     });
 
@@ -502,6 +504,7 @@ module.exports = async (req, res) => {
     if (body && body.action === 'signup') {
       try {
         const { password, name, birthdate, _hp } = body;
+        const lang = body.lang === 'en' ? 'en' : 'fr';
         // Normalisé ici : cet email finit dans tore_subscriptions (table Postgres classique,
         // comparaison .eq sensible à la casse) — non normalisé, un compte auto-inscrit avec
         // une majuscule pourrait ensuite apparaître "non abonné" ou créer une ligne en double.
@@ -589,6 +592,7 @@ module.exports = async (req, res) => {
                 full_name: name,
                 birthdate: birthdate || null,
                 status: 'active', // Les comptes créés manuellement sont actifs par défaut
+                lang, // langue des emails ultérieurs (voir supabase-migration-subscription-lang.sql)
                 created_at: new Date().toISOString(),
                 updated_at: new Date().toISOString()
               });
@@ -605,7 +609,7 @@ module.exports = async (req, res) => {
         }
 
         try {
-          await sendSignupConfirmationEmail(email, name);
+          await sendSignupConfirmationEmail(email, name, lang);
         } catch (emailError) {
           console.log('[Signup] Email confirmation failed (non-bloquant):', emailError.message);
         }

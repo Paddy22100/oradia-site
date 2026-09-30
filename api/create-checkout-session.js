@@ -108,7 +108,9 @@ module.exports = async (req, res) => {
             const portalSession = await stripe.billingPortal.sessions.create({
                 customer: sub.stripe_customer_id,
                 configuration: await getPortalConfigurationId(stripe),
-                return_url: `${frontendUrl}/member/abonnements.html`
+                // Visiteur de l'espace membre en anglais (js/member-i18n.js) → portail en anglais.
+                locale: req.body.lang === 'en' ? 'en' : 'auto',
+                return_url: `${frontendUrl}/member/abonnements.html${req.body.lang === 'en' ? '?lang=en' : ''}`
             });
             return res.json({ success: true, url: portalSession.url });
         }
