@@ -5345,7 +5345,11 @@
                     if (f.type === 'devis' && ['envoyee','acceptee'].includes(f.statut)) {
                         actions.push(`<button onclick="factConvertir('${f.id}')" class="text-gold/60 hover:text-gold text-xs px-2 py-1">Convertir en facture</button>`);
                     }
-                    if (f.statut !== 'payee') {
+                    if (f.statut === 'payee') {
+                        // Sans cette action, une erreur de saisie d'encaissement était
+                        // définitive : la facture restait payée et la recette en place.
+                        actions.push(`<button onclick="factAnnulerPaiement('${f.id}')" class="text-orange-300/80 hover:text-orange-300 text-xs px-2 py-1">Annuler l'encaissement</button>`);
+                    } else {
                         actions.push(`<button onclick="factDelete('${f.id}', '${factEsc(f.numero)}')" class="text-red-400/60 hover:text-red-400 text-xs px-2 py-1">${f.statut === 'brouillon' ? 'Supprimer' : 'Annuler'}</button>`);
                     }
 
@@ -5556,6 +5560,18 @@
             if (!res.ok) { adminAlert(json.error || 'Relance impossible'); return; }
             adminAlert(`Relance n°${json.rang} envoyée${json.joursRetard ? ` (${json.joursRetard} jours de retard)` : ''}.`);
             factLoadList();
+        }
+
+        async function factAnnulerPaiement(id) {
+            if (!(await adminConfirm("Annuler l'encaissement ? La recette correspondante sera retirée du chiffre d'affaires et la facture repassera en attente de règlement. À n'utiliser que pour corriger une saisie erronée, jamais pour un remboursement client.", { danger: true }))) return;
+            const res = await adminFetch('/api/admin/factures/annuler-paiement', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Opération impossible'); return; }
+            adminAlert(json.message);
+            factLoadList();
+            if (typeof loadComptabilite === 'function') loadComptabilite();
         }
 
         async function factConvertir(id) {
