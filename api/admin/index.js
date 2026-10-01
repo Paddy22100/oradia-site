@@ -10181,6 +10181,36 @@ Réponds en français, sans tiret long, format markdown compact.`
       });
     }
 
+    // Annulation d'un encaissement saisi par erreur (mauvaise date, mauvaise facture).
+    // Supprime la recette créée et ramène la facture en « envoyée ». Ce n'est pas un
+    // remboursement client — un vrai remboursement se saisit comme un montant négatif,
+    // qui se déduit du chiffre d'affaires du mois où il est effectué.
+    if (path === '/factures/annuler-paiement' || path === '/factures/annuler-paiement/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const { data: facture, error: e1 } = await sb.from('factures').select('*').eq('id', id).single();
+      if (e1) throw e1;
+      if (facture.statut !== 'payee') return res.status(409).json({ error: `${facture.numero} n'est pas marquée payée.` });
+
+      if (facture.transaction_id) {
+        const { error: eDel } = await sb.from('transactions').delete().eq('id', facture.transaction_id);
+        if (eDel) throw eDel;
+      }
+      const { error } = await sb.from('factures').update({
+        statut: 'envoyee', date_paiement: null, mode_paiement: null,
+        transaction_id: null, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        message: `Encaissement annulé : ${facture.numero} repasse en attente de règlement et la recette de ${facture.total_ht} € a été retirée du chiffre d'affaires.`
+      });
+    }
+
     // Conversion d'un devis accepté en facture : nouvelle pièce, nouveau numéro dans
     // la série des factures. Le devis est conservé et marqué accepté.
     if (path === '/factures/convertir' || path === '/factures/convertir/') {
