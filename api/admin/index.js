@@ -13,7 +13,7 @@ const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, sendAbandonedCartEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail, sendOracleGiftInviteEmail, sendRenewalReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
-const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
+const { sendGuidanceConfirmationEmail, formatGuidanceDate } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 const { parisDate, computeUrssaf, CATEGORY_BY_SOURCE } = require('../../lib/urssaf.js');
@@ -3396,10 +3396,11 @@ async function handleData(req, res) {
           const sampleDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
           const emailSentGuidance = await sendGuidanceConfirmationEmail({
             clientEmail: dest,
-            clientName: 'Prénom Nom (exemple)',
+            clientName: body.lang === 'en' ? 'First Last (sample)' : 'Prénom Nom (exemple)',
             duration: 60,
-            dateStr: sampleDate.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }),
-            jitsiUrl: 'https://meet.jit.si/oradia-exemple'
+            dateStr: formatGuidanceDate(sampleDate, body.lang === 'en' ? 'en' : 'fr'),
+            jitsiUrl: 'https://meet.jit.si/oradia-exemple',
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSentGuidance) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });

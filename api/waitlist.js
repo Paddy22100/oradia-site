@@ -710,7 +710,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Invalid email',
-        message: 'Veuillez entrer une adresse email valide.'
+        message: lang === 'en' ? 'Please enter a valid email address.' : 'Veuillez entrer une adresse email valide.'
       });
     }
 
@@ -749,7 +749,7 @@ module.exports = async (req, res) => {
       return res.status(500).json({
         success: false,
         error: 'Database error',
-        message: 'Impossible de vous inscrire pour le moment.'
+        message: lang === 'en' ? 'We could not subscribe you right now.' : 'Impossible de vous inscrire pour le moment.'
       });
     }
 
@@ -771,7 +771,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Vous êtes inscrit à la liste d\'attente.',
+      message: lang === 'en' ? 'You are on the list.' : 'Vous êtes inscrit à la liste d\'attente.',
       emailSent,
       contactAdded
     });

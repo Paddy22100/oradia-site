@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { sendBrevoEmail, shippingFromOrder } = require('../lib/brevo-order-email.js');
 // Emails abonnés : une seule implémentation partagée avec le dashboard (voir CLAUDE.md).
 const { sendToreSubscriptionEmail, sendSubscriptionEmail } = require('../lib/tore-subscription-email.js');
-const { sendGuidanceConfirmationEmail } = require('../lib/guidance-email.js');
+const { sendGuidanceConfirmationEmail, formatGuidanceDate } = require('../lib/guidance-email.js');
 const { hitRateLimit } = require('../lib/rate-limit.js');
 
 // Échec d'écriture en base pendant le traitement d'un paiement : l'erreur remonte
@@ -1075,12 +1075,12 @@ async function handleCalWebhook(req, res) {
         }).then(({ error }) => { if (error && !isDuplicateKey(error)) console.error('[webhook] transactions insert (guidance):', error.message); });
         }
 
-        const dateStr = scheduledAt
-            ? new Date(scheduledAt).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' })
-            : '—';
+        const dateStr = formatGuidanceDate(scheduledAt, 'fr'); // notification admin (française)
+        // Réservation depuis /en/guidance.html : métadonnée Cal.com « lang » (voir l'embed).
+        const clientLang = payload.metadata?.lang === 'en' ? 'en' : 'fr';
 
         if (clientEmail) {
-            await sendGuidanceConfirmationEmail({ clientEmail, clientName, duration, dateStr, jitsiUrl })
+            await sendGuidanceConfirmationEmail({ clientEmail, clientName, duration, dateStr: formatGuidanceDate(scheduledAt, clientLang), jitsiUrl, lang: clientLang })
                 .catch(e => console.error('[cal-webhook] Email client:', e.message));
         }
 

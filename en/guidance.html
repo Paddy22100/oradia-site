@@ -188,7 +188,9 @@
       Cal("inline", {
         elementOrSelector: "#cal-booking-placeholder",
         calLink: slug,
-        config: { theme: "dark", brandColor: "#d4af37", layout: "month_view" }
+        // "metadata[lang]" : renvoyé par Cal.com dans le webhook (payload.metadata.lang) →
+        // email de confirmation en anglais (lib/guidance-email.js).
+        config: { theme: "dark", brandColor: "#d4af37", layout: "month_view", "metadata[lang]": "en" }
       });
     }
   </script>

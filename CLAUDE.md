@@ -169,6 +169,10 @@ Tirages programmés : langue dans `tore_scheduled_draws.lang` (`supabase-migrati
 envoyée par `member/tirages.html` ; l'analyse IA (`lib/tore-analysis-prompt.js`, `lang`) et l'email suivent.
 Confirmation newsletter (`sendWaitlistConfirmationEmail(email, lang)` dans `api/waitlist.js`) : anglais pour la
 source `en-landing` ou `lang: 'en'` (bandeau `bandeau_newsletter-en.webp`, sans la bannière de l'app, française).
+Confirmation de guidance (`lib/guidance-email.js`, `lang` + `formatGuidanceDate`) : la page `/en/guidance.html`
+passe `metadata[lang]=en` à Cal.com, lu par le webhook Cal (`payload.metadata.lang`).
+Email Supabase « Reset Password » : modèle versionné `emails/templates/supabase-reset-password.html`, à coller dans
+le dashboard Supabase (langue = `user_metadata.lang`, posée à la création du compte).
 
 ### 5. LOGIQUE FREEMIUM — localStorage
 
