@@ -4468,7 +4468,7 @@
                                 </div>
                             </div>
                             <div class="flex justify-end gap-2 mt-4">
-                                <button onclick="factClientReset()" class="px-4 py-2 text-sm rounded-lg border border-gold/20 text-gold/50 hover:text-gold/80 transition">Vider</button>
+                                <button onclick="factClientReset()" id="fact-client-reset-btn" class="px-4 py-2 text-sm rounded-lg border border-gold/20 text-gold/50 hover:text-gold/80 transition">Vider le formulaire</button>
                                 <button onclick="factClientSave()" class="px-5 py-2 text-sm rounded-lg bg-gold/20 text-gold border border-gold/40 font-semibold hover:bg-gold/30 transition">Enregistrer</button>
                             </div>
                         </div>
@@ -5612,6 +5612,8 @@
                 const el = document.getElementById('fact-client-' + k); if (el) el.value = '';
             });
             document.getElementById('fact-client-form-title').textContent = 'Nouveau client';
+            const btnReset = document.getElementById('fact-client-reset-btn');
+            if (btnReset) btnReset.textContent = 'Vider le formulaire';
         }
 
         function factClientEdit(id) {
@@ -5625,6 +5627,10 @@
             document.getElementById('fact-client-ville').value = c.ville || '';
             document.getElementById('fact-client-siret').value = c.siret || '';
             document.getElementById('fact-client-form-title').textContent = 'Modifier ' + c.nom;
+            // « Vider » seul laissait croire à une suppression : en modification, le bouton
+            // annonce qu'il abandonne la modification en cours, pas qu'il efface des données.
+            const btnEdit = document.getElementById('fact-client-reset-btn');
+            if (btnEdit) btnEdit.textContent = 'Annuler la modification';
         }
 
         async function factClientSave() {
