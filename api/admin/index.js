@@ -2324,7 +2324,8 @@ async function handleData(req, res) {
               full_name: sub.full_name || '',
               subscription_type: 'tore',
               subscription_active: true,
-              must_change_password: true
+              must_change_password: true,
+              lang: sub.lang === 'en' ? 'en' : 'fr' // langue de l'email Supabase de réinitialisation
             }
           });
           if (createErr) {
