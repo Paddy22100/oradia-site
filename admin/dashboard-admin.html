@@ -4225,24 +4225,31 @@
             </div>
 
             <!-- Déclaration URSSAF — ce qui doit réellement être déclaré, pas juste un
-                 chiffre estimé noyé dans les KPIs. Base = abonnements uniquement :
-                 précommandes et dons exclus tant qu'ils restent conditionnels
-                 (garantie zéro-risque de la page précommande). -->
+                 chiffre estimé noyé dans les KPIs. Base = tout l'encaissé du mois
+                 (précommandes et dons compris) : la micro-entreprise se déclare sur
+                 l'encaissement, cf. lib/urssaf.js. Les trois cartes reprennent mot pour mot
+                 les trois cases du formulaire autoentrepreneur.urssaf.fr, pour qu'il n'y ait
+                 rien à traduire au moment de la saisie. -->
             <div class="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 mb-6">
                 <div class="mb-4">
                     <h4 class="text-orange-300 font-semibold">Déclaration URSSAF</h4>
-                    <p class="text-light-gold/40 text-xs italic mt-1">Base = abonnements uniquement. Précommandes et dons exclus tant qu'ils restent conditionnels (remboursables si l'objectif de financement n'est pas atteint).</p>
+                    <p class="text-light-gold/40 text-xs italic mt-1">À recopier tel quel dans le formulaire. Base = tout ce qui a été encaissé ce mois-ci, montant brut avant frais Stripe, précommandes et dons compris. Les recettes hors site (ménage, entretien) doivent être ajoutées à la main.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white/3 rounded-lg p-3">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Recettes BNC <span id="urssaf-taux-bnc"></span></p>
+                        <p class="text-gold/80 text-sm">À saisir : <span class="font-semibold" id="urssaf-base-bnc">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bnc">—</span></p>
+                    </div>
                     <div class="bg-white/3 rounded-lg p-3">
                         <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BIC ventes <span id="urssaf-taux-bic"></span></p>
-                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bic">—</span></p>
+                        <p class="text-gold/80 text-sm">À saisir : <span class="font-semibold" id="urssaf-base-bic">—</span></p>
                         <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bic">—</span></p>
                     </div>
                     <div class="bg-white/3 rounded-lg p-3">
-                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BNC services <span id="urssaf-taux-bnc"></span></p>
-                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bnc">—</span></p>
-                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bnc">—</span></p>
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BIC prestations <span id="urssaf-taux-presta"></span></p>
+                        <p class="text-gold/80 text-sm">À saisir : <span class="font-semibold" id="urssaf-base-presta">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-presta">—</span></p>
                     </div>
                 </div>
                 <p class="text-gold/30 text-xs mt-4" id="urssaf-exclusions"></p>
@@ -16758,22 +16765,34 @@
                 ? `dont ${fmt(sd.other)} de frais hors encaissement`
                 : '');
             const urssafDetailEl = document.getElementById('compta-urssaf-detail');
-            if (urssafDetailEl && b) {
-                urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
+            const cases = b && b.cases;
+            if (urssafDetailEl && cases) {
+                urssafDetailEl.innerHTML = [
+                    `BNC ${(cases.bnc.taux*100).toFixed(2)}% : ${fmt(cases.bnc.cotisation)}`,
+                    `BIC ventes ${(cases.bic_ventes.taux*100).toFixed(2)}% : ${fmt(cases.bic_ventes.cotisation)}`,
+                    `BIC prestations ${(cases.bic_prestations.taux*100).toFixed(2)}% : ${fmt(cases.bic_prestations.cotisation)}`,
+                    `CFP : ${fmt(b.cfp)}`
+                ].join('<br>');
             }
-            if (b) {
-                setEl('urssaf-taux-bic', `(${(b.tauxBIC*100).toFixed(1)}%)`);
-                setEl('urssaf-taux-bnc', `(${(b.tauxBNC*100).toFixed(1)}%)`);
-                setEl('urssaf-base-bic', fmt(b.recettesVentesBIC));
-                setEl('urssaf-cotis-bic', fmt(b.urssafBIC));
-                setEl('urssaf-base-bnc', fmt(b.recettesServicesBNC));
-                setEl('urssaf-cotis-bnc', fmt(b.urssafBNC));
+            if (cases) {
+                const fill = (suffix, c) => {
+                    setEl(`urssaf-taux-${suffix}`, `(${(c.taux*100).toFixed(2)}%)`);
+                    setEl(`urssaf-base-${suffix}`, fmt(c.base));
+                    setEl(`urssaf-cotis-${suffix}`, fmt(c.cotisation));
+                };
+                fill('bnc', cases.bnc);
+                fill('bic', cases.bic_ventes);
+                fill('presta', cases.bic_prestations);
                 const exclEl = document.getElementById('urssaf-exclusions');
                 if (exclEl) {
                     const parts = [];
-                    if (b.recettesPrecommandeExclues > 0) parts.push(`${fmt(b.recettesPrecommandeExclues)} de précommandes`);
-                    if (b.recettesDonsExclus > 0) parts.push(`${fmt(b.recettesDonsExclus)} de dons`);
-                    exclEl.textContent = parts.length ? `Non comptés dans cette base : ${parts.join(' + ')}.` : '';
+                    if (b.recettesPrecommandeIncluses > 0) parts.push(`${fmt(b.recettesPrecommandeIncluses)} de précommandes`);
+                    if (b.recettesDonsInclus > 0) parts.push(`${fmt(b.recettesDonsInclus)} de dons`);
+                    const inclus = parts.length ? `Inclus dans cette base : ${parts.join(' + ')}. ` : '';
+                    const acre = b.acre
+                        ? `Taux réduits de moitié par l'Acre jusqu'au ${b.acreLastDay} — ils doublent ensuite.`
+                        : `Acre terminée (${b.acreLastDay}) : taux pleins.`;
+                    exclEl.textContent = inclus + acre;
                 }
             }
             const transactions = data.data || [];

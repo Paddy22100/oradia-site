@@ -16,6 +16,7 @@ const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const { parisDate, computeUrssaf } = require('../../lib/urssaf.js');
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
 const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
@@ -1713,12 +1714,15 @@ async function handleData(req, res) {
           const depenseRows = (txs||[]).filter(t => t.type === 'depense');
           const totalRecettes = recetteRows.reduce((s,t) => s + parseFloat(t.amount), 0);
           const totalDepenses = depenseRows.reduce((s,t) => s + parseFloat(t.amount), 0);
-          // Dons en espèces : comptés dans totalRecettes (argent réellement reçu) mais hors
-          // base URSSAF — ils ne transitent pas par le compte pro et ne sont pas déclarés.
-          const recDeclarables = totalRecettes - recetteRows.filter(t => t.source === 'don-especes').reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBIC = recetteRows.filter(t => t.source === 'precommande' || t.source === 'abonnement').reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBNC = recDeclarables - recBIC;
-          const urssaf = recBIC * 0.123 + recBNC * 0.211;
+          // Base URSSAF : tout l'encaissé du mois, ventilé par lib/urssaf.js — y compris les
+          // dons en espèces, qui sont encaissés même s'ils ne transitent pas par le compte pro.
+          // Même calcul que le bloc "Déclaration URSSAF" du dashboard (GET /transactions).
+          const urssafCalc = computeUrssaf(recetteRows, monthStart.slice(0,7));
+          const recDeclarables = urssafCalc.base;
+          const recVentes = urssafCalc.categories.bic_ventes;
+          const recPresta = urssafCalc.categories.bic_prestations;
+          const recBNC = urssafCalc.categories.bnc;
+          const urssaf = urssafCalc.total;
           // Frais Stripe réels du mois (balance transactions), pas une estimation par taux :
           // le taux dépend de la carte du client et Stripe prélève aussi des frais hors
           // encaissement. Repli sur l'estimation seulement si l'API est injoignable.
@@ -1760,7 +1764,7 @@ async function handleData(req, res) {
               + (feesResult.otherFeesEur > 0 ? feeLine('Autres frais Stripe (Billing, litiges, change)', feesResult.otherFeesEur) : '')
               + (feesResult.refundCount > 0 ? `<tr><td style="padding:4px 0;color:rgba(209,201,176,0.6);font-size:12px;font-style:italic;" colspan="2">${feesResult.refundCount} remboursement${feesResult.refundCount>1?'s':''} sur la période (les commissions Stripe ne sont pas restituées)</td></tr>` : '')
             : feeLine(`Estimation sur ${stripeRows.length} encaissement${stripeRows.length > 1 ? 's' : ''}`, stripeFees);
-          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Recettes encaissées (brut)</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">${feesLabel}</td><td style="text-align:right;color:#f87171;">− ${fmt(stripeFees)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Dépenses</td><td style="text-align:right;color:#f87171;">− ${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Cotisations URSSAF estimées</td><td style="text-align:right;color:#f87171;">− ${fmt(urssaf)}</td></tr><tr><td style="padding:10px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Résultat net — ce qu'il vous reste</td><td style="text-align:right;color:${tresorerieReelle>=0?'#2dd4bf':'#f87171'};font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(tresorerieReelle)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC 12,3% sur ${fmt(recBIC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBIC*0.123)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BNC 21,1% sur ${fmt(recBNC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC*0.211)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:4px;padding:14px 16px;margin-bottom:28px;"><p style="margin:0 0 6px;color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">⚠️ Ce que vous devez déclarer à l'URSSAF</p><p style="margin:0 0 8px;color:#d1c9b0;font-size:12.5px;line-height:1.6;">Le montant brut encaissé par le client — <strong>pas</strong> le net après commission Stripe. Les frais Stripe ne sont pas déductibles en micro-entreprise (l'abattement forfaitaire joue déjà ce rôle au moment de l'impôt sur le revenu).</p><p style="margin:0;color:#e8c96a;font-size:13px;font-weight:600;">Montant à déclarer ce mois-ci : ${fmt(totalRecettes)} — et non ${fmt(totalRecettes - stripeFees)}, qui est le net une fois Stripe passé.</p></div><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Détail des frais Stripe</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%">${stripeDetailRows}<tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total prélevé par Stripe</td><td style="text-align:right;color:#f87171;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">− ${fmt(stripeFees)}</td></tr></table>${feesNote}</td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
+          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Recettes encaissées (brut)</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">${feesLabel}</td><td style="text-align:right;color:#f87171;">− ${fmt(stripeFees)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Dépenses</td><td style="text-align:right;color:#f87171;">− ${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Cotisations URSSAF estimées</td><td style="text-align:right;color:#f87171;">− ${fmt(urssaf)}</td></tr><tr><td style="padding:10px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Résultat net — ce qu'il vous reste</td><td style="text-align:right;color:${tresorerieReelle>=0?'#2dd4bf':'#f87171'};font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(tresorerieReelle)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC ventes ${(recVentes.taux*100).toFixed(2)}% sur ${fmt(recVentes.base)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recVentes.cotisation)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC prestations ${(recPresta.taux*100).toFixed(2)}% sur ${fmt(recPresta.base)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recPresta.cotisation)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Recettes BNC ${(recBNC.taux*100).toFixed(2)}% sur ${fmt(recBNC.base)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC.cotisation)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">CFP</td><td style="text-align:right;color:#e8c96a;">${fmt(urssafCalc.cfp)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:4px;padding:14px 16px;margin-bottom:28px;"><p style="margin:0 0 6px;color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">⚠️ Ce que vous devez déclarer à l'URSSAF</p><p style="margin:0 0 8px;color:#d1c9b0;font-size:12.5px;line-height:1.6;">Le montant brut encaissé par le client — <strong>pas</strong> le net après commission Stripe. Les frais Stripe ne sont pas déductibles en micro-entreprise (l'abattement forfaitaire joue déjà ce rôle au moment de l'impôt sur le revenu).</p><p style="margin:0;color:#e8c96a;font-size:13px;font-weight:600;">Montant à déclarer ce mois-ci : ${fmt(recDeclarables)} — et non ${fmt(totalRecettes - stripeFees)}, qui est le net une fois Stripe passé.</p></div><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Détail des frais Stripe</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%">${stripeDetailRows}<tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total prélevé par Stripe</td><td style="text-align:right;color:#f87171;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">− ${fmt(stripeFees)}</td></tr></table>${feesNote}</td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
           const r = await fetch('https://api.brevo.com/v3/smtp/email', { method:'POST', headers:{'Content-Type':'application/json','api-key':BREVO_API_KEY}, body: JSON.stringify({ sender:{email:'contact@oradia.fr',name:'ORADIA Dashboard'}, to:[{email:adminEmail}], subject:`📊 Rapport mensuel ORADIA — ${cap(monthLabel)}`, htmlContent: html }) });
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
@@ -2995,15 +2999,15 @@ async function handleData(req, res) {
         }
 
         const toInsert = [
-            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category: p.order_type === 'order' ? 'commande' : 'précommande', description:`${p.order_type === 'order' ? 'Commande' : 'Précommande'} ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
+            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: parisDate(p.created_at), type:'recette', category: p.order_type === 'order' ? 'commande' : 'précommande', description:`${p.order_type === 'order' ? 'Commande' : 'Précommande'} ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             // Dons en espèces visibles en comptabilité (source distincte 'don-especes') mais
             // exclus de la base de calcul URSSAF plus bas (voir GET /transactions) — reçus
             // hors Stripe/compte pro, cet argent n'est pas déclaré.
-            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
-            ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
+            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: parisDate(d.created_at), type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: parisDate(g.created_at), type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
             // Seulement les abonnés sans AUCUNE ligne "abonnement" existante (vraie rattrapage,
             // pas un doublon de ce que le webhook a déjà enregistré).
-            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: parisDate(s.created_at), type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${parisDate(s.created_at)}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
             ...(ululeBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'ulule', description:`Ulule ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'ulule', source_ref: `ul_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
@@ -9726,25 +9730,16 @@ Réponds en français, sans tiret long, format markdown compact.`
         const recettes = recetteRows.reduce((s, t) => s + parseFloat(t.amount), 0);
         const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
-        // Déclaration URSSAF : uniquement les abonnements (revenu récurrent, acquis
-        // sans condition). Précommandes ET dons exclus de cette base tant que l'argent
-        // reste conditionnel — la garantie "zéro-risque" de la page précommande promet
-        // un remboursement intégral si l'objectif de financement n'est pas atteint, donc
-        // rien n'est déclaré dessus avant que ce ne soit acquis. Décision explicite de
-        // Rudy (2026-09) — le régime micro-entrepreneur se déclare en principe sur
-        // l'encaissé, pas sur le "définitivement acquis" ; à confirmer avec un
-        // expert-comptable si besoin. Les abonnements sont classés BIC (déjà le cas
-        // avant ce changement) ; rien ne tombe en BNC pour l'instant avec ce périmètre.
-        const recettesDeclarables = recetteRows
-          .filter(t => t.source === 'abonnement')
-          .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesVentesBIC = recettesDeclarables;
-        const recettesServicesBNC = 0;
-        const URSSAF_RATE_BIC = 0.123;
-        const URSSAF_RATE_BNC = 0.211;
-        const urssafBIC = recettesVentesBIC * URSSAF_RATE_BIC;
-        const urssafBNC = recettesServicesBNC * URSSAF_RATE_BNC;
-        const urssaf = urssafBIC + urssafBNC;
+        // Déclaration URSSAF : TOUT l'encaissé de la période, ventilé dans les trois cases
+        // du formulaire. Les précommandes et les dons y sont inclus — en micro-entreprise la
+        // comptabilité est de trésorerie, et un encaissement reste un encaissement même si la
+        // contrepartie n'est pas livrée (cf. lib/urssaf.js, qui porte la règle en détail).
+        // Un remboursement se déduit du CA du mois où il est effectué, via un montant négatif.
+        // Remplace l'ancienne base "abonnements uniquement" (sous-déclaration) et aligne ce
+        // calcul sur celui du rapport mensuel, qui divergeait.
+        const urssafCalc = computeUrssaf(recetteRows, month ? `${year}-${month.padStart(2,'0')}` : `${year}-12-31`);
+        const recettesDeclarables = urssafCalc.base;
+        const urssaf = urssafCalc.total;
 
         // Frais Stripe réels (balance transactions), à titre informatif uniquement —
         // n'affecte jamais le calcul URSSAF (qui se base sur le montant brut encaissé, conformément
@@ -9761,13 +9756,12 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Ce qui reste vraiment : l'URSSAF est un décaissement au même titre que Stripe.
         const tresorerieReelleEstimee = recettes - stripeFees - depenses - urssaf;
 
-        // Détail de ce qui est volontairement exclu de la base déclarable, pour que le
-        // dashboard puisse l'afficher clairement plutôt que de laisser deviner pourquoi
-        // la base est plus petite que les recettes brutes.
-        const recettesPrecommandeExclues = recetteRows
+        // Plus rien n'est exclu de la base déclarable : ces deux totaux ne servent plus qu'à
+        // rappeler dans le dashboard d'où vient le chiffre, pas à justifier un écart.
+        const recettesPrecommandeIncluses = recetteRows
           .filter(t => t.source === 'precommande')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesDonsExclus = recetteRows
+        const recettesDonsInclus = recetteRows
           .filter(t => t.source === 'don' || t.source === 'don-especes')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
 
@@ -9798,10 +9792,13 @@ Réponds en français, sans tiret long, format markdown compact.`
             tresorerieReelleEstimee,
             breakdown: {
               recettesDeclarables,
-              recettesVentesBIC, recettesServicesBNC,
-              urssafBIC, urssafBNC,
-              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC,
-              recettesPrecommandeExclues, recettesDonsExclus
+              // Les trois cases du formulaire URSSAF, nommées comme elles y figurent.
+              cases: urssafCalc.categories,
+              cotisations: urssafCalc.cotisations,
+              cfp: urssafCalc.cfp,
+              acre: urssafCalc.acre,
+              acreLastDay: urssafCalc.acreLastDay,
+              recettesPrecommandeIncluses, recettesDonsInclus
             }
           }
         });
