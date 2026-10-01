@@ -5193,14 +5193,20 @@
                 <div class="stat-card rounded-xl p-6">
                     <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-id-card"></i> Informations légales</h4>
                     <div class="space-y-3 text-sm">
-                        <div><label class="text-light-gold/50 text-xs block mb-1">Nom</label><input id="ci-nom" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Nom</label><input id="ci-nom" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Marque</label><input id="ci-marque" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        </div>
                         <div><label class="text-light-gold/50 text-xs block mb-1">Statut juridique</label><input id="ci-statutJuridique" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
                         <div class="grid grid-cols-2 gap-3">
                             <div><label class="text-light-gold/50 text-xs block mb-1">SIRET</label><input id="ci-siret" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
                             <div><label class="text-light-gold/50 text-xs block mb-1">Code APE</label><input id="ci-codeApe" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
                         </div>
                         <div><label class="text-light-gold/50 text-xs block mb-1">Adresse</label><input id="ci-adresse" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
-                        <div><label class="text-light-gold/50 text-xs block mb-1">Email de contact</label><input id="ci-email" type="email" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Email de contact</label><input id="ci-email" type="email" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Téléphone</label><input id="ci-telephone" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        </div>
                     </div>
                 </div>
                 <div class="stat-card rounded-xl p-6">
@@ -5569,7 +5575,7 @@
             if (!(await adminConfirm(`Envoyer ${f.numero} à ${client.email} ? Une pièce envoyée ne peut plus être modifiée.`))) return;
 
             let pdfBase64;
-            try { pdfBase64 = factBuildPdf(f, client); }
+            try { pdfBase64 = await factBuildPdf(f, client); }
             catch (e) { adminAlert('Génération du PDF impossible : ' + e.message); return; }
 
             const send = await adminFetch('/api/admin/factures/send', {
@@ -5729,8 +5735,25 @@
         // Reprend la mise en page du modèle Word, mentions légales comprises, en
         // corrigeant ce qui y était faux : l'échéance est calculée, l'adresse et la
         // période viennent des données, et il ne reste aucun crochet de gabarit.
-        function factBuildPdf(f, client) {
+        // Infos émetteur (Paramètres > Entreprise) mises en cache pour la session dashboard —
+        // évite un aller-retour réseau à chaque génération de PDF ; se rafraîchit à chaque
+        // rechargement de page, donc au plus une fois périmé entre deux modifications.
+        let _factEmetteurCache = null;
+        async function factGetEmetteur() {
+            if (_factEmetteurCache) return _factEmetteurCache;
+            try {
+                const res = await adminFetch('/api/admin/data?section=company-info');
+                const data = await res.json();
+                _factEmetteurCache = data.data || {};
+            } catch {
+                _factEmetteurCache = {};
+            }
+            return _factEmetteurCache;
+        }
+
+        async function factBuildPdf(f, client) {
             if (!window.jspdf?.jsPDF) throw new Error('librairie PDF non chargée, rechargez la page');
+            const emetteur = await factGetEmetteur();
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
             const estDevis = f.type === 'devis';
@@ -5738,10 +5761,14 @@
             let y = M;
 
             doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20);
-            doc.text('Rudy BOUCHERON — EI', M, y); y += 5;
+            doc.text(emetteur.nom || 'Rudy BOUCHERON — EI', M, y); y += 5;
             doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(70);
-            ['ORADIA', '17 Cardevily — 22100 Trévron', 'SIRET : 821 308 004 00034', 'contact@oradia.fr — 06 45 51 19 90']
-                .forEach(l => { doc.text(l, M, y); y += 4.2; });
+            [
+                emetteur.marque || 'ORADIA',
+                emetteur.adresse || '17 Cardevily — 22100 Trévron',
+                `SIRET : ${emetteur.siret || '821 308 004 00034'}`,
+                `${emetteur.email || 'contact@oradia.fr'} — ${emetteur.telephone || '06 45 51 19 90'}`
+            ].forEach(l => { doc.text(l, M, y); y += 4.2; });
 
             y += 8;
             doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(20);
@@ -5789,8 +5816,8 @@
                 doc.text(`Devis valable jusqu'au ${factDateFr(f.date_echeance)}.`, M, y); y += 4.6;
             } else {
                 doc.text(`Date d'échéance : ${factDateFr(f.date_echeance)} — paiement à ${f.delai_paiement_jours} jours à compter de la date d'émission.`, M, y); y += 4.6;
-                doc.text('Mode de règlement : virement bancaire — IBAN FR76 1558 9228 4506 7504 8634 186', M, y); y += 4.6;
-                doc.text('ou chèque à l’ordre de Rudy Boucheron.', M, y); y += 4.6;
+                if (emetteur.iban) { doc.text(`Mode de règlement : virement bancaire — IBAN ${emetteur.iban}`, M, y); y += 4.6; }
+                doc.text(emetteur.iban ? 'ou chèque à l’ordre de Rudy Boucheron.' : 'Mode de règlement : virement bancaire ou chèque à l’ordre de Rudy Boucheron.', M, y); y += 4.6;
             }
 
             y += 6; doc.setFontSize(7); doc.setTextColor(120);
@@ -15767,7 +15794,7 @@
         }
 
         // ── Entreprise (infos légales + RIB) — app_settings clé company_info ──
-        const COMPANY_INFO_FIELDS = ['nom', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'banque', 'iban', 'bic'];
+        const COMPANY_INFO_FIELDS = ['nom', 'marque', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'telephone', 'banque', 'iban', 'bic'];
         async function loadCompanyInfo() {
             try {
                 const res = await adminFetch('/api/admin/data?section=company-info');

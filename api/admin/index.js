@@ -2163,7 +2163,7 @@ async function handleData(req, res) {
 
       // ── Informations entreprise + RIB (Paramètres > Entreprise), app_settings clé company_info ──
       if (action === 'save-company-info') {
-        const fields = ['nom', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'banque', 'iban', 'bic'];
+        const fields = ['nom', 'marque', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'telephone', 'banque', 'iban', 'bic'];
         const value = {};
         for (const f of fields) value[f] = String(body[f] || '').trim().slice(0, 200);
         const { error } = await supabase.from('app_settings')
@@ -3833,12 +3833,15 @@ async function handleData(req, res) {
     }
 
     // ── Section company-info : infos entreprise + RIB (app_settings clé company_info) ──
-    // Préremplie avec les mentions légales actuelles tant que rien n'a encore été
-    // enregistré depuis le dashboard (le RIB n'y figure pas, à saisir une première fois).
+    // Même source que l'émetteur des factures (lib/facture-email.js, getEmetteur) : ce
+    // sous-onglet EST l'endroit où éditer ces informations, plutôt qu'un fichier de code.
+    // Préremplie tant que rien n'a encore été enregistré depuis le dashboard — avec les
+    // seules infos déjà publiques (mentions légales) ; jamais de RIB en dur ici.
     if (section === 'company-info') {
       const DEFAULTS = {
-        nom: 'Rudy Boucheron', statutJuridique: 'Micro-entreprise', siret: '82130800400034',
-        codeApe: '9609Z', adresse: '17 Cardevily - 22100 TRÉVRON', email: 'contact@oradia.fr',
+        nom: 'Rudy BOUCHERON — EI', marque: 'ORADIA', statutJuridique: 'Micro-entreprise',
+        siret: '821 308 004 00034', codeApe: '9609Z', adresse: '17 Cardevily — 22100 Trévron',
+        email: 'contact@oradia.fr', telephone: '06 45 51 19 90',
         banque: '', iban: '', bic: ''
       };
       const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'company_info').maybeSingle();
@@ -10093,7 +10096,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       // Jamais de second template écrit ici (règle CLAUDE.md).
       if (test) {
         const ex = exempleFacture();
-        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null });
+        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null, supabase: sb });
         return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null });
       }
 
@@ -10117,7 +10120,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (eUp) throw eUp;
 
       const send = facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
-      const result = await send({ facture, lignes: lignes || [], client, pdfBase64 });
+      const result = await send({ facture, lignes: lignes || [], client, pdfBase64, supabase: sb });
       if (!result.ok) return res.status(502).json({ error: `Envoi impossible : ${result.error}` });
 
       const { error: eUpd } = await sb.from('factures').update({
@@ -10158,7 +10161,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         : 0;
       const rang = (facture.relance_count || 0) + 1;
 
-      const result = await sendRelanceEmail({ facture, lignes: lignes || [], client, pdfBase64, rang, joursRetard });
+      const result = await sendRelanceEmail({ facture, lignes: lignes || [], client, pdfBase64, rang, joursRetard, supabase: sb });
       if (!result.ok) return res.status(502).json({ error: `Relance impossible : ${result.error}` });
 
       const { error } = await sb.from('factures').update({
