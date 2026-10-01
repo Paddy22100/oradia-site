@@ -4347,7 +4347,7 @@
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
                     <div class="flex items-center gap-2 flex-wrap">
                         <select id="fact-filtre-statut" onchange="factLoadList()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
-                            <option value="">Tous les statuts</option>
+                            <option value="">En cours (hors annulées)</option>
                             <option value="brouillon">Brouillons</option>
                             <option value="envoyee">Envoyées</option>
                             <option value="payee">Payées</option>
@@ -5350,7 +5350,10 @@
                     if (f.type === 'devis' && ['envoyee','acceptee'].includes(f.statut)) {
                         actions.push(`<button onclick="factConvertir('${f.id}')" class="text-gold/60 hover:text-gold text-xs px-2 py-1">Convertir en facture</button>`);
                     }
-                    if (f.statut === 'payee') {
+                    if (['annulee', 'refusee'].includes(f.statut)) {
+                        // Pièce neutralisée : plus aucune action, et surtout pas « Annuler »
+                        // une seconde fois.
+                    } else if (f.statut === 'payee') {
                         // Sans cette action, une erreur de saisie d'encaissement était
                         // définitive : la facture restait payée et la recette en place.
                         actions.push(`<button onclick="factAnnulerPaiement('${f.id}')" class="text-orange-300/80 hover:text-orange-300 text-xs px-2 py-1">Annuler l'encaissement</button>`);
