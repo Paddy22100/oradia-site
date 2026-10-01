@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Créer mon espace — ORADIA</title>
     <meta name="robots" content="noindex, nofollow">
@@ -250,7 +252,7 @@
             <ul class="login-perks">
                 <li><i class="fas fa-infinity"></i> Accès à tous vos tirages</li>
                 <li><i class="fas fa-history"></i> Historique et suivi</li>
-                <li><i class="fas fa-unlock-alt"></i> Accès complet à l'expérience du Tore</li>
+                <li><i class="fas fa-unlock-alt"></i> 2 tirages gratuits pour découvrir le Tore</li>
                 <li><i class="fas fa-envelope-open-text"></i> Inspirations mensuelles</li>
             </ul>
 
@@ -394,6 +396,7 @@
                         password,
                         name,
                         birthdate,
+                        lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr',
                         _hp: document.getElementById('website_url')?.value || ''
                     })
                 });

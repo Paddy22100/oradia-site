@@ -117,7 +117,8 @@ class FooterManager {
         const res = await fetch('/api/waitlist', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, source: 'footer-newsletter' })
+          // Espace membre affiché en anglais (js/member-i18n.js) → confirmation en anglais.
+          body: JSON.stringify({ email, source: 'footer-newsletter', lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr' })
         });
         const data = await res.json();
         if (res.ok && data.success) {

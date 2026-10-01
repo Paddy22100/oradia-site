@@ -16,6 +16,8 @@ const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const { parisDate, computeUrssaf, CATEGORY_BY_SOURCE } = require('../../lib/urssaf.js');
+const { sendFactureEmail, sendDevisEmail, sendRelanceEmail, exempleFacture } = require('../../lib/facture-email.js');
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
 const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
@@ -1713,12 +1715,15 @@ async function handleData(req, res) {
           const depenseRows = (txs||[]).filter(t => t.type === 'depense');
           const totalRecettes = recetteRows.reduce((s,t) => s + parseFloat(t.amount), 0);
           const totalDepenses = depenseRows.reduce((s,t) => s + parseFloat(t.amount), 0);
-          // Dons en espèces : comptés dans totalRecettes (argent réellement reçu) mais hors
-          // base URSSAF — ils ne transitent pas par le compte pro et ne sont pas déclarés.
-          const recDeclarables = totalRecettes - recetteRows.filter(t => t.source === 'don-especes').reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBIC = recetteRows.filter(t => t.source === 'precommande' || t.source === 'abonnement').reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBNC = recDeclarables - recBIC;
-          const urssaf = recBIC * 0.123 + recBNC * 0.211;
+          // Base URSSAF : tout l'encaissé du mois, ventilé par lib/urssaf.js — y compris les
+          // dons en espèces, qui sont encaissés même s'ils ne transitent pas par le compte pro.
+          // Même calcul que le bloc "Déclaration URSSAF" du dashboard (GET /transactions).
+          const urssafCalc = computeUrssaf(recetteRows, monthStart.slice(0,7));
+          const recDeclarables = urssafCalc.base;
+          const recVentes = urssafCalc.categories.bic_ventes;
+          const recPresta = urssafCalc.categories.bic_prestations;
+          const recBNC = urssafCalc.categories.bnc;
+          const urssaf = urssafCalc.total;
           // Frais Stripe réels du mois (balance transactions), pas une estimation par taux :
           // le taux dépend de la carte du client et Stripe prélève aussi des frais hors
           // encaissement. Repli sur l'estimation seulement si l'API est injoignable.
@@ -1760,7 +1765,7 @@ async function handleData(req, res) {
               + (feesResult.otherFeesEur > 0 ? feeLine('Autres frais Stripe (Billing, litiges, change)', feesResult.otherFeesEur) : '')
               + (feesResult.refundCount > 0 ? `<tr><td style="padding:4px 0;color:rgba(209,201,176,0.6);font-size:12px;font-style:italic;" colspan="2">${feesResult.refundCount} remboursement${feesResult.refundCount>1?'s':''} sur la période (les commissions Stripe ne sont pas restituées)</td></tr>` : '')
             : feeLine(`Estimation sur ${stripeRows.length} encaissement${stripeRows.length > 1 ? 's' : ''}`, stripeFees);
-          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Recettes encaissées (brut)</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">${feesLabel}</td><td style="text-align:right;color:#f87171;">− ${fmt(stripeFees)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Dépenses</td><td style="text-align:right;color:#f87171;">− ${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Cotisations URSSAF estimées</td><td style="text-align:right;color:#f87171;">− ${fmt(urssaf)}</td></tr><tr><td style="padding:10px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Résultat net — ce qu'il vous reste</td><td style="text-align:right;color:${tresorerieReelle>=0?'#2dd4bf':'#f87171'};font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(tresorerieReelle)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC 12,3% sur ${fmt(recBIC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBIC*0.123)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BNC 21,1% sur ${fmt(recBNC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC*0.211)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:4px;padding:14px 16px;margin-bottom:28px;"><p style="margin:0 0 6px;color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">⚠️ Ce que vous devez déclarer à l'URSSAF</p><p style="margin:0 0 8px;color:#d1c9b0;font-size:12.5px;line-height:1.6;">Le montant brut encaissé par le client — <strong>pas</strong> le net après commission Stripe. Les frais Stripe ne sont pas déductibles en micro-entreprise (l'abattement forfaitaire joue déjà ce rôle au moment de l'impôt sur le revenu).</p><p style="margin:0;color:#e8c96a;font-size:13px;font-weight:600;">Montant à déclarer ce mois-ci : ${fmt(totalRecettes)} — et non ${fmt(totalRecettes - stripeFees)}, qui est le net une fois Stripe passé.</p></div><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Détail des frais Stripe</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%">${stripeDetailRows}<tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total prélevé par Stripe</td><td style="text-align:right;color:#f87171;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">− ${fmt(stripeFees)}</td></tr></table>${feesNote}</td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
+          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Recettes encaissées (brut)</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">${feesLabel}</td><td style="text-align:right;color:#f87171;">− ${fmt(stripeFees)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Dépenses</td><td style="text-align:right;color:#f87171;">− ${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Cotisations URSSAF estimées</td><td style="text-align:right;color:#f87171;">− ${fmt(urssaf)}</td></tr><tr><td style="padding:10px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Résultat net — ce qu'il vous reste</td><td style="text-align:right;color:${tresorerieReelle>=0?'#2dd4bf':'#f87171'};font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(tresorerieReelle)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC ventes ${(recVentes.taux*100).toFixed(2)}% sur ${fmt(recVentes.base)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recVentes.cotisation)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC prestations ${(recPresta.taux*100).toFixed(2)}% sur ${fmt(recPresta.base)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recPresta.cotisation)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Recettes BNC ${(recBNC.taux*100).toFixed(2)}% sur ${fmt(recBNC.base)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC.cotisation)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">CFP</td><td style="text-align:right;color:#e8c96a;">${fmt(urssafCalc.cfp)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:4px;padding:14px 16px;margin-bottom:28px;"><p style="margin:0 0 6px;color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">⚠️ Ce que vous devez déclarer à l'URSSAF</p><p style="margin:0 0 8px;color:#d1c9b0;font-size:12.5px;line-height:1.6;">Le montant brut encaissé par le client — <strong>pas</strong> le net après commission Stripe. Les frais Stripe ne sont pas déductibles en micro-entreprise (l'abattement forfaitaire joue déjà ce rôle au moment de l'impôt sur le revenu).</p><p style="margin:0;color:#e8c96a;font-size:13px;font-weight:600;">Montant à déclarer ce mois-ci : ${fmt(recDeclarables)} — et non ${fmt(totalRecettes - stripeFees)}, qui est le net une fois Stripe passé.</p></div><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Détail des frais Stripe</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%">${stripeDetailRows}<tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total prélevé par Stripe</td><td style="text-align:right;color:#f87171;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">− ${fmt(stripeFees)}</td></tr></table>${feesNote}</td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
           const r = await fetch('https://api.brevo.com/v3/smtp/email', { method:'POST', headers:{'Content-Type':'application/json','api-key':BREVO_API_KEY}, body: JSON.stringify({ sender:{email:'contact@oradia.fr',name:'ORADIA Dashboard'}, to:[{email:adminEmail}], subject:`📊 Rapport mensuel ORADIA — ${cap(monthLabel)}`, htmlContent: html }) });
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
@@ -3006,15 +3011,15 @@ async function handleData(req, res) {
         }
 
         const toInsert = [
-            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category: p.order_type === 'order' ? 'commande' : 'précommande', description:`${p.order_type === 'order' ? 'Commande' : 'Précommande'} ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
+            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: parisDate(p.created_at), type:'recette', category: p.order_type === 'order' ? 'commande' : 'précommande', description:`${p.order_type === 'order' ? 'Commande' : 'Précommande'} ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             // Dons en espèces visibles en comptabilité (source distincte 'don-especes') mais
             // exclus de la base de calcul URSSAF plus bas (voir GET /transactions) — reçus
             // hors Stripe/compte pro, cet argent n'est pas déclaré.
-            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
-            ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
+            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: parisDate(d.created_at), type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: parisDate(g.created_at), type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
             // Seulement les abonnés sans AUCUNE ligne "abonnement" existante (vraie rattrapage,
             // pas un doublon de ce que le webhook a déjà enregistré).
-            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: parisDate(s.created_at), type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${parisDate(s.created_at)}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
             ...(ululeBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'ulule', description:`Ulule ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'ulule', source_ref: `ul_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
@@ -3341,7 +3346,7 @@ async function handleData(req, res) {
         if (type === 'newsletter-confirm') {
           // Réutilise le VRAI template (api/waitlist.js), au lieu d'une copie générique
           // qui ne reflétait plus l'email réellement envoyé (bandeau, encart précommande, etc.)
-          const emailSentNl = await sendWaitlistConfirmationEmail(dest);
+          const emailSentNl = await sendWaitlistConfirmationEmail(dest, body.lang === 'en' ? 'en' : 'fr');
           if (!emailSentNl) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
         } else if (type === 'preorder-confirm') {
@@ -9751,25 +9756,16 @@ Réponds en français, sans tiret long, format markdown compact.`
         const recettes = recetteRows.reduce((s, t) => s + parseFloat(t.amount), 0);
         const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
-        // Déclaration URSSAF : uniquement les abonnements (revenu récurrent, acquis
-        // sans condition). Précommandes ET dons exclus de cette base tant que l'argent
-        // reste conditionnel — la garantie "zéro-risque" de la page précommande promet
-        // un remboursement intégral si l'objectif de financement n'est pas atteint, donc
-        // rien n'est déclaré dessus avant que ce ne soit acquis. Décision explicite de
-        // Rudy (2026-09) — le régime micro-entrepreneur se déclare en principe sur
-        // l'encaissé, pas sur le "définitivement acquis" ; à confirmer avec un
-        // expert-comptable si besoin. Les abonnements sont classés BIC (déjà le cas
-        // avant ce changement) ; rien ne tombe en BNC pour l'instant avec ce périmètre.
-        const recettesDeclarables = recetteRows
-          .filter(t => t.source === 'abonnement')
-          .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesVentesBIC = recettesDeclarables;
-        const recettesServicesBNC = 0;
-        const URSSAF_RATE_BIC = 0.123;
-        const URSSAF_RATE_BNC = 0.211;
-        const urssafBIC = recettesVentesBIC * URSSAF_RATE_BIC;
-        const urssafBNC = recettesServicesBNC * URSSAF_RATE_BNC;
-        const urssaf = urssafBIC + urssafBNC;
+        // Déclaration URSSAF : TOUT l'encaissé de la période, ventilé dans les trois cases
+        // du formulaire. Les précommandes et les dons y sont inclus — en micro-entreprise la
+        // comptabilité est de trésorerie, et un encaissement reste un encaissement même si la
+        // contrepartie n'est pas livrée (cf. lib/urssaf.js, qui porte la règle en détail).
+        // Un remboursement se déduit du CA du mois où il est effectué, via un montant négatif.
+        // Remplace l'ancienne base "abonnements uniquement" (sous-déclaration) et aligne ce
+        // calcul sur celui du rapport mensuel, qui divergeait.
+        const urssafCalc = computeUrssaf(recetteRows, month ? `${year}-${month.padStart(2,'0')}` : `${year}-12-31`);
+        const recettesDeclarables = urssafCalc.base;
+        const urssaf = urssafCalc.total;
 
         // Frais Stripe réels (balance transactions), à titre informatif uniquement —
         // n'affecte jamais le calcul URSSAF (qui se base sur le montant brut encaissé, conformément
@@ -9786,13 +9782,12 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Ce qui reste vraiment : l'URSSAF est un décaissement au même titre que Stripe.
         const tresorerieReelleEstimee = recettes - stripeFees - depenses - urssaf;
 
-        // Détail de ce qui est volontairement exclu de la base déclarable, pour que le
-        // dashboard puisse l'afficher clairement plutôt que de laisser deviner pourquoi
-        // la base est plus petite que les recettes brutes.
-        const recettesPrecommandeExclues = recetteRows
+        // Plus rien n'est exclu de la base déclarable : ces deux totaux ne servent plus qu'à
+        // rappeler dans le dashboard d'où vient le chiffre, pas à justifier un écart.
+        const recettesPrecommandeIncluses = recetteRows
           .filter(t => t.source === 'precommande')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesDonsExclus = recetteRows
+        const recettesDonsInclus = recetteRows
           .filter(t => t.source === 'don' || t.source === 'don-especes')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
 
@@ -9823,10 +9818,13 @@ Réponds en français, sans tiret long, format markdown compact.`
             tresorerieReelleEstimee,
             breakdown: {
               recettesDeclarables,
-              recettesVentesBIC, recettesServicesBNC,
-              urssafBIC, urssafBNC,
-              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC,
-              recettesPrecommandeExclues, recettesDonsExclus
+              // Les trois cases du formulaire URSSAF, nommées comme elles y figurent.
+              cases: urssafCalc.categories,
+              cotisations: urssafCalc.cotisations,
+              cfp: urssafCalc.cfp,
+              acre: urssafCalc.acre,
+              acreLastDay: urssafCalc.acreLastDay,
+              recettesPrecommandeIncluses, recettesDonsInclus
             }
           }
         });
@@ -9851,6 +9849,486 @@ Réponds en français, sans tiret long, format markdown compact.`
         return res.status(200).json({ success: true });
       }
       return res.status(405).end();
+    }
+
+    // ============================================================
+    // FACTURATION — clients, devis, factures, livre des recettes
+    // ============================================================
+    // Tout vit dans ce routeur : Vercel Hobby plafonne à 12 fonctions serverless et
+    // /api/ en compte déjà 12. Aucun nouveau fichier n'est possible dans /api/.
+    //
+    // RÈGLE CENTRALE : une facture n'est pas une recette. Elle ne produit une ligne
+    // dans `transactions` qu'au moment où elle est marquée payée, à la DATE DU
+    // PAIEMENT. Créer ou envoyer une facture ne touche jamais la comptabilité.
+
+    if (path === '/clients' || path === '/clients/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      if (req.method === 'GET') {
+        const { data, error } = await sb.from('clients').select('*')
+          .eq('archived', false).order('nom', { ascending: true });
+        if (error) throw error;
+        return res.status(200).json({ success: true, data: data || [] });
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        if (!body.nom || !String(body.nom).trim()) return res.status(400).json({ error: 'Le nom du client est obligatoire' });
+        if (body.id) {
+          const { id, ...updates } = body;
+          updates.updated_at = new Date().toISOString();
+          const { error } = await sb.from('clients').update(updates).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        const { data, error } = await sb.from('clients').insert(body).select().single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, data });
+      }
+      if (req.method === 'DELETE') {
+        // Archivage plutôt que suppression : les factures émises gardent un lien vers
+        // le client, et une pièce comptable ne doit pas perdre son destinataire.
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sb.from('clients').update({ archived: true }).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).end();
+    }
+
+    if (path === '/prestation-modeles' || path === '/prestation-modeles/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      if (req.method === 'GET') {
+        const { data, error } = await sb.from('prestation_modeles').select('*').order('ordre', { ascending: true });
+        if (error) throw error;
+        return res.status(200).json({ success: true, data: data || [] });
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        if (body.id) {
+          const { id, ...updates } = body;
+          const { error } = await sb.from('prestation_modeles').update(updates).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        const { data, error } = await sb.from('prestation_modeles').insert(body).select().single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, data });
+      }
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sb.from('prestation_modeles').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).end();
+    }
+
+    if (path === '/factures' || path === '/factures/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      if (req.method === 'GET') {
+        const id = urlParams.get('id');
+        if (id) {
+          const [{ data: facture, error: e1 }, { data: lignes, error: e2 }] = await Promise.all([
+            sb.from('factures').select('*, clients(*)').eq('id', id).single(),
+            sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+          ]);
+          if (e1) throw e1;
+          if (e2) throw e2;
+          return res.status(200).json({ success: true, data: { ...facture, lignes: lignes || [] } });
+        }
+
+        let q = sb.from('factures').select('*, clients(nom, email)').order('date_emission', { ascending: false }).order('numero', { ascending: false });
+        const statut = urlParams.get('statut');
+        const type   = urlParams.get('type');
+        const annee  = urlParams.get('year');
+        const client = urlParams.get('client_id');
+        // Sans filtre explicite, les pièces annulées sont masquées : elles ne demandent
+        // plus rien et encombrent la liste. Elles restent consultables via le filtre,
+        // et ne sont jamais supprimées — leur numéro doit rester dans la séquence.
+        if (statut) q = q.eq('statut', statut);
+        else q = q.neq('statut', 'annulee');
+        if (type)   q = q.eq('type', type);
+        if (client) q = q.eq('client_id', client);
+        if (annee)  q = q.gte('date_emission', `${annee}-01-01`).lte('date_emission', `${annee}-12-31`);
+        const { data, error } = await q;
+        if (error) throw error;
+
+        const rows = data || [];
+        const today = parisDate(new Date().toISOString());
+        // Une facture envoyée dont l'échéance est passée est en retard : c'est ce que
+        // la liste met en avant, pas le total émis (qui n'a pas de sens comptable ici).
+        const enRetard = rows.filter(f => f.type === 'facture' && f.statut === 'envoyee' && f.date_echeance && f.date_echeance < today);
+        const sum = (list) => list.reduce((s, f) => s + (parseFloat(f.total_ht) || 0), 0);
+        return res.status(200).json({
+          success: true,
+          data: rows,
+          summary: {
+            enAttente:        sum(rows.filter(f => f.type === 'facture' && f.statut === 'envoyee')),
+            enAttenteCount:   rows.filter(f => f.type === 'facture' && f.statut === 'envoyee').length,
+            enRetard:         sum(enRetard),
+            enRetardCount:    enRetard.length,
+            enRetardIds:      enRetard.map(f => f.id),
+            brouillonsCount:  rows.filter(f => f.statut === 'brouillon').length
+          }
+        });
+      }
+
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const lignes = Array.isArray(body.lignes) ? body.lignes : [];
+        const { lignes: _omit, clients: _omit2, ...entete } = body;
+
+        // Le total vient toujours des lignes, jamais du client : un total envoyé par
+        // le navigateur pourrait diverger de ce que le PDF affiche.
+        const totalFromLignes = lignes.reduce((s, l) =>
+          s + (parseFloat(l.quantite) || 0) * (parseFloat(l.prix_unitaire) || 0), 0);
+
+        // Échéance calculée, jamais recopiée — c'est l'origine du « 31/09/2026 »
+        // imprimé sur les deux premières factures, sur un mois de trente jours.
+        const addDays = (ymd, days) => {
+          const [y, m, d] = String(ymd).slice(0, 10).split('-').map(Number);
+          const dt = new Date(Date.UTC(y, m - 1, d));
+          dt.setUTCDate(dt.getUTCDate() + (parseInt(days, 10) || 0));
+          return dt.toISOString().slice(0, 10);
+        };
+
+        if (body.id) {
+          const { data: existing, error: eExist } = await sb.from('factures').select('statut, numero').eq('id', body.id).single();
+          if (eExist) throw eExist;
+          // Une pièce envoyée est figée : la modifier après coup reviendrait à changer
+          // un document que le client détient déjà.
+          if (existing.statut !== 'brouillon') {
+            return res.status(409).json({ error: `La pièce ${existing.numero} a déjà été envoyée et ne peut plus être modifiée. Créez un avoir ou une nouvelle pièce.` });
+          }
+          const updates = { ...entete, total_ht: totalFromLignes, updated_at: new Date().toISOString() };
+          delete updates.id; delete updates.numero; delete updates.serie;
+          if (updates.date_emission) updates.date_echeance = addDays(updates.date_emission, updates.delai_paiement_jours || 30);
+          const { error } = await sb.from('factures').update(updates).eq('id', body.id);
+          if (error) throw error;
+          await sb.from('facture_lignes').delete().eq('facture_id', body.id);
+          if (lignes.length) {
+            const { error: eL } = await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
+              facture_id: body.id, designation: l.designation, date_prestation: l.date_prestation || null,
+              quantite: parseFloat(l.quantite) || 1, prix_unitaire: parseFloat(l.prix_unitaire) || 0,
+              total: (parseFloat(l.quantite) || 1) * (parseFloat(l.prix_unitaire) || 0), ordre: i
+            })));
+            if (eL) throw eL;
+          }
+          return res.status(200).json({ success: true, id: body.id });
+        }
+
+        // Numéro attribué par la base, pas par l'application : la continuité de la
+        // numérotation est une obligation légale et deux créations simultanées
+        // produiraient sinon le même numéro.
+        const serie = entete.type === 'devis' ? 'D01' : 'F01';
+        const { data: numero, error: eNum } = await sb.rpc('next_facture_numero', { p_serie: serie });
+        if (eNum) throw eNum;
+
+        let clientSnapshot = null;
+        if (entete.client_id) {
+          const { data: c } = await sb.from('clients').select('*').eq('id', entete.client_id).single();
+          if (c) clientSnapshot = c;
+        }
+
+        const dateEmission = entete.date_emission || parisDate(new Date().toISOString());
+        const delai = parseInt(entete.delai_paiement_jours, 10) || 30;
+        const { data: created, error } = await sb.from('factures').insert({
+          ...entete,
+          numero, serie,
+          date_emission: dateEmission,
+          delai_paiement_jours: delai,
+          date_echeance: addDays(dateEmission, delai),
+          client_snapshot: clientSnapshot,
+          total_ht: totalFromLignes,
+          statut: 'brouillon'
+        }).select().single();
+        if (error) throw error;
+
+        if (lignes.length) {
+          const { error: eL } = await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
+            facture_id: created.id, designation: l.designation, date_prestation: l.date_prestation || null,
+            quantite: parseFloat(l.quantite) || 1, prix_unitaire: parseFloat(l.prix_unitaire) || 0,
+            total: (parseFloat(l.quantite) || 1) * (parseFloat(l.prix_unitaire) || 0), ordre: i
+          })));
+          if (eL) throw eL;
+        }
+        return res.status(200).json({ success: true, data: created });
+      }
+
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: f, error: eGet } = await sb.from('factures').select('statut, numero').eq('id', id).single();
+        if (eGet) throw eGet;
+        // Un brouillon n'a aucune valeur juridique : il se supprime. Une pièce émise
+        // ne se supprime jamais (trou dans la numérotation), elle s'annule.
+        if (f.statut === 'brouillon') {
+          const { error } = await sb.from('factures').delete().eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true, deleted: true });
+        }
+        const { error } = await sb.from('factures').update({ statut: 'annulee', updated_at: new Date().toISOString() }).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true, deleted: false, message: `${f.numero} a été annulée. Une pièce émise ne peut pas être supprimée : cela créerait un trou dans la numérotation.` });
+      }
+      return res.status(405).end();
+    }
+
+    // Envoi d'une pièce : archive le PDF, l'envoie au client, passe en « envoyée ».
+    // Ne crée AUCUNE recette — l'encaissement viendra plus tard, cf. /factures/payer.
+    if (path === '/factures/send' || path === '/factures/send/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const body = await parseBody(req);
+      const { id, pdfBase64, test } = body;
+
+      // Test depuis l'onglet Mails : mêmes fonctions d'envoi, données d'exemple.
+      // Jamais de second template écrit ici (règle CLAUDE.md).
+      if (test) {
+        const ex = exempleFacture();
+        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null });
+        return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null });
+      }
+
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const [{ data: facture, error: e1 }, { data: lignes, error: e2 }] = await Promise.all([
+        sb.from('factures').select('*, clients(*)').eq('id', id).single(),
+        sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+
+      const client = facture.clients || facture.client_snapshot || {};
+      if (!client.email) return res.status(400).json({ error: `Aucune adresse email pour ${client.nom || 'ce client'}. Complétez sa fiche avant d'envoyer.` });
+      if (!pdfBase64) return res.status(400).json({ error: 'PDF manquant' });
+
+      // Archivage avant envoi : la pièce émise doit être conservée dix ans, et c'est
+      // ce même fichier qui sera rattaché aux relances.
+      const storagePath = `${facture.date_emission.slice(0, 4)}/${facture.numero}.pdf`;
+      const { error: eUp } = await sb.storage.from('factures-emises')
+        .upload(storagePath, Buffer.from(pdfBase64, 'base64'), { contentType: 'application/pdf', upsert: true });
+      if (eUp) throw eUp;
+
+      const send = facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
+      const result = await send({ facture, lignes: lignes || [], client, pdfBase64 });
+      if (!result.ok) return res.status(502).json({ error: `Envoi impossible : ${result.error}` });
+
+      const { error: eUpd } = await sb.from('factures').update({
+        statut: 'envoyee', sent_at: new Date().toISOString(), sent_to: client.email,
+        storage_path: storagePath, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (eUpd) throw eUpd;
+      return res.status(200).json({ success: true, sentTo: client.email });
+    }
+
+    // Relance d'impayé. Réutilise le PDF archivé : aucune régénération, donc aucun
+    // risque que le client reçoive deux versions différentes d'une même facture.
+    if (path === '/factures/relance' || path === '/factures/relance/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const [{ data: facture, error: e1 }, { data: lignes }] = await Promise.all([
+        sb.from('factures').select('*, clients(*)').eq('id', id).single(),
+        sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+      ]);
+      if (e1) throw e1;
+      if (facture.statut === 'payee') return res.status(409).json({ error: `${facture.numero} est déjà réglée.` });
+      if (facture.statut !== 'envoyee') return res.status(409).json({ error: `${facture.numero} n'a pas encore été envoyée.` });
+
+      const client = facture.clients || facture.client_snapshot || {};
+      let pdfBase64 = null;
+      if (facture.storage_path) {
+        const { data: file } = await sb.storage.from('factures-emises').download(facture.storage_path);
+        if (file) pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
+      }
+
+      const today = parisDate(new Date().toISOString());
+      const joursRetard = facture.date_echeance
+        ? Math.max(0, Math.round((Date.parse(today) - Date.parse(facture.date_echeance)) / 86400000))
+        : 0;
+      const rang = (facture.relance_count || 0) + 1;
+
+      const result = await sendRelanceEmail({ facture, lignes: lignes || [], client, pdfBase64, rang, joursRetard });
+      if (!result.ok) return res.status(502).json({ error: `Relance impossible : ${result.error}` });
+
+      const { error } = await sb.from('factures').update({
+        relance_count: rang, last_relance_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ success: true, rang, joursRetard });
+    }
+
+    // Encaissement — LE seul endroit où une facture devient du chiffre d'affaires.
+    // La recette est datée du PAIEMENT, jamais de l'émission : c'est ce qui empêche
+    // de déclarer en août une facture émise le 26 août et encaissée en septembre.
+    if (path === '/factures/payer' || path === '/factures/payer/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id, date_paiement, mode_paiement } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      if (!date_paiement) return res.status(400).json({ error: "La date d'encaissement est obligatoire : c'est elle qui détermine le mois de déclaration." });
+
+      const { data: facture, error: e1 } = await sb.from('factures').select('*, clients(nom)').eq('id', id).single();
+      if (e1) throw e1;
+      if (facture.statut === 'payee') return res.status(409).json({ error: `${facture.numero} est déjà marquée payée.` });
+      if (facture.type === 'devis')   return res.status(409).json({ error: `${facture.numero} est un devis : convertissez-le en facture d'abord.` });
+
+      const clientNom = (facture.clients && facture.clients.nom) || (facture.client_snapshot && facture.client_snapshot.nom) || '';
+      const { data: tx, error: eTx } = await sb.from('transactions').insert({
+        date: String(date_paiement).slice(0, 10),
+        type: 'recette',
+        category: 'prestation',
+        description: `${facture.numero} — ${clientNom}`.trim(),
+        amount: facture.total_ht,
+        source: 'manuel',
+        urssaf_category: facture.urssaf_category,
+        facture_id: facture.id
+      }).select().single();
+      if (eTx) throw eTx;
+
+      const { error } = await sb.from('factures').update({
+        statut: 'payee', date_paiement: String(date_paiement).slice(0, 10),
+        mode_paiement: mode_paiement || null, transaction_id: tx.id, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+
+      return res.status(200).json({
+        success: true,
+        transaction: tx,
+        message: `${facture.numero} encaissée le ${String(date_paiement).slice(0,10)} — ${facture.total_ht} € ajoutés au chiffre d'affaires de ce mois-là.`
+      });
+    }
+
+    // Annulation d'un encaissement saisi par erreur (mauvaise date, mauvaise facture).
+    // Supprime la recette créée et ramène la facture en « envoyée ». Ce n'est pas un
+    // remboursement client — un vrai remboursement se saisit comme un montant négatif,
+    // qui se déduit du chiffre d'affaires du mois où il est effectué.
+    if (path === '/factures/annuler-paiement' || path === '/factures/annuler-paiement/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const { data: facture, error: e1 } = await sb.from('factures').select('*').eq('id', id).single();
+      if (e1) throw e1;
+      if (facture.statut !== 'payee') return res.status(409).json({ error: `${facture.numero} n'est pas marquée payée.` });
+
+      if (facture.transaction_id) {
+        const { error: eDel } = await sb.from('transactions').delete().eq('id', facture.transaction_id);
+        if (eDel) throw eDel;
+      }
+      const { error } = await sb.from('factures').update({
+        statut: 'envoyee', date_paiement: null, mode_paiement: null,
+        transaction_id: null, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        message: `Encaissement annulé : ${facture.numero} repasse en attente de règlement et la recette de ${facture.total_ht} € a été retirée du chiffre d'affaires.`
+      });
+    }
+
+    // Conversion d'un devis accepté en facture : nouvelle pièce, nouveau numéro dans
+    // la série des factures. Le devis est conservé et marqué accepté.
+    if (path === '/factures/convertir' || path === '/factures/convertir/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const [{ data: devis, error: e1 }, { data: lignes }] = await Promise.all([
+        sb.from('factures').select('*').eq('id', id).single(),
+        sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+      ]);
+      if (e1) throw e1;
+      if (devis.type !== 'devis') return res.status(409).json({ error: `${devis.numero} est déjà une facture.` });
+
+      const { data: numero, error: eNum } = await sb.rpc('next_facture_numero', { p_serie: 'F01' });
+      if (eNum) throw eNum;
+
+      const today = parisDate(new Date().toISOString());
+      const [y, m, d] = today.split('-').map(Number);
+      const ech = new Date(Date.UTC(y, m - 1, d));
+      ech.setUTCDate(ech.getUTCDate() + (devis.delai_paiement_jours || 30));
+
+      const { data: created, error } = await sb.from('factures').insert({
+        numero, serie: 'F01', type: 'facture', statut: 'brouillon',
+        client_id: devis.client_id, client_snapshot: devis.client_snapshot,
+        date_emission: today, date_echeance: ech.toISOString().slice(0, 10),
+        delai_paiement_jours: devis.delai_paiement_jours, periode_label: devis.periode_label,
+        total_ht: devis.total_ht, urssaf_category: devis.urssaf_category,
+        notes: devis.notes
+      }).select().single();
+      if (error) throw error;
+
+      if ((lignes || []).length) {
+        await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
+          facture_id: created.id, designation: l.designation, date_prestation: l.date_prestation,
+          quantite: l.quantite, prix_unitaire: l.prix_unitaire, total: l.total, ordre: i
+        })));
+      }
+      await sb.from('factures').update({ statut: 'acceptee', updated_at: new Date().toISOString() }).eq('id', id);
+      return res.status(200).json({ success: true, data: created });
+    }
+
+    // Livre des recettes — registre chronologique obligatoire en micro-entreprise.
+    // Colonnes pensées pour être relues par un tiers : c'est ce fichier qu'une
+    // plateforme agréée avalera pour l'e-reporting de septembre 2027.
+    if (path === '/livre-recettes' || path === '/livre-recettes/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'GET') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const year = urlParams.get('year') || String(new Date().getFullYear());
+
+      const { data, error } = await sb.from('transactions')
+        .select('date, description, amount, source, category, urssaf_category, facture_id, factures(numero, mode_paiement, client_snapshot)')
+        .eq('type', 'recette')
+        .gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+        .order('date', { ascending: true });
+      if (error) throw error;
+
+      const LIBELLE_CASE = {
+        bnc: 'Recettes BNC', bic_ventes: 'BIC ventes', bic_prestations: 'BIC prestations'
+      };
+      const esc = (v) => {
+        const s = String(v == null ? '' : v);
+        return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ['Date d\'encaissement', 'Référence', 'Client', 'Nature de la recette', 'Case URSSAF', 'Montant encaissé (EUR)', 'Mode de règlement'];
+      const lines = [header.join(';')];
+      let total = 0;
+
+      for (const t of data || []) {
+        const f = t.factures || {};
+        const snap = f.client_snapshot || {};
+        const cat = t.urssaf_category || (CATEGORY_BY_SOURCE[t.source] || 'bic_prestations');
+        total += parseFloat(t.amount) || 0;
+        lines.push([
+          t.date, f.numero || '', snap.nom || '', t.description || t.category || '',
+          LIBELLE_CASE[cat] || cat,
+          (parseFloat(t.amount) || 0).toFixed(2).replace('.', ','),
+          f.mode_paiement || (t.source === 'manuel' ? '' : 'Stripe')
+        ].map(esc).join(';'));
+      }
+      lines.push(['', '', '', 'TOTAL', '', total.toFixed(2).replace('.', ','), ''].map(esc).join(';'));
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=livre-des-recettes-${year}.csv`);
+      // BOM : sans lui Excel lit le CSV en latin-1 et casse les accents.
+      return res.status(200).send('﻿' + lines.join('\n'));
     }
 
     if (path === '/analytics' || path === '/analytics/') {

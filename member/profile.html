@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Profil - ORADIA</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -549,9 +551,50 @@
                             if (data.birth_date && bdEl) bdEl.textContent = new Date(data.birth_date).toLocaleDateString('fr-FR');
                         }
                     } catch(e) {}
+                    // Date/lieu de naissance gardés sur le compte (aussi pour les membres non abonnés).
+                    try {
+                        const r = await birthFetch('GET');
+                        if (r.ok) {
+                            const b = await r.json();
+                            const dateInput = document.getElementById('birthDateInput');
+                            const placeInput = document.getElementById('birthPlaceInput');
+                            if (dateInput && b.birth_date) dateInput.value = b.birth_date;
+                            if (placeInput && b.birth_place) placeInput.value = b.birth_place;
+                            if (b.birth_date && bdEl) bdEl.textContent = new Date(b.birth_date).toLocaleDateString('fr-FR');
+                        }
+                    } catch(e) {}
                 }
             } catch(e) {}
         })();
+
+        // Appel authentifié (jeton de session membre, renouvelé une fois via le refresh_token
+        // si expiré) vers /api/auth/save-birth-info.
+        async function birthFetch(method, payload) {
+            const storage = sessionStorage.getItem('oradia_member_session') ? sessionStorage : localStorage;
+            const sess = JSON.parse(storage.getItem('oradia_member_session') || '{}');
+            const call = (token) => fetch('/api/auth/save-birth-info', {
+                method,
+                headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+                ...(payload ? { body: JSON.stringify(payload) } : {})
+            });
+            let res = await call(sess.access_token);
+            if (res.status === 401 && sess.refresh_token) {
+                try {
+                    const r = await fetch('/api/auth/refresh-session', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ refresh_token: sess.refresh_token })
+                    });
+                    const d = await r.json();
+                    if (d.success && d.session) {
+                        sess.access_token = d.session.access_token;
+                        sess.refresh_token = d.session.refresh_token;
+                        storage.setItem('oradia_member_session', JSON.stringify(sess));
+                        res = await call(sess.access_token);
+                    }
+                } catch (e) {}
+            }
+            return res;
+        }
 
         async function saveBirthInfo() {
             const btn = document.getElementById('saveBirthBtn');
@@ -564,11 +607,7 @@
             if (!email) { return; }
             btn.disabled = true; btn.textContent = 'Enregistrement…';
             try {
-                const res = await fetch('/api/auth/save-birth-info', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, birth_date, birth_place })
-                });
+                const res = await birthFetch('POST', { email, birth_date, birth_place });
                 const data = await res.json();
                 msg.classList.remove('hidden');
                 if (data.success) {

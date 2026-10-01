@@ -2,6 +2,8 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historique des Tirages - ORADIA</title>
 <script src="../js/tirages-storage.js"></script>
@@ -1263,7 +1265,8 @@
                 hour: parseInt(document.getElementById('scheduleHour').value, 10),
                 intention,
                 gender: _scheduleGender,
-                active: true
+                active: true,
+                lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr' // langue de l'analyse et de l'email programmés
             };
             if (_scheduleFrequency === 'weekly') payload.dayOfWeek = parseInt(document.getElementById('scheduleDayOfWeek').value, 10);
             if (_scheduleFrequency === 'monthly') payload.dayOfMonth = parseInt(document.getElementById('scheduleDayOfMonth').value, 10);

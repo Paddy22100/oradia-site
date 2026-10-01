@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <style>html{visibility:hidden!important}</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your experience — ORADIA Oracle</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" href="/images/logo-hd-v2.webp" type="image/jpeg">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { visibility: visible !important; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Lora', Georgia, serif;
+            color: #e9e7df;
+            background: #07112a url('/images/oradia-hero-4k.webp') center top / cover no-repeat fixed;
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding: 40px 20px 60px;
+        }
+
+        /* Overlay sombre global — léger pour laisser transparaître l'image */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 10, 25, 0.52);
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            max-width: 780px;
+        }
+
+        /* Header */
+        .brand {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .brand-logo {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 1px solid rgba(212,175,55,0.4);
+            margin: 0 auto 14px;
+            display: block;
+        }
+        .brand-name {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 22px;
+            font-weight: 300;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+            color: #d4af37;
+        }
+        .brand-sep {
+            width: 40px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            margin: 10px auto;
+        }
+        .brand-sub {
+            font-size: 11px;
+            color: rgba(212,175,55,0.5);
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+
+        /* Card principale */
+        .card {
+            background: rgba(7, 20, 42, 0.72);
+            border: 1px solid rgba(212,175,55,0.22);
+            border-radius: 18px;
+            padding: 40px 40px 36px;
+            box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
+        }
+        @media (max-width: 520px) {
+            .card { padding: 26px 20px 24px; }
+        }
+
+        .card-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 30px;
+            font-weight: 300;
+            color: #f0c75e;
+            line-height: 1.2;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .card-intro {
+            font-size: 13.5px;
+            color: rgba(212,175,55,0.6);
+            line-height: 1.75;
+            margin-bottom: 28px;
+            font-style: italic;
+            text-align: center;
+        }
+
+        /* Section cartes du tirage */
+        .cards-section {
+            margin-bottom: 28px;
+        }
+        .cards-label {
+            font-size: 10px;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: rgba(212,175,55,0.45);
+            text-align: center;
+            margin-bottom: 14px;
+        }
+        .cards-row {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .card-thumb {
+            text-align: center;
+        }
+        .card-thumb img {
+            display: block;
+            width: 64px;
+            height: 96px;
+            object-fit: cover;
+            border-radius: 7px;
+            border: 1px solid rgba(212,175,55,0.3);
+            margin: 0 auto 5px;
+        }
+        .card-thumb img.cosmos-img {
+            width: 76px;
+            height: 114px;
+            border-color: rgba(212,175,55,0.55);
+            box-shadow: 0 0 14px rgba(212,175,55,0.18);
+        }
+        .card-thumb-name {
+            font-size: 9px;
+            color: rgba(212,175,55,0.55);
+            letter-spacing: 0.05em;
+            text-transform: capitalize;
+            max-width: 70px;
+            margin: 0 auto;
+            line-height: 1.3;
+        }
+
+        /* Questions */
+        .question { margin-bottom: 26px; }
+        .q-label {
+            display: block;
+            font-size: 14.5px;
+            color: #f5e7a1;
+            line-height: 1.65;
+            margin-bottom: 14px;
+            font-weight: 400;
+        }
+        .q-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 22px;
+            background: rgba(212,175,55,0.15);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 50%;
+            font-size: 11px;
+            color: #d4af37;
+            margin-right: 8px;
+            flex-shrink: 0;
+            vertical-align: middle;
+        }
+
+        /* Score slider */
+        .score-wrapper { display: flex; align-items: center; gap: 14px; }
+        .score-slider {
+            flex: 1;
+            -webkit-appearance: none; appearance: none;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(212,175,55,0.15), rgba(212,175,55,0.4));
+            border-radius: 2px; outline: none;
+        }
+        .score-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #d4af37; cursor: pointer;
+            border: 2px solid #f5e7a1;
+            box-shadow: 0 2px 8px rgba(212,175,55,0.4);
+        }
+        .score-slider::-moz-range-thumb {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: #d4af37; cursor: pointer;
+            border: 2px solid #f5e7a1;
+        }
+        .score-display {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 30px; font-weight: 600;
+            color: #d4af37; min-width: 36px; text-align: center;
+        }
+        .score-labels {
+            display: flex; justify-content: space-between;
+            margin-top: 6px; font-size: 11px;
+            color: rgba(212,175,55,0.4); font-style: italic;
+        }
+
+        /* Checkbox */
+        .check-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        @media (max-width: 500px) { .check-grid { grid-template-columns: 1fr; } }
+        .check-item {
+            display: flex; align-items: flex-start; gap: 10px;
+            padding: 10px 12px;
+            border: 1px solid rgba(212,175,55,0.15); border-radius: 8px;
+            cursor: pointer; transition: all 0.15s ease;
+            background: rgba(255,255,255,0.02);
+        }
+        .check-item:hover { border-color: rgba(212,175,55,0.35); background: rgba(212,175,55,0.05); }
+        .check-item input[type="checkbox"] { width:15px;height:15px;margin-top:1px;flex-shrink:0;accent-color:#d4af37;cursor:pointer; pointer-events:none; }
+        .check-item.selected { border-color: rgba(212,175,55,0.5); background: rgba(212,175,55,0.08); }
+        .check-item span { font-size: 13px; color: rgba(229,231,235,0.85); line-height: 1.4; }
+
+        /* Radio */
+        .radio-row { display: flex; flex-wrap: wrap; gap: 8px; }
+        .radio-btn {
+            padding: 9px 16px;
+            border: 1px solid rgba(212,175,55,0.2); border-radius: 20px;
+            font-size: 13px; color: rgba(212,175,55,0.7);
+            cursor: pointer; transition: all 0.15s ease;
+            background: transparent; font-family: 'Lora', serif; white-space: nowrap;
+        }
+        .radio-btn:hover { border-color: rgba(212,175,55,0.45); color: #f5e7a1; }
+        .radio-btn.selected { background: rgba(212,175,55,0.15); border-color: rgba(212,175,55,0.55); color: #f5e7a1; }
+
+        /* Textarea */
+        .free-text {
+            width: 100%; background: rgba(5,16,32,0.6);
+            border: 1px solid rgba(212,175,55,0.2); border-radius: 8px;
+            padding: 14px 16px; color: #e9e7df;
+            font-family: 'Lora', serif; font-size: 14px; line-height: 1.7;
+            resize: vertical; min-height: 90px; outline: none; transition: border-color 0.2s;
+        }
+        .free-text:focus { border-color: rgba(212,175,55,0.45); }
+        .free-text::placeholder { color: rgba(212,175,55,0.3); font-style: italic; }
+
+        /* Séparateur */
+        .sep {
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.15), transparent);
+            margin: 26px 0;
+        }
+
+        /* Submit */
+        .btn-submit {
+            display: block; width: 100%;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #d4af37 0%, #f0c75e 100%);
+            color: #07142a; font-family: 'Lora', serif;
+            font-size: 16px; font-weight: 600;
+            border: none; border-radius: 10px; cursor: pointer;
+            letter-spacing: 0.5px; transition: all 0.2s ease;
+            box-shadow: 0 4px 18px rgba(212,175,55,0.32);
+        }
+        .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(212,175,55,0.42); }
+        .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .note-required { text-align: center; font-size: 12px; color: rgba(212,175,55,0.4); margin-top: 12px; font-style: italic; }
+
+        /* ── État succès ── */
+        #successState { display: none; text-align: center; padding: 16px 0; }
+        .success-star { font-size: 52px; margin-bottom: 18px; line-height: 1; }
+        .success-title {
+            font-family: 'Cormorant Garamond', serif;
+            font-size: 32px; font-weight: 300;
+            color: #f0c75e; margin-bottom: 14px;
+        }
+        .success-text {
+            font-size: 14.5px; color: rgba(212,175,55,0.7);
+            line-height: 1.85; max-width: 440px; margin: 0 auto 32px;
+        }
+        .success-links { display: flex; flex-direction: column; gap: 14px; align-items: center; }
+        .btn-preorder {
+            display: inline-block;
+            background: linear-gradient(135deg, #d4af37, #f0c75e);
+            color: #050f23; text-decoration: none;
+            padding: 14px 36px; border-radius: 50px;
+            font-family: 'Lora', serif; font-weight: 700;
+            font-size: 14px; letter-spacing: 0.5px;
+            box-shadow: 0 4px 18px rgba(212,175,55,0.32);
+            transition: all 0.2s ease;
+        }
+        .btn-preorder:hover { transform: translateY(-1px); box-shadow: 0 6px 22px rgba(212,175,55,0.42); }
+        .success-link-secondary {
+            display: inline-block; color: rgba(212,175,55,0.6);
+            font-size: 13px; text-decoration: none;
+            border-bottom: 1px solid rgba(212,175,55,0.25);
+            padding-bottom: 2px; transition: all 0.2s;
+        }
+        .success-link-secondary:hover { color: #d4af37; border-color: #d4af37; }
+
+        /* ── État erreur ── */
+        #invalidState { display: none; text-align: center; padding: 20px 0; }
+        .error-icon { font-size: 40px; margin-bottom: 16px; }
+        .error-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; color: #f87171; margin-bottom: 10px; }
+        .error-text { font-size: 14px; color: rgba(229,231,235,0.6); line-height: 1.7; }
+    </style>
+</head>
+<body>
+<div class="container">
+
+    <!-- Brand -->
+    <div class="brand">
+        <img src="/images/logo-hd-v2.webp" alt="Oradia" class="brand-logo">
+        <div class="brand-name">Oradia</div>
+        <div class="brand-sep"></div>
+        <div class="brand-sub">Synchronicity study</div>
+    </div>
+
+    <!-- Card principale -->
+    <div class="card">
+
+        <!-- Formulaire -->
+        <div id="formState">
+            <h1 class="card-title">What did you notice?</h1>
+            <p class="card-intro">
+                Your observation window has closed.<br>
+                These few questions help us understand how draws resonate in real life.<br>
+                <span style="font-size:12px;">Your answers are anonymous — no email is stored.</span>
+            </p>
+
+            <!-- Cartes du tirage (chargées dynamiquement) -->
+            <div id="cardsSection" class="cards-section" style="display:none;">
+                <div class="cards-label">&#10022; Your draw &#10022;</div>
+                <div class="cards-row" id="cardsRow"></div>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Q1 : Score -->
+            <div class="question">
+                <label class="q-label">
+                    <span class="q-num">1</span>
+                    On a scale of 1 to 10, how strongly did you experience synchronicities during this period?
+                </label>
+                <div class="score-wrapper">
+                    <input type="range" id="scoreSlider" class="score-slider" min="1" max="10" value="5"
+                           oninput="document.getElementById('scoreVal').textContent = this.value">
+                    <div class="score-display" id="scoreVal">5</div>
+                </div>
+                <div class="score-labels">
+                    <span>1 — None</span>
+                    <span>10 — Very intense</span>
+                </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Q2 : Types -->
+            <div class="question">
+                <label class="q-label">
+                    <span class="q-num">2</span>
+                    What type(s) of synchronicities did you mainly notice?
+                    <em style="color:rgba(212,175,55,0.4);font-size:12px;"> — several answers possible</em>
+                </label>
+                <div class="check-grid" id="typesGrid">
+                    <label class="check-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" value="rencontres" style="pointer-events:none">
+                        <span>Unexpected encounters or people</span>
+                    </label>
+                    <label class="check-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" value="intuitions" style="pointer-events:none">
+                        <span>Thoughts / intuitions that came true</span>
+                    </label>
+                    <label class="check-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" value="timing" style="pointer-events:none">
+                        <span>Remarkable timing coincidences</span>
+                    </label>
+                    <label class="check-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" value="reves" style="pointer-events:none">
+                        <span>Dreams related to my intention</span>
+                    </label>
+                    <label class="check-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" value="signes" style="pointer-events:none">
+                        <span>Signs in my surroundings (symbols, animals, words)</span>
+                    </label>
+                    <label class="check-item" onclick="toggleCheck(this)">
+                        <input type="checkbox" value="aucune" style="pointer-events:none">
+                        <span>None in particular</span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Q3 : Résonance -->
+            <div class="question">
+                <label class="q-label">
+                    <span class="q-num">3</span>
+                    Did the message of your draw feel connected to what you experienced?
+                </label>
+                <div class="radio-row" id="resonanceRow">
+                    <button type="button" class="radio-btn" data-val="fort" onclick="selectRadio('resonanceRow', this)">Strongly</button>
+                    <button type="button" class="radio-btn" data-val="plutot_oui" onclick="selectRadio('resonanceRow', this)">Somewhat</button>
+                    <button type="button" class="radio-btn" data-val="peu" onclick="selectRadio('resonanceRow', this)">A little</button>
+                    <button type="button" class="radio-btn" data-val="non" onclick="selectRadio('resonanceRow', this)">Not at all</button>
+                </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Q4 : État intérieur -->
+            <div class="question">
+                <label class="q-label">
+                    <span class="q-num">4</span>
+                    How would you describe your inner state during this period?
+                </label>
+                <div class="radio-row" id="etatRow">
+                    <button type="button" class="radio-btn" data-val="calme" onclick="selectRadio('etatRow', this)">Calmer / centred</button>
+                    <button type="button" class="radio-btn" data-val="alerte" onclick="selectRadio('etatRow', this)">More alert / attentive</button>
+                    <button type="button" class="radio-btn" data-val="neutre" onclick="selectRadio('etatRow', this)">Neutral</button>
+                    <button type="button" class="radio-btn" data-val="perturbe" onclick="selectRadio('etatRow', this)">Unsettled / restless</button>
+                </div>
+            </div>
+
+            <div class="sep"></div>
+
+            <!-- Q5 : Témoignage -->
+            <div class="question">
+                <label class="q-label">
+                    <span class="q-num">5</span>
+                    If you wish, describe the most striking synchronicity.
+                    <em style="color:rgba(212,175,55,0.4);font-size:12px;"> — optional</em>
+                </label>
+                <textarea id="temoignage" class="free-text"
+                    placeholder="A moment, an image, an encounter... share what struck you, even if it seems trivial."
+                    maxlength="1000"></textarea>
+            </div>
+
+            <button type="button" id="submitBtn" class="btn-submit" onclick="submitSurvey()">
+                Send my observations
+            </button>
+            <p class="note-required">* Only question 1 is required</p>
+        </div>
+
+        <!-- ── État succès ── -->
+        <div id="successState">
+            <div class="success-star">✦</div>
+            <h2 class="success-title">Thank you for sharing</h2>
+            <p class="success-text">
+                Your observations contribute to a better understanding of synchronicities.<br>
+                Every experience counts — even the quietest ones.
+            </p>
+
+            <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:14px;padding:24px 28px;margin-bottom:28px;text-align:center;">
+                <p style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:10px;">Pre-orders open</p>
+                <div style="display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;margin-bottom:14px;">
+                    <div style="text-align:left;">
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:300;color:#f5e7a1;margin-bottom:6px;line-height:1.2;">The Oradia Oracle<br>in your hands</p>
+                        <p style="font-size:12px;color:#4a5a6a;line-height:1.6;">64 cards · Booklet · Initiatory tale · Handcrafted coin</p>
+                    </div>
+                    <img src="/images/medias/apercu_stripe.webp" alt="Oradia Oracle"
+                         style="width:110px;border-radius:8px;border:1px solid rgba(212,175,55,0.25);flex-shrink:0;">
+                </div>
+                <a href="https://oradia.fr/precommande-oracle.html" class="btn-preorder">
+                    Pre-order the physical oracle
+                </a>
+            </div>
+
+            <div class="success-links">
+                <a href="https://oradia.fr/en/tore.html" class="success-link-secondary">Do a new draw →</a>
+            </div>
+        </div>
+
+        <!-- ── État token invalide ── -->
+        <div id="invalidState">
+            <div class="error-icon">⊘</div>
+            <h2 class="error-title">Invalid or expired link</h2>
+            <p class="error-text">
+                This survey link is no longer valid.<br>
+                You may have already answered, or the window may have been deleted.
+            </p>
+        </div>
+
+    </div><!-- /card -->
+
+</div><!-- /container -->
+
+<script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const surveyToken = urlParams.get('token');
+
+    if (!surveyToken) {
+        document.getElementById('formState').style.display = 'none';
+        document.getElementById('invalidState').style.display = 'block';
+    } else {
+        // Charger les cartes de la fenêtre
+        fetch('/api/fenetre/window?token=' + encodeURIComponent(surveyToken))
+            .then(r => r.ok ? r.json() : null)
+            .then(data => {
+                if (!data || !data.window) return;
+                const win = data.window;
+                const cards = Array.isArray(win.cards) ? win.cards : [];
+                if (cards.length === 0) return;
+
+                const row = document.getElementById('cardsRow');
+                cards.forEach(card => {
+                    const imgPath = card.imgSrc || card.image || ('images/' + card.family + '/' + card.name + '.png');
+                    const src = imgPath.startsWith('http') ? imgPath : 'https://oradia.fr/' + imgPath.replace(/^\//, '');
+                    const isCosmos = card.family === 'memoire_cosmos';
+                    const thumb = document.createElement('div');
+                    thumb.className = 'card-thumb';
+                    thumb.innerHTML =
+                        '<img src="' + src + '" alt="' + card.name.replace(/_/g,' ') + '"'
+                        + (isCosmos ? ' class="cosmos-img"' : '') + ' onerror="this.parentNode.remove()">'
+                        + '<div class="card-thumb-name">' + card.name.replace(/_/g,' ') + '</div>';
+                    row.appendChild(thumb);
+                });
+
+                document.getElementById('cardsSection').style.display = 'block';
+            })
+            .catch(() => {}); // silencieux si erreur réseau
+    }
+
+    function toggleCheck(label) {
+        const cb = label.querySelector('input[type="checkbox"]');
+        cb.checked = !cb.checked;
+        label.classList.toggle('selected', cb.checked);
+    }
+
+    function selectRadio(rowId, btn) {
+        document.getElementById(rowId).querySelectorAll('.radio-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+    }
+
+    async function submitSurvey() {
+        const score = document.getElementById('scoreSlider').value;
+        const types = Array.from(document.querySelectorAll('#typesGrid input[type="checkbox"]:checked')).map(cb => cb.value);
+        const resonanceSelected = document.querySelector('#resonanceRow .radio-btn.selected');
+        const etatSelected = document.querySelector('#etatRow .radio-btn.selected');
+        const temoignage = document.getElementById('temoignage').value.trim();
+
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = 'Sending…';
+
+        try {
+            const res = await fetch('/api/fenetre/survey', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    token:      surveyToken,
+                    score:      parseInt(score, 10),
+                    types:      types,
+                    resonance:  resonanceSelected?.dataset.val || null,
+                    etat:       etatSelected?.dataset.val || null,
+                    temoignage: temoignage || null,
+                })
+            });
+
+            const data = await res.json();
+
+            if (res.ok && data.success) {
+                document.getElementById('formState').style.display = 'none';
+                document.getElementById('successState').style.display = 'block';
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else if (res.status === 404) {
+                document.getElementById('formState').style.display = 'none';
+                document.getElementById('invalidState').style.display = 'block';
+            } else {
+                throw new Error(data.message || 'Server error');
+            }
+        } catch (err) {
+            console.error(err);
+            btn.disabled = false;
+            btn.textContent = 'Send my observations';
+            alert('An error occurred. Please try again.');
+        }
+    }
+</script>
+<script src="/js/page-tracker.js" defer></script>
+</body>
+</html>
