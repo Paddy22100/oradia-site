@@ -503,7 +503,7 @@ module.exports = async (req, res) => {
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
       try {
-        const { password, name, birthdate, _hp } = body;
+        const { password, name, _hp } = body;
         const lang = body.lang === 'en' ? 'en' : 'fr';
         // Normalisé ici : cet email finit dans tore_subscriptions (table Postgres classique,
         // comparaison .eq sensible à la casse) — non normalisé, un compte auto-inscrit avec
@@ -575,35 +575,21 @@ module.exports = async (req, res) => {
           });
         }
 
-        // Créer l'entrée dans tore_subscriptions (sauf si une ligne existe déjà pour cet
-        // email, même avec une casse différente — évite un doublon silencieux, par
-        // exemple si un abonnement Stripe existait déjà pour cette adresse).
+        // L'inscription crée uniquement le compte membre : elle ne donne JAMAIS d'accès
+        // illimité. Auparavant, sans ligne existante, une ligne tore_subscriptions
+        // status 'active' SANS expires_at était insérée ("comptes créés manuellement
+        // actifs par défaut", reliquat) — que check-subscription traite comme un abonné
+        // illimité : n'importe qui pouvait obtenir les tirages gratuitement via /inscription.
+        // Les accès légitimes ont déjà leur ligne avant l'inscription :
+        //   - abonnement payé : créée par stripe-webhook.js ;
+        //   - mois offert : créée par le dashboard (action « Offrir un mois », avec expires_at).
+        // Sans ligne, le membre garde ses 2 tirages gratuits puis s'abonne via Stripe.
         try {
           const { data: existingSub } = await supabase
             .from('tore_subscriptions').select('id').ilike('email', email).maybeSingle();
-
-          if (existingSub) {
-            console.log('[Signup] tore_subscriptions entry already exists for:', email);
-          } else {
-            const { error: subError } = await supabase
-              .from('tore_subscriptions')
-              .insert({
-                email: email,
-                full_name: name,
-                birthdate: birthdate || null,
-                status: 'active', // Les comptes créés manuellement sont actifs par défaut
-                lang, // langue des emails ultérieurs (voir supabase-migration-subscription-lang.sql)
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString()
-              });
-
-            if (subError) {
-              console.error('[Signup] tore_subscriptions insert error:', subError.message);
-              // Ne pas bloquer la création du compte pour cette erreur
-            } else {
-              console.log('[Signup] tore_subscriptions entry created for:', email);
-            }
-          }
+          console.log(existingSub
+            ? '[Signup] tore_subscriptions entry already exists for: ' + email
+            : '[Signup] compte gratuit (aucun abonnement) pour: ' + email);
         } catch (subError) {
           console.error('[Signup] tore_subscriptions exception:', subError.message);
         }

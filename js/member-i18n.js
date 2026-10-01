@@ -202,6 +202,7 @@
     'Accès à tous vos tirages': 'Access to all your draws',
     'Historique et suivi': 'History and follow-up',
     "Accès complet à l'expérience du Tore": 'Full access to the Tore experience',
+    '2 tirages gratuits pour découvrir le Tore': '2 free draws to discover the Tore',
     'Inspirations mensuelles': 'Monthly inspirations',
     'Veuillez remplir Prénom, Nom et Email.': 'Please fill in First name, Last name and Email.',
     'Email invalide.': 'Invalid email.',
