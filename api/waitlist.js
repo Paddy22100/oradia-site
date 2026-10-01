@@ -559,7 +559,7 @@ module.exports = async (req, res) => {
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
           email,
           password,
-          user_metadata: { full_name: name, ...(birthDate ? { birth_date: birthDate } : {}) },
+          user_metadata: { full_name: name, lang, ...(birthDate ? { birth_date: birthDate } : {}) }, // lang : email Supabase de réinitialisation
           email_confirm: false
         });
 
