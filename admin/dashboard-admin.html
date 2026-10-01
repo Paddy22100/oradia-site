@@ -11777,16 +11777,18 @@
         }
 
         // Alimente l'autocomplétion (datalist) ET le sélecteur déroulant du champ
-        // Destinataire avec le Répertoire de contacts — fusionne 3 sources distinctes
-        // (newsletter_contacts, suppliers, retail_partners : trois tables séparées, pas
-        // une seule avec une colonne catégorie) pour que fournisseurs et partenaires
-        // soient trouvables ici aussi, pas seulement les contacts newsletter. Chargé une
-        // seule fois par session dashboard, pas à chaque ouverture de l'onglet Mails.
+        // Destinataire avec le Répertoire de contacts — fusionne 4 sources distinctes
+        // (newsletter_contacts, suppliers, retail_partners, clients : des tables séparées,
+        // pas une seule avec une colonne catégorie) pour que fournisseurs, partenaires et
+        // clients de facturation soient trouvables ici aussi, pas seulement les contacts
+        // newsletter. Chargé une seule fois par session dashboard, pas à chaque ouverture
+        // de l'onglet Mails.
         const COMPOSE_CONTACTS_CATEGORIES = [
             { value: 'all',      label: 'Tous' },
             { value: 'contact',  label: 'Contacts' },
             { value: 'supplier', label: 'Fournisseurs' },
-            { value: 'partner',  label: 'Partenaires' }
+            { value: 'partner',  label: 'Partenaires' },
+            { value: 'client',   label: 'Clients (factu.)' }
         ];
         let composeContactsLoaded = false;
         let composeContactsCache = [];
@@ -11816,7 +11818,7 @@
         async function loadComposeContacts() {
             if (composeContactsLoaded) return;
             composeContactsLoaded = true;
-            const [contacts, suppliers, partners] = await Promise.all([
+            const [contacts, suppliers, partners, clients] = await Promise.all([
                 loadComposeContactsSource('/api/admin/data?section=waitlist&page=1&limit=5000',
                     c => c.email ? { email: c.email, label: [c.prenom, c.nom].filter(Boolean).join(' '), category: 'contact' } : null,
                     'contacts'),
@@ -11830,9 +11832,15 @@
                     'suppliers'),
                 loadComposeContactsSource('/api/admin/data?section=partners',
                     p => p.name ? { email: p.email || null, label: p.name, category: 'partner' } : null,
-                    'partners')
+                    'partners'),
+                // Clients de facturation (module Factures) — table séparée de newsletter_contacts,
+                // absente du répertoire jusqu'ici : un client facturé n'apparaissait donc pas comme
+                // destinataire possible pour un email ponctuel (support, suivi...).
+                loadComposeContactsSource('/api/admin/clients',
+                    c => c.nom ? { email: c.email || null, label: c.nom, category: 'client' } : null,
+                    'clients')
             ]);
-            composeContactsCache = [...contacts, ...suppliers, ...partners];
+            composeContactsCache = [...contacts, ...suppliers, ...partners, ...clients];
             const datalist = document.getElementById('composeContactsList');
             datalist.innerHTML = composeContactsCache
                 .filter(c => c.email)
@@ -11880,7 +11888,8 @@
 
         const COMPOSE_CATEGORY_BADGE = {
             supplier: '<span class="text-blue-300/70 text-[0.65rem] uppercase tracking-wide ml-1.5">Fournisseur</span>',
-            partner:  '<span class="text-purple-300/70 text-[0.65rem] uppercase tracking-wide ml-1.5">Partenaire</span>'
+            partner:  '<span class="text-purple-300/70 text-[0.65rem] uppercase tracking-wide ml-1.5">Partenaire</span>',
+            client:   '<span class="text-teal-300/70 text-[0.65rem] uppercase tracking-wide ml-1.5">Client</span>'
         };
         function renderComposeContactsPicker() {
             const list = document.getElementById('composeContactsPickerList');
