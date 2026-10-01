@@ -2156,6 +2156,17 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Informations entreprise + RIB (Paramètres > Entreprise), app_settings clé company_info ──
+      if (action === 'save-company-info') {
+        const fields = ['nom', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'banque', 'iban', 'bic'];
+        const value = {};
+        for (const f of fields) value[f] = String(body[f] || '').trim().slice(0, 200);
+        const { error } = await supabase.from('app_settings')
+          .upsert({ key: 'company_info', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       // ── Grille tarifaire revendeurs (ligne unique, id=1) ──
       if (action === 'save-reseller-pricing') {
         const { prixPublic, remise3exPct, remise10exPct, commissionDepotPct } = body;
@@ -3814,6 +3825,20 @@ async function handleData(req, res) {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section company-info : infos entreprise + RIB (app_settings clé company_info) ──
+    // Préremplie avec les mentions légales actuelles tant que rien n'a encore été
+    // enregistré depuis le dashboard (le RIB n'y figure pas, à saisir une première fois).
+    if (section === 'company-info') {
+      const DEFAULTS = {
+        nom: 'Rudy Boucheron', statutJuridique: 'Micro-entreprise', siret: '82130800400034',
+        codeApe: '9609Z', adresse: '17 Cardevily - 22100 TRÉVRON', email: 'contact@oradia.fr',
+        banque: '', iban: '', bic: ''
+      };
+      const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'company_info').maybeSingle();
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: { ...DEFAULTS, ...(data?.value || {}) } });
     }
 
     // ── Section reseller-pricing : grille tarifaire revendeurs (ligne unique) ──

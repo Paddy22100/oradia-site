@@ -4893,6 +4893,10 @@
                 class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-light-gold/50 hover:text-gold transition">
                 <i class="fas fa-server mr-1.5"></i>Paramètres système
             </button>
+            <button onclick="showSettingsSubTab('entreprise')" id="settings-subtab-btn-entreprise"
+                class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-light-gold/50 hover:text-gold transition">
+                <i class="fas fa-building mr-1.5"></i>Entreprise
+            </button>
         </div>
 
         <div id="settings-subtab-features">
@@ -4975,6 +4979,43 @@
             </div>
         </section>
         </div><!-- /settings-subtab-system -->
+
+        <div id="settings-subtab-entreprise" class="hidden">
+        <section class="mb-10">
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Entreprise</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Informations légales et coordonnées bancaires — préremplies depuis les mentions légales, modifiables ici.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="stat-card rounded-xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-id-card"></i> Informations légales</h4>
+                    <div class="space-y-3 text-sm">
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Nom</label><input id="ci-nom" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Statut juridique</label><input id="ci-statutJuridique" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-light-gold/50 text-xs block mb-1">SIRET</label><input id="ci-siret" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Code APE</label><input id="ci-codeApe" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                        </div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Adresse</label><input id="ci-adresse" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Email de contact</label><input id="ci-email" type="email" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                    </div>
+                </div>
+                <div class="stat-card rounded-xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-university"></i> Coordonnées bancaires (RIB)</h4>
+                    <div class="space-y-3 text-sm">
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Banque</label><input id="ci-banque" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">IBAN</label><input id="ci-iban" type="text" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">BIC</label><input id="ci-bic" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-5">
+                        <button onclick="saveCompanyInfo(this)" class="bg-gold text-night-blue font-semibold px-4 py-2 rounded-lg hover:bg-light-gold transition text-sm"><i class="fas fa-save mr-1.5"></i>Enregistrer</button>
+                        <button onclick="downloadCompanyRib()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-download mr-1.5"></i>Télécharger mon RIB</button>
+                    </div>
+                    <p id="ci-msg" class="text-xs mt-2"></p>
+                </div>
+            </div>
+        </section>
+        </div><!-- /settings-subtab-entreprise -->
         </div><!-- /tab-settings -->
 
     </main>
@@ -15002,6 +15043,7 @@
         function showSettingsSubTab(name) {
             document.getElementById('settings-subtab-features')?.classList.toggle('hidden', name !== 'features');
             document.getElementById('settings-subtab-system')?.classList.toggle('hidden', name !== 'system');
+            document.getElementById('settings-subtab-entreprise')?.classList.toggle('hidden', name !== 'entreprise');
             document.getElementById('settings-subtab-btn-features')?.classList.toggle('border-gold', name === 'features');
             document.getElementById('settings-subtab-btn-features')?.classList.toggle('text-gold', name === 'features');
             document.getElementById('settings-subtab-btn-features')?.classList.toggle('border-transparent', name !== 'features');
@@ -15010,6 +15052,88 @@
             document.getElementById('settings-subtab-btn-system')?.classList.toggle('text-gold', name === 'system');
             document.getElementById('settings-subtab-btn-system')?.classList.toggle('border-transparent', name !== 'system');
             document.getElementById('settings-subtab-btn-system')?.classList.toggle('text-light-gold/50', name !== 'system');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('border-gold', name === 'entreprise');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('text-gold', name === 'entreprise');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('border-transparent', name !== 'entreprise');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('text-light-gold/50', name !== 'entreprise');
+            if (name === 'entreprise') loadCompanyInfo();
+        }
+
+        // ── Entreprise (infos légales + RIB) — app_settings clé company_info ──
+        const COMPANY_INFO_FIELDS = ['nom', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'banque', 'iban', 'bic'];
+        async function loadCompanyInfo() {
+            try {
+                const res = await adminFetch('/api/admin/data?section=company-info');
+                const data = await res.json();
+                const d = data.data || {};
+                for (const f of COMPANY_INFO_FIELDS) {
+                    const el = document.getElementById('ci-' + f);
+                    if (el) el.value = d[f] || '';
+                }
+            } catch (e) {
+                const msg = document.getElementById('ci-msg');
+                if (msg) { msg.textContent = 'Erreur de chargement : ' + e.message; msg.className = 'text-xs mt-2 text-red-400/80'; }
+            }
+        }
+
+        async function saveCompanyInfo(btn) {
+            const msg = document.getElementById('ci-msg');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>Enregistrement…';
+            try {
+                const body = {};
+                for (const f of COMPANY_INFO_FIELDS) body[f] = document.getElementById('ci-' + f)?.value || '';
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save-company-info', ...body })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'échec inconnu');
+                if (msg) { msg.textContent = 'Enregistré.'; msg.className = 'text-xs mt-2 text-teal-300/90'; }
+            } catch (e) {
+                if (msg) { msg.textContent = 'Erreur : ' + e.message; msg.className = 'text-xs mt-2 text-red-400/80'; }
+            } finally {
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        }
+
+        // Génère le RIB à partir des champs actuellement saisis (pas besoin d'avoir
+        // cliqué "Enregistrer" au préalable) — même style sobre que les autres exports
+        // PDF du dashboard (downloadRetroProtocol), un seul tableau sans fioritures.
+        function downloadCompanyRib() {
+            if (!window.jspdf?.jsPDF) { adminAlert('Librairie PDF non chargée — recharge la page.'); return; }
+            const v = (f) => document.getElementById('ci-' + f)?.value.trim() || '—';
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const W = 210, M = 24;
+            const GOLD = [176, 141, 45], NAVY = [10, 25, 47], INK = [22, 35, 58], MUTE = [110, 112, 128];
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...GOLD);
+            doc.text('O R A D I A', W / 2, 22, { align: 'center' });
+            doc.setDrawColor(...GOLD); doc.setLineWidth(0.4);
+            doc.line(W / 2 - 30, 27, W / 2 + 30, 27);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...NAVY);
+            doc.text("Relevé d'Identité Bancaire", W / 2, 38, { align: 'center' });
+
+            let y = 56;
+            const row = (label, value, mono) => {
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MUTE);
+                doc.text(label, M, y);
+                doc.setFont(mono ? 'courier' : 'helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...INK);
+                doc.text(value, M, y + 6);
+                y += 16;
+            };
+            row('Titulaire du compte', v('nom'));
+            row('Adresse', v('adresse'));
+            row('Domiciliation', v('banque'));
+            row('IBAN', v('iban'), true);
+            row('BIC', v('bic'), true);
+
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTE);
+            doc.text(`${v('statutJuridique')} — SIRET ${v('siret')}`, M, y + 4);
+            doc.text(`Édité le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`, W - M, y + 4, { align: 'right' });
+
+            doc.save('oradia-rib.pdf');
         }
 
         // ── Registre de fonctionnalités ──
