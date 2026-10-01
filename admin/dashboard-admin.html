@@ -5101,6 +5101,10 @@
                 class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-light-gold/50 hover:text-gold transition">
                 <i class="fas fa-server mr-1.5"></i>Paramètres système
             </button>
+            <button onclick="showSettingsSubTab('entreprise')" id="settings-subtab-btn-entreprise"
+                class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-light-gold/50 hover:text-gold transition">
+                <i class="fas fa-building mr-1.5"></i>Entreprise
+            </button>
         </div>
 
         <div id="settings-subtab-features">
@@ -5183,6 +5187,49 @@
             </div>
         </section>
         </div><!-- /settings-subtab-system -->
+
+        <div id="settings-subtab-entreprise" class="hidden">
+        <section class="mb-10">
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Entreprise</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Informations légales et coordonnées bancaires — préremplies depuis les mentions légales, modifiables ici.</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="stat-card rounded-xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-id-card"></i> Informations légales</h4>
+                    <div class="space-y-3 text-sm">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Nom</label><input id="ci-nom" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Marque</label><input id="ci-marque" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        </div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Statut juridique</label><input id="ci-statutJuridique" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-light-gold/50 text-xs block mb-1">SIRET</label><input id="ci-siret" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Code APE</label><input id="ci-codeApe" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                        </div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Adresse</label><input id="ci-adresse" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Email de contact</label><input id="ci-email" type="email" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                            <div><label class="text-light-gold/50 text-xs block mb-1">Téléphone</label><input id="ci-telephone" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="stat-card rounded-xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-university"></i> Coordonnées bancaires (RIB)</h4>
+                    <div class="space-y-3 text-sm">
+                        <div><label class="text-light-gold/50 text-xs block mb-1">Banque</label><input id="ci-banque" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold"></div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">IBAN</label><input id="ci-iban" type="text" placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                        <div><label class="text-light-gold/50 text-xs block mb-1">BIC</label><input id="ci-bic" type="text" class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg px-3 py-2 text-light-gold font-mono"></div>
+                    </div>
+                    <div class="flex items-center gap-3 mt-5">
+                        <button onclick="saveCompanyInfo(this)" class="bg-gold text-night-blue font-semibold px-4 py-2 rounded-lg hover:bg-light-gold transition text-sm"><i class="fas fa-save mr-1.5"></i>Enregistrer</button>
+                        <button onclick="downloadCompanyRib()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-download mr-1.5"></i>Télécharger mon RIB</button>
+                    </div>
+                    <p id="ci-msg" class="text-xs mt-2"></p>
+                </div>
+            </div>
+        </section>
+        </div><!-- /settings-subtab-entreprise -->
         </div><!-- /tab-settings -->
 
     </main>
@@ -5533,7 +5580,7 @@
             if (!(await adminConfirm(`Envoyer ${f.numero} à ${client.email} ? Une pièce envoyée ne peut plus être modifiée.`))) return;
 
             let pdfBase64;
-            try { pdfBase64 = factBuildPdf(f, client); }
+            try { pdfBase64 = await factBuildPdf(f, client); }
             catch (e) { adminAlert('Génération du PDF impossible : ' + e.message); return; }
 
             const send = await adminFetch('/api/admin/factures/send', {
@@ -5693,8 +5740,25 @@
         // Reprend la mise en page du modèle Word, mentions légales comprises, en
         // corrigeant ce qui y était faux : l'échéance est calculée, l'adresse et la
         // période viennent des données, et il ne reste aucun crochet de gabarit.
-        function factBuildPdf(f, client) {
+        // Infos émetteur (Paramètres > Entreprise) mises en cache pour la session dashboard —
+        // évite un aller-retour réseau à chaque génération de PDF ; se rafraîchit à chaque
+        // rechargement de page, donc au plus une fois périmé entre deux modifications.
+        let _factEmetteurCache = null;
+        async function factGetEmetteur() {
+            if (_factEmetteurCache) return _factEmetteurCache;
+            try {
+                const res = await adminFetch('/api/admin/data?section=company-info');
+                const data = await res.json();
+                _factEmetteurCache = data.data || {};
+            } catch {
+                _factEmetteurCache = {};
+            }
+            return _factEmetteurCache;
+        }
+
+        async function factBuildPdf(f, client) {
             if (!window.jspdf?.jsPDF) throw new Error('librairie PDF non chargée, rechargez la page');
+            const emetteur = await factGetEmetteur();
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
             const estDevis = f.type === 'devis';
@@ -5702,10 +5766,14 @@
             let y = M;
 
             doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20);
-            doc.text('Rudy BOUCHERON — EI', M, y); y += 5;
+            doc.text(emetteur.nom || 'Rudy BOUCHERON — EI', M, y); y += 5;
             doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(70);
-            ['ORADIA', '17 Cardevily — 22100 Trévron', 'SIRET : 821 308 004 00034', 'contact@oradia.fr — 06 45 51 19 90']
-                .forEach(l => { doc.text(l, M, y); y += 4.2; });
+            [
+                emetteur.marque || 'ORADIA',
+                emetteur.adresse || '17 Cardevily — 22100 Trévron',
+                `SIRET : ${emetteur.siret || '821 308 004 00034'}`,
+                `${emetteur.email || 'contact@oradia.fr'} — ${emetteur.telephone || '06 45 51 19 90'}`
+            ].forEach(l => { doc.text(l, M, y); y += 4.2; });
 
             y += 8;
             doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(20);
@@ -5753,8 +5821,8 @@
                 doc.text(`Devis valable jusqu'au ${factDateFr(f.date_echeance)}.`, M, y); y += 4.6;
             } else {
                 doc.text(`Date d'échéance : ${factDateFr(f.date_echeance)} — paiement à ${f.delai_paiement_jours} jours à compter de la date d'émission.`, M, y); y += 4.6;
-                doc.text('Mode de règlement : virement bancaire — IBAN FR76 1558 9228 4506 7504 8634 186', M, y); y += 4.6;
-                doc.text('ou chèque à l’ordre de Rudy Boucheron.', M, y); y += 4.6;
+                if (emetteur.iban) { doc.text(`Mode de règlement : virement bancaire — IBAN ${emetteur.iban}`, M, y); y += 4.6; }
+                doc.text(emetteur.iban ? 'ou chèque à l’ordre de Rudy Boucheron.' : 'Mode de règlement : virement bancaire ou chèque à l’ordre de Rudy Boucheron.', M, y); y += 4.6;
             }
 
             y += 6; doc.setFontSize(7); doc.setTextColor(120);
@@ -15714,6 +15782,7 @@
         function showSettingsSubTab(name) {
             document.getElementById('settings-subtab-features')?.classList.toggle('hidden', name !== 'features');
             document.getElementById('settings-subtab-system')?.classList.toggle('hidden', name !== 'system');
+            document.getElementById('settings-subtab-entreprise')?.classList.toggle('hidden', name !== 'entreprise');
             document.getElementById('settings-subtab-btn-features')?.classList.toggle('border-gold', name === 'features');
             document.getElementById('settings-subtab-btn-features')?.classList.toggle('text-gold', name === 'features');
             document.getElementById('settings-subtab-btn-features')?.classList.toggle('border-transparent', name !== 'features');
@@ -15722,6 +15791,88 @@
             document.getElementById('settings-subtab-btn-system')?.classList.toggle('text-gold', name === 'system');
             document.getElementById('settings-subtab-btn-system')?.classList.toggle('border-transparent', name !== 'system');
             document.getElementById('settings-subtab-btn-system')?.classList.toggle('text-light-gold/50', name !== 'system');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('border-gold', name === 'entreprise');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('text-gold', name === 'entreprise');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('border-transparent', name !== 'entreprise');
+            document.getElementById('settings-subtab-btn-entreprise')?.classList.toggle('text-light-gold/50', name !== 'entreprise');
+            if (name === 'entreprise') loadCompanyInfo();
+        }
+
+        // ── Entreprise (infos légales + RIB) — app_settings clé company_info ──
+        const COMPANY_INFO_FIELDS = ['nom', 'marque', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'telephone', 'banque', 'iban', 'bic'];
+        async function loadCompanyInfo() {
+            try {
+                const res = await adminFetch('/api/admin/data?section=company-info');
+                const data = await res.json();
+                const d = data.data || {};
+                for (const f of COMPANY_INFO_FIELDS) {
+                    const el = document.getElementById('ci-' + f);
+                    if (el) el.value = d[f] || '';
+                }
+            } catch (e) {
+                const msg = document.getElementById('ci-msg');
+                if (msg) { msg.textContent = 'Erreur de chargement : ' + e.message; msg.className = 'text-xs mt-2 text-red-400/80'; }
+            }
+        }
+
+        async function saveCompanyInfo(btn) {
+            const msg = document.getElementById('ci-msg');
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>Enregistrement…';
+            try {
+                const body = {};
+                for (const f of COMPANY_INFO_FIELDS) body[f] = document.getElementById('ci-' + f)?.value || '';
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'save-company-info', ...body })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'échec inconnu');
+                if (msg) { msg.textContent = 'Enregistré.'; msg.className = 'text-xs mt-2 text-teal-300/90'; }
+            } catch (e) {
+                if (msg) { msg.textContent = 'Erreur : ' + e.message; msg.className = 'text-xs mt-2 text-red-400/80'; }
+            } finally {
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        }
+
+        // Génère le RIB à partir des champs actuellement saisis (pas besoin d'avoir
+        // cliqué "Enregistrer" au préalable) — même style sobre que les autres exports
+        // PDF du dashboard (downloadRetroProtocol), un seul tableau sans fioritures.
+        function downloadCompanyRib() {
+            if (!window.jspdf?.jsPDF) { adminAlert('Librairie PDF non chargée — recharge la page.'); return; }
+            const v = (f) => document.getElementById('ci-' + f)?.value.trim() || '—';
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const W = 210, M = 24;
+            const GOLD = [176, 141, 45], NAVY = [10, 25, 47], INK = [22, 35, 58], MUTE = [110, 112, 128];
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(...GOLD);
+            doc.text('O R A D I A', W / 2, 22, { align: 'center' });
+            doc.setDrawColor(...GOLD); doc.setLineWidth(0.4);
+            doc.line(W / 2 - 30, 27, W / 2 + 30, 27);
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(15); doc.setTextColor(...NAVY);
+            doc.text("Relevé d'Identité Bancaire", W / 2, 38, { align: 'center' });
+
+            let y = 56;
+            const row = (label, value, mono) => {
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...MUTE);
+                doc.text(label, M, y);
+                doc.setFont(mono ? 'courier' : 'helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(...INK);
+                doc.text(value, M, y + 6);
+                y += 16;
+            };
+            row('Titulaire du compte', v('nom'));
+            row('Adresse', v('adresse'));
+            row('Domiciliation', v('banque'));
+            row('IBAN', v('iban'), true);
+            row('BIC', v('bic'), true);
+
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(...MUTE);
+            doc.text(`${v('statutJuridique')} — SIRET ${v('siret')}`, M, y + 4);
+            doc.text(`Édité le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`, W - M, y + 4, { align: 'right' });
+
+            doc.save('oradia-rib.pdf');
         }
 
         // ── Registre de fonctionnalités ──
@@ -17518,13 +17669,27 @@
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         <span class="font-bold ${isRecette?'text-green-400':'text-red-400'}">${isRecette?'+':'-'}${fmt2(t.amount)}</span>
-                        <button onclick="viewTransactionInvoices('${t.id}','${escapeHtmlFront(t.description).replace(/'/g, "\\'")}')" title="Factures jointes" class="relative text-xs transition ${t.invoice_count > 0 ? 'text-gold/70 hover:text-gold' : 'text-gold/25 hover:text-gold/60'}">
+                        ${t.facture ? `<button onclick="voirFactureEmise('${t.facture.id}')" title="Voir la facture ${escapeHtmlFront(t.facture.numero)}" class="text-xs transition text-gold/70 hover:text-gold"><i class="fas fa-file-invoice"></i></button>` : ''}
+                        <button onclick="viewTransactionInvoices('${t.id}','${escapeHtmlFront(t.description).replace(/'/g, "\\'")}')" title="${isRecette ? 'Pièces jointes' : 'Joindre un justificatif'}" class="relative text-xs transition ${t.invoice_count > 0 ? 'text-gold/70 hover:text-gold' : 'text-gold/25 hover:text-gold/60'}">
                             <i class="fas fa-paperclip"></i>${t.invoice_count > 0 ? `<span class="absolute -top-1.5 -right-2 bg-gold text-[#07112a] text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">${t.invoice_count}</span>` : ''}
                         </button>
                         <button onclick="deleteTransaction('${t.id}')" class="text-red-400/40 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // Ouvre le PDF de la facture ÉMISE dont provient la recette. Distinct du
+        // trombone, qui sert à joindre un justificatif reçu — pertinent sur une
+        // dépense, pas sur une recette qu'on a soi-même facturée.
+        async function voirFactureEmise(factureId) {
+            const res = await adminFetch('/api/admin/factures/pdf-url', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: factureId })
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Facture introuvable'); return; }
+            window.open(json.url, '_blank');
         }
 
         function exportComptaPDF() {

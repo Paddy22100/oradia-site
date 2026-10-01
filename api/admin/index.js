@@ -2161,6 +2161,17 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Informations entreprise + RIB (Paramètres > Entreprise), app_settings clé company_info ──
+      if (action === 'save-company-info') {
+        const fields = ['nom', 'marque', 'statutJuridique', 'siret', 'codeApe', 'adresse', 'email', 'telephone', 'banque', 'iban', 'bic'];
+        const value = {};
+        for (const f of fields) value[f] = String(body[f] || '').trim().slice(0, 200);
+        const { error } = await supabase.from('app_settings')
+          .upsert({ key: 'company_info', value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       // ── Grille tarifaire revendeurs (ligne unique, id=1) ──
       if (action === 'save-reseller-pricing') {
         const { prixPublic, remise3exPct, remise10exPct, commissionDepotPct } = body;
@@ -3821,6 +3832,23 @@ async function handleData(req, res) {
         .order('created_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section company-info : infos entreprise + RIB (app_settings clé company_info) ──
+    // Même source que l'émetteur des factures (lib/facture-email.js, getEmetteur) : ce
+    // sous-onglet EST l'endroit où éditer ces informations, plutôt qu'un fichier de code.
+    // Préremplie tant que rien n'a encore été enregistré depuis le dashboard — avec les
+    // seules infos déjà publiques (mentions légales) ; jamais de RIB en dur ici.
+    if (section === 'company-info') {
+      const DEFAULTS = {
+        nom: 'Rudy BOUCHERON — EI', marque: 'ORADIA', statutJuridique: 'Micro-entreprise',
+        siret: '821 308 004 00034', codeApe: '9609Z', adresse: '17 Cardevily — 22100 Trévron',
+        email: 'contact@oradia.fr', telephone: '06 45 51 19 90',
+        banque: '', iban: '', bic: ''
+      };
+      const { data, error } = await supabase.from('app_settings').select('value').eq('key', 'company_info').maybeSingle();
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: { ...DEFAULTS, ...(data?.value || {}) } });
     }
 
     // ── Section reseller-pricing : grille tarifaire revendeurs (ligne unique) ──
@@ -9778,7 +9806,19 @@ Réponds en français, sans tiret long, format markdown compact.`
             .in('transaction_id', data.map(t => t.id));
           (invoiceRows || []).forEach(r => { invoiceCounts[r.transaction_id] = (invoiceCounts[r.transaction_id] || 0) + 1; });
         }
-        const dataWithInvoiceCounts = (data || []).map(t => ({ ...t, invoice_count: invoiceCounts[t.id] || 0 }));
+        // Facture émise à l'origine de la recette, pour pouvoir la consulter depuis la
+        // ligne de comptabilité plutôt que d'aller la chercher dans l'onglet Facturation.
+        let facturesById = {};
+        const factureIds = (data || []).map(t => t.facture_id).filter(Boolean);
+        if (factureIds.length > 0) {
+          const { data: factureRows } = await sb.from('factures').select('id, numero, storage_path').in('id', factureIds);
+          (factureRows || []).forEach(f => { facturesById[f.id] = f; });
+        }
+        const dataWithInvoiceCounts = (data || []).map(t => ({
+          ...t,
+          invoice_count: invoiceCounts[t.id] || 0,
+          facture: t.facture_id ? (facturesById[t.facture_id] || null) : null
+        }));
 
         return res.status(200).json({
           success: true,
@@ -10070,7 +10110,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       // Jamais de second template écrit ici (règle CLAUDE.md).
       if (test) {
         const ex = exempleFacture();
-        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null });
+        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null, supabase: sb });
         return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null });
       }
 
@@ -10094,7 +10134,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (eUp) throw eUp;
 
       const send = facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
-      const result = await send({ facture, lignes: lignes || [], client, pdfBase64 });
+      const result = await send({ facture, lignes: lignes || [], client, pdfBase64, supabase: sb });
       if (!result.ok) return res.status(502).json({ error: `Envoi impossible : ${result.error}` });
 
       const { error: eUpd } = await sb.from('factures').update({
@@ -10135,7 +10175,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         : 0;
       const rang = (facture.relance_count || 0) + 1;
 
-      const result = await sendRelanceEmail({ facture, lignes: lignes || [], client, pdfBase64, rang, joursRetard });
+      const result = await sendRelanceEmail({ facture, lignes: lignes || [], client, pdfBase64, rang, joursRetard, supabase: sb });
       if (!result.ok) return res.status(502).json({ error: `Relance impossible : ${result.error}` });
 
       const { error } = await sb.from('factures').update({
@@ -10185,6 +10225,25 @@ Réponds en français, sans tiret long, format markdown compact.`
         transaction: tx,
         message: `${facture.numero} encaissée le ${String(date_paiement).slice(0,10)} — ${facture.total_ht} € ajoutés au chiffre d'affaires de ce mois-là.`
       });
+    }
+
+    // Lien signé vers le PDF d'une facture émise, pour la consulter depuis la
+    // comptabilité. Bucket `factures-emises` (pièces émises), à ne pas confondre
+    // avec `transaction-invoices` (justificatifs reçus, joints aux dépenses).
+    if (path === '/factures/pdf-url' || path === '/factures/pdf-url/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { data: f, error } = await sb.from('factures').select('numero, storage_path').eq('id', id).single();
+      if (error) throw error;
+      if (!f.storage_path) {
+        return res.status(404).json({ error: `Aucun PDF archivé pour ${f.numero} : cette facture a été reprise depuis un document antérieur au dashboard. Joignez l'original avec le trombone si vous voulez le conserver ici.` });
+      }
+      const { data: signed, error: eSign } = await sb.storage.from('factures-emises').createSignedUrl(f.storage_path, 300);
+      if (eSign) return res.status(500).json({ error: 'Lien impossible à générer : ' + eSign.message });
+      return res.status(200).json({ success: true, url: signed.signedUrl, numero: f.numero });
     }
 
     // Annulation d'un encaissement saisi par erreur (mauvaise date, mauvaise facture).
