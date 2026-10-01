@@ -16,7 +16,8 @@ const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
-const { parisDate, computeUrssaf } = require('../../lib/urssaf.js');
+const { parisDate, computeUrssaf, CATEGORY_BY_SOURCE } = require('../../lib/urssaf.js');
+const { sendFactureEmail, sendDevisEmail, sendRelanceEmail, exempleFacture } = require('../../lib/facture-email.js');
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
 const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
@@ -9823,6 +9824,452 @@ Réponds en français, sans tiret long, format markdown compact.`
         return res.status(200).json({ success: true });
       }
       return res.status(405).end();
+    }
+
+    // ============================================================
+    // FACTURATION — clients, devis, factures, livre des recettes
+    // ============================================================
+    // Tout vit dans ce routeur : Vercel Hobby plafonne à 12 fonctions serverless et
+    // /api/ en compte déjà 12. Aucun nouveau fichier n'est possible dans /api/.
+    //
+    // RÈGLE CENTRALE : une facture n'est pas une recette. Elle ne produit une ligne
+    // dans `transactions` qu'au moment où elle est marquée payée, à la DATE DU
+    // PAIEMENT. Créer ou envoyer une facture ne touche jamais la comptabilité.
+
+    if (path === '/clients' || path === '/clients/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      if (req.method === 'GET') {
+        const { data, error } = await sb.from('clients').select('*')
+          .eq('archived', false).order('nom', { ascending: true });
+        if (error) throw error;
+        return res.status(200).json({ success: true, data: data || [] });
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        if (!body.nom || !String(body.nom).trim()) return res.status(400).json({ error: 'Le nom du client est obligatoire' });
+        if (body.id) {
+          const { id, ...updates } = body;
+          updates.updated_at = new Date().toISOString();
+          const { error } = await sb.from('clients').update(updates).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        const { data, error } = await sb.from('clients').insert(body).select().single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, data });
+      }
+      if (req.method === 'DELETE') {
+        // Archivage plutôt que suppression : les factures émises gardent un lien vers
+        // le client, et une pièce comptable ne doit pas perdre son destinataire.
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sb.from('clients').update({ archived: true }).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).end();
+    }
+
+    if (path === '/prestation-modeles' || path === '/prestation-modeles/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      if (req.method === 'GET') {
+        const { data, error } = await sb.from('prestation_modeles').select('*').order('ordre', { ascending: true });
+        if (error) throw error;
+        return res.status(200).json({ success: true, data: data || [] });
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        if (body.id) {
+          const { id, ...updates } = body;
+          const { error } = await sb.from('prestation_modeles').update(updates).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        const { data, error } = await sb.from('prestation_modeles').insert(body).select().single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, data });
+      }
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sb.from('prestation_modeles').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).end();
+    }
+
+    if (path === '/factures' || path === '/factures/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      if (req.method === 'GET') {
+        const id = urlParams.get('id');
+        if (id) {
+          const [{ data: facture, error: e1 }, { data: lignes, error: e2 }] = await Promise.all([
+            sb.from('factures').select('*, clients(*)').eq('id', id).single(),
+            sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+          ]);
+          if (e1) throw e1;
+          if (e2) throw e2;
+          return res.status(200).json({ success: true, data: { ...facture, lignes: lignes || [] } });
+        }
+
+        let q = sb.from('factures').select('*, clients(nom, email)').order('date_emission', { ascending: false }).order('numero', { ascending: false });
+        const statut = urlParams.get('statut');
+        const type   = urlParams.get('type');
+        const annee  = urlParams.get('year');
+        const client = urlParams.get('client_id');
+        if (statut) q = q.eq('statut', statut);
+        if (type)   q = q.eq('type', type);
+        if (client) q = q.eq('client_id', client);
+        if (annee)  q = q.gte('date_emission', `${annee}-01-01`).lte('date_emission', `${annee}-12-31`);
+        const { data, error } = await q;
+        if (error) throw error;
+
+        const rows = data || [];
+        const today = parisDate(new Date().toISOString());
+        // Une facture envoyée dont l'échéance est passée est en retard : c'est ce que
+        // la liste met en avant, pas le total émis (qui n'a pas de sens comptable ici).
+        const enRetard = rows.filter(f => f.type === 'facture' && f.statut === 'envoyee' && f.date_echeance && f.date_echeance < today);
+        const sum = (list) => list.reduce((s, f) => s + (parseFloat(f.total_ht) || 0), 0);
+        return res.status(200).json({
+          success: true,
+          data: rows,
+          summary: {
+            enAttente:        sum(rows.filter(f => f.type === 'facture' && f.statut === 'envoyee')),
+            enAttenteCount:   rows.filter(f => f.type === 'facture' && f.statut === 'envoyee').length,
+            enRetard:         sum(enRetard),
+            enRetardCount:    enRetard.length,
+            enRetardIds:      enRetard.map(f => f.id),
+            brouillonsCount:  rows.filter(f => f.statut === 'brouillon').length
+          }
+        });
+      }
+
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const lignes = Array.isArray(body.lignes) ? body.lignes : [];
+        const { lignes: _omit, clients: _omit2, ...entete } = body;
+
+        // Le total vient toujours des lignes, jamais du client : un total envoyé par
+        // le navigateur pourrait diverger de ce que le PDF affiche.
+        const totalFromLignes = lignes.reduce((s, l) =>
+          s + (parseFloat(l.quantite) || 0) * (parseFloat(l.prix_unitaire) || 0), 0);
+
+        // Échéance calculée, jamais recopiée — c'est l'origine du « 31/09/2026 »
+        // imprimé sur les deux premières factures, sur un mois de trente jours.
+        const addDays = (ymd, days) => {
+          const [y, m, d] = String(ymd).slice(0, 10).split('-').map(Number);
+          const dt = new Date(Date.UTC(y, m - 1, d));
+          dt.setUTCDate(dt.getUTCDate() + (parseInt(days, 10) || 0));
+          return dt.toISOString().slice(0, 10);
+        };
+
+        if (body.id) {
+          const { data: existing, error: eExist } = await sb.from('factures').select('statut, numero').eq('id', body.id).single();
+          if (eExist) throw eExist;
+          // Une pièce envoyée est figée : la modifier après coup reviendrait à changer
+          // un document que le client détient déjà.
+          if (existing.statut !== 'brouillon') {
+            return res.status(409).json({ error: `La pièce ${existing.numero} a déjà été envoyée et ne peut plus être modifiée. Créez un avoir ou une nouvelle pièce.` });
+          }
+          const updates = { ...entete, total_ht: totalFromLignes, updated_at: new Date().toISOString() };
+          delete updates.id; delete updates.numero; delete updates.serie;
+          if (updates.date_emission) updates.date_echeance = addDays(updates.date_emission, updates.delai_paiement_jours || 30);
+          const { error } = await sb.from('factures').update(updates).eq('id', body.id);
+          if (error) throw error;
+          await sb.from('facture_lignes').delete().eq('facture_id', body.id);
+          if (lignes.length) {
+            const { error: eL } = await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
+              facture_id: body.id, designation: l.designation, date_prestation: l.date_prestation || null,
+              quantite: parseFloat(l.quantite) || 1, prix_unitaire: parseFloat(l.prix_unitaire) || 0,
+              total: (parseFloat(l.quantite) || 1) * (parseFloat(l.prix_unitaire) || 0), ordre: i
+            })));
+            if (eL) throw eL;
+          }
+          return res.status(200).json({ success: true, id: body.id });
+        }
+
+        // Numéro attribué par la base, pas par l'application : la continuité de la
+        // numérotation est une obligation légale et deux créations simultanées
+        // produiraient sinon le même numéro.
+        const serie = entete.type === 'devis' ? 'D01' : 'F01';
+        const { data: numero, error: eNum } = await sb.rpc('next_facture_numero', { p_serie: serie });
+        if (eNum) throw eNum;
+
+        let clientSnapshot = null;
+        if (entete.client_id) {
+          const { data: c } = await sb.from('clients').select('*').eq('id', entete.client_id).single();
+          if (c) clientSnapshot = c;
+        }
+
+        const dateEmission = entete.date_emission || parisDate(new Date().toISOString());
+        const delai = parseInt(entete.delai_paiement_jours, 10) || 30;
+        const { data: created, error } = await sb.from('factures').insert({
+          ...entete,
+          numero, serie,
+          date_emission: dateEmission,
+          delai_paiement_jours: delai,
+          date_echeance: addDays(dateEmission, delai),
+          client_snapshot: clientSnapshot,
+          total_ht: totalFromLignes,
+          statut: 'brouillon'
+        }).select().single();
+        if (error) throw error;
+
+        if (lignes.length) {
+          const { error: eL } = await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
+            facture_id: created.id, designation: l.designation, date_prestation: l.date_prestation || null,
+            quantite: parseFloat(l.quantite) || 1, prix_unitaire: parseFloat(l.prix_unitaire) || 0,
+            total: (parseFloat(l.quantite) || 1) * (parseFloat(l.prix_unitaire) || 0), ordre: i
+          })));
+          if (eL) throw eL;
+        }
+        return res.status(200).json({ success: true, data: created });
+      }
+
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: f, error: eGet } = await sb.from('factures').select('statut, numero').eq('id', id).single();
+        if (eGet) throw eGet;
+        // Un brouillon n'a aucune valeur juridique : il se supprime. Une pièce émise
+        // ne se supprime jamais (trou dans la numérotation), elle s'annule.
+        if (f.statut === 'brouillon') {
+          const { error } = await sb.from('factures').delete().eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true, deleted: true });
+        }
+        const { error } = await sb.from('factures').update({ statut: 'annulee', updated_at: new Date().toISOString() }).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true, deleted: false, message: `${f.numero} a été annulée. Une pièce émise ne peut pas être supprimée : cela créerait un trou dans la numérotation.` });
+      }
+      return res.status(405).end();
+    }
+
+    // Envoi d'une pièce : archive le PDF, l'envoie au client, passe en « envoyée ».
+    // Ne crée AUCUNE recette — l'encaissement viendra plus tard, cf. /factures/payer.
+    if (path === '/factures/send' || path === '/factures/send/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const body = await parseBody(req);
+      const { id, pdfBase64, test } = body;
+
+      // Test depuis l'onglet Mails : mêmes fonctions d'envoi, données d'exemple.
+      // Jamais de second template écrit ici (règle CLAUDE.md).
+      if (test) {
+        const ex = exempleFacture();
+        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null });
+        return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null });
+      }
+
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const [{ data: facture, error: e1 }, { data: lignes, error: e2 }] = await Promise.all([
+        sb.from('factures').select('*, clients(*)').eq('id', id).single(),
+        sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+      ]);
+      if (e1) throw e1;
+      if (e2) throw e2;
+
+      const client = facture.clients || facture.client_snapshot || {};
+      if (!client.email) return res.status(400).json({ error: `Aucune adresse email pour ${client.nom || 'ce client'}. Complétez sa fiche avant d'envoyer.` });
+      if (!pdfBase64) return res.status(400).json({ error: 'PDF manquant' });
+
+      // Archivage avant envoi : la pièce émise doit être conservée dix ans, et c'est
+      // ce même fichier qui sera rattaché aux relances.
+      const storagePath = `${facture.date_emission.slice(0, 4)}/${facture.numero}.pdf`;
+      const { error: eUp } = await sb.storage.from('factures-emises')
+        .upload(storagePath, Buffer.from(pdfBase64, 'base64'), { contentType: 'application/pdf', upsert: true });
+      if (eUp) throw eUp;
+
+      const send = facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
+      const result = await send({ facture, lignes: lignes || [], client, pdfBase64 });
+      if (!result.ok) return res.status(502).json({ error: `Envoi impossible : ${result.error}` });
+
+      const { error: eUpd } = await sb.from('factures').update({
+        statut: 'envoyee', sent_at: new Date().toISOString(), sent_to: client.email,
+        storage_path: storagePath, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (eUpd) throw eUpd;
+      return res.status(200).json({ success: true, sentTo: client.email });
+    }
+
+    // Relance d'impayé. Réutilise le PDF archivé : aucune régénération, donc aucun
+    // risque que le client reçoive deux versions différentes d'une même facture.
+    if (path === '/factures/relance' || path === '/factures/relance/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const [{ data: facture, error: e1 }, { data: lignes }] = await Promise.all([
+        sb.from('factures').select('*, clients(*)').eq('id', id).single(),
+        sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+      ]);
+      if (e1) throw e1;
+      if (facture.statut === 'payee') return res.status(409).json({ error: `${facture.numero} est déjà réglée.` });
+      if (facture.statut !== 'envoyee') return res.status(409).json({ error: `${facture.numero} n'a pas encore été envoyée.` });
+
+      const client = facture.clients || facture.client_snapshot || {};
+      let pdfBase64 = null;
+      if (facture.storage_path) {
+        const { data: file } = await sb.storage.from('factures-emises').download(facture.storage_path);
+        if (file) pdfBase64 = Buffer.from(await file.arrayBuffer()).toString('base64');
+      }
+
+      const today = parisDate(new Date().toISOString());
+      const joursRetard = facture.date_echeance
+        ? Math.max(0, Math.round((Date.parse(today) - Date.parse(facture.date_echeance)) / 86400000))
+        : 0;
+      const rang = (facture.relance_count || 0) + 1;
+
+      const result = await sendRelanceEmail({ facture, lignes: lignes || [], client, pdfBase64, rang, joursRetard });
+      if (!result.ok) return res.status(502).json({ error: `Relance impossible : ${result.error}` });
+
+      const { error } = await sb.from('factures').update({
+        relance_count: rang, last_relance_at: new Date().toISOString(), updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ success: true, rang, joursRetard });
+    }
+
+    // Encaissement — LE seul endroit où une facture devient du chiffre d'affaires.
+    // La recette est datée du PAIEMENT, jamais de l'émission : c'est ce qui empêche
+    // de déclarer en août une facture émise le 26 août et encaissée en septembre.
+    if (path === '/factures/payer' || path === '/factures/payer/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id, date_paiement, mode_paiement } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      if (!date_paiement) return res.status(400).json({ error: "La date d'encaissement est obligatoire : c'est elle qui détermine le mois de déclaration." });
+
+      const { data: facture, error: e1 } = await sb.from('factures').select('*, clients(nom)').eq('id', id).single();
+      if (e1) throw e1;
+      if (facture.statut === 'payee') return res.status(409).json({ error: `${facture.numero} est déjà marquée payée.` });
+      if (facture.type === 'devis')   return res.status(409).json({ error: `${facture.numero} est un devis : convertissez-le en facture d'abord.` });
+
+      const clientNom = (facture.clients && facture.clients.nom) || (facture.client_snapshot && facture.client_snapshot.nom) || '';
+      const { data: tx, error: eTx } = await sb.from('transactions').insert({
+        date: String(date_paiement).slice(0, 10),
+        type: 'recette',
+        category: 'prestation',
+        description: `${facture.numero} — ${clientNom}`.trim(),
+        amount: facture.total_ht,
+        source: 'manuel',
+        urssaf_category: facture.urssaf_category,
+        facture_id: facture.id
+      }).select().single();
+      if (eTx) throw eTx;
+
+      const { error } = await sb.from('factures').update({
+        statut: 'payee', date_paiement: String(date_paiement).slice(0, 10),
+        mode_paiement: mode_paiement || null, transaction_id: tx.id, updated_at: new Date().toISOString()
+      }).eq('id', id);
+      if (error) throw error;
+
+      return res.status(200).json({
+        success: true,
+        transaction: tx,
+        message: `${facture.numero} encaissée le ${String(date_paiement).slice(0,10)} — ${facture.total_ht} € ajoutés au chiffre d'affaires de ce mois-là.`
+      });
+    }
+
+    // Conversion d'un devis accepté en facture : nouvelle pièce, nouveau numéro dans
+    // la série des factures. Le devis est conservé et marqué accepté.
+    if (path === '/factures/convertir' || path === '/factures/convertir/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const [{ data: devis, error: e1 }, { data: lignes }] = await Promise.all([
+        sb.from('factures').select('*').eq('id', id).single(),
+        sb.from('facture_lignes').select('*').eq('facture_id', id).order('ordre', { ascending: true })
+      ]);
+      if (e1) throw e1;
+      if (devis.type !== 'devis') return res.status(409).json({ error: `${devis.numero} est déjà une facture.` });
+
+      const { data: numero, error: eNum } = await sb.rpc('next_facture_numero', { p_serie: 'F01' });
+      if (eNum) throw eNum;
+
+      const today = parisDate(new Date().toISOString());
+      const [y, m, d] = today.split('-').map(Number);
+      const ech = new Date(Date.UTC(y, m - 1, d));
+      ech.setUTCDate(ech.getUTCDate() + (devis.delai_paiement_jours || 30));
+
+      const { data: created, error } = await sb.from('factures').insert({
+        numero, serie: 'F01', type: 'facture', statut: 'brouillon',
+        client_id: devis.client_id, client_snapshot: devis.client_snapshot,
+        date_emission: today, date_echeance: ech.toISOString().slice(0, 10),
+        delai_paiement_jours: devis.delai_paiement_jours, periode_label: devis.periode_label,
+        total_ht: devis.total_ht, urssaf_category: devis.urssaf_category,
+        notes: devis.notes
+      }).select().single();
+      if (error) throw error;
+
+      if ((lignes || []).length) {
+        await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
+          facture_id: created.id, designation: l.designation, date_prestation: l.date_prestation,
+          quantite: l.quantite, prix_unitaire: l.prix_unitaire, total: l.total, ordre: i
+        })));
+      }
+      await sb.from('factures').update({ statut: 'acceptee', updated_at: new Date().toISOString() }).eq('id', id);
+      return res.status(200).json({ success: true, data: created });
+    }
+
+    // Livre des recettes — registre chronologique obligatoire en micro-entreprise.
+    // Colonnes pensées pour être relues par un tiers : c'est ce fichier qu'une
+    // plateforme agréée avalera pour l'e-reporting de septembre 2027.
+    if (path === '/livre-recettes' || path === '/livre-recettes/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'GET') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const year = urlParams.get('year') || String(new Date().getFullYear());
+
+      const { data, error } = await sb.from('transactions')
+        .select('date, description, amount, source, category, urssaf_category, facture_id, factures(numero, mode_paiement, client_snapshot)')
+        .eq('type', 'recette')
+        .gte('date', `${year}-01-01`).lte('date', `${year}-12-31`)
+        .order('date', { ascending: true });
+      if (error) throw error;
+
+      const LIBELLE_CASE = {
+        bnc: 'Recettes BNC', bic_ventes: 'BIC ventes', bic_prestations: 'BIC prestations'
+      };
+      const esc = (v) => {
+        const s = String(v == null ? '' : v);
+        return /[";\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+      };
+      const header = ['Date d\'encaissement', 'Référence', 'Client', 'Nature de la recette', 'Case URSSAF', 'Montant encaissé (EUR)', 'Mode de règlement'];
+      const lines = [header.join(';')];
+      let total = 0;
+
+      for (const t of data || []) {
+        const f = t.factures || {};
+        const snap = f.client_snapshot || {};
+        const cat = t.urssaf_category || (CATEGORY_BY_SOURCE[t.source] || 'bic_prestations');
+        total += parseFloat(t.amount) || 0;
+        lines.push([
+          t.date, f.numero || '', snap.nom || '', t.description || t.category || '',
+          LIBELLE_CASE[cat] || cat,
+          (parseFloat(t.amount) || 0).toFixed(2).replace('.', ','),
+          f.mode_paiement || (t.source === 'manuel' ? '' : 'Stripe')
+        ].map(esc).join(';'));
+      }
+      lines.push(['', '', '', 'TOTAL', '', total.toFixed(2).replace('.', ','), ''].map(esc).join(';'));
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename=livre-des-recettes-${year}.csv`);
+      // BOM : sans lui Excel lit le CSV en latin-1 et casse les accents.
+      return res.status(200).send('﻿' + lines.join('\n'));
     }
 
     if (path === '/analytics' || path === '/analytics/') {
