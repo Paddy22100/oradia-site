@@ -3987,7 +3987,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
           const remainingActionsCards = totalActionsCards - drawnActionsCards;
           
           if (remainingActionsCards > 0) {
-            actionsTextEl.textContent = `Il reste ${remainingActionsCards} carte${remainingActionsCards > 1 ? 's' : ''} dans la famille Actions`;
+            actionsTextEl.textContent = `${remainingActionsCards} card${remainingActionsCards > 1 ? 's' : ''} left in the Actions family`;
             actionsCountEl.classList.remove('hidden');
           } else {
             actionsCountEl.classList.add('hidden');
@@ -6493,14 +6493,14 @@ function showArrowForStep(stepIndex, isMatch) {
     // Trouver la configuration de l'étape actuelle
     const step = STEPS_TORE.find(s => s.key === currentFamily);
     if (!step) {
-      showCardError('Configuration de famille non trouvée, réessayez.', 2000);
+      showCardError('Family configuration not found, please try again.', 2000);
       return;
     }
     
     // Récupérer l'index de l'étape actuelle dans STEPS_TORE
     const stepIndex = STEPS_TORE.findIndex(s => s.key === currentFamily);
     if (stepIndex === -1) {
-      showCardError('Index de famille invalide, réessayez.', 2000);
+      showCardError('Invalid family index, please try again.', 2000);
       return;
     }
 

@@ -39,14 +39,18 @@
         if (req.display !== 'granted') return;
       }
 
-      const body = intention
-        ? `Qu'as-tu remarqué autour de « ${intention.slice(0, 120)} » ?`
-        : "Qu'as-tu remarqué durant cette période ?";
+      // Page anglaise (<html lang="en">, ex. /en/tore-analysis.html) → notification en anglais.
+      const en = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
+      const body = en
+        ? (intention ? `What did you notice around "${intention.slice(0, 120)}"?` : 'What did you notice during this period?')
+        : (intention
+          ? `Qu'as-tu remarqué autour de « ${intention.slice(0, 120)} » ?`
+          : "Qu'as-tu remarqué durant cette période ?");
 
       await plugin.schedule({
         notifications: [{
           id: makeNotificationId(),
-          title: 'Ta fenêtre d’observation se referme',
+          title: en ? 'Your observation window is closing' : 'Ta fenêtre d’observation se referme',
           body: body,
           schedule: { at: at },
           extra: { type: 'observation-window-closing' }
