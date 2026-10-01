@@ -9923,7 +9923,11 @@ Réponds en français, sans tiret long, format markdown compact.`
         const type   = urlParams.get('type');
         const annee  = urlParams.get('year');
         const client = urlParams.get('client_id');
+        // Sans filtre explicite, les pièces annulées sont masquées : elles ne demandent
+        // plus rien et encombrent la liste. Elles restent consultables via le filtre,
+        // et ne sont jamais supprimées — leur numéro doit rester dans la séquence.
         if (statut) q = q.eq('statut', statut);
+        else q = q.neq('statut', 'annulee');
         if (type)   q = q.eq('type', type);
         if (client) q = q.eq('client_id', client);
         if (annee)  q = q.gte('date_emission', `${annee}-01-01`).lte('date_emission', `${annee}-12-31`);
