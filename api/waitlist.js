@@ -504,6 +504,8 @@ module.exports = async (req, res) => {
     if (body && body.action === 'signup') {
       try {
         const { password, name, _hp } = body;
+        // Date de naissance (facultative) : gardée sur le compte, pas sur un abonnement.
+        const birthDate = /^\d{4}-\d{2}-\d{2}$/.test(String(body.birthdate || '')) ? body.birthdate : null;
         const lang = body.lang === 'en' ? 'en' : 'fr';
         // Normalisé ici : cet email finit dans tore_subscriptions (table Postgres classique,
         // comparaison .eq sensible à la casse) — non normalisé, un compte auto-inscrit avec
@@ -555,7 +557,7 @@ module.exports = async (req, res) => {
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
           email,
           password,
-          user_metadata: { full_name: name },
+          user_metadata: { full_name: name, ...(birthDate ? { birth_date: birthDate } : {}) },
           email_confirm: false
         });
 

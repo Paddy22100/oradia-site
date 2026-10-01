@@ -123,6 +123,9 @@
     'Erreur de connexion. Réessayez.': 'Connection error. Please try again.',
     'Non authentifié.': 'Not authenticated.',
     'Session expirée.': 'Session expired.',
+    'Session expirée': 'Session expired',
+    'Date de naissance invalide': 'Invalid date of birth',
+    'Email invalide': 'Invalid email',
 
     // Connexion (login + formulaires de connexion intégrés)
     'Connexion': 'Log in',

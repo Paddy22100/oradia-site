@@ -493,15 +493,52 @@ async function handleSaveToreEmail(req, res) {
   return res.end(JSON.stringify({ success: true }));
 }
 
-// ============ SAUVEGARDE DATE/LIEU DE NAISSANCE (profil membre) ============
+// ============ DATE/LIEU DE NAISSANCE (profil membre) ============
+// Stockés sur le compte Supabase Auth (user_metadata.birth_date / birth_place) : un membre
+// sans abonnement n'a pas de ligne tore_subscriptions (voir api/waitlist.js, signup), la
+// date saisie à l'inscription doit pourtant être conservée. Pour les abonnés, la ligne
+// tore_subscriptions est aussi mise à jour (anciennes données lues en repli).
+//   GET  /api/auth/save-birth-info  (Bearer)  → { birth_date, birth_place }
+//   POST /api/auth/save-birth-info  (Bearer de préférence, sinon email — ancien comportement)
 async function handleSaveBirthInfo(req, res) {
+  const { getMemberFromRequest } = require('../../lib/member-subscription.js');
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const member = await getMemberFromRequest(supabase, req);
+
+  if (req.method === 'GET') {
+    if (!member) {
+      res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Session expirée' }));
+    }
+    let birthDate = null, birthPlace = null;
+    try {
+      const { data } = await supabase.auth.admin.getUserById(member.userId);
+      const meta = data?.user?.user_metadata || {};
+      birthDate = meta.birth_date || null;
+      birthPlace = meta.birth_place || null;
+    } catch (e) { console.error('[birth-info] getUserById:', e.message); }
+    if (!birthDate || !birthPlace) {
+      const { data: row } = await supabase.from('tore_subscriptions')
+        .select('birth_date, birthdate, birth_place').ilike('email', member.email).limit(1).maybeSingle();
+      if (row) {
+        birthDate = birthDate || row.birth_date || row.birthdate || null;
+        birthPlace = birthPlace || row.birth_place || null;
+      }
+    }
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: true, birth_date: birthDate, birth_place: birthPlace }));
+  }
+
   const body = await new Promise((resolve, reject) => {
     let data = '';
     req.on('data', c => data += c);
     req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
     req.on('error', reject);
   });
-  const email = (body.email || '').trim().toLowerCase();
+  const email = member ? member.email : (body.email || '').trim().toLowerCase();
   const birthDate = (body.birth_date || '').trim();
   const birthPlace = (body.birth_place || '').trim().slice(0, 200);
   if (!email || !email.includes('@')) {
@@ -512,15 +549,25 @@ async function handleSaveBirthInfo(req, res) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: 'Date de naissance invalide' }));
   }
-  const supabase = createClient(
-    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  if (member) {
+    try {
+      const { data } = await supabase.auth.admin.getUserById(member.userId);
+      const meta = data?.user?.user_metadata || {};
+      const { error: metaErr } = await supabase.auth.admin.updateUserById(member.userId, {
+        user_metadata: { ...meta, birth_date: birthDate || null, birth_place: birthPlace || null }
+      });
+      if (metaErr) throw metaErr;
+    } catch (e) {
+      console.error('[birth-info] updateUserById:', e.message);
+      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: e.message }));
+    }
+  }
   const { error } = await supabase
     .from('tore_subscriptions')
     .update({ birth_date: birthDate || null, birth_place: birthPlace || null, updated_at: new Date().toISOString() })
     .ilike('email', email);
-  if (error) {
+  if (error && !member) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: error.message }));
   }
@@ -713,6 +760,11 @@ module.exports = async (req, res) => {
     // GET /check-newsletter - vérifie si un email est inscrit à la newsletter (liste Brevo 5)
     if (req.method === 'GET' && (path.includes('check-newsletter') || fullUrl.includes('check-newsletter'))) {
       return await handleCheckNewsletter(req, res);
+    }
+
+    // GET /save-birth-info : lecture authentifiée de la date/lieu de naissance du membre
+    if (req.method === 'GET' && (path.includes('save-birth-info') || fullUrl.includes('save-birth-info'))) {
+      return await handleSaveBirthInfo(req, res);
     }
 
     // POST routes
