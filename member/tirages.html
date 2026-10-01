@@ -1265,7 +1265,8 @@
                 hour: parseInt(document.getElementById('scheduleHour').value, 10),
                 intention,
                 gender: _scheduleGender,
-                active: true
+                active: true,
+                lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr' // langue de l'analyse et de l'email programmés
             };
             if (_scheduleFrequency === 'weekly') payload.dayOfWeek = parseInt(document.getElementById('scheduleDayOfWeek').value, 10);
             if (_scheduleFrequency === 'monthly') payload.dayOfMonth = parseInt(document.getElementById('scheduleDayOfMonth').value, 10);

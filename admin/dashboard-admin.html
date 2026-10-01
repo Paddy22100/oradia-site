@@ -4757,9 +4757,14 @@
                         <p class="text-gold font-semibold text-sm">Confirmation inscription newsletter</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé à l'inscription sur le site</p>
                     </div>
-                    <button onclick="sendMailTest('newsletter-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('newsletter-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('newsletter-confirm', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Confirmation paiement Tore -->

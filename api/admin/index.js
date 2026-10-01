@@ -2313,7 +2313,8 @@ async function handleData(req, res) {
               full_name: sub.full_name || '',
               subscription_type: 'tore',
               subscription_active: true,
-              must_change_password: true
+              must_change_password: true,
+              lang: sub.lang === 'en' ? 'en' : 'fr' // langue de l'email Supabase de réinitialisation
             }
           });
           if (createErr) {
@@ -3335,7 +3336,7 @@ async function handleData(req, res) {
         if (type === 'newsletter-confirm') {
           // Réutilise le VRAI template (api/waitlist.js), au lieu d'une copie générique
           // qui ne reflétait plus l'email réellement envoyé (bandeau, encart précommande, etc.)
-          const emailSentNl = await sendWaitlistConfirmationEmail(dest);
+          const emailSentNl = await sendWaitlistConfirmationEmail(dest, body.lang === 'en' ? 'en' : 'fr');
           if (!emailSentNl) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
         } else if (type === 'preorder-confirm') {

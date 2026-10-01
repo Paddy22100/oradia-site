@@ -165,6 +165,10 @@ de l'email depuis `/en/tore.html`. Email de clôture de fenêtre d'observation (
 langue stockée dans `observation_windows.lang` à l'activation depuis `/en/tore-analysis.html` ; le
 questionnaire anglais `en/synchronicite.html` envoie les **mêmes codes** de réponse que la version
 française (seuls les libellés sont traduits — ne jamais traduire les valeurs stockées).
+Tirages programmés : langue dans `tore_scheduled_draws.lang` (`supabase-migration-scheduled-draws-lang.sql`),
+envoyée par `member/tirages.html` ; l'analyse IA (`lib/tore-analysis-prompt.js`, `lang`) et l'email suivent.
+Confirmation newsletter (`sendWaitlistConfirmationEmail(email, lang)` dans `api/waitlist.js`) : anglais pour la
+source `en-landing` ou `lang: 'en'` (bandeau `bandeau_newsletter-en.webp`, sans la bannière de l'app, française).
 
 ### 5. LOGIQUE FREEMIUM — localStorage
 

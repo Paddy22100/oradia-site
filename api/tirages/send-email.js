@@ -1867,6 +1867,7 @@ async function handleSaveSchedule(req, res) {
     intention: cleanIntention,
     gender: (gender === 'homme' || gender === 'femme') ? gender : null,
     active: active !== false,
+    lang: body.lang === 'en' ? 'en' : 'fr', // langue de l'analyse et de l'email programmés
     updated_at: new Date().toISOString()
   };
 
@@ -2005,7 +2006,7 @@ async function runScheduledDrawsBackground(supabase, due, now) {
         return card;
       });
 
-      const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender, userEmail: sched.email });
+      const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender, userEmail: sched.email, lang: sched.lang });
       if (!analysis) { failed++; return; }
 
       const passerelles = cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
@@ -2013,7 +2014,7 @@ async function runScheduledDrawsBackground(supabase, due, now) {
       // Enregistrer dans l'historique (source = programme, rétention séparée des tirages ponctuels)
       const { error: insErr } = await supabase.from('tirages').insert({
         user_id: sched.user_id,
-        type: 'Tirage Tore (programmé)',
+        type: sched.lang === 'en' ? 'Tore draw (scheduled)' : 'Tirage Tore (programmé)',
         source: 'programme',
         intention: sched.intention,
         cartes: cards.map(c => c.name),
@@ -2044,7 +2045,8 @@ async function runScheduledDrawsBackground(supabase, due, now) {
             synthesis: analysis.synthesis,
             observationDays: null,
             observationText: '',
-            attentionPoints: []
+            attentionPoints: [],
+            lang: sched.lang === 'en' ? 'en' : 'fr'
           }
         };
         const fakeRes = {

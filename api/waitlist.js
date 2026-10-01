@@ -167,7 +167,9 @@ async function addContactToBrevoList(email) {
   }
 }
 
-async function sendWaitlistConfirmationEmail(email) {
+// Bilingue : lang 'en' pour une inscription depuis les pages anglaises (source 'en-landing').
+async function sendWaitlistConfirmationEmail(email, lang = 'fr') {
+  const en = lang === 'en';
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
   const senderName = process.env.BREVO_SENDER_NAME || 'ORADIA';
@@ -194,16 +196,16 @@ async function sendWaitlistConfirmationEmail(email) {
           email: "contact@oradia.fr",
           name: "Oradia"
         },
-        subject: "Rudy d'Oradia - Bienvenue dans l'univers ORADIA ✨",
+        subject: en ? "Rudy from Oradia - Welcome to the ORADIA universe ✨" : "Rudy d'Oradia - Bienvenue dans l'univers ORADIA ✨",
         htmlContent: `
 <!DOCTYPE html>
-<html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<html lang="${en ? 'en' : 'fr'}" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <meta name="x-apple-disable-message-reformatting">
-  <title>Bienvenue dans l'univers ORADIA</title>
+  <title>${en ? 'Welcome to the ORADIA universe' : 'Bienvenue dans l\'univers ORADIA'}</title>
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
@@ -231,7 +233,7 @@ async function sendWaitlistConfirmationEmail(email) {
           <!-- Bandeau newsletter -->
           <tr>
             <td style="padding:0; line-height:0; font-size:0;">
-              <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
+              <img src="https://oradia.fr/images/medias/bandeau_newsletter${en ? '-en' : ''}.webp" alt="${en ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
             </td>
           </tr>
 
@@ -247,7 +249,7 @@ async function sendWaitlistConfirmationEmail(email) {
                 <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
               </p>
               <p style="margin:14px 0 0; color:#d8bf72; font-family:Georgia,serif; font-size:14px; font-style:italic; line-height:1.6;">
-                Ton inscription est confirmée
+                ${en ? 'Your subscription is confirmed' : 'Ton inscription est confirmée'}
               </p>
             </td>
           </tr>
@@ -256,10 +258,10 @@ async function sendWaitlistConfirmationEmail(email) {
           <tr>
             <td class="pad-body" style="padding:0 40px;">
               <p style="margin:0 0 18px; color:#e8e2cf; font-family:Georgia,serif; font-size:16px; line-height:1.8; text-align:justify;">
-                Cher(e) ami(e),
+                ${en ? 'Dear friend,' : 'Cher(e) ami(e),'}
               </p>
               <p style="margin:0 0 28px; color:#c8c0a8; font-family:Georgia,serif; font-size:16px; line-height:1.8; text-align:justify;">
-                Merci de rejoindre la communauté ORADIA. Tu recevras nos inspirations, actualités de l'Oracle et avant-premières directement dans ta boîte mail.
+                ${en ? 'Thank you for joining the ORADIA community. You will receive our inspirations, Oracle news and previews straight to your inbox.' : 'Merci de rejoindre la communauté ORADIA. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail.'}
               </p>
             </td>
           </tr>
@@ -271,10 +273,10 @@ async function sendWaitlistConfirmationEmail(email) {
                 <tr>
                   <td style="padding:18px 22px;">
                     <p style="margin:0 0 6px; color:#d4af37; font-family:Georgia,serif; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;">
-                      📬 Pour ne rien manquer
+                      ${en ? '📬 Don\'t miss a thing' : '📬 Pour ne rien manquer'}
                     </p>
                     <p style="margin:0; color:#c8c0a8; font-family:Georgia,serif; font-size:13px; line-height:1.75; text-align:justify;">
-                      Certaines messageries (comme Gmail) classent nos emails dans l'onglet <strong style="color:#e8e2cf;">Promotions</strong> ou dans les indésirables. Si tu ne nous vois pas dans ta boîte principale, pense à y jeter un œil, puis ajoute <a href="mailto:contact@oradia.fr" style="color:#d4af37; text-decoration:none;">contact@oradia.fr</a> à tes contacts pour recevoir nos messages à coup sûr.
+                      ${en ? 'Some mail providers (like Gmail) file our emails under the <strong style="color:#e8e2cf;">Promotions</strong> tab or in spam. If you don\'t see us in your main inbox, take a look there, then add <a href="mailto:contact@oradia.fr" style="color:#d4af37; text-decoration:none;">contact@oradia.fr</a> to your contacts to be sure to receive our messages.' : 'Certaines messageries (comme Gmail) classent nos emails dans l\'onglet <strong style="color:#e8e2cf;">Promotions</strong> ou dans les indésirables. Si tu ne nous vois pas dans ta boîte principale, pense à y jeter un œil, puis ajoute <a href="mailto:contact@oradia.fr" style="color:#d4af37; text-decoration:none;">contact@oradia.fr</a> à tes contacts pour recevoir nos messages à coup sûr.'}
                     </p>
                   </td>
                 </tr>
@@ -288,19 +290,19 @@ async function sendWaitlistConfirmationEmail(email) {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;" bgcolor="#0f1d35">
                 <tr>
                   <td align="center" style="padding:20px 28px 4px; line-height:0; font-size:0;">
-                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="ORADIA — La Boussole Intérieure, coffret et cartes" width="220" style="display:block; width:220px; max-width:55%; height:auto; border:0; border-radius:8px;">
+                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="${en ? 'ORADIA — The Inner Compass, box and cards' : 'ORADIA — La Boussole Intérieure, coffret et cartes'}" width="220" style="display:block; width:220px; max-width:55%; height:auto; border:0; border-radius:8px;">
                   </td>
                 </tr>
                 <tr>
                   <td align="center" style="padding:26px 28px;">
                     <p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;">
-                      Édition limitée
+                      ${en ? 'Limited edition' : 'Édition limitée'}
                     </p>
                     <p style="margin:0 0 20px; color:#c8c0a8; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
-                      L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 31 décembre 2026.
+                      ${en ? 'The physical ORADIA Oracle is open for pre-order.<br>Join the first edition before 31 December 2026.' : 'L\'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 31 décembre 2026.'}
                     </p>
                     <a href="https://oradia.fr/precommande-oracle.html" class="btn-preorder" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 38px; border-radius:50px; letter-spacing:0.05em;">
-                      Précommander l'Oracle physique
+                      ${en ? 'Pre-order the physical Oracle' : 'Précommander l\'Oracle physique'}
                     </a>
                   </td>
                 </tr>
@@ -312,19 +314,19 @@ async function sendWaitlistConfirmationEmail(email) {
           <tr>
             <td style="padding:0 40px 16px; text-align:center;">
               <p style="margin:0; color:#9ca3af; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
-                Tu peux aussi faire un tirage en ligne dès maintenant avec La Boussole Intérieure.
+                ${en ? 'You can also do an online draw right now with The Inner Compass.' : 'Tu peux aussi faire un tirage en ligne dès maintenant avec La Boussole Intérieure.'}
               </p>
             </td>
           </tr>
           <tr>
             <td align="center" style="padding:0 40px 30px;">
-              <a href="https://oradia.fr/tore.html" class="btn-tirage" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 40px; border-radius:50px; letter-spacing:0.05em;">
-                Faire un tirage maintenant
+              <a href="https://oradia.fr${en ? '/en' : ''}/tore.html" class="btn-tirage" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 40px; border-radius:50px; letter-spacing:0.05em;">
+                ${en ? 'Do a draw now' : 'Faire un tirage maintenant'}
               </a>
             </td>
           </tr>
 
-          <!-- Bannière app mobile bêta — plus petite que l'encart précommande ci-dessus
+${en ? '' : `          <!-- Bannière app mobile bêta — plus petite que l'encart précommande ci-dessus
                (500px vs ~636px de large) pour rester secondaire sans être trop discrète. -->
           <tr>
             <td align="center" style="padding:0 40px 26px;">
@@ -334,7 +336,7 @@ async function sendWaitlistConfirmationEmail(email) {
             </td>
           </tr>
 
-          <!-- Séparateur -->
+`}          <!-- Séparateur -->
           <tr>
             <td style="padding:4px 40px; text-align:center;">
               <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
@@ -346,9 +348,9 @@ async function sendWaitlistConfirmationEmail(email) {
           <!-- Signature -->
           <tr>
             <td align="center" style="padding:24px 32px 32px;">
-              <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+              <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">${en ? 'With gratitude,' : 'Avec gratitude,'}</p>
               <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
-              <p style="margin:0; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+              <p style="margin:0; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">${en ? 'Founder of Oradia' : 'Fondateur d\'Oradia'}</p>
             </td>
           </tr>
 
@@ -362,7 +364,7 @@ async function sendWaitlistConfirmationEmail(email) {
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:6px auto 14px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
               <p style="margin:0; color:#c8c0a8; font-family:Georgia,serif; font-size:11px; line-height:1.5; opacity:0.45;">
-                ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.
+                ${en ? 'ORADIA - The Inner Compass<br>Reveal. Transmute. Connect.' : 'ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.'}
               </p>
             </td>
           </tr>
@@ -376,7 +378,7 @@ async function sendWaitlistConfirmationEmail(email) {
 </body>
 </html>
         `,
-        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — L\'app mobile ORADIA est aussi disponible en bêta, sur liste d\'attente : oradia.fr/app-beta-inscription.html — Avec gratitude, Rudy Boucheron'
+        textContent: en ? 'Welcome to the ORADIA universe! Your subscription is confirmed. You will receive our inspirations, Oracle news and previews straight to your inbox. You can do an online draw right now: oradia.fr/en/tore.html, or pre-order the physical Oracle: oradia.fr/precommande-oracle.html. With gratitude, Rudy Boucheron' : 'Bienvenue dans l\'univers ORADIA ! Ton inscription est confirmée. Tu recevras nos inspirations, actualités de l\'Oracle et avant-premières directement dans ta boîte mail. Tu peux dès maintenant faire un tirage en ligne : oradia.fr/tore.html — ou précommander l\'Oracle physique : oradia.fr/precommande-oracle.html — L\'app mobile ORADIA est aussi disponible en bêta, sur liste d\'attente : oradia.fr/app-beta-inscription.html — Avec gratitude, Rudy Boucheron'
       })
     });
 
@@ -557,7 +559,7 @@ module.exports = async (req, res) => {
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
           email,
           password,
-          user_metadata: { full_name: name, ...(birthDate ? { birth_date: birthDate } : {}) },
+          user_metadata: { full_name: name, lang, ...(birthDate ? { birth_date: birthDate } : {}) }, // lang : email Supabase de réinitialisation
           email_confirm: false
         });
 
@@ -701,6 +703,8 @@ module.exports = async (req, res) => {
     const ALLOWED_SOURCES = ['precommande-oracle', 'footer-newsletter', 'tore', 'oracle', 'blog', 'inline', 'site', 'app-home', 'app-feedback', 'en-landing'];
     const rawSource = String(body.source || 'site').trim().toLowerCase();
     const source = ALLOWED_SOURCES.includes(rawSource) ? rawSource : 'site';
+    // Langue de l'email de confirmation : pages anglaises (source 'en-landing') ou lang explicite.
+    const lang = (body.lang === 'en' || source === 'en-landing') ? 'en' : 'fr';
 
     if (!isValidEmail(email)) {
       return res.status(400).json({
@@ -733,6 +737,7 @@ module.exports = async (req, res) => {
           status: 'active',
           metadata: {
             page: source,
+            lang,
             subscribed_at: new Date().toISOString()
           }
         },
@@ -749,7 +754,7 @@ module.exports = async (req, res) => {
     }
 
     const [emailSent, contactAdded] = await Promise.all([
-      isNewOrReactivated ? sendWaitlistConfirmationEmail(email) : Promise.resolve(false),
+      isNewOrReactivated ? sendWaitlistConfirmationEmail(email, lang) : Promise.resolve(false),
       addContactToBrevoList(email)
     ]);
 

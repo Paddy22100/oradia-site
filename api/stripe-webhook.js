@@ -303,7 +303,8 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
                 full_name: fullName || '',
                 subscription_type: 'tore',
                 subscription_active: true,
-                must_change_password: true
+                must_change_password: true,
+                lang: lang === 'en' ? 'en' : 'fr' // langue de l'email Supabase de réinitialisation
             }
         });
 
