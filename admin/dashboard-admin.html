@@ -4839,9 +4839,14 @@
                         <p class="text-gold font-semibold text-sm">Confirmation réservation guidance</p>
                         <p class="text-gold/40 text-xs mt-0.5">Envoyé au client après réservation</p>
                     </div>
-                    <button onclick="sendMailTest('guidance-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
-                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
-                    </button>
+                    <div class="flex-shrink-0 flex items-center gap-2">
+                        <button onclick="sendMailTest('guidance-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                        <button onclick="sendMailTest('guidance-confirm', undefined, 'en')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Test EN
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Rappel de renouvellement (avant échéance) -->
@@ -17673,13 +17678,27 @@
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">
                         <span class="font-bold ${isRecette?'text-green-400':'text-red-400'}">${isRecette?'+':'-'}${fmt2(t.amount)}</span>
-                        <button onclick="viewTransactionInvoices('${t.id}','${escapeHtmlFront(t.description).replace(/'/g, "\\'")}')" title="Factures jointes" class="relative text-xs transition ${t.invoice_count > 0 ? 'text-gold/70 hover:text-gold' : 'text-gold/25 hover:text-gold/60'}">
+                        ${t.facture ? `<button onclick="voirFactureEmise('${t.facture.id}')" title="Voir la facture ${escapeHtmlFront(t.facture.numero)}" class="text-xs transition text-gold/70 hover:text-gold"><i class="fas fa-file-invoice"></i></button>` : ''}
+                        <button onclick="viewTransactionInvoices('${t.id}','${escapeHtmlFront(t.description).replace(/'/g, "\\'")}')" title="${isRecette ? 'Pièces jointes' : 'Joindre un justificatif'}" class="relative text-xs transition ${t.invoice_count > 0 ? 'text-gold/70 hover:text-gold' : 'text-gold/25 hover:text-gold/60'}">
                             <i class="fas fa-paperclip"></i>${t.invoice_count > 0 ? `<span class="absolute -top-1.5 -right-2 bg-gold text-[#07112a] text-[9px] font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">${t.invoice_count}</span>` : ''}
                         </button>
                         <button onclick="deleteTransaction('${t.id}')" class="text-red-400/40 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // Ouvre le PDF de la facture ÉMISE dont provient la recette. Distinct du
+        // trombone, qui sert à joindre un justificatif reçu — pertinent sur une
+        // dépense, pas sur une recette qu'on a soi-même facturée.
+        async function voirFactureEmise(factureId) {
+            const res = await adminFetch('/api/admin/factures/pdf-url', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: factureId })
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Facture introuvable'); return; }
+            window.open(json.url, '_blank');
         }
 
         function exportComptaPDF() {

@@ -13,7 +13,7 @@ const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail, sendAbandonedCartEmail, shippingFromOrder } = require('../../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail, sendOracleGiftInviteEmail, sendRenewalReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
-const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
+const { sendGuidanceConfirmationEmail, formatGuidanceDate } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 const { parisDate, computeUrssaf, CATEGORY_BY_SOURCE } = require('../../lib/urssaf.js');
@@ -3407,10 +3407,11 @@ async function handleData(req, res) {
           const sampleDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
           const emailSentGuidance = await sendGuidanceConfirmationEmail({
             clientEmail: dest,
-            clientName: 'Prénom Nom (exemple)',
+            clientName: body.lang === 'en' ? 'First Last (sample)' : 'Prénom Nom (exemple)',
             duration: 60,
-            dateStr: sampleDate.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }),
-            jitsiUrl: 'https://meet.jit.si/oradia-exemple'
+            dateStr: formatGuidanceDate(sampleDate, body.lang === 'en' ? 'en' : 'fr'),
+            jitsiUrl: 'https://meet.jit.si/oradia-exemple',
+            lang: body.lang === 'en' ? 'en' : 'fr'
           });
           if (!emailSentGuidance) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
@@ -9805,7 +9806,19 @@ Réponds en français, sans tiret long, format markdown compact.`
             .in('transaction_id', data.map(t => t.id));
           (invoiceRows || []).forEach(r => { invoiceCounts[r.transaction_id] = (invoiceCounts[r.transaction_id] || 0) + 1; });
         }
-        const dataWithInvoiceCounts = (data || []).map(t => ({ ...t, invoice_count: invoiceCounts[t.id] || 0 }));
+        // Facture émise à l'origine de la recette, pour pouvoir la consulter depuis la
+        // ligne de comptabilité plutôt que d'aller la chercher dans l'onglet Facturation.
+        let facturesById = {};
+        const factureIds = (data || []).map(t => t.facture_id).filter(Boolean);
+        if (factureIds.length > 0) {
+          const { data: factureRows } = await sb.from('factures').select('id, numero, storage_path').in('id', factureIds);
+          (factureRows || []).forEach(f => { facturesById[f.id] = f; });
+        }
+        const dataWithInvoiceCounts = (data || []).map(t => ({
+          ...t,
+          invoice_count: invoiceCounts[t.id] || 0,
+          facture: t.facture_id ? (facturesById[t.facture_id] || null) : null
+        }));
 
         return res.status(200).json({
           success: true,
@@ -10212,6 +10225,25 @@ Réponds en français, sans tiret long, format markdown compact.`
         transaction: tx,
         message: `${facture.numero} encaissée le ${String(date_paiement).slice(0,10)} — ${facture.total_ht} € ajoutés au chiffre d'affaires de ce mois-là.`
       });
+    }
+
+    // Lien signé vers le PDF d'une facture émise, pour la consulter depuis la
+    // comptabilité. Bucket `factures-emises` (pièces émises), à ne pas confondre
+    // avec `transaction-invoices` (justificatifs reçus, joints aux dépenses).
+    if (path === '/factures/pdf-url' || path === '/factures/pdf-url/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { id } = await parseBody(req);
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { data: f, error } = await sb.from('factures').select('numero, storage_path').eq('id', id).single();
+      if (error) throw error;
+      if (!f.storage_path) {
+        return res.status(404).json({ error: `Aucun PDF archivé pour ${f.numero} : cette facture a été reprise depuis un document antérieur au dashboard. Joignez l'original avec le trombone si vous voulez le conserver ici.` });
+      }
+      const { data: signed, error: eSign } = await sb.storage.from('factures-emises').createSignedUrl(f.storage_path, 300);
+      if (eSign) return res.status(500).json({ error: 'Lien impossible à générer : ' + eSign.message });
+      return res.status(200).json({ success: true, url: signed.signedUrl, numero: f.numero });
     }
 
     // Annulation d'un encaissement saisi par erreur (mauvaise date, mauvaise facture).
