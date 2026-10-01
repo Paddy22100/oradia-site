@@ -4149,6 +4149,10 @@
                     class="compta-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
                     <i class="fas fa-euro-sign mr-1.5"></i>Recettes & dépenses
                 </button>
+                <button onclick="showComptaSubTab('facturation')" id="compta-subtab-btn-facturation"
+                    class="compta-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-file-invoice mr-1.5"></i>Facturation
+                </button>
                 <button onclick="showComptaSubTab('costs')" id="compta-subtab-btn-costs"
                     class="compta-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
                     <i class="fas fa-server mr-1.5"></i>Coûts du site
@@ -4225,24 +4229,31 @@
             </div>
 
             <!-- Déclaration URSSAF — ce qui doit réellement être déclaré, pas juste un
-                 chiffre estimé noyé dans les KPIs. Base = abonnements uniquement :
-                 précommandes et dons exclus tant qu'ils restent conditionnels
-                 (garantie zéro-risque de la page précommande). -->
+                 chiffre estimé noyé dans les KPIs. Base = tout l'encaissé du mois
+                 (précommandes et dons compris) : la micro-entreprise se déclare sur
+                 l'encaissement, cf. lib/urssaf.js. Les trois cartes reprennent mot pour mot
+                 les trois cases du formulaire autoentrepreneur.urssaf.fr, pour qu'il n'y ait
+                 rien à traduire au moment de la saisie. -->
             <div class="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 mb-6">
                 <div class="mb-4">
                     <h4 class="text-orange-300 font-semibold">Déclaration URSSAF</h4>
-                    <p class="text-light-gold/40 text-xs italic mt-1">Base = abonnements uniquement. Précommandes et dons exclus tant qu'ils restent conditionnels (remboursables si l'objectif de financement n'est pas atteint).</p>
+                    <p class="text-light-gold/40 text-xs italic mt-1">À recopier tel quel dans le formulaire. Base = tout ce qui a été encaissé ce mois-ci, montant brut avant frais Stripe, précommandes et dons compris. Les recettes hors site (ménage, entretien) doivent être ajoutées à la main.</p>
                 </div>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-white/3 rounded-lg p-3">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Recettes BNC <span id="urssaf-taux-bnc"></span></p>
+                        <p class="text-gold/80 text-sm">À saisir : <span class="font-semibold" id="urssaf-base-bnc">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bnc">—</span></p>
+                    </div>
                     <div class="bg-white/3 rounded-lg p-3">
                         <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BIC ventes <span id="urssaf-taux-bic"></span></p>
-                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bic">—</span></p>
+                        <p class="text-gold/80 text-sm">À saisir : <span class="font-semibold" id="urssaf-base-bic">—</span></p>
                         <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bic">—</span></p>
                     </div>
                     <div class="bg-white/3 rounded-lg p-3">
-                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BNC services <span id="urssaf-taux-bnc"></span></p>
-                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bnc">—</span></p>
-                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bnc">—</span></p>
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BIC prestations <span id="urssaf-taux-presta"></span></p>
+                        <p class="text-gold/80 text-sm">À saisir : <span class="font-semibold" id="urssaf-base-presta">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-presta">—</span></p>
                     </div>
                 </div>
                 <p class="text-gold/30 text-xs mt-4" id="urssaf-exclusions"></p>
@@ -4279,6 +4290,18 @@
                         <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Notes</label>
                         <input type="text" id="ct-notes" placeholder="Notes optionnelles..." class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm placeholder-gold/20">
                     </div>
+                    <!-- Case URSSAF : sans ce champ, toute saisie manuelle retombait sur le
+                         défaut « BIC prestations », ce qui est juste pour le ménage et
+                         l'entretien mais faux pour une vente ou une consultation. -->
+                    <div class="md:col-span-2" id="ct-urssaf-wrap">
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Case URSSAF (recettes uniquement)</label>
+                        <select id="ct-urssaf" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                            <option value="">Déduire de la source</option>
+                            <option value="bic_prestations">BIC prestations — ménage, entretien, abonnements</option>
+                            <option value="bic_ventes">BIC ventes — oracles et objets physiques</option>
+                            <option value="bnc">Recettes BNC — magnétisme, consultations, conseil</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="flex gap-3 mt-4">
                     <button onclick="saveTransaction()" class="bg-gold/20 hover:bg-gold/30 border border-gold/40 text-gold px-5 py-2 rounded-xl text-sm font-medium transition">Enregistrer</button>
@@ -4293,6 +4316,166 @@
             </div><!-- /compta-subtab-transactions -->
 
             <!-- ── Coûts du site (frais techniques + abonnements) ── -->
+
+            <!-- ══════════ FACTURATION ══════════
+                 Devis, factures, clients et livre des recettes. Placé sous Comptabilité
+                 parce que c'est le même circuit : une facture encaissée devient une
+                 transaction, qui alimente le bloc Déclaration URSSAF juste à côté.
+                 Règle structurante : une facture n'est pas une recette. Le marquage
+                 « payée » demande la date du virement et c'est elle, pas la date
+                 d'émission, qui date la recette. -->
+            <div id="compta-subtab-facturation" class="hidden">
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div class="bg-white/5 border border-gold/15 rounded-xl p-4">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">En attente de règlement</p>
+                        <p class="text-gold text-2xl font-semibold" id="fact-kpi-attente">—</p>
+                        <p class="text-gold/40 text-xs mt-1" id="fact-kpi-attente-sub">&nbsp;</p>
+                    </div>
+                    <div class="bg-red-500/10 border border-red-500/20 rounded-xl p-4">
+                        <p class="text-red-300/70 text-xs uppercase tracking-wider mb-1">En retard</p>
+                        <p class="text-red-300 text-2xl font-semibold" id="fact-kpi-retard">—</p>
+                        <p class="text-red-300/70 text-xs mt-1" id="fact-kpi-retard-sub">&nbsp;</p>
+                    </div>
+                    <div class="bg-white/5 border border-gold/15 rounded-xl p-4">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Brouillons</p>
+                        <p class="text-gold text-2xl font-semibold" id="fact-kpi-brouillons">—</p>
+                        <p class="text-gold/40 text-xs mt-1">non envoyés</p>
+                    </div>
+                </div>
+
+                <div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <select id="fact-filtre-statut" onchange="factLoadList()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                            <option value="">Tous les statuts</option>
+                            <option value="brouillon">Brouillons</option>
+                            <option value="envoyee">Envoyées</option>
+                            <option value="payee">Payées</option>
+                            <option value="annulee">Annulées</option>
+                        </select>
+                        <select id="fact-filtre-type" onchange="factLoadList()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                            <option value="">Factures et devis</option>
+                            <option value="facture">Factures</option>
+                            <option value="devis">Devis</option>
+                        </select>
+                    </div>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="factExportLivre()" class="px-4 py-2 text-sm rounded-lg border border-gold/25 text-gold/70 hover:text-gold hover:border-gold/50 transition">
+                            <i class="fas fa-book mr-1.5"></i>Livre des recettes
+                        </button>
+                        <button onclick="factOpenClients()" class="px-4 py-2 text-sm rounded-lg border border-gold/25 text-gold/70 hover:text-gold hover:border-gold/50 transition">
+                            <i class="fas fa-address-book mr-1.5"></i>Clients
+                        </button>
+                        <button onclick="factNew('devis')" class="px-4 py-2 text-sm rounded-lg border border-gold/25 text-gold/70 hover:text-gold hover:border-gold/50 transition">
+                            <i class="fas fa-file-signature mr-1.5"></i>Nouveau devis
+                        </button>
+                        <button onclick="factNew('facture')" class="px-4 py-2 text-sm rounded-lg bg-gold/20 text-gold border border-gold/40 font-semibold hover:bg-gold/30 transition">
+                            <i class="fas fa-plus mr-1.5"></i>Nouvelle facture
+                        </button>
+                    </div>
+                </div>
+
+                <div id="fact-list" class="space-y-2"></div>
+
+                <!-- Éditeur de pièce -->
+                <div id="fact-editor" class="hidden fixed inset-0 z-50 bg-black/70 overflow-y-auto p-4">
+                    <div class="max-w-3xl mx-auto bg-[#07112a] border border-gold/30 rounded-2xl shadow-2xl p-6 my-8">
+                        <div class="flex items-start justify-between mb-5">
+                            <div>
+                                <h4 class="text-gold text-xl font-semibold" id="fact-editor-title">Nouvelle facture</h4>
+                                <p class="text-gold/40 text-xs mt-1" id="fact-editor-numero">Le numéro sera attribué à l'enregistrement</p>
+                            </div>
+                            <button onclick="factCloseEditor()" class="text-gold/40 hover:text-gold text-xl leading-none">&times;</button>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
+                            <div>
+                                <label class="block text-gold/50 text-xs uppercase tracking-wider mb-1.5">Client</label>
+                                <select id="fact-client" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm"></select>
+                            </div>
+                            <div>
+                                <label class="block text-gold/50 text-xs uppercase tracking-wider mb-1.5">Période facturée</label>
+                                <input id="fact-periode" type="text" placeholder="septembre 2026" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-gold/50 text-xs uppercase tracking-wider mb-1.5">Date d'émission</label>
+                                <input id="fact-date-emission" type="date" onchange="factRefreshEcheance()" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-gold/50 text-xs uppercase tracking-wider mb-1.5">Délai de paiement</label>
+                                <div class="flex items-center gap-2">
+                                    <input id="fact-delai" type="number" min="0" value="30" onchange="factRefreshEcheance()" class="w-24 bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                    <span class="text-gold/40 text-xs" id="fact-echeance-label">jours</span>
+                                </div>
+                            </div>
+                            <div class="md:col-span-2">
+                                <label class="block text-gold/50 text-xs uppercase tracking-wider mb-1.5">Case URSSAF de cette prestation</label>
+                                <select id="fact-urssaf" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                    <option value="bic_prestations">BIC prestations — ménage, entretien, abonnements</option>
+                                    <option value="bic_ventes">BIC ventes — oracles et objets physiques</option>
+                                    <option value="bnc">Recettes BNC — magnétisme, consultations, conseil</option>
+                                </select>
+                                <p class="text-gold/30 text-xs mt-1.5">Reportée sur la recette au moment de l'encaissement.</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-between mb-2">
+                            <label class="block text-gold/50 text-xs uppercase tracking-wider">Lignes</label>
+                            <div class="flex items-center gap-2">
+                                <select id="fact-modele" class="bg-white/5 border border-gold/20 text-gold/70 rounded-lg px-2 py-1.5 text-xs"></select>
+                                <button onclick="factAddLigneFromModele()" class="px-3 py-1.5 text-xs rounded-lg border border-gold/25 text-gold/70 hover:text-gold transition">Ajouter</button>
+                            </div>
+                        </div>
+                        <div id="fact-lignes" class="space-y-2 mb-3"></div>
+                        <button onclick="factAddLigne()" class="text-gold/50 hover:text-gold text-xs mb-5 transition"><i class="fas fa-plus mr-1"></i>Ligne vide</button>
+
+                        <div class="flex items-center justify-between border-t border-gold/15 pt-4 mb-5">
+                            <span class="text-gold/60 text-sm">Total à payer</span>
+                            <span class="text-gold text-2xl font-semibold" id="fact-total">0,00 €</span>
+                        </div>
+
+                        <div class="flex flex-wrap items-center justify-end gap-2">
+                            <button onclick="factCloseEditor()" class="px-4 py-2 text-sm rounded-lg border border-gold/20 text-gold/50 hover:text-gold/80 transition">Annuler</button>
+                            <button onclick="factSave(false)" class="px-4 py-2 text-sm rounded-lg border border-gold/25 text-gold/70 hover:text-gold transition">Enregistrer le brouillon</button>
+                            <button onclick="factSaveAndSend()" class="px-5 py-2 text-sm rounded-lg bg-gold/20 text-gold border border-gold/40 font-semibold hover:bg-gold/30 transition">
+                                <i class="fas fa-paper-plane mr-1.5"></i>Enregistrer et envoyer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fiches clients -->
+                <div id="fact-clients-panel" class="hidden fixed inset-0 z-50 bg-black/70 overflow-y-auto p-4">
+                    <div class="max-w-2xl mx-auto bg-[#07112a] border border-gold/30 rounded-2xl shadow-2xl p-6 my-8">
+                        <div class="flex items-start justify-between mb-5">
+                            <h4 class="text-gold text-xl font-semibold">Clients</h4>
+                            <button onclick="document.getElementById('fact-clients-panel').classList.add('hidden')" class="text-gold/40 hover:text-gold text-xl leading-none">&times;</button>
+                        </div>
+                        <div id="fact-clients-list" class="space-y-2 mb-6"></div>
+                        <div class="border-t border-gold/15 pt-5">
+                            <p class="text-gold/50 text-xs uppercase tracking-wider mb-3" id="fact-client-form-title">Nouveau client</p>
+                            <input type="hidden" id="fact-client-id">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <input id="fact-client-nom" placeholder="Nom *" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <input id="fact-client-email" placeholder="Email" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <input id="fact-client-adresse" placeholder="Adresse" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <input id="fact-client-telephone" placeholder="Téléphone" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <input id="fact-client-cp" placeholder="Code postal" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <input id="fact-client-ville" placeholder="Ville" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <div class="md:col-span-2">
+                                    <input id="fact-client-siret" placeholder="SIRET (si professionnel)" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                    <p class="text-gold/30 text-xs mt-1.5">Laissez vide pour un particulier. Un client avec SIRET est du B2B : à partir du 1er septembre 2027, ses factures devront passer par une plateforme agréée.</p>
+                                </div>
+                            </div>
+                            <div class="flex justify-end gap-2 mt-4">
+                                <button onclick="factClientReset()" class="px-4 py-2 text-sm rounded-lg border border-gold/20 text-gold/50 hover:text-gold/80 transition">Vider</button>
+                                <button onclick="factClientSave()" class="px-5 py-2 text-sm rounded-lg bg-gold/20 text-gold border border-gold/40 font-semibold hover:bg-gold/30 transition">Enregistrer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div id="compta-subtab-costs" class="hidden">
                 <div class="flex items-center justify-between mb-6">
                     <div>
@@ -4390,7 +4573,7 @@
                 </div>
 
                 <!-- Liste brute des intentions -->
-                <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                <div class="bg-white/5 border border-gold/10 rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-list text-gold/60"></i> Intentions collectées</h3>
                         <span id="intentions-count" class="text-gold/40 text-xs"></span>
@@ -4408,22 +4591,22 @@
                 <!-- Résultats -->
                 <div id="insights-result" class="hidden space-y-6">
                     <!-- Thèmes -->
-                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                    <div class="bg-white/5 border border-gold/10 rounded-2xl p-6">
                         <h3 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-pie text-gold/60"></i> Thèmes dominants</h3>
                         <div id="insights-themes" class="space-y-3"></div>
                     </div>
                     <!-- Besoins -->
-                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                    <div class="bg-white/5 border border-gold/10 rounded-2xl p-6">
                         <h3 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-heart text-gold/60"></i> Besoins récurrents</h3>
                         <ul id="insights-besoins" class="space-y-2 text-gold/80 text-sm list-disc list-inside"></ul>
                     </div>
                     <!-- Cartes dominantes -->
-                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                    <div class="bg-white/5 border border-gold/10 rounded-2xl p-6">
                         <h3 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-layer-group text-gold/60"></i> Cartes les plus tirées</h3>
                         <div id="insights-cartes" class="flex flex-wrap gap-2"></div>
                     </div>
                     <!-- Suggestions newsletter -->
-                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                    <div class="bg-white/5 border border-gold/10 rounded-2xl p-6">
                         <h3 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-envelope text-gold/60"></i> Suggestions de newsletter</h3>
                         <div id="insights-suggestions" class="space-y-3"></div>
                     </div>
@@ -5059,8 +5242,10 @@
             document.querySelectorAll('.compta-subtab-btn').forEach(b => { b.classList.remove('border-gold','text-gold','bg-gold/10'); b.classList.add('border-transparent','text-gold/50'); });
             const activeBtn = document.getElementById('compta-subtab-btn-' + name);
             if (activeBtn) { activeBtn.classList.add('border-gold','text-gold','bg-gold/10'); activeBtn.classList.remove('border-transparent','text-gold/50'); }
-            document.getElementById('compta-subtab-transactions')?.classList.toggle('hidden', name !== 'transactions');
-            document.getElementById('compta-subtab-costs')?.classList.toggle('hidden', name !== 'costs');
+            ['transactions', 'facturation', 'costs'].forEach(n => {
+                document.getElementById('compta-subtab-' + n)?.classList.toggle('hidden', n !== name);
+            });
+            if (name === 'facturation') factInit();
         }
 
         // Sous-onglets de Précommandes : "Précommandes directes" (Stripe/Mondial Relay) vs
@@ -5070,6 +5255,483 @@
             const activeBtn = document.getElementById('preorders-subtab-btn-' + name);
             if (activeBtn) { activeBtn.classList.add('border-gold','text-gold','bg-gold/10'); activeBtn.classList.remove('border-transparent','text-gold/50'); }
             document.querySelectorAll('.preorders-subtab').forEach(el => { el.classList.toggle('hidden', el.id !== 'preorders-subtab-' + name); });
+        }
+
+
+        // ══════════ FACTURATION ══════════
+        // Devis, factures, clients, relances, livre des recettes.
+        // Règle structurante reprise de l'API : une facture n'est pas une recette.
+        // Enregistrer ou envoyer ne touche pas la comptabilité ; seul « Marquer payée »
+        // crée la transaction, à la date du virement que l'on saisit à ce moment-là.
+        let _factClients = [], _factModeles = [], _factCurrent = null, _factInited = false;
+
+        const FACT_STATUTS = {
+            brouillon: { label: 'Brouillon', cls: 'text-gold/50 border-gold/20' },
+            envoyee:   { label: 'Envoyée',   cls: 'text-blue-300 border-blue-400/30' },
+            payee:     { label: 'Payée',     cls: 'text-green-300 border-green-400/30' },
+            annulee:   { label: 'Annulée',   cls: 'text-gold/30 border-gold/10' },
+            acceptee:  { label: 'Acceptée',  cls: 'text-green-300 border-green-400/30' },
+            refusee:   { label: 'Refusée',   cls: 'text-gold/30 border-gold/10' }
+        };
+
+        const factEur = (n) => (Number(n) || 0).toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+        // Jamais de new Date() sur un 'YYYY-MM-DD' : le navigateur l'interprète en UTC
+        // et la date recule d'un jour à l'affichage pour les fuseaux à l'est de Greenwich.
+        const factDateFr = (ymd) => { if (!ymd) return ''; const [y,m,d] = String(ymd).slice(0,10).split('-'); return `${d}/${m}/${y}`; };
+        const factToday = () => { const d = new Date(); return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10); };
+        const factAddDays = (ymd, days) => { const [y,m,d] = String(ymd).slice(0,10).split('-').map(Number); const dt = new Date(Date.UTC(y, m-1, d)); dt.setUTCDate(dt.getUTCDate() + (parseInt(days,10)||0)); return dt.toISOString().slice(0,10); };
+        const factEsc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+
+        async function factInit() {
+            if (_factInited) { factLoadList(); return; }
+            _factInited = true;
+            await Promise.all([factLoadClients(), factLoadModeles()]);
+            factLoadList();
+        }
+
+        async function factLoadClients() {
+            try {
+                const res = await adminFetch('/api/admin/clients');
+                const json = await res.json();
+                _factClients = json.data || [];
+            } catch (e) { _factClients = []; }
+        }
+
+        async function factLoadModeles() {
+            try {
+                const res = await adminFetch('/api/admin/prestation-modeles');
+                const json = await res.json();
+                _factModeles = json.data || [];
+            } catch (e) { _factModeles = []; }
+        }
+
+        async function factLoadList() {
+            const el = document.getElementById('fact-list');
+            if (!el) return;
+            el.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8 animate-pulse">Chargement…</p>';
+            const params = new URLSearchParams();
+            const st = document.getElementById('fact-filtre-statut')?.value;
+            const ty = document.getElementById('fact-filtre-type')?.value;
+            if (st) params.set('statut', st);
+            if (ty) params.set('type', ty);
+
+            try {
+                const res = await adminFetch(`/api/admin/factures?${params}`);
+                const json = await res.json();
+                const rows = json.data || [], s = json.summary || {};
+
+                document.getElementById('fact-kpi-attente').textContent = factEur(s.enAttente);
+                document.getElementById('fact-kpi-attente-sub').textContent = `${s.enAttenteCount || 0} facture${(s.enAttenteCount||0) > 1 ? 's' : ''}`;
+                document.getElementById('fact-kpi-retard').textContent = factEur(s.enRetard);
+                document.getElementById('fact-kpi-retard-sub').textContent = `${s.enRetardCount || 0} échéance${(s.enRetardCount||0) > 1 ? 's' : ''} dépassée${(s.enRetardCount||0) > 1 ? 's' : ''}`;
+                document.getElementById('fact-kpi-brouillons').textContent = s.brouillonsCount || 0;
+
+                const retardIds = new Set(s.enRetardIds || []);
+                if (!rows.length) { el.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8">Aucune pièce. Commencez par « Nouvelle facture ».</p>'; return; }
+
+                el.innerHTML = rows.map(f => {
+                    const st = FACT_STATUTS[f.statut] || { label: f.statut, cls: 'text-gold/50 border-gold/20' };
+                    const enRetard = retardIds.has(f.id);
+                    const client = (f.clients && f.clients.nom) || (f.client_snapshot && f.client_snapshot.nom) || '—';
+                    const actions = [];
+                    if (f.statut === 'brouillon') {
+                        actions.push(`<button onclick="factEdit('${f.id}')" class="text-gold/60 hover:text-gold text-xs px-2 py-1">Modifier</button>`);
+                        actions.push(`<button onclick="factSendExisting('${f.id}')" class="text-gold/60 hover:text-gold text-xs px-2 py-1">Envoyer</button>`);
+                    }
+                    if (f.statut === 'envoyee' && f.type === 'facture') {
+                        actions.push(`<button onclick="factTogglePaiement('${f.id}')" class="text-green-400/70 hover:text-green-400 text-xs px-2 py-1">Marquer payée</button>`);
+                        actions.push(`<button onclick="factRelancer('${f.id}')" class="text-orange-300/80 hover:text-orange-300 text-xs px-2 py-1">Relancer${f.relance_count ? ` (${f.relance_count})` : ''}</button>`);
+                    }
+                    if (f.type === 'devis' && ['envoyee','acceptee'].includes(f.statut)) {
+                        actions.push(`<button onclick="factConvertir('${f.id}')" class="text-gold/60 hover:text-gold text-xs px-2 py-1">Convertir en facture</button>`);
+                    }
+                    if (f.statut !== 'payee') {
+                        actions.push(`<button onclick="factDelete('${f.id}', '${factEsc(f.numero)}')" class="text-red-400/60 hover:text-red-400 text-xs px-2 py-1">${f.statut === 'brouillon' ? 'Supprimer' : 'Annuler'}</button>`);
+                    }
+
+                    return `
+                    <div class="bg-white/5 border ${enRetard ? 'border-red-500/30' : 'border-gold/15'} rounded-xl p-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <span class="text-gold font-semibold text-sm">${factEsc(f.numero)}</span>
+                                    <span class="text-xs px-2 py-0.5 rounded-full border ${st.cls}">${st.label}</span>
+                                    ${enRetard ? '<span class="text-xs px-2 py-0.5 rounded-full border border-red-400/40 text-red-300">En retard</span>' : ''}
+                                </div>
+                                <p class="text-gold/50 text-xs mt-1">
+                                    ${factEsc(client)} · émise le ${factDateFr(f.date_emission)}${f.date_echeance && f.type === 'facture' ? ` · échéance ${factDateFr(f.date_echeance)}` : ''}${f.date_paiement ? ` · encaissée le ${factDateFr(f.date_paiement)}` : ''}
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-1 flex-wrap">
+                                <span class="text-gold text-lg font-semibold mr-2">${factEur(f.total_ht)}</span>
+                                ${actions.join('')}
+                            </div>
+                        </div>
+                        <div id="fact-pay-${f.id}" class="hidden mt-3 pt-3 border-t border-gold/10">
+                            <p class="text-gold/50 text-xs mb-2">Date du crédit en banque — c'est elle qui détermine le mois de déclaration, pas la date d'émission.</p>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <input type="date" id="fact-pay-date-${f.id}" value="${factToday()}" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                <select id="fact-pay-mode-${f.id}" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                                    <option value="Virement">Virement</option>
+                                    <option value="Chèque">Chèque</option>
+                                    <option value="Espèces">Espèces</option>
+                                </select>
+                                <button onclick="factConfirmPaiement('${f.id}')" class="px-4 py-2 text-sm rounded-lg bg-green-500/20 text-green-300 border border-green-500/40 font-semibold hover:bg-green-500/30 transition">Confirmer l'encaissement</button>
+                            </div>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400/70 text-sm text-center py-8">Erreur de chargement : ${factEsc(e.message)}</p>`;
+            }
+        }
+
+        // ── Éditeur ──────────────────────────────────────────────
+        function factNew(type) {
+            _factCurrent = { id: null, type, lignes: [] };
+            document.getElementById('fact-editor-title').textContent = type === 'devis' ? 'Nouveau devis' : 'Nouvelle facture';
+            document.getElementById('fact-editor-numero').textContent = "Le numéro sera attribué à l'enregistrement, à la suite du précédent.";
+            document.getElementById('fact-client').innerHTML = _factClients.map(c => `<option value="${c.id}">${factEsc(c.nom)}</option>`).join('') || '<option value="">Aucun client — créez-en un</option>';
+            document.getElementById('fact-modele').innerHTML = _factModeles.map(m => `<option value="${m.id}">${factEsc(m.libelle)} — ${factEur(m.prix_unitaire)}</option>`).join('');
+            document.getElementById('fact-periode').value = '';
+            document.getElementById('fact-date-emission').value = factToday();
+            document.getElementById('fact-delai').value = 30;
+            document.getElementById('fact-urssaf').value = 'bic_prestations';
+            factRenderLignes();
+            factRefreshEcheance();
+            document.getElementById('fact-editor').classList.remove('hidden');
+        }
+
+        async function factEdit(id) {
+            const res = await adminFetch(`/api/admin/factures?id=${id}`);
+            const json = await res.json();
+            const f = json.data;
+            _factCurrent = { id: f.id, type: f.type, lignes: (f.lignes || []).map(l => ({ designation: l.designation, date_prestation: l.date_prestation, quantite: l.quantite, prix_unitaire: l.prix_unitaire })) };
+            document.getElementById('fact-editor-title').textContent = f.type === 'devis' ? 'Devis' : 'Facture';
+            document.getElementById('fact-editor-numero').textContent = f.numero;
+            document.getElementById('fact-client').innerHTML = _factClients.map(c => `<option value="${c.id}" ${c.id === f.client_id ? 'selected' : ''}>${factEsc(c.nom)}</option>`).join('');
+            document.getElementById('fact-modele').innerHTML = _factModeles.map(m => `<option value="${m.id}">${factEsc(m.libelle)} — ${factEur(m.prix_unitaire)}</option>`).join('');
+            document.getElementById('fact-periode').value = f.periode_label || '';
+            document.getElementById('fact-date-emission').value = f.date_emission || factToday();
+            document.getElementById('fact-delai').value = f.delai_paiement_jours || 30;
+            document.getElementById('fact-urssaf').value = f.urssaf_category || 'bic_prestations';
+            factRenderLignes();
+            factRefreshEcheance();
+            document.getElementById('fact-editor').classList.remove('hidden');
+        }
+
+        function factCloseEditor() { document.getElementById('fact-editor').classList.add('hidden'); _factCurrent = null; }
+
+        // L'échéance est calculée, jamais saisie : les deux factures émises sous Word
+        // portaient « 31/09/2026 », un jour qui n'existe pas.
+        function factRefreshEcheance() {
+            const em = document.getElementById('fact-date-emission').value;
+            const dl = document.getElementById('fact-delai').value;
+            const lab = document.getElementById('fact-echeance-label');
+            if (!lab) return;
+            lab.textContent = (em && dl !== '') ? `jours → échéance le ${factDateFr(factAddDays(em, dl))}` : 'jours';
+        }
+
+        function factAddLigne(preset) {
+            if (!_factCurrent) return;
+            _factCurrent.lignes.push(preset || { designation: '', date_prestation: factToday(), quantite: 1, prix_unitaire: 0 });
+            factRenderLignes();
+        }
+
+        function factAddLigneFromModele() {
+            const id = document.getElementById('fact-modele')?.value;
+            const m = _factModeles.find(x => x.id === id);
+            if (!m) return factAddLigne();
+            factAddLigne({ designation: m.designation, date_prestation: factToday(), quantite: 1, prix_unitaire: parseFloat(m.prix_unitaire) || 0 });
+            if (m.urssaf_category) document.getElementById('fact-urssaf').value = m.urssaf_category;
+        }
+
+        function factRemoveLigne(i) { _factCurrent.lignes.splice(i, 1); factRenderLignes(); }
+
+        function factUpdateLigne(i, champ, valeur) {
+            if (!_factCurrent || !_factCurrent.lignes[i]) return;
+            _factCurrent.lignes[i][champ] = (champ === 'quantite' || champ === 'prix_unitaire') ? parseFloat(valeur) || 0 : valeur;
+            factRefreshTotal();
+        }
+
+        function factRenderLignes() {
+            const el = document.getElementById('fact-lignes');
+            if (!el || !_factCurrent) return;
+            el.innerHTML = _factCurrent.lignes.map((l, i) => `
+                <div class="flex flex-wrap items-center gap-2">
+                    <input value="${factEsc(l.designation)}" oninput="factUpdateLigne(${i},'designation',this.value)" placeholder="Désignation" class="flex-1 min-w-[180px] bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                    <input type="date" value="${l.date_prestation || ''}" onchange="factUpdateLigne(${i},'date_prestation',this.value)" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-2 py-2 text-sm">
+                    <input type="number" step="0.5" value="${l.quantite}" onchange="factUpdateLigne(${i},'quantite',this.value)" class="w-16 bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-2 py-2 text-sm" title="Quantité">
+                    <input type="number" step="0.01" value="${l.prix_unitaire}" onchange="factUpdateLigne(${i},'prix_unitaire',this.value)" class="w-24 bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-2 py-2 text-sm" title="Prix unitaire">
+                    <button onclick="factRemoveLigne(${i})" class="text-red-400/50 hover:text-red-400 px-2">&times;</button>
+                </div>`).join('') || '<p class="text-gold/30 text-xs italic">Aucune ligne.</p>';
+            factRefreshTotal();
+        }
+
+        function factRefreshTotal() {
+            const t = (_factCurrent?.lignes || []).reduce((s, l) => s + (parseFloat(l.quantite) || 0) * (parseFloat(l.prix_unitaire) || 0), 0);
+            document.getElementById('fact-total').textContent = factEur(t);
+            return t;
+        }
+
+        function factCollect() {
+            return {
+                id: _factCurrent.id || undefined,
+                type: _factCurrent.type,
+                client_id: document.getElementById('fact-client').value || null,
+                periode_label: document.getElementById('fact-periode').value || null,
+                date_emission: document.getElementById('fact-date-emission').value,
+                delai_paiement_jours: parseInt(document.getElementById('fact-delai').value, 10) || 30,
+                urssaf_category: document.getElementById('fact-urssaf').value,
+                lignes: _factCurrent.lignes.filter(l => String(l.designation || '').trim())
+            };
+        }
+
+        async function factSave(silencieux) {
+            const payload = factCollect();
+            if (!payload.client_id) { adminAlert('Choisissez un client.'); return null; }
+            if (!payload.lignes.length) { adminAlert('Ajoutez au moins une ligne.'); return null; }
+            const res = await adminFetch('/api/admin/factures', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Enregistrement impossible'); return null; }
+            const id = json.data?.id || json.id || payload.id;
+            if (!silencieux) { adminAlert(`${json.data?.numero || 'Pièce'} enregistrée en brouillon.`); factCloseEditor(); factLoadList(); }
+            return id;
+        }
+
+        async function factSaveAndSend() {
+            const id = await factSave(true);
+            if (!id) return;
+            factCloseEditor();
+            await factSendExisting(id);
+        }
+
+        async function factSendExisting(id) {
+            const res = await adminFetch(`/api/admin/factures?id=${id}`);
+            const f = (await res.json()).data;
+            const client = f.clients || f.client_snapshot || {};
+            if (!client.email) { adminAlert(`Aucune adresse email pour ${client.nom || 'ce client'}. Complétez sa fiche d'abord.`); return; }
+            if (!(await adminConfirm(`Envoyer ${f.numero} à ${client.email} ? Une pièce envoyée ne peut plus être modifiée.`))) return;
+
+            let pdfBase64;
+            try { pdfBase64 = factBuildPdf(f, client); }
+            catch (e) { adminAlert('Génération du PDF impossible : ' + e.message); return; }
+
+            const send = await adminFetch('/api/admin/factures/send', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, pdfBase64 })
+            });
+            const json = await send.json();
+            if (!send.ok) { adminAlert(json.error || 'Envoi impossible'); return; }
+            adminAlert(`${f.numero} envoyée à ${json.sentTo}.`);
+            factLoadList();
+        }
+
+        function factTogglePaiement(id) { document.getElementById('fact-pay-' + id)?.classList.toggle('hidden'); }
+
+        async function factConfirmPaiement(id) {
+            const date = document.getElementById('fact-pay-date-' + id)?.value;
+            const mode = document.getElementById('fact-pay-mode-' + id)?.value;
+            if (!date) { adminAlert("Indiquez la date du crédit en banque."); return; }
+            const res = await adminFetch('/api/admin/factures/payer', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id, date_paiement: date, mode_paiement: mode })
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Opération impossible'); return; }
+            adminAlert(json.message);
+            factLoadList();
+            // La recette vient d'entrer en comptabilité : le bloc URSSAF doit suivre.
+            if (typeof loadComptabilite === 'function') loadComptabilite();
+        }
+
+        async function factRelancer(id) {
+            if (!(await adminConfirm('Envoyer une relance pour cette facture ?'))) return;
+            const res = await adminFetch('/api/admin/factures/relance', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Relance impossible'); return; }
+            adminAlert(`Relance n°${json.rang} envoyée${json.joursRetard ? ` (${json.joursRetard} jours de retard)` : ''}.`);
+            factLoadList();
+        }
+
+        async function factConvertir(id) {
+            if (!(await adminConfirm('Créer une facture à partir de ce devis ? Le devis sera conservé et marqué accepté.'))) return;
+            const res = await adminFetch('/api/admin/factures/convertir', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id })
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Conversion impossible'); return; }
+            adminAlert(`${json.data.numero} créée en brouillon.`);
+            factLoadList();
+        }
+
+        async function factDelete(id, numero) {
+            if (!(await adminConfirm(`Supprimer ou annuler ${numero} ?`, { danger: true }))) return;
+            const res = await adminFetch(`/api/admin/factures?id=${id}`, { method: 'DELETE' });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Opération impossible'); return; }
+            if (json.message) adminAlert(json.message);
+            factLoadList();
+        }
+
+        function factExportLivre() {
+            const year = document.getElementById('compta-year')?.value || new Date().getFullYear();
+            window.open(`/api/admin/livre-recettes?year=${year}`, '_blank');
+        }
+
+        // ── Clients ──────────────────────────────────────────────
+        async function factOpenClients() {
+            await factLoadClients();
+            factRenderClients();
+            factClientReset();
+            document.getElementById('fact-clients-panel').classList.remove('hidden');
+        }
+
+        function factRenderClients() {
+            const el = document.getElementById('fact-clients-list');
+            if (!el) return;
+            el.innerHTML = _factClients.map(c => `
+                <div class="flex items-center justify-between bg-white/5 border border-gold/15 rounded-lg px-4 py-3">
+                    <div class="min-w-0">
+                        <p class="text-gold/90 text-sm">${factEsc(c.nom)}${c.siret ? ' <span class="text-xs text-blue-300/70">· professionnel</span>' : ''}</p>
+                        <p class="text-gold/40 text-xs">${factEsc(c.email || "pas d'email")}${c.ville ? ' · ' + factEsc(c.ville) : ''}</p>
+                    </div>
+                    <div class="flex items-center gap-1">
+                        <button onclick="factClientEdit('${c.id}')" class="text-gold/60 hover:text-gold text-xs px-2 py-1">Modifier</button>
+                        <button onclick="factClientArchive('${c.id}')" class="text-red-400/60 hover:text-red-400 text-xs px-2 py-1">Archiver</button>
+                    </div>
+                </div>`).join('') || '<p class="text-gold/30 text-sm italic">Aucun client.</p>';
+        }
+
+        function factClientReset() {
+            ['id','nom','email','adresse','telephone','cp','ville','siret'].forEach(k => {
+                const el = document.getElementById('fact-client-' + k); if (el) el.value = '';
+            });
+            document.getElementById('fact-client-form-title').textContent = 'Nouveau client';
+        }
+
+        function factClientEdit(id) {
+            const c = _factClients.find(x => x.id === id); if (!c) return;
+            document.getElementById('fact-client-id').value = c.id;
+            document.getElementById('fact-client-nom').value = c.nom || '';
+            document.getElementById('fact-client-email').value = c.email || '';
+            document.getElementById('fact-client-adresse').value = c.adresse || '';
+            document.getElementById('fact-client-telephone').value = c.telephone || '';
+            document.getElementById('fact-client-cp').value = c.code_postal || '';
+            document.getElementById('fact-client-ville').value = c.ville || '';
+            document.getElementById('fact-client-siret').value = c.siret || '';
+            document.getElementById('fact-client-form-title').textContent = 'Modifier ' + c.nom;
+        }
+
+        async function factClientSave() {
+            const payload = {
+                id: document.getElementById('fact-client-id').value || undefined,
+                nom: document.getElementById('fact-client-nom').value.trim(),
+                email: document.getElementById('fact-client-email').value.trim() || null,
+                adresse: document.getElementById('fact-client-adresse').value.trim() || null,
+                telephone: document.getElementById('fact-client-telephone').value.trim() || null,
+                code_postal: document.getElementById('fact-client-cp').value.trim() || null,
+                ville: document.getElementById('fact-client-ville').value.trim() || null,
+                siret: document.getElementById('fact-client-siret').value.trim() || null
+            };
+            if (!payload.nom) { adminAlert('Le nom est obligatoire.'); return; }
+            const res = await adminFetch('/api/admin/clients', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload)
+            });
+            const json = await res.json();
+            if (!res.ok) { adminAlert(json.error || 'Enregistrement impossible'); return; }
+            await factLoadClients(); factRenderClients(); factClientReset();
+            adminAlert('Client enregistré.');
+        }
+
+        async function factClientArchive(id) {
+            if (!(await adminConfirm('Archiver ce client ? Ses factures sont conservées.', { danger: true }))) return;
+            await adminFetch(`/api/admin/clients?id=${id}`, { method: 'DELETE' });
+            await factLoadClients(); factRenderClients();
+        }
+
+        // ── PDF ──────────────────────────────────────────────────
+        // Reprend la mise en page du modèle Word, mentions légales comprises, en
+        // corrigeant ce qui y était faux : l'échéance est calculée, l'adresse et la
+        // période viennent des données, et il ne reste aucun crochet de gabarit.
+        function factBuildPdf(f, client) {
+            if (!window.jspdf?.jsPDF) throw new Error('librairie PDF non chargée, rechargez la page');
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const estDevis = f.type === 'devis';
+            const M = 18;
+            let y = M;
+
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20);
+            doc.text('Rudy BOUCHERON — EI', M, y); y += 5;
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(70);
+            ['ORADIA', '17 Cardevily — 22100 Trévron', 'SIRET : 821 308 004 00034', 'contact@oradia.fr — 06 45 51 19 90']
+                .forEach(l => { doc.text(l, M, y); y += 4.2; });
+
+            y += 8;
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(20);
+            doc.text(estDevis ? 'DEVIS' : 'FACTURE', M, y);
+            y += 3; doc.setDrawColor(200, 170, 70); doc.setLineWidth(0.6); doc.line(M, y, 120, y); y += 8;
+
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(10);
+            doc.text(`${estDevis ? 'Devis' : 'Facture'} n° ${f.numero}`, M, y); y += 5;
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5); doc.setTextColor(60);
+            doc.text(`Date d'émission : ${factDateFr(f.date_emission)}`, M, y); y += 4.5;
+            if (f.periode_label) { doc.text(`Date de la prestation : ${f.periode_label}`, M, y); y += 4.5; }
+
+            y += 6;
+            doc.setFontSize(8); doc.setTextColor(130); doc.text('FACTURÉ À', M, y); y += 5;
+            doc.setFontSize(10); doc.setTextColor(30);
+            [client.nom, client.adresse, [client.code_postal, client.ville].filter(Boolean).join(' ')]
+                .filter(Boolean).forEach(l => { doc.text(String(l), M, y); y += 4.6; });
+
+            y += 6;
+            doc.autoTable({
+                startY: y, margin: { left: M, right: M },
+                head: [['DÉSIGNATION', 'DATE', 'QTÉ', 'P.U. HT', 'TOTAL HT']],
+                body: (f.lignes || []).map(l => [
+                    l.designation, factDateFr(l.date_prestation),
+                    String(l.quantite).replace('.', ','),
+                    factEur(l.prix_unitaire), factEur(l.total)
+                ]),
+                styles: { font: 'helvetica', fontSize: 9, cellPadding: 2.2, textColor: 30 },
+                headStyles: { fillColor: [255, 255, 255], textColor: 30, fontStyle: 'bold', lineWidth: { bottom: 0.4 }, lineColor: [40, 40, 40] },
+                columnStyles: { 2: { halign: 'center' }, 3: { halign: 'right' }, 4: { halign: 'right' } },
+                theme: 'plain'
+            });
+            y = doc.lastAutoTable.finalY + 8;
+
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+            doc.text(`TOTAL À PAYER : ${factEur(f.total_ht)}`, 210 - M, y, { align: 'right' });
+            y += 6; doc.setDrawColor(210); doc.setLineWidth(0.3); doc.line(M, y, 210 - M, y); y += 8;
+
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(9);
+            doc.text('TVA non applicable, art. 293 B du CGI', M, y); y += 8;
+
+            doc.setFontSize(8); doc.setTextColor(130); doc.text('RÈGLEMENT', M, y); y += 5;
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(50);
+            if (estDevis) {
+                doc.text(`Devis valable jusqu'au ${factDateFr(f.date_echeance)}.`, M, y); y += 4.6;
+            } else {
+                doc.text(`Date d'échéance : ${factDateFr(f.date_echeance)} — paiement à ${f.delai_paiement_jours} jours à compter de la date d'émission.`, M, y); y += 4.6;
+                doc.text('Mode de règlement : virement bancaire — IBAN FR76 1558 9228 4506 7504 8634 186', M, y); y += 4.6;
+                doc.text('ou chèque à l’ordre de Rudy Boucheron.', M, y); y += 4.6;
+            }
+
+            y += 6; doc.setFontSize(7); doc.setTextColor(120);
+            if (!estDevis) {
+                doc.text(doc.splitTextToSize(
+                    "Pas d'escompte pour paiement anticipé. En cas de retard de paiement, application de pénalités au taux de trois fois le taux d'intérêt légal en vigueur, ainsi que d'une indemnité forfaitaire pour frais de recouvrement de 40 € (art. L. 441-10 et D. 441-5 du code de commerce).",
+                    210 - 2 * M), M, y);
+                y += 9;
+            }
+            doc.text('Entrepreneur individuel immatriculé au Registre National des Entreprises.', M, y);
+
+            return doc.output('datauristring').split(',')[1];
         }
 
         // ══════════ GESTION DU BLOG ══════════
@@ -16758,22 +17420,34 @@
                 ? `dont ${fmt(sd.other)} de frais hors encaissement`
                 : '');
             const urssafDetailEl = document.getElementById('compta-urssaf-detail');
-            if (urssafDetailEl && b) {
-                urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
+            const cases = b && b.cases;
+            if (urssafDetailEl && cases) {
+                urssafDetailEl.innerHTML = [
+                    `BNC ${(cases.bnc.taux*100).toFixed(2)}% : ${fmt(cases.bnc.cotisation)}`,
+                    `BIC ventes ${(cases.bic_ventes.taux*100).toFixed(2)}% : ${fmt(cases.bic_ventes.cotisation)}`,
+                    `BIC prestations ${(cases.bic_prestations.taux*100).toFixed(2)}% : ${fmt(cases.bic_prestations.cotisation)}`,
+                    `CFP : ${fmt(b.cfp)}`
+                ].join('<br>');
             }
-            if (b) {
-                setEl('urssaf-taux-bic', `(${(b.tauxBIC*100).toFixed(1)}%)`);
-                setEl('urssaf-taux-bnc', `(${(b.tauxBNC*100).toFixed(1)}%)`);
-                setEl('urssaf-base-bic', fmt(b.recettesVentesBIC));
-                setEl('urssaf-cotis-bic', fmt(b.urssafBIC));
-                setEl('urssaf-base-bnc', fmt(b.recettesServicesBNC));
-                setEl('urssaf-cotis-bnc', fmt(b.urssafBNC));
+            if (cases) {
+                const fill = (suffix, c) => {
+                    setEl(`urssaf-taux-${suffix}`, `(${(c.taux*100).toFixed(2)}%)`);
+                    setEl(`urssaf-base-${suffix}`, fmt(c.base));
+                    setEl(`urssaf-cotis-${suffix}`, fmt(c.cotisation));
+                };
+                fill('bnc', cases.bnc);
+                fill('bic', cases.bic_ventes);
+                fill('presta', cases.bic_prestations);
                 const exclEl = document.getElementById('urssaf-exclusions');
                 if (exclEl) {
                     const parts = [];
-                    if (b.recettesPrecommandeExclues > 0) parts.push(`${fmt(b.recettesPrecommandeExclues)} de précommandes`);
-                    if (b.recettesDonsExclus > 0) parts.push(`${fmt(b.recettesDonsExclus)} de dons`);
-                    exclEl.textContent = parts.length ? `Non comptés dans cette base : ${parts.join(' + ')}.` : '';
+                    if (b.recettesPrecommandeIncluses > 0) parts.push(`${fmt(b.recettesPrecommandeIncluses)} de précommandes`);
+                    if (b.recettesDonsInclus > 0) parts.push(`${fmt(b.recettesDonsInclus)} de dons`);
+                    const inclus = parts.length ? `Inclus dans cette base : ${parts.join(' + ')}. ` : '';
+                    const acre = b.acre
+                        ? `Taux réduits de moitié par l'Acre jusqu'au ${b.acreLastDay} — ils doublent ensuite.`
+                        : `Acre terminée (${b.acreLastDay}) : taux pleins.`;
+                    exclEl.textContent = inclus + acre;
                 }
             }
             const transactions = data.data || [];
@@ -16886,13 +17560,16 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
             const category = document.getElementById('ct-category')?.value.trim();
             const notes = document.getElementById('ct-notes')?.value.trim();
             if (!description || !amount || amount <= 0) { adminAlert('Description et montant requis.'); return; }
+            const urssafCategory = document.getElementById('ct-urssaf')?.value || null;
             const body = { type, date, description, amount, ...(category && {category}), ...(notes && {notes}) };
+            // Seules les recettes entrent dans la base déclarable ; une dépense n'a pas de case.
+            if (type === 'recette') body.urssaf_category = urssafCategory;
             if (_comptaEditId) body.id = _comptaEditId;
             const res = await adminFetch('/api/admin/transactions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
             const data = await res.json();
             if (!data.success) { adminAlert('Erreur: ' + data.error); return; }
             document.getElementById('compta-add-form').classList.add('hidden');
-            ['ct-description','ct-amount','ct-category','ct-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            ['ct-description','ct-amount','ct-category','ct-notes','ct-urssaf'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
             _comptaEditId = null;
             loadComptabilite();
         }
