@@ -5460,7 +5460,19 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   // notables — voir lib/astro-calendar.js) suivi d'une invitation à l'interpréter :
   // pas besoin de le reconstruire ici, ni de répéter theme.label qui redirait la
   // même chose en plus court.
-  const content = `<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`;
+  // Liste des cartes en texte simple, dans le pipeline normal des paragraphes : la
+  // grille d'images (raw_content_append, tableaux + images) n'apparaît pas dans
+  // certaines messageries (tableaux retirés, images bloquées) — les lecteurs ne
+  // voyaient alors aucune carte. Ce paragraphe s'affiche partout.
+  // Noms stockés en capitales (« LE RÊVEUR ») : mis en casse de phrase pour le texte.
+  const nice = (n) => { const t = String(n || '').toLocaleLowerCase('fr-FR'); return t.charAt(0).toLocaleUpperCase('fr-FR') + t.slice(1); };
+  const cardsText = cards.map(card => {
+    const family = FAMILY_LABELS[card.family] || card.family;
+    const bridge = card.bridgeCard ? ` → passerelle <i>${nlEscHtml(nice(card.bridgeCard.name))}</i>` : '';
+    return `<b>${nlEscHtml(nice(card.name))}</b> (${nlEscHtml(family)})${bridge}`;
+  }).join(' · ');
+  const content = `<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`
+    + `<p><b>Les cartes tirées cette semaine :</b> ${cardsText}.</p>`;
 
   let rawContentAppend = buildTirageCardsGridHtml(cards);
   if (analysis?.explore) rawContentAppend += tirageCardBox('Ce que cela invite à explorer', analysis.explore, '#8b6fc0');
