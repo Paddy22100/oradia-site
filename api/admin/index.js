@@ -4144,21 +4144,36 @@ async function handleData(req, res) {
     if (section === 'compose-email') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const body = await parseBody(req);
-      const { to, subject, message } = body;
+      const { to, subject, message, attachments } = body;
       if (!to || !subject || !message) return res.status(400).json({ error: 'destinataire, sujet et message requis' });
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRe.test(to)) return res.status(400).json({ error: 'Adresse email invalide' });
 
+      // Pièces jointes optionnelles : le filtre 3 Mo côté dashboard reste la vraie protection
+      // (au-delà, Vercel rejette la requête avant même d'exécuter ce code — limite fixe de la
+      // plateforme, hors de notre contrôle) ; ce contrôle n'est qu'un filet pour un appel
+      // direct de l'API sans passer par le formulaire.
+      let brevoAttachments;
+      if (Array.isArray(attachments) && attachments.length > 0) {
+        const totalBytes = attachments.reduce((sum, a) => sum + Buffer.byteLength(String(a.content || ''), 'base64'), 0);
+        if (totalBytes > 4 * 1024 * 1024) return res.status(400).json({ error: 'Pièces jointes trop lourdes (4 Mo max au total)' });
+        brevoAttachments = attachments
+          .filter(a => a && a.name && a.content)
+          .map(a => ({ name: String(a.name).slice(0, 200), content: a.content }));
+      }
+
       const html = buildSupportReplyEmailHtml({ message });
+      const brevoPayload = {
+        sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html
+      };
+      if (brevoAttachments && brevoAttachments.length > 0) brevoPayload.attachment = brevoAttachments;
       const brevoResp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-        body: JSON.stringify({
-          sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
-          to: [{ email: to }],
-          subject,
-          htmlContent: html
-        })
+        body: JSON.stringify(brevoPayload)
       });
       if (!brevoResp.ok) {
         const err = await brevoResp.json().catch(() => ({}));

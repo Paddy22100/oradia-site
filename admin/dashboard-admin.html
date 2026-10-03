@@ -4656,6 +4656,12 @@
                     <textarea id="composeEmailMessage" rows="8" placeholder="Votre message…"
                         class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
                 </div>
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Pièces jointes <span class="text-light-gold/30">(3 Mo max au total)</span></label>
+                    <input id="composeEmailAttachments" type="file" multiple onchange="composeRenderAttachments()"
+                        class="w-full text-sm text-light-gold/70 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gold/30 file:bg-gold/10 file:text-gold file:text-xs file:cursor-pointer">
+                    <div id="composeAttachmentsList" class="mt-2 space-y-1"></div>
+                </div>
                 <div class="flex items-center gap-3">
                     <button onclick="composeEmail()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer</button>
                     <span id="composeEmailStatus" class="text-xs text-light-gold/40"></span>
@@ -11952,18 +11958,59 @@
             panel.classList.add('hidden');
         });
 
+        // Fichiers sélectionnés pour le prochain envoi — tableau séparé plutôt que de relire
+        // l'input à chaque fois : permet de retirer un fichier précis (l'API FileList ne le
+        // permet pas nativement) sans manipuler DataTransfer. Resélectionner des fichiers dans
+        // la fenêtre de sélection remplace le tableau en entier (comportement natif standard).
+        const COMPOSE_ATTACHMENTS_MAX_BYTES = 3 * 1024 * 1024; // 3 Mo — marge sous la limite de
+        // 4,5 Mo par requête imposée par Vercel (hors notre contrôle, encodage base64 ~+33 %)
+        let composeAttachmentFiles = [];
+        function composeRenderAttachments() {
+            const input = document.getElementById('composeEmailAttachments');
+            composeAttachmentFiles = Array.from(input.files || []);
+            const list = document.getElementById('composeAttachmentsList');
+            const totalBytes = composeAttachmentFiles.reduce((sum, f) => sum + f.size, 0);
+            const overLimit = totalBytes > COMPOSE_ATTACHMENTS_MAX_BYTES;
+            list.innerHTML = composeAttachmentFiles.map((f, i) => `
+                <div class="flex items-center justify-between text-xs ${overLimit ? 'text-red-400' : 'text-light-gold/60'} bg-white/5 rounded px-2.5 py-1.5">
+                    <span class="truncate"><i class="fas fa-paperclip mr-1.5 opacity-60"></i>${escapeHtmlFront(f.name)} <span class="opacity-50">(${(f.size / 1024).toFixed(0)} Ko)</span></span>
+                    <button type="button" onclick="composeRemoveAttachment(${i})" class="shrink-0 ml-2 text-light-gold/40 hover:text-red-400 transition"><i class="fas fa-times"></i></button>
+                </div>`).join('')
+                + (overLimit ? `<p class="text-xs text-red-400 mt-1">Total ${(totalBytes / 1024 / 1024).toFixed(1)} Mo — dépasse la limite de 3 Mo, retire un fichier.</p>` : '');
+        }
+        function composeRemoveAttachment(index) {
+            composeAttachmentFiles.splice(index, 1);
+            // Resynchronise l'input (FileList en lecture seule hors DataTransfer) pour que son
+            // affichage natif ("3 fichiers sélectionnés") ne mente pas après une suppression.
+            const dt = new DataTransfer();
+            composeAttachmentFiles.forEach(f => dt.items.add(f));
+            document.getElementById('composeEmailAttachments').files = dt.files;
+            composeRenderAttachments();
+        }
+        function composeFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+                reader.onerror = () => reject(new Error(`Lecture de ${file.name} impossible`));
+                reader.readAsDataURL(file);
+            });
+        }
+
         async function composeEmail() {
             const to      = document.getElementById('composeEmailTo').value.trim();
             const subject = document.getElementById('composeEmailSubject').value.trim();
             const message = document.getElementById('composeEmailMessage').value.trim();
             const status  = document.getElementById('composeEmailStatus');
             if (!to || !subject || !message) { if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Destinataire, sujet et message requis.'; } return; }
+            const totalBytes = composeAttachmentFiles.reduce((sum, f) => sum + f.size, 0);
+            if (totalBytes > COMPOSE_ATTACHMENTS_MAX_BYTES) { if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Pièces jointes trop lourdes (3 Mo max au total).'; } return; }
             if (status) { status.className = 'text-xs text-light-gold/40'; status.textContent = 'Envoi…'; }
             try {
+                const attachments = await Promise.all(composeAttachmentFiles.map(async f => ({ name: f.name, content: await composeFileToBase64(f) })));
                 const res = await adminFetch('/api/admin/data?section=compose-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ to, subject, message })
+                    body: JSON.stringify({ to, subject, message, attachments })
                 });
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || 'Envoi échoué');
@@ -11971,6 +12018,9 @@
                 document.getElementById('composeEmailTo').value = '';
                 document.getElementById('composeEmailSubject').value = '';
                 document.getElementById('composeEmailMessage').value = '';
+                document.getElementById('composeEmailAttachments').value = '';
+                composeAttachmentFiles = [];
+                composeRenderAttachments();
             } catch (e) {
                 if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Erreur : ' + e.message; }
             }
