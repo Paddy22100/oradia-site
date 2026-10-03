@@ -42,7 +42,7 @@ const variants = {
 
 const variant = process.env.TW_VARIANT || 'main';
 const contentFor = {
-  guidance: ['./guidance.html', './en/guidance.html', './components/**/*.{html,js}', './js/**/*.js'],
+  guidance: ['./guidance.html', './components/**/*.{html,js}', './js/**/*.js'],
   livraison: ['./livraison.html', './en/livraison.html', './components/**/*.{html,js}', './js/**/*.js']
 };
 
