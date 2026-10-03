@@ -1076,7 +1076,8 @@ async function handleCalWebhook(req, res) {
         }
 
         const dateStr = formatGuidanceDate(scheduledAt, 'fr'); // notification admin (française)
-        // Réservation depuis /en/guidance.html : métadonnée Cal.com « lang » (voir l'embed).
+        // Métadonnée Cal.com « lang » (= 'en' seulement si une page anglaise la transmet ;
+        // la guidance n'est plus proposée en anglais, /en/guidance redirige vers /en/).
         const clientLang = payload.metadata?.lang === 'en' ? 'en' : 'fr';
 
         if (clientEmail) {

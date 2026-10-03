@@ -4678,6 +4678,10 @@ video {
   color: rgb(94 234 212 / 0.8);
 }
 
+.text-teal-300\/90 {
+  color: rgb(94 234 212 / 0.9);
+}
+
 .text-teal-400 {
   --tw-text-opacity: 1;
   color: rgb(45 212 191 / var(--tw-text-opacity, 1));

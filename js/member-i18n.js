@@ -687,7 +687,7 @@
 
   // Liens vers les pages publiques → version anglaise quand elle existe.
   var EN_PAGES = { '/': '/en/', '/index.html': '/en/', '/tore.html': '/en/tore.html', '/oracle.html': '/en/oracle.html',
-    '/guidance.html': '/en/guidance.html', '/a-propos.html': '/en/a-propos.html', '/contact.html': '/en/contact.html',
+    '/a-propos.html': '/en/a-propos.html', '/contact.html': '/en/contact.html',
     '/cgu.html': '/en/cgu.html', '/cgv.html': '/en/cgv.html', '/mentions-legales.html': '/en/mentions-legales.html',
     '/politique-confidentialite.html': '/en/politique-confidentialite.html', '/cartes.html': '/en/cartes.html',
     '/blog': '/en/blog/', '/blog/': '/en/blog/', '/success-tore.html': '/en/success-tore.html' };
