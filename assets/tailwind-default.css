@@ -4503,6 +4503,10 @@ video {
   margin-right: 0.75rem;
 }
 
+.file\:cursor-pointer::file-selector-button {
+  cursor: pointer;
+}
+
 .file\:rounded-lg::file-selector-button {
   border-radius: 0.5rem;
 }
@@ -5666,6 +5670,11 @@ video {
   .md\:px-8 {
     padding-left: 2rem;
     padding-right: 2rem;
+  }
+
+  .md\:py-16 {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
   }
 
   .md\:py-20 {
