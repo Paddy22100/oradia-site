@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<style>html{visibility:hidden!important}</style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Le Dialogue Intérieur — Test Admin | Oradia</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          'night-blue': '#0a192f',
+          'dark-blue': '#051428',
+          'gold': '#d4af37',
+          'light-gold': '#f5e7a1'
+        },
+        fontFamily: {
+          'cormorant': ['Cormorant Garamond', 'serif'],
+          'poppins': ['Poppins', 'sans-serif']
+        }
+      }
+    }
+  };
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<style>
+  body { font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; }
+  .cormorant { font-family:'Cormorant Garamond', serif; }
+  .step { display:none; }
+  .step.active { display:block; animation:fadeIn .8s ease; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+  .card-reveal {
+    width:160px; margin:0 auto; border-radius:14px; border:2px solid #d4af37;
+    box-shadow:0 0 40px rgba(212,175,55,.35); transition:all 1.2s ease; animation:reveal 1s ease;
+  }
+  @keyframes reveal { from{opacity:0; transform:scale(.8) rotateY(90deg);} to{opacity:1; transform:scale(1) rotateY(0);} }
+  .card-reveal.soothed { border-color:#f5e7a1; box-shadow:0 0 70px rgba(245,231,161,.5); transform:scale(.85) translateY(10px); opacity:.85; }
+  .card-mini { width:48px; border-radius:6px; border:1px solid rgba(212,175,55,.4); opacity:.55; transition:all .4s ease; }
+  .card-mini.done { opacity:1; border-color:#d4af37; box-shadow:0 0 10px rgba(212,175,55,.3); }
+  textarea, input[type=text] {
+    background:rgba(255,255,255,.04); border:1px solid rgba(212,175,55,.35); color:#f5e7a1;
+    border-radius:10px; padding:12px 14px; width:100%; font-family:'Poppins',sans-serif;
+  }
+  textarea:focus, input[type=text]:focus { outline:none; border-color:#d4af37; }
+  .btn-gold {
+    background:linear-gradient(135deg,#d4af37,#f4e4c1); color:#0a192f; font-weight:600;
+    padding:12px 28px; border-radius:30px; transition:all .3s ease; border:none; cursor:pointer;
+  }
+  .btn-gold:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(212,175,55,.4); }
+  .btn-gold:disabled { opacity:.5; cursor:not-allowed; transform:none; }
+  .btn-ghost {
+    background:transparent; color:#f5e7a1; border:1px solid rgba(245,231,161,.3);
+    padding:10px 22px; border-radius:30px; cursor:pointer; transition:all .3s ease;
+  }
+  .btn-ghost:hover { border-color:#f5e7a1; }
+  .chip {
+    display:inline-block; padding:6px 16px; border-radius:20px; border:1px solid rgba(212,175,55,.4);
+    font-size:13px; cursor:pointer; margin:4px; transition:all .2s ease;
+  }
+  .chip.selected, .chip:hover { background:rgba(212,175,55,.2); border-color:#d4af37; }
+  .spinner {
+    width:28px; height:28px; border:3px solid rgba(212,175,55,.2); border-top-color:#d4af37;
+    border-radius:50%; animation:spin 1s linear infinite; margin:0 auto;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  .guide-text { font-size:15px; line-height:1.7; opacity:.92; }
+</style>
+</head>
+<body class="min-h-screen">
+
+<div id="guard-loading" class="min-h-screen flex items-center justify-center">
+  <div class="spinner"></div>
+</div>
+
+<div id="app" class="hidden min-h-screen px-4 py-10 md:py-16">
+  <div class="max-w-xl mx-auto">
+
+    <div class="text-center mb-2">
+      <span class="chip" style="cursor:default; border-color:rgba(245,231,161,.25); color:rgba(245,231,161,.6); font-size:11px; letter-spacing:.08em; text-transform:uppercase;">Test admin — non public</span>
+    </div>
+    <h1 class="cormorant text-3xl md:text-4xl text-center text-gold mt-4 mb-2">Le Dialogue Intérieur</h1>
+    <p class="text-center text-sm opacity-70 mb-6">Donner une forme à ce que vous portez, pour pouvoir lui parler.</p>
+
+    <!-- Fil des 7 cartes, rempli au fil du protocole -->
+    <div id="progress-strip" class="hidden flex justify-center gap-2 mb-10 flex-wrap"></div>
+
+    <!-- Étape 0 : localisation -->
+    <section id="step-intro" class="step active">
+      <p class="mb-4 leading-relaxed">Installez-vous confortablement. Pensez à une tension, une inquiétude, un poids mental léger à modéré que vous portez en ce moment. Où se manifeste-t-il dans votre corps ?</p>
+      <div class="mb-4" id="body-chips">
+        <span class="chip" data-loc="la poitrine">la poitrine</span>
+        <span class="chip" data-loc="la gorge">la gorge</span>
+        <span class="chip" data-loc="le ventre">le ventre</span>
+        <span class="chip" data-loc="la tête">la tête</span>
+        <span class="chip" data-loc="les épaules">les épaules</span>
+      </div>
+      <textarea id="intention" rows="3" placeholder="Décrivez cette tension et où vous la sentez (ex. : une inquiétude diffuse, logée dans la poitrine, depuis quelques jours)."></textarea>
+      <div class="text-center mt-6">
+        <button class="btn-gold" onclick="startDraw()">Entrer en dialogue</button>
+      </div>
+    </section>
+
+    <!-- Chargement du tirage complet -->
+    <section id="step-loading" class="step">
+      <div class="text-center py-10">
+        <div class="spinner mb-4"></div>
+        <p class="cormorant text-lg text-gold">L'oracle consulte le hasard quantique...</p>
+      </div>
+    </section>
+
+    <!-- Étapes 1 à 7 : une carte à la fois, générées dynamiquement -->
+    <section id="step-card" class="step">
+      <p class="guide-text mb-6" id="card-guide"></p>
+      <div class="text-center mb-4">
+        <img id="card-img" class="card-reveal" src="" alt="">
+        <p class="cormorant text-sm text-gold/70 uppercase tracking-widest mt-4" id="card-family"></p>
+        <p class="cormorant text-2xl text-light-gold mt-1" id="card-name"></p>
+        <p class="italic text-sm opacity-70 mt-3 px-4" id="card-quote"></p>
+      </div>
+
+      <div id="card-inputs" class="mt-6"></div>
+
+      <div class="text-center mt-8">
+        <button class="btn-gold" id="card-next-btn" onclick="advanceFromCard()">Continuer</button>
+      </div>
+    </section>
+
+    <!-- Synthèse / réintégration -->
+    <section id="step-synthesis" class="step">
+      <div id="synth-loading" class="text-center py-10">
+        <div class="spinner mb-4"></div>
+        <p class="cormorant text-lg text-gold">L'oracle tisse la clôture du dialogue...</p>
+      </div>
+      <div id="synth-result" class="hidden">
+        <div class="text-center mb-6">
+          <img id="card-img-archetype" class="card-reveal soothed" style="width:130px;" src="" alt="">
+        </div>
+        <div class="bg-white/5 border border-gold/20 rounded-2xl p-6 leading-relaxed" id="synth-text"></div>
+        <p class="text-center text-sm opacity-60 mt-6 italic">Prenez une grande inspiration. Rouvrez les yeux. Le dialogue est clos.</p>
+        <div class="text-center mt-8">
+          <button class="btn-ghost" onclick="resetAll()">Recommencer</button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+</div>
+
+<script>
+  // ── Garde d'accès — identique au principe de admin/dashboard-admin.html :
+  // page masquée tant que la session admin (cookie oradia_admin_session)
+  // n'est pas validée auprès de l'API. Pas de lien public vers cette page,
+  // en plus du Disallow /admin/ de robots.txt.
+  function getAdminToken() {
+    try {
+      const d = localStorage.getItem('oradia_auth');
+      if (d) return JSON.parse(d).token || null;
+    } catch (e) {}
+    return null;
+  }
+
+  function adminFetch(url, options = {}) {
+    const token = getAdminToken();
+    const headers = { ...(options.headers || {}) };
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+    return fetch(url, { credentials: 'include', ...options, headers });
+  }
+
+  (async function guard() {
+    try {
+      const r = await adminFetch('/api/admin/auth?action=me&_=' + Date.now());
+      if (!r.ok) { window.location.replace('/admin/login.html'); return; }
+      document.documentElement.style.setProperty('visibility', 'visible', 'important');
+      document.getElementById('guard-loading').classList.add('hidden');
+      document.getElementById('app').classList.remove('hidden');
+    } catch (e) {
+      window.location.replace('/admin/login.html');
+    }
+  })();
+
+  // ── Protocole : chaque famille porte un rôle précis. L'ordre reproduit
+  // exactement celui du tirage du Tore (TIRAGE_ORDER côté serveur), réutilisé
+  // tel quel plutôt que ré-inventé : émotion touchée, besoin mis en lumière,
+  // transmutation possible, la part elle-même (archétype, cœur du dialogue),
+  // la clé qui se présente, le chemin d'action, puis le contexte plus vaste.
+  const PROTOCOL = [
+    {
+      family: 'emotions',
+      guide: "Revenez à cette tension, là où vous l'avez sentie. Avant qu'elle ne prenne forme, laissez venir une question : quelle émotion vient-elle chatouiller en vous, précisément ? Ne cherchez pas la bonne réponse, laissez-la venir.",
+      inputKey: 'emotion', inputLabel: "L'émotion qui est venue", optional: true
+    },
+    {
+      family: 'besoins',
+      guide: "Cette émotion a une forme, même si vous ne l'avez jamais regardée en face. Donnez-lui une taille, une couleur, une texture, une température. Puis, sans forcer, demandez-lui : quel besoin viens-tu mettre en lumière ?",
+      inputKey: 'besoin', inputLabel: 'Le besoin qui est venu', optional: true
+    },
+    {
+      family: 'transmutation',
+      guide: "Une énergie de transformation se présente. Elle ne supprime rien de ce qui a été ressenti : elle indique une direction par laquelle ce qui pèse peut commencer à se déplacer.",
+      inputKey: null
+    },
+    {
+      family: 'archetypes',
+      guide: "Une présence se dessine : c'est elle qui porte cette tension depuis le début, la part de vous qui a pris en charge ce rôle. Regardez-la. Puis adressez-vous directement à elle, sans forcer mentalement les réponses — laissez venir un mot, une image, une certitude intuitionnée.",
+      inputKey: 'dialogue', isDialogue: true
+    },
+    {
+      family: 'revelations',
+      guide: 'Une clé se présente, discrète mais précise.',
+      inputKey: 'cle', inputLabel: 'Ce que cette clé vous inspire', optional: true
+    },
+    {
+      family: 'actions',
+      guide: 'Reste à savoir ce que ce chemin appelle maintenant, concrètement.',
+      inputKey: 'action', inputLabel: 'Ce que vous sentez devoir entreprendre', optional: true
+    },
+    {
+      family: 'memoire_cosmos',
+      guide: "Une dernière carte élargit le cadre. Elle rappelle que ce dialogue, aussi intime soit-il, s'inscrit dans quelque chose de plus vaste, qui vous traverse sans vous appartenir en propre.",
+      inputKey: null
+    }
+  ];
+
+  let drawnCards = [];
+  let currentStepIndex = 0;
+  const reponses = { emotion: '', besoin: '', sert: '', comprendre: '', protege: '', cle: '', action: '' };
+
+  function showStep(id) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('body-chips').addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    document.querySelectorAll('#body-chips .chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    const ta = document.getElementById('intention');
+    const loc = chip.dataset.loc;
+    if (!ta.value.includes(loc)) {
+      ta.value = (ta.value ? ta.value.trim() + ' ' : '') + 'Localisée dans ' + loc + '.';
+    }
+  });
+
+  async function startDraw() {
+    showStep('step-loading');
+    try {
+      const r = await adminFetch('/api/admin/data?action=dialogue-interieur-tirer', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await r.json();
+      if (!r.ok || !data.success) throw new Error(data.error || 'Erreur de tirage');
+      drawnCards = data.cards;
+      renderProgressStrip();
+      currentStepIndex = 0;
+      renderCardStep();
+    } catch (e) {
+      document.getElementById('step-loading').innerHTML = '<p class="text-red-300 text-center">' + e.message + '</p><div class="text-center mt-4"><button class="btn-ghost" onclick="startDraw()">Réessayer</button></div>';
+    }
+  }
+
+  function renderProgressStrip() {
+    const strip = document.getElementById('progress-strip');
+    strip.classList.remove('hidden');
+    strip.innerHTML = drawnCards.map((c, i) => `<img class="card-mini" id="mini-${i}" src="${c.imgSrc}" alt="${c.name}">`).join('');
+  }
+
+  function cardByFamily(family) {
+    return drawnCards.find(c => c.family === family);
+  }
+
+  function renderCardStep() {
+    const step = PROTOCOL[currentStepIndex];
+    const card = cardByFamily(step.family);
+
+    document.getElementById('card-guide').textContent = step.guide;
+    document.getElementById('card-img').src = card.imgSrc || '';
+    document.getElementById('card-img').alt = card.name;
+    document.getElementById('card-family').textContent = card.familyLabel;
+    document.getElementById('card-name').textContent = card.name;
+    document.getElementById('card-quote').textContent = card.quote ? '« ' + card.quote + ' »' : '';
+
+    const inputsEl = document.getElementById('card-inputs');
+    inputsEl.innerHTML = '';
+
+    if (step.isDialogue) {
+      inputsEl.innerHTML = `
+        <p class="mb-4 text-sm opacity-80 leading-relaxed">Un champ laissé vide est une réponse valable : le silence répond aussi.</p>
+        <label class="block text-sm text-gold mb-1">À quoi sers-tu ?</label>
+        <textarea id="input-sert" rows="2" class="mb-4" placeholder="Ce qui vient..."></textarea>
+        <label class="block text-sm text-gold mb-1">Qu'aimerais-tu que je comprenne ?</label>
+        <textarea id="input-comprendre" rows="2" class="mb-4" placeholder="Ce qui vient..."></textarea>
+        <label class="block text-sm text-gold mb-1">Que protèges-tu ?</label>
+        <textarea id="input-protege" rows="2" placeholder="Ce qui vient..."></textarea>
+      `;
+    } else if (step.inputKey) {
+      inputsEl.innerHTML = `
+        <label class="block text-sm text-gold mb-1">${step.inputLabel} <span class="opacity-50">(facultatif)</span></label>
+        <textarea id="input-${step.inputKey}" rows="2" placeholder="Ce qui vient..."></textarea>
+      `;
+    }
+
+    document.getElementById('card-next-btn').textContent = currentStepIndex === PROTOCOL.length - 1 ? 'Clore le dialogue' : 'Continuer';
+    showStep('step-card');
+    const mini = document.getElementById('mini-' + drawnCards.indexOf(card));
+    if (mini) mini.classList.add('done');
+  }
+
+  function advanceFromCard() {
+    const step = PROTOCOL[currentStepIndex];
+    if (step.isDialogue) {
+      reponses.sert = document.getElementById('input-sert').value.trim();
+      reponses.comprendre = document.getElementById('input-comprendre').value.trim();
+      reponses.protege = document.getElementById('input-protege').value.trim();
+    } else if (step.inputKey) {
+      reponses[step.inputKey] = document.getElementById('input-' + step.inputKey).value.trim();
+    }
+
+    if (currentStepIndex < PROTOCOL.length - 1) {
+      currentStepIndex++;
+      renderCardStep();
+    } else {
+      goToSynthesis();
+    }
+  }
+
+  async function goToSynthesis() {
+    showStep('step-synthesis');
+    document.getElementById('synth-loading').classList.remove('hidden');
+    document.getElementById('synth-result').classList.add('hidden');
+    const payload = {
+      intention: document.getElementById('intention').value.trim(),
+      cards: drawnCards,
+      reponses
+    };
+    try {
+      const r = await adminFetch('/api/admin/data?action=dialogue-interieur-synthese', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+      const data = await r.json();
+      if (!r.ok || !data.success) throw new Error(data.error || "L'oracle n'a pas pu générer la synthèse.");
+      const archetypeCard = cardByFamily('archetypes');
+      document.getElementById('card-img-archetype').src = archetypeCard?.imgSrc || '';
+      document.getElementById('card-img-archetype').alt = archetypeCard?.name || '';
+      document.getElementById('synth-text').textContent = data.synthese;
+      document.getElementById('synth-loading').classList.add('hidden');
+      document.getElementById('synth-result').classList.remove('hidden');
+    } catch (e) {
+      document.getElementById('synth-loading').innerHTML = '<p class="text-red-300 text-center">' + e.message + '</p><div class="text-center mt-4"><button class="btn-ghost" onclick="goToSynthesis()">Réessayer</button></div>';
+    }
+  }
+
+  function resetAll() {
+    drawnCards = [];
+    currentStepIndex = 0;
+    Object.keys(reponses).forEach(k => reponses[k] = '');
+    document.getElementById('intention').value = '';
+    document.querySelectorAll('#body-chips .chip').forEach(c => c.classList.remove('selected'));
+    document.getElementById('progress-strip').classList.add('hidden');
+    showStep('step-intro');
+  }
+</script>
+</body>
+</html>

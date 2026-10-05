@@ -21,6 +21,7 @@ const { sendFactureEmail, sendDevisEmail, sendRelanceEmail, exempleFacture } = r
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
 const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
+const { generateDialogueSynthesis } = require('../../lib/dialogue-interieur-prompt.js');
 const { getWeeklyAstroTheme } = require('../../lib/astro-calendar.js');
 const sharp = require('sharp');
 
@@ -7181,6 +7182,45 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           return res.status(502).json({ error: 'Erreur envoi Brevo : ' + errText });
         }
         return res.status(200).json({ success: true, sent_to: TEST_RECIPIENT, subject: finalSubject, draft_id: draft.id });
+      }
+
+      // ── "Le Dialogue Intérieur" — expérience de test, admin-only (voir
+      // admin/dialogue-interieur.html, non reliée au site public). Réutilise
+      // le tirage complet du Tore (drawSevenCards, même mécanique QRNG) plutôt
+      // qu'un tirage dédié : l'ordre des familles (émotions, besoins,
+      // transmutation, archétypes, révélations, actions, mémoire cosmos) sert
+      // ici de trame au protocole — chaque carte révélée une par une, avec un
+      // rôle précis dans le dialogue (voir les textes de cadrage côté client).
+      // Cartes passerelles ignorées pour cette première version : une seule
+      // carte par famille, pour garder le protocole lisible. Pas
+      // d'enregistrement en base pour l'instant : aucune donnée personnelle
+      // à conserver tant que l'expérience reste une maquette de test.
+      if (action === 'dialogue-interieur-tirer') {
+        const { cards, qrngSource } = await drawSevenCards();
+        return res.status(200).json({
+          success: true,
+          qrngSource,
+          cards: cards.map(c => ({
+            family: c.family,
+            familyLabel: FAMILY_LABELS[c.family] || c.family,
+            name: c.name,
+            quote: c.quote,
+            imgSrc: resolveCardImageUrl(c.name) || ''
+          }))
+        });
+      }
+
+      // ── "Le Dialogue Intérieur" — synthèse de clôture (négociation,
+      // remerciement, réintégration) générée à partir des 7 cartes tirées et
+      // des réponses libres recueillies à chaque étape du protocole.
+      if (action === 'dialogue-interieur-synthese') {
+        const { intention, cards, reponses } = body;
+        if (!Array.isArray(cards) || cards.length !== 7) {
+          return res.status(400).json({ error: 'Les 7 cartes sont requises — relancez le tirage.' });
+        }
+        const synthese = await generateDialogueSynthesis({ intention, cards, reponses });
+        if (!synthese) return res.status(502).json({ error: "L'oracle n'a pas pu générer la synthèse, réessayez." });
+        return res.status(200).json({ success: true, synthese });
       }
 
       // ── Illustre une étape du parcours pas encore validée : génère deux images via
