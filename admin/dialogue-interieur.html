@@ -23,6 +23,29 @@
   }
   @keyframes reveal { from{opacity:0; transform:scale(.8) rotateY(90deg);} to{opacity:1; transform:scale(1) rotateY(0);} }
   .card-reveal.soothed { border-color:#f5e7a1; box-shadow:0 0 70px rgba(245,231,161,.5); transform:scale(.85) translateY(10px); opacity:.85; }
+
+  /* ── Carte retournée au clic, comme un vrai jeu de cartes ── */
+  .flip-card { width:170px; aspect-ratio:2/3; margin:0 auto; perspective:1200px; cursor:pointer; }
+  .flip-card-inner {
+    position:relative; width:100%; height:100%; transform-style:preserve-3d;
+    transition:transform .9s cubic-bezier(.45,.15,.2,1);
+  }
+  .flip-card.flipped .flip-card-inner { transform:rotateY(180deg); }
+  .flip-card.flipped { cursor:default; }
+  .flip-card-face {
+    position:absolute; inset:0; backface-visibility:hidden; border-radius:14px;
+    border:2px solid #d4af37; overflow:hidden; box-shadow:0 0 30px rgba(212,175,55,.25);
+  }
+  .flip-card-face img { width:100%; height:100%; object-fit:cover; display:block; }
+  .flip-card-front { transform:rotateY(180deg); }
+  .flip-card:not(.flipped) .flip-card-back { box-shadow:0 0 30px rgba(212,175,55,.25); }
+  .flip-card:not(.flipped):hover .flip-card-back { box-shadow:0 0 45px rgba(212,175,55,.5); }
+  .flip-card-hint {
+    position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:11px;
+    letter-spacing:.08em; text-transform:uppercase; color:#f5e7a1; opacity:.9;
+    text-shadow:0 1px 4px rgba(0,0,0,.7); pointer-events:none;
+  }
+  #card-revealed { animation:fadeIn .8s ease; }
   .card-mini { width:48px; border-radius:6px; border:1px solid rgba(212,175,55,.4); opacity:.55; transition:all .4s ease; }
   .card-mini.done { opacity:1; border-color:#d4af37; box-shadow:0 0 10px rgba(212,175,55,.3); }
   textarea, input[type=text] {
@@ -98,18 +121,31 @@
 
     <!-- Étapes 1 à 7 : une carte à la fois, générées dynamiquement -->
     <section id="step-card" class="step">
-      <p class="guide-text mb-6" id="card-guide"></p>
-      <div class="text-center mb-4">
-        <img id="card-img" class="card-reveal" src="" alt="">
-        <p class="cormorant text-sm text-gold/70 uppercase tracking-widest mt-4" id="card-family"></p>
-        <p class="cormorant text-2xl text-light-gold mt-1" id="card-name"></p>
-        <p class="italic text-sm opacity-70 mt-3 px-4" id="card-quote"></p>
+      <p class="guide-text mb-6 text-center" id="card-guide"></p>
+
+      <div class="flip-card" id="flip-card" onclick="flipCard()">
+        <div class="flip-card-inner">
+          <div class="flip-card-face flip-card-back">
+            <img id="card-back-img" src="" alt="Carte face cachée">
+            <p class="flip-card-hint">Touchez pour retourner la carte</p>
+          </div>
+          <div class="flip-card-face flip-card-front">
+            <img id="card-front-img" src="" alt="">
+          </div>
+        </div>
       </div>
 
-      <div id="card-inputs" class="mt-6"></div>
+      <div id="card-revealed" class="hidden text-center mt-5">
+        <p class="cormorant text-sm text-gold/70 uppercase tracking-widest" id="card-family"></p>
+        <p class="cormorant text-2xl text-light-gold mt-1" id="card-name"></p>
+        <p class="italic text-sm opacity-70 mt-3 px-4" id="card-quote"></p>
+        <p class="guide-text mt-4 px-2" id="card-laius"></p>
 
-      <div class="text-center mt-8">
-        <button class="btn-gold" id="card-next-btn" onclick="advanceFromCard()">Continuer</button>
+        <div id="card-inputs" class="mt-6 text-left"></div>
+
+        <div class="mt-8">
+          <button class="btn-gold" id="card-next-btn" onclick="advanceFromCard()">Continuer</button>
+        </div>
       </div>
     </section>
 
@@ -173,45 +209,46 @@
   // la clé qui se présente, le chemin d'action, puis le contexte plus vaste.
   const PROTOCOL = [
     {
-      family: 'emotions',
-      guide: "Revenez à cette tension, là où vous l'avez sentie. Avant qu'elle ne prenne forme, laissez venir une question : quelle émotion vient-elle chatouiller en vous, précisément ? Ne cherchez pas la bonne réponse, laissez-la venir.",
-      inputKey: 'emotion', inputLabel: "L'émotion qui est venue", optional: true
+      family: 'emotions', dos: 'emotion',
+      guide: "Revenez à cette tension, là où vous l'avez sentie. Laissez-la s'accueillir, sans la juger. Quand vous êtes prêt, retournez la carte pour découvrir l'émotion qu'elle vient chatouiller en vous.",
+      laius: "Voici l'émotion qui se présente. Accueillez-la telle qu'elle est, sans chercher à la corriger."
     },
     {
-      family: 'besoins',
-      guide: "Cette émotion a une forme, même si vous ne l'avez jamais regardée en face. Donnez-lui une taille, une couleur, une texture, une température. Puis, sans forcer, demandez-lui : quel besoin viens-tu mettre en lumière ?",
-      inputKey: 'besoin', inputLabel: 'Le besoin qui est venu', optional: true
+      family: 'besoins', dos: 'besoin',
+      guide: "Cette émotion a une forme, même si vous ne l'avez jamais regardée en face. Donnez-lui une taille, une couleur, une texture, une température. Quand vous êtes prêt, retournez la carte pour découvrir le besoin qu'elle vient mettre en lumière.",
+      laius: "Ce besoin était là, sous la tension, depuis le début."
     },
     {
-      family: 'transmutation',
-      guide: "Une énergie de transformation se présente. Elle ne supprime rien de ce qui a été ressenti : elle indique une direction par laquelle ce qui pèse peut commencer à se déplacer.",
-      inputKey: null
+      family: 'transmutation', dos: 'transmutation',
+      guide: "Une direction de transformation s'apprête à se révéler, en lien avec ce qui vient d'émerger. Retournez la carte.",
+      laius: "Voici la direction par laquelle ce qui pèse peut commencer à se déplacer."
     },
     {
-      family: 'archetypes',
-      guide: "Une présence se dessine : c'est elle qui porte cette tension depuis le début, la part de vous qui a pris en charge ce rôle. Regardez-la. Puis adressez-vous directement à elle, sans forcer mentalement les réponses — laissez venir un mot, une image, une certitude intuitionnée.",
-      inputKey: 'dialogue', isDialogue: true
+      family: 'archetypes', dos: 'archetype',
+      guide: "Une présence va se dessiner : la part de vous qui porte cette tension depuis le début. Retournez la carte pour la rencontrer.",
+      laius: "Regardez-la. Puis adressez-vous directement à elle, sans forcer mentalement les réponses — laissez venir un mot, une image, une certitude intuitionnée.",
+      isDialogue: true
     },
     {
-      family: 'revelations',
-      guide: 'Une clé se présente, discrète mais précise.',
-      inputKey: 'cle', inputLabel: 'Ce que cette clé vous inspire', optional: true
+      family: 'revelations', dos: 'revelation',
+      guide: "Une clé s'apprête à se présenter, discrète mais précise. Retournez la carte.",
+      laius: 'Cette clé est à vous désormais.'
     },
     {
-      family: 'actions',
-      guide: 'Reste à savoir ce que ce chemin appelle maintenant, concrètement.',
-      inputKey: 'action', inputLabel: 'Ce que vous sentez devoir entreprendre', optional: true
+      family: 'actions', dos: 'action',
+      guide: 'Reste à savoir ce que ce chemin appelle maintenant, concrètement. Retournez la carte.',
+      laius: 'Voici ce que ce chemin vous invite à entreprendre.'
     },
     {
-      family: 'memoire_cosmos',
-      guide: "Une dernière carte élargit le cadre. Elle rappelle que ce dialogue, aussi intime soit-il, s'inscrit dans quelque chose de plus vaste, qui vous traverse sans vous appartenir en propre.",
-      inputKey: null
+      family: 'memoire_cosmos', dos: 'memoire_cosmos',
+      guide: 'Une dernière carte élargit le cadre. Retournez-la.',
+      laius: "Ce dialogue, aussi intime soit-il, s'inscrit dans quelque chose de plus vaste, qui vous traverse sans vous appartenir en propre."
     }
   ];
 
   let drawnCards = [];
   let currentStepIndex = 0;
-  const reponses = { emotion: '', besoin: '', sert: '', comprendre: '', protege: '', cle: '', action: '' };
+  const reponses = { sert: '', comprendre: '', protege: '' };
 
   function showStep(id) {
     document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
@@ -261,17 +298,21 @@
     const card = cardByFamily(step.family);
 
     document.getElementById('card-guide').textContent = step.guide;
-    document.getElementById('card-img').src = card.imgSrc || '';
-    document.getElementById('card-img').alt = card.name;
+
+    // Carte face cachée tant qu'elle n'a pas été retournée au clic.
+    const flipEl = document.getElementById('flip-card');
+    flipEl.classList.remove('flipped');
+    document.getElementById('card-back-img').src = `/images/dos/dos_${step.dos}.webp`;
+    document.getElementById('card-front-img').src = card.imgSrc || '';
+    document.getElementById('card-front-img').alt = card.name;
+
     document.getElementById('card-family').textContent = card.familyLabel;
     document.getElementById('card-name').textContent = card.name;
     document.getElementById('card-quote').textContent = card.quote ? '« ' + card.quote + ' »' : '';
+    document.getElementById('card-laius').textContent = step.laius;
 
     const inputsEl = document.getElementById('card-inputs');
-    inputsEl.innerHTML = '';
-
-    if (step.isDialogue) {
-      inputsEl.innerHTML = `
+    inputsEl.innerHTML = step.isDialogue ? `
         <p class="mb-4 text-sm opacity-80 leading-relaxed">Un champ laissé vide est une réponse valable : le silence répond aussi.</p>
         <label class="block text-sm text-gold mb-1">À quoi sers-tu ?</label>
         <textarea id="input-sert" rows="2" class="mb-4" placeholder="Ce qui vient..."></textarea>
@@ -279,18 +320,36 @@
         <textarea id="input-comprendre" rows="2" class="mb-4" placeholder="Ce qui vient..."></textarea>
         <label class="block text-sm text-gold mb-1">Que protèges-tu ?</label>
         <textarea id="input-protege" rows="2" placeholder="Ce qui vient..."></textarea>
-      `;
-    } else if (step.inputKey) {
-      inputsEl.innerHTML = `
-        <label class="block text-sm text-gold mb-1">${step.inputLabel} <span class="opacity-50">(facultatif)</span></label>
-        <textarea id="input-${step.inputKey}" rows="2" placeholder="Ce qui vient..."></textarea>
-      `;
-    }
+      ` : '';
 
     document.getElementById('card-next-btn').textContent = currentStepIndex === PROTOCOL.length - 1 ? 'Clore le dialogue' : 'Continuer';
+    document.getElementById('card-revealed').classList.add('hidden');
     showStep('step-card');
+  }
+
+  // Retourne la carte au clic — une seule fois, ensuite le contenu révélé reste affiché.
+  // Le texte apparaît une fois la rotation 3D terminée (transitionend plutôt qu'un délai
+  // fixe deviné, pour rester calé sur la durée réelle définie en CSS).
+  function flipCard() {
+    const flipEl = document.getElementById('flip-card');
+    if (flipEl.classList.contains('flipped')) return;
+    flipEl.classList.add('flipped');
+
+    const card = cardByFamily(PROTOCOL[currentStepIndex].family);
     const mini = document.getElementById('mini-' + drawnCards.indexOf(card));
     if (mini) mini.classList.add('done');
+
+    const inner = flipEl.querySelector('.flip-card-inner');
+    let revealed = false;
+    const reveal = () => {
+      if (revealed) return;
+      revealed = true;
+      document.getElementById('card-revealed').classList.remove('hidden');
+      document.getElementById('card-revealed').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    };
+    inner.addEventListener('transitionend', reveal, { once: true });
+    // Filet de sécurité si transitionend ne se déclenche pas (ex. onglet en arrière-plan).
+    setTimeout(reveal, 1200);
   }
 
   function advanceFromCard() {
@@ -299,8 +358,6 @@
       reponses.sert = document.getElementById('input-sert').value.trim();
       reponses.comprendre = document.getElementById('input-comprendre').value.trim();
       reponses.protege = document.getElementById('input-protege').value.trim();
-    } else if (step.inputKey) {
-      reponses[step.inputKey] = document.getElementById('input-' + step.inputKey).value.trim();
     }
 
     if (currentStepIndex < PROTOCOL.length - 1) {
