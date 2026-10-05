@@ -9,23 +9,48 @@
 
 <link rel="stylesheet" href="/assets/tailwind.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600&family=Cormorant+Garamond:wght@400;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 
 <style>
-  body { font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; }
-  .cormorant { font-family:'Cormorant Garamond', serif; }
-  .step { display:none; }
-  .step.active { display:block; animation:fadeIn .8s ease; }
-  @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
-  .card-reveal {
-    width:160px; margin:0 auto; border-radius:14px; border:2px solid #d4af37;
-    box-shadow:0 0 40px rgba(212,175,55,.35); transition:all 1.2s ease; animation:reveal 1s ease;
+  html, body { height:100%; }
+  body {
+    font-family:'Poppins',sans-serif; color:#f5e7a1;
+    background-color:#0a192f;
+    background-image:
+      radial-gradient(circle at 15% -10%, rgba(245,231,161,.10), transparent 55%),
+      radial-gradient(circle at 85% 110%, rgba(88,190,255,.08), transparent 55%),
+      radial-gradient(circle at 50% 50%, #d4af37 1px, transparent 1px),
+      linear-gradient(160deg, #0a192f, #051428 60%, #020814);
+    background-size: auto, auto, 46px 46px, auto;
+    background-repeat: no-repeat, no-repeat, repeat, no-repeat;
+    background-attachment: fixed, fixed, fixed, fixed;
   }
-  @keyframes reveal { from{opacity:0; transform:scale(.8) rotateY(90deg);} to{opacity:1; transform:scale(1) rotateY(0);} }
-  .card-reveal.soothed { border-color:#f5e7a1; box-shadow:0 0 70px rgba(245,231,161,.5); transform:scale(.85) translateY(10px); opacity:.85; }
+  .cormorant { font-family:'Cormorant Garamond', serif; }
+  .cinzel { font-family:'Cinzel', serif; }
+  .eyebrow {
+    font-family:'Cinzel', serif; letter-spacing:.14em; text-transform:uppercase;
+    text-shadow:0 0 8px rgba(0,0,0,.8);
+  }
 
-  /* ── Carte retournée au clic, comme un vrai jeu de cartes ── */
-  .flip-card { width:170px; aspect-ratio:2/3; margin:0 auto; perspective:1200px; cursor:pointer; }
+  .step { display:none; }
+  .step.active { display:block; animation:fadeIn .7s ease; }
+  @keyframes fadeIn { from{opacity:0; transform:translateY(10px);} to{opacity:1; transform:translateY(0);} }
+
+  .guide-text { font-size:15px; line-height:1.7; opacity:0; }
+  .guide-text.text-appear { animation:fadeIn .6s ease forwards; }
+  #card-revealed { opacity:0; animation:fadeIn .7s ease forwards; }
+
+  /* ── Carte retournée au clic, comme un vrai jeu de cartes ──
+     Entrée en scène propre (cardAppear) rejouée explicitement à chaque étape
+     (classe retirée puis réappliquée avec un reflow forcé, voir JS) — sans ce
+     forçage, retirer "flipped" entre deux étapes rejouait un flip inversé
+     visible (la face suivante apparaissait brièvement avant de se recacher),
+     au lieu d'un simple passage instantané à l'état face cachée. */
+  .flip-card-wrap { opacity:0; transform:scale(.85) translateY(14px); }
+  .flip-card-wrap.card-appear { animation:cardAppear .65s cubic-bezier(.25,.9,.35,1.15) .15s forwards; }
+  @keyframes cardAppear { to { opacity:1; transform:scale(1) translateY(0); } }
+
+  .flip-card { width:min(170px, 46vw); aspect-ratio:2/3; margin:0 auto; perspective:1200px; cursor:pointer; }
   .flip-card-inner {
     position:relative; width:100%; height:100%; transform-style:preserve-3d;
     transition:transform .9s cubic-bezier(.45,.15,.2,1);
@@ -38,21 +63,45 @@
   }
   .flip-card-face img { width:100%; height:100%; object-fit:cover; display:block; }
   .flip-card-front { transform:rotateY(180deg); }
-  .flip-card:not(.flipped) .flip-card-back { box-shadow:0 0 30px rgba(212,175,55,.25); }
-  .flip-card:not(.flipped):hover .flip-card-back { box-shadow:0 0 45px rgba(212,175,55,.5); }
-  .flip-card-hint {
-    position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:11px;
-    letter-spacing:.08em; text-transform:uppercase; color:#f5e7a1; opacity:.9;
-    text-shadow:0 1px 4px rgba(0,0,0,.7); pointer-events:none;
+  .flip-card:not(.flipped) .flip-card-back { animation:backPulse 3.2s ease-in-out infinite; }
+  @keyframes backPulse {
+    0%, 100% { box-shadow:0 0 28px rgba(212,175,55,.22); }
+    50% { box-shadow:0 0 42px rgba(212,175,55,.42); }
   }
-  #card-revealed { animation:fadeIn .8s ease; }
-  .card-mini { width:48px; border-radius:6px; border:1px solid rgba(212,175,55,.4); opacity:.55; transition:all .4s ease; }
-  .card-mini.done { opacity:1; border-color:#d4af37; box-shadow:0 0 10px rgba(212,175,55,.3); }
+  .flip-card:not(.flipped):hover .flip-card-back { box-shadow:0 0 50px rgba(212,175,55,.55); }
+  .flip-card-hint {
+    position:absolute; bottom:10px; left:0; right:0; text-align:center; font-size:10.5px;
+    letter-spacing:.1em; text-transform:uppercase; color:#f5e7a1; opacity:.9;
+    text-shadow:0 1px 4px rgba(0,0,0,.8); pointer-events:none; font-family:'Cinzel',serif;
+  }
+
+  .card-reveal {
+    width:160px; margin:0 auto; border-radius:14px; border:2px solid #d4af37;
+    box-shadow:0 0 40px rgba(212,175,55,.35); animation:reveal 1s ease;
+  }
+  @keyframes reveal { from{opacity:0; transform:scale(.8);} to{opacity:1; transform:scale(1);} }
+  .card-reveal.soothed { border-color:#f5e7a1; box-shadow:0 0 70px rgba(245,231,161,.5); transform:scale(.85) translateY(10px); opacity:.85; }
+
+  /* ── Fil des 7 cartes : dos jusqu'à révélation, puis visage + lueur ── */
+  #progress-strip { position:relative; }
+  #progress-strip::before {
+    content:''; position:absolute; top:50%; left:6%; right:6%; height:1px; z-index:0;
+    background:linear-gradient(90deg, transparent, rgba(212,175,55,.4), transparent);
+  }
+  .card-mini {
+    position:relative; z-index:1; width:clamp(28px, 9vw, 38px); aspect-ratio:2/3; object-fit:cover;
+    border-radius:6px; border:1px solid rgba(212,175,55,.35); opacity:.5;
+    transition:opacity .5s ease, border-color .5s ease, box-shadow .5s ease, transform .5s ease;
+    background:#051428;
+  }
+  .card-mini.done { opacity:1; border-color:#d4af37; box-shadow:0 0 14px rgba(212,175,55,.5); transform:translateY(-3px); }
+
   textarea, input[type=text] {
     background:rgba(255,255,255,.04); border:1px solid rgba(212,175,55,.35); color:#f5e7a1;
     border-radius:10px; padding:12px 14px; width:100%; font-family:'Poppins',sans-serif;
+    transition:border-color .2s ease, background .2s ease;
   }
-  textarea:focus, input[type=text]:focus { outline:none; border-color:#d4af37; }
+  textarea:focus, input[type=text]:focus { outline:none; border-color:#d4af37; background:rgba(255,255,255,.06); }
   .btn-gold {
     background:linear-gradient(135deg,#d4af37,#f4e4c1); color:#0a192f; font-weight:600;
     padding:12px 28px; border-radius:30px; transition:all .3s ease; border:none; cursor:pointer;
@@ -63,7 +112,7 @@
     background:transparent; color:#f5e7a1; border:1px solid rgba(245,231,161,.3);
     padding:10px 22px; border-radius:30px; cursor:pointer; transition:all .3s ease;
   }
-  .btn-ghost:hover { border-color:#f5e7a1; }
+  .btn-ghost:hover { border-color:#f5e7a1; background:rgba(245,231,161,.06); }
   .chip {
     display:inline-block; padding:6px 16px; border-radius:20px; border:1px solid rgba(212,175,55,.4);
     font-size:13px; cursor:pointer; margin:4px; transition:all .2s ease;
@@ -74,7 +123,6 @@
     border-radius:50%; animation:spin 1s linear infinite; margin:0 auto;
   }
   @keyframes spin { to { transform:rotate(360deg); } }
-  .guide-text { font-size:15px; line-height:1.7; opacity:.92; }
 </style>
 </head>
 <body class="min-h-screen">
@@ -87,13 +135,14 @@
   <div class="max-w-xl mx-auto">
 
     <div class="text-center mb-2">
-      <span class="chip" style="cursor:default; border-color:rgba(245,231,161,.25); color:rgba(245,231,161,.6); font-size:11px; letter-spacing:.08em; text-transform:uppercase;">Test admin — non public</span>
+      <span class="chip eyebrow" style="cursor:default; border-color:rgba(245,231,161,.25); color:rgba(245,231,161,.6); font-size:10.5px;">Test admin — non public</span>
     </div>
     <h1 class="cormorant text-3xl md:text-4xl text-center text-gold mt-4 mb-2">Le Dialogue Intérieur</h1>
     <p class="text-center text-sm opacity-70 mb-6">Donner une forme à ce que vous portez, pour pouvoir lui parler.</p>
 
-    <!-- Fil des 7 cartes, rempli au fil du protocole -->
-    <div id="progress-strip" class="hidden flex justify-center gap-2 mb-10 flex-wrap"></div>
+    <!-- Fil des 7 cartes : dos jusqu'à révélation, pour ne jamais trahir à l'avance
+         quelle carte s'apprête à être retournée plus bas. -->
+    <div id="progress-strip" class="hidden flex justify-center gap-2.5 mb-10"></div>
 
     <!-- Étape 0 : localisation -->
     <section id="step-intro" class="step active">
@@ -123,20 +172,22 @@
     <section id="step-card" class="step">
       <p class="guide-text mb-6 text-center" id="card-guide"></p>
 
-      <div class="flip-card" id="flip-card" onclick="flipCard()">
-        <div class="flip-card-inner">
-          <div class="flip-card-face flip-card-back">
-            <img id="card-back-img" src="" alt="Carte face cachée">
-            <p class="flip-card-hint">Touchez pour retourner la carte</p>
-          </div>
-          <div class="flip-card-face flip-card-front">
-            <img id="card-front-img" src="" alt="">
+      <div class="flip-card-wrap" id="flip-card-wrap">
+        <div class="flip-card" id="flip-card" onclick="flipCard()">
+          <div class="flip-card-inner">
+            <div class="flip-card-face flip-card-back">
+              <img id="card-back-img" src="" alt="Carte face cachée">
+              <p class="flip-card-hint">Touchez pour retourner la carte</p>
+            </div>
+            <div class="flip-card-face flip-card-front">
+              <img id="card-front-img" src="" alt="">
+            </div>
           </div>
         </div>
       </div>
 
       <div id="card-revealed" class="hidden text-center mt-5">
-        <p class="cormorant text-sm text-gold/70 uppercase tracking-widest" id="card-family"></p>
+        <p class="eyebrow text-sm text-gold/70" id="card-family"></p>
         <p class="cormorant text-2xl text-light-gold mt-1" id="card-name"></p>
         <p class="italic text-sm opacity-70 mt-3 px-4" id="card-quote"></p>
         <p class="guide-text mt-4 px-2" id="card-laius"></p>
@@ -283,10 +334,35 @@
     }
   }
 
+  // Rejoue une animation CSS pilotée par classe (sinon, ré-ajouter une classe déjà
+  // présente est un no-op pour le navigateur : rien ne se relance visuellement).
+  function restartAnimation(el, className) {
+    el.classList.remove(className);
+    void el.offsetWidth; // force le reflow entre le retrait et l'ajout
+    el.classList.add(className);
+  }
+
+  // Bascule la carte à l'état "face cachée" sans transition visible — sinon, retirer
+  // la classe "flipped" entre deux étapes rejoue un flip inversé animé (transition
+  // CSS toujours active), montrant brièvement la prochaine carte avant qu'elle ne se
+  // recache : exactement le bug "la carte apparaît déjà visible puis se retourne".
+  function resetFlipInstant(flipEl) {
+    const inner = flipEl.querySelector('.flip-card-inner');
+    inner.style.transition = 'none';
+    flipEl.classList.remove('flipped');
+    void inner.offsetWidth;
+    inner.style.transition = '';
+  }
+
   function renderProgressStrip() {
     const strip = document.getElementById('progress-strip');
     strip.classList.remove('hidden');
-    strip.innerHTML = drawnCards.map((c, i) => `<img class="card-mini" id="mini-${i}" src="${c.imgSrc}" alt="${c.name}">`).join('');
+    // Dos de carte pour toutes, tant qu'aucune n'a été retournée : ne jamais trahir
+    // à l'avance quelle carte va se présenter aux étapes suivantes.
+    strip.innerHTML = drawnCards.map((c, i) => {
+      const dos = (PROTOCOL.find(s => s.family === c.family) || {}).dos || c.family;
+      return `<img class="card-mini" id="mini-${i}" src="/images/dos/dos_${dos}.webp" alt="">`;
+    }).join('');
   }
 
   function cardByFamily(family) {
@@ -298,13 +374,15 @@
     const card = cardByFamily(step.family);
 
     document.getElementById('card-guide').textContent = step.guide;
+    restartAnimation(document.getElementById('card-guide'), 'text-appear');
 
     // Carte face cachée tant qu'elle n'a pas été retournée au clic.
     const flipEl = document.getElementById('flip-card');
-    flipEl.classList.remove('flipped');
+    resetFlipInstant(flipEl);
     document.getElementById('card-back-img').src = `/images/dos/dos_${step.dos}.webp`;
     document.getElementById('card-front-img').src = card.imgSrc || '';
     document.getElementById('card-front-img').alt = card.name;
+    restartAnimation(document.getElementById('flip-card-wrap'), 'card-appear');
 
     document.getElementById('card-family').textContent = card.familyLabel;
     document.getElementById('card-name').textContent = card.name;
@@ -335,15 +413,18 @@
     if (flipEl.classList.contains('flipped')) return;
     flipEl.classList.add('flipped');
 
-    const card = cardByFamily(PROTOCOL[currentStepIndex].family);
-    const mini = document.getElementById('mini-' + drawnCards.indexOf(card));
-    if (mini) mini.classList.add('done');
-
     const inner = flipEl.querySelector('.flip-card-inner');
     let revealed = false;
     const reveal = () => {
       if (revealed) return;
       revealed = true;
+
+      // Le mini de la frise ne dévoile le visage de la carte qu'à cet instant précis,
+      // en même temps que le reste du contenu révélé — jamais avant.
+      const card = cardByFamily(PROTOCOL[currentStepIndex].family);
+      const mini = document.getElementById('mini-' + drawnCards.indexOf(card));
+      if (mini) { mini.src = card.imgSrc || mini.src; mini.classList.add('done'); }
+
       document.getElementById('card-revealed').classList.remove('hidden');
       document.getElementById('card-revealed').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     };
