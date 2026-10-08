@@ -315,7 +315,7 @@ class FreemiumTracker {
         // partagé entre le tirage français et le tirage anglais.
         const isEN = (document.documentElement.lang || '').toLowerCase().indexOf('en') === 0;
         const T = isEN ? {
-            ariaLabel: 'Free draws used', close: 'Close', banner: 'banniere-facebook-en', tagline: 'The Inner Compass',
+            ariaLabel: 'Free draws used', close: 'Close', banner: 'banniere-facebook-en', tagline: 'L’Oracle des Passerelles',
             oldPrice: '€8', newPrice: '€5',
             title: "You've explored your two free draws",
             intro: "Your guidance journey doesn't end here — here's how to continue.",
@@ -332,7 +332,7 @@ class FreemiumTracker {
             error: 'Something went wrong. Please try again.', loading: 'Loading…', subscribe: 'Subscribe',
             consentLabel: 'The Tore subscription'
         } : {
-            ariaLabel: 'Tirages offerts utilisés', close: 'Fermer', banner: 'banniere-facebook', tagline: 'La Boussole Intérieure',
+            ariaLabel: 'Tirages offerts utilisés', close: 'Fermer', banner: 'banniere-facebook', tagline: 'L’Oracle des Passerelles',
             oldPrice: '8€', newPrice: '5€',
             title: 'Vos deux tirages offerts ont été explorés',
             intro: "Votre chemin de guidance ne s'arrête pas là — voici comment continuer.",

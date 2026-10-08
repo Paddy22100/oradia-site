@@ -5,7 +5,7 @@
 // flou) de l'expérience "Le Dialogue Intérieur" encore en test admin-only.
 //
 // Même convention que les étapes existantes : jamais de "je", pas de tiret
-// long, "L'oracle de La Boussole Intérieure" (jamais "La Boussole" seule).
+// long, "L'Oracle des Passerelles" (jamais "Passerelles" seul).
 // Insérées SANS extra.parcours_valide : à relire et valider depuis l'onglet
 // Newsletter & Réseaux du dashboard, comme toutes les étapes 14-31.
 // Idempotent : relancer ce script ne duplique jamais une étape déjà insérée.
@@ -24,7 +24,7 @@ const ENTRIES = [
 <p>Les neurosciences contemporaines appellent cela le cerveau prédictif. Loin d'enregistrer passivement le monde, le cerveau anticipe sans relâche, construit un modèle, puis interprète ce qui arrive à travers ce modèle. Un même événement, vécu dans deux cadres différents, ne produit pas la même expérience. Ce n'est pas une illusion : c'est ainsi que la perception fonctionne, depuis toujours, dans toutes les cultures.</p>
 <p>Les traditions anciennes savaient cela sans le nommer ainsi. Un rituel n'invente pas un miracle, il prépare un terrain. Il annonce au corps et à l'esprit que quelque chose d'important s'apprête à se produire, et cette annonce, seule, modifie déjà ce qui va suivre.</p>
 <p>Ce que l'on appelle parfois concentration ou intention n'est rien d'autre que ce cadre, posé consciemment. Avant d'agir, avant de décider, le cadre dans lequel la question est posée détermine une grande partie de la réponse qui pourra émerger.</p>
-<p>L'oracle de La Boussole Intérieure ne fonctionne pas autrement. Le silence qu'il demande, la question qu'il invite à formuler avant de tirer une carte, ne sont pas un décor. Ils sont le cadre qui permet à ce qui est déjà là, en vous, de se rendre enfin lisible.</p>`
+<p>L'Oracle des Passerelles ne fonctionne pas autrement. Le silence qu'il demande, la question qu'il invite à formuler avant de tirer une carte, ne sont pas un décor. Ils sont le cadre qui permet à ce qui est déjà là, en vous, de se rendre enfin lisible.</p>`
   },
   {
     ordre: 33,
@@ -34,7 +34,7 @@ const ENTRIES = [
 <p>Certains ethnopsychiatres, en travaillant avec des patients venus d'ailleurs, ont fait un choix rare : accueillir leurs esprits plutôt que de les traduire aussitôt dans un vocabulaire occidental qui les aurait disqualifiés. Ce n'est pas dans la croyance exacte que la guérison se loge, mais dans le cadre où cette croyance peut enfin être prise au sérieux.</p>
 <p>L'Occident, en se détachant des esprits extérieurs, n'a pas renoncé à cette intuition. Il l'a seulement déplacée vers l'intérieur. Freud et Jung ont parlé d'inconscient, une instance qui a ses propres intentions, parfois opposées à celles de la conscience claire. Plus récemment, certaines approches thérapeutiques ont repris ce principe sous le nom de parts, ou de sous-personnalités.</p>
 <p>Ce glissement de vocabulaire ne change rien à l'essentiel : ce qui résiste en soi n'est presque jamais une chose compacte et unique. Ce sont des voix, des mouvements, parfois contradictoires, qui ont chacun leur histoire et leur raison d'être là.</p>
-<p>L'oracle de La Boussole Intérieure s'adresse à ces voix sans prétendre les unifier de force. Chaque carte tirée donne une forme provisoire à l'une d'entre elles, le temps d'un dialogue qui n'a rien d'une croyance à adopter : un outil, hérité de partout, pour que ce qui agit en silence puisse enfin être entendu.</p>`
+<p>L'Oracle des Passerelles s'adresse à ces voix sans prétendre les unifier de force. Chaque carte tirée donne une forme provisoire à l'une d'entre elles, le temps d'un dialogue qui n'a rien d'une croyance à adopter : un outil, hérité de partout, pour que ce qui agit en silence puisse enfin être entendu.</p>`
   },
   {
     ordre: 34,
@@ -44,7 +44,7 @@ const ENTRIES = [
 <p>Dans les pratiques qui donnent une forme à ce que l'on porte intérieurement, un même constat revient, encore et encore. Interrogée directement, la part qui tenait bon révèle rarement une intention malveillante. Le plus souvent, elle répond qu'elle protège quelque chose, qu'elle a appris, un jour, que vigilance ou retrait étaient nécessaires, et qu'elle n'a simplement jamais reçu le message que ce jour-là est passé.</p>
 <p>C'est un gardien qui a fait du zèle, pas un saboteur. Il monte la garde devant une porte qui n'a peut-être plus besoin d'être gardée, avec la même fidélité que le premier jour. Lui demander de disparaître ne fonctionne presque jamais : un gardien qu'on attaque redouble de vigilance, il ne se retire pas.</p>
 <p>Ce qui change la relation, c'est de reconnaître ce service rendu, même ancien, même devenu encombrant. Remercier avant de négocier. Signifier que le message a été reçu, et que la garde peut, enfin, se relâcher un peu.</p>
-<p>L'oracle de La Boussole Intérieure n'aide pas à faire taire ces voix intérieures. Il aide à leur parler autrement, à y reconnaître une intention protectrice avant d'y voir un obstacle, ce qui, bien souvent, suffit à commencer à désarmer la tension qu'elles portent.</p>`
+<p>L'Oracle des Passerelles n'aide pas à faire taire ces voix intérieures. Il aide à leur parler autrement, à y reconnaître une intention protectrice avant d'y voir un obstacle, ce qui, bien souvent, suffit à commencer à désarmer la tension qu'elles portent.</p>`
   },
   {
     ordre: 35,
@@ -53,7 +53,7 @@ const ENTRIES = [
     content: `<p>Ce qui n'a pas de forme est presque impossible à affronter. Une inquiétude diffuse, un poids qui n'a pas de nom, une tension qui circule sans qu'on sache où elle commence : tant que cela reste flou, aucun dialogue n'est possible, parce qu'il n'y a personne en face à qui s'adresser.</p>
 <p>C'est peut-être la fonction la plus ancienne et la plus universelle du rituel : donner un contour à ce qui n'en a pas. Une couleur, une texture, une présence que l'on peut situer devant soi plutôt que de la laisser diffuse à l'intérieur. Ce geste, aussi simple qu'il paraisse, change déjà la nature de l'expérience.</p>
 <p>Car une fois qu'une chose a une forme, elle peut être regardée. Et ce qui peut être regardé peut être écouté, questionné, parfois même remercié. Ce que l'on continue de combattre dans le flou, on peut commencer à l'accueillir dès qu'il prend un visage.</p>
-<p>C'est tout l'enjeu d'un passage que l'oracle de La Boussole Intérieure explore de plus en plus : non plus seulement éclairer une situation de l'extérieur, mais offrir un support concret, une carte, une image, à la part intérieure qui demande à être entendue.</p>
+<p>C'est tout l'enjeu d'un passage que l'Oracle des Passerelles explore de plus en plus : non plus seulement éclairer une situation de l'extérieur, mais offrir un support concret, une carte, une image, à la part intérieure qui demande à être entendue.</p>
 <p>Cette piste continue de se préciser. Elle sera annoncée ici, en temps voulu, quand elle sera prête à être partagée plus largement.</p>`
   }
 ];

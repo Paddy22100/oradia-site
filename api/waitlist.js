@@ -233,7 +233,7 @@ async function sendWaitlistConfirmationEmail(email, lang = 'fr') {
           <!-- Bandeau newsletter -->
           <tr>
             <td style="padding:0; line-height:0; font-size:0;">
-              <img src="https://oradia.fr/images/medias/bandeau_newsletter${en ? '-en' : ''}.webp" alt="${en ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
+              <img src="https://oradia.fr/images/medias/bandeau_newsletter${en ? '-en' : ''}.webp" alt="${en ? 'Oradia — L’Oracle des Passerelles' : 'Oradia — L’Oracle des Passerelles'}" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
             </td>
           </tr>
 
@@ -290,7 +290,7 @@ async function sendWaitlistConfirmationEmail(email, lang = 'fr') {
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;" bgcolor="#0f1d35">
                 <tr>
                   <td align="center" style="padding:20px 28px 4px; line-height:0; font-size:0;">
-                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="${en ? 'ORADIA — The Inner Compass, box and cards' : 'ORADIA — La Boussole Intérieure, coffret et cartes'}" width="220" style="display:block; width:220px; max-width:55%; height:auto; border:0; border-radius:8px;">
+                    <img src="https://oradia.fr/images/medias/apercu_stripe.webp" alt="${en ? 'ORADIA — L’Oracle des Passerelles, box and cards' : 'ORADIA — L’Oracle des Passerelles, coffret et cartes'}" width="220" style="display:block; width:220px; max-width:55%; height:auto; border:0; border-radius:8px;">
                   </td>
                 </tr>
                 <tr>
@@ -314,7 +314,7 @@ async function sendWaitlistConfirmationEmail(email, lang = 'fr') {
           <tr>
             <td style="padding:0 40px 16px; text-align:center;">
               <p style="margin:0; color:#9ca3af; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
-                ${en ? 'You can also do an online draw right now with The Inner Compass.' : 'Tu peux aussi faire un tirage en ligne dès maintenant avec La Boussole Intérieure.'}
+                ${en ? 'You can also do an online draw right now with L’Oracle des Passerelles.' : 'Tu peux aussi faire un tirage en ligne dès maintenant avec L’Oracle des Passerelles.'}
               </p>
             </td>
           </tr>
@@ -364,7 +364,7 @@ ${en ? '' : `          <!-- Bannière app mobile bêta — plus petite que l'enc
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:6px auto 14px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
               <p style="margin:0; color:#c8c0a8; font-family:Georgia,serif; font-size:11px; line-height:1.5; opacity:0.45;">
-                ${en ? 'ORADIA - The Inner Compass<br>Reveal. Transmute. Connect.' : 'ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.'}
+                ${en ? 'ORADIA - L’Oracle des Passerelles<br>Reveal. Transmute. Connect.' : 'ORADIA - L’Oracle des Passerelles<br>Révéler. Transmuter. Relier.'}
               </p>
             </td>
           </tr>
@@ -467,7 +467,7 @@ async function sendSignupConfirmationEmail(email, name, lang = 'fr') {
                 <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> &nbsp;&middot;&nbsp; <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a>
               </p>
               <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:4px auto 12px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.webp" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.webp" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.webp" alt="YouTube" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
-              <p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">${en ? 'ORADIA - The Inner Compass<br>Reveal. Transmute. Connect.' : 'ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.'}</p>
+              <p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">${en ? 'ORADIA - L’Oracle des Passerelles<br>Reveal. Transmute. Connect.' : 'ORADIA - L’Oracle des Passerelles<br>Révéler. Transmuter. Relier.'}</p>
             </td>
           </tr>
         </table>
