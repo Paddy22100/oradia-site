@@ -158,6 +158,161 @@ async function generateSocialImage({ subject, textContent }) {
   }
 }
 
+// ── Illustrations des newsletters du parcours (bouton « Illustrer la newsletter ») ──
+// Même moteur que les images validées (OpenAI gpt-image-1, celui de ChatGPT), au format
+// panoramique et dans le style des étapes déjà validées : on transmet 2 images validées
+// comme références de style (endpoint /images/edits), avec repli sur /images/generations.
+const NL_ILLUS_STYLE = [
+  'Cinematic painterly fantasy illustration, highly detailed, soft volumetric light.',
+  'Golden hour or twilight: warm glowing gold light against a deep blue starry sky,',
+  'a thin crescent moon, faint sacred-geometry circles and a vertical line of small stars or moons in the sky,',
+  'luminous golden filaments, roots or threads of light, misty valleys, mountains, a winding river reflecting the light,',
+  'white wildflowers and ivy in the foreground. When a person appears: a woman with dark hair in a bun,',
+  'wearing a flowing cream draped dress, seen from behind or in profile, serene and introspective.',
+  'Mystical, calm, hopeful mood. Wide 16:9 composition. Absolutely no text, letters, logo or watermark.'
+].join(' ');
+const NL_ILLUS_COST_USD = parseFloat(process.env.OPENAI_ILLUS_COST_USD || '0.08');
+
+async function nlIllusSupabase() {
+  return createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
+
+// Deux images d'étapes validées du parcours, au hasard, comme références de style.
+async function nlIllusStyleRefs(sb, count = 2) {
+  try {
+    const { data } = await sb.from('newsletter_drafts').select('images, extra')
+      .eq('archived', false).limit(200);
+    const urls = (data || [])
+      .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true)
+      .flatMap(d => (Array.isArray(d.images) ? d.images : []).map(i => i.path))
+      .filter(u => typeof u === 'string' && /^https:\/\//.test(u));
+    for (let i = urls.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [urls[i], urls[j]] = [urls[j], urls[i]]; }
+    return urls.slice(0, count);
+  } catch (_) { return []; }
+}
+
+// Scène concrète (en anglais) adaptée au texte, via Claude : ouverture = grand paysage,
+// suite = détail symbolique plus intime, pour que les 2 images ne se ressemblent pas.
+async function nlIllusScene({ subject, content, slot }) {
+  const fallback = slot === 'suite'
+    ? 'a close-up symbolic detail glowing with golden light, echoing the theme'
+    : 'a wide serene landscape at golden hour echoing the theme';
+  if (!process.env.ANTHROPIC_API_KEY) return fallback;
+  const text = String(content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 1500);
+  const kind = slot === 'suite'
+    ? 'a more intimate, symbolic close or medium shot (an object, hands, a gesture, a natural element) that captures the heart of the message'
+    : 'a wide establishing scene (a landscape, possibly with one figure seen from behind) that opens the theme';
+  const prompt = `Newsletter Oradia (oracle de développement personnel). Sujet : ${subject}\nTexte : ${text}\n\nDescribe in ONE English sentence (max 35 words) ${kind}. Concrete visual elements only, no style words, no text in the image. Reply with the sentence only.`;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 120, messages: [{ role: 'user', content: prompt }] }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!r.ok) return fallback;
+    const data = await r.json();
+    const out = (data.content || []).map(b => b.text || '').join('').trim().replace(/^["']|["']$/g, '');
+    return out || fallback;
+  } catch (_) { return fallback; }
+}
+
+async function nlIllusDownload(url) {
+  const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error(`téléchargement ${r.status}`);
+  // gpt-image-1 accepte png/jpeg/webp : on normalise en PNG pour éviter toute surprise
+  return await sharp(Buffer.from(await r.arrayBuffer())).png().toBuffer();
+}
+
+// Appel OpenAI : avec images de référence (edits) si fournies, sinon génération simple.
+async function nlIllusOpenAI({ prompt, refBuffers }) {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error('OPENAI_API_KEY non configurée');
+  const common = { model: 'gpt-image-1', size: '1536x1024', quality: 'medium' };
+  if (refBuffers && refBuffers.length) {
+    const form = new FormData();
+    form.append('model', common.model);
+    form.append('prompt', prompt);
+    form.append('size', common.size);
+    form.append('quality', common.quality);
+    refBuffers.forEach((buf, i) => form.append('image[]', new Blob([buf], { type: 'image/png' }), `ref${i}.png`));
+    const r = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(52000)
+    });
+    if (r.ok) {
+      const b64 = (await r.json())?.data?.[0]?.b64_json;
+      if (b64) return Buffer.from(b64, 'base64');
+    } else {
+      console.error('[nlIllus] edits', r.status, (await r.text().catch(() => '')).slice(0, 300));
+    }
+  }
+  const r = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    body: JSON.stringify({ ...common, prompt, n: 1 }),
+    signal: AbortSignal.timeout(52000)
+  });
+  if (!r.ok) throw new Error(`OpenAI ${r.status} : ${(await r.text().catch(() => '')).slice(0, 200)}`);
+  const b64 = (await r.json())?.data?.[0]?.b64_json;
+  if (!b64) throw new Error('Réponse OpenAI vide');
+  return Buffer.from(b64, 'base64');
+}
+
+// Enregistre l'image (WebP 1400 px, comme les images validées) dans newsletter-uploads.
+async function nlIllusStore(sb, buf, label) {
+  const webp = await sharp(buf).resize({ width: 1400, withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
+  const filename = `${Date.now()}_ia_${String(label || 'illustration').normalize('NFD').replace(/[^a-zA-Z0-9]+/g, '_').slice(0, 40)}.webp`;
+  const { error } = await sb.storage.from('newsletter-uploads').upload(filename, webp, { contentType: 'image/webp', upsert: false });
+  if (error) throw new Error(error.message);
+  return sb.storage.from('newsletter-uploads').getPublicUrl(filename).data.publicUrl;
+}
+
+async function nlIllusLog(startedAt, status) {
+  try {
+    const { logApiUsage } = require('../../lib/api-usage-tracker.js');
+    await logApiUsage({ apiName: 'openai-images', modelName: 'gpt-image-1', costUsd: status === 'success' ? NL_ILLUS_COST_USD : 0,
+      status, requestDurationMs: Date.now() - startedAt });
+  } catch (_) {}
+}
+
+// Une illustration pour une newsletter (slot 'ouverture' ou 'suite'). Retourne l'URL publique.
+async function nlIllustrate({ subject, content, slot }) {
+  const startedAt = Date.now();
+  const sb = await nlIllusSupabase();
+  try {
+    const [scene, refUrls] = await Promise.all([nlIllusScene({ subject, content, slot }), nlIllusStyleRefs(sb, 2)]);
+    const refBuffers = (await Promise.all(refUrls.map(u => nlIllusDownload(u).catch(() => null)))).filter(Boolean);
+    const prompt = `${refBuffers.length ? 'Create a NEW original illustration in exactly the same art style, palette and lighting as the reference images (do not copy their content). ' : ''}Scene: ${scene}. Style: ${NL_ILLUS_STYLE}`;
+    const buf = await nlIllusOpenAI({ prompt, refBuffers });
+    const url = await nlIllusStore(sb, buf, `${subject}_${slot}`);
+    await nlIllusLog(startedAt, 'success');
+    return { url, scene };
+  } catch (e) {
+    await nlIllusLog(startedAt, 'error');
+    throw e;
+  }
+}
+
+// Retouche une illustration existante selon la demande de Rudy (« plus de lune », etc.).
+async function nlIllustrationEdit({ url, instruction }) {
+  const startedAt = Date.now();
+  const sb = await nlIllusSupabase();
+  try {
+    const base = await nlIllusDownload(url);
+    const prompt = `Edit this illustration: ${instruction}. Keep everything else the same: same art style, palette, golden lighting and overall composition. ${NL_ILLUS_STYLE}`;
+    const buf = await nlIllusOpenAI({ prompt, refBuffers: [base] });
+    const out = await nlIllusStore(sb, buf, 'retouche');
+    await nlIllusLog(startedAt, 'success');
+    return { url: out };
+  } catch (e) {
+    await nlIllusLog(startedAt, 'error');
+    throw e;
+  }
+}
+
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
 // ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
 // et dépasserait la limite de taille des fonctions Vercel.
@@ -6911,6 +7066,37 @@ async function handleNewsletter(req, res) {
       // brut, qui déroute le générateur d'image) à partir du sujet/intention/contenu de
       // la newsletter, pour que l'illustration générée par IA reste cohérente avec le
       // propos plutôt que de dépendre de ce que l'admin a pensé à taper.
+      // ── Bouton « Illustrer la newsletter » : une image par appel (slot ouverture / suite),
+      // dans le style des étapes validées. L'éditeur place l'image puis Rudy enregistre.
+      if (action === 'illustrate-image') {
+        const subject = String(body.subject || '').slice(0, 200);
+        const content = String(body.content || '').slice(0, 20000);
+        const slot = body.slot === 'suite' ? 'suite' : 'ouverture';
+        if (!subject && !content) return res.status(400).json({ error: 'Sujet ou contenu requis' });
+        try {
+          const out = await nlIllustrate({ subject, content, slot });
+          return res.status(200).json({ success: true, ...out });
+        } catch (e) {
+          return res.status(502).json({ error: e.message });
+        }
+      }
+
+      // ── Retouche d'une illustration (« modifier cette image ») ──
+      if (action === 'edit-illustration') {
+        const url = String(body.url || '');
+        const instruction = String(body.instruction || '').trim().slice(0, 600);
+        if (!/^https:\/\/[a-z0-9.-]+\.supabase\.co\/storage\/v1\/object\/public\/newsletter-uploads\//.test(url)) {
+          return res.status(400).json({ error: 'Image inconnue (seules les images de newsletter peuvent être retouchées)' });
+        }
+        if (!instruction) return res.status(400).json({ error: 'Décris la modification souhaitée' });
+        try {
+          const out = await nlIllustrationEdit({ url, instruction });
+          return res.status(200).json({ success: true, ...out });
+        } catch (e) {
+          return res.status(502).json({ error: e.message });
+        }
+      }
+
       if (action === 'suggest-image-prompt') {
         if (!process.env.ANTHROPIC_API_KEY) {
           return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
@@ -7254,8 +7440,8 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         const latePosition = Math.min(totalParas - 1, Math.max(1, Math.round(totalParas * 0.75)));
 
         const [openingUrl, lateUrl] = await Promise.all([
-          generateSocialImage({ subject, textContent: content }),
-          generateSocialImage({ subject, textContent: content })
+          nlIllustrate({ subject, content, slot: 'ouverture' }).then(r => r.url).catch(() => null),
+          nlIllustrate({ subject, content, slot: 'suite' }).then(r => r.url).catch(() => null)
         ]);
         if (!openingUrl && !lateUrl) {
           return res.status(502).json({ error: "Échec de génération des images (clé OpenAI absente ou API indisponible)" });

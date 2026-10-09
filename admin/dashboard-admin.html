@@ -10422,6 +10422,10 @@
                 <div id="nl-image-selected-label" class="hidden mb-2 text-xs text-green-300">
                     <i class="fas fa-check-circle mr-1"></i><span></span>
                 </div>
+                <button onclick="nlIllustrerNewsletter()" id="nl-illus-btn" class="w-full mb-2 flex items-center justify-center gap-3 bg-gold/20 border-2 border-gold/60 text-gold rounded-2xl px-6 py-4 text-lg font-semibold hover:bg-gold/30 transition">
+                    <i class="fas fa-palette"></i><span>Illustrer la newsletter</span>
+                </button>
+                <p id="nl-illus-status" class="text-xs text-gold/60 mb-4 text-center">2 images dans le style des étapes validées. Ensuite ✏️ sur une image pour la modifier.</p>
                 <div id="nl-selected-previews" class="grid grid-cols-3 gap-3 mb-3"></div>
                 <button onclick="nlClearImages()" id="nl-clear-btn" class="hidden mb-4 text-xs text-gold/40 hover:text-gold/70 transition">
                     ✕ Effacer toutes les images
@@ -10916,6 +10920,7 @@
                     <img src="${sel.path}" class="w-20 h-14 object-cover rounded-lg">
                     <div class="flex items-center justify-between mt-1 gap-1">
                         <span class="text-xs truncate max-w-[64px] ${placed ? 'text-green-400' : isActive ? 'text-gold' : 'text-gold/35'}">${placed ? '✓ placée' : isActive ? '← choisir' : 'non placée'}</span>
+                        <button onclick="event.stopPropagation();nlModifierImage(${i})" title="Modifier cette image (dire ce qui ne va pas)" class="text-gold/50 hover:text-gold text-xs flex-shrink-0">✏️</button>
                         <button onclick="event.stopPropagation();nlToggleImage(${sel.index})" title="Retirer cette image" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕</button>
                     </div>
                 </div>`;
@@ -10982,6 +10987,113 @@
                 </div>
             </div>`;
             nlRenderSocialQuickPicks();
+        }
+
+        // ── Illustrer la newsletter : 2 images IA dans le style des étapes validées ──
+        let nlIllusBusy = false;
+        function nlIllusSetStatus(msg, isError) {
+            const el = document.getElementById('nl-illus-status');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = 'text-xs mb-4 text-center ' + (isError ? 'text-red-400' : 'text-gold/60');
+        }
+
+        function nlIllusParagraphCount() {
+            const contentVal = document.getElementById('nl-content')?.value || '';
+            const visible = (p) => String(p).replace(/<[^>]+>/g, '').replace(/&nbsp;|&#160;/gi, ' ').trim().length > 0;
+            const isHtml = /<[a-z][\s\S]*>/i.test(contentVal);
+            return isHtml
+                ? contentVal.split(/<\/p>\s*<p[^>]*>/i).filter(visible).length
+                : contentVal.split(/\n+/).filter(visible).length;
+        }
+
+        async function nlIllusCall(action, payload) {
+            const res = await adminFetch('/api/admin/newsletter?action=' + action, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success || !data.url) throw new Error(data.error || ('Erreur ' + res.status));
+            return data;
+        }
+
+        async function nlIllustrerNewsletter() {
+            if (nlIllusBusy) return;
+            const subject = document.getElementById('nl-subject')?.value || '';
+            const content = document.getElementById('nl-content')?.value || '';
+            if (!content.trim()) { nlIllusSetStatus('Écris ou génère d\'abord le texte.', true); return; }
+            if (nlSelectedImages.length > 1) {
+                const ok = await adminConfirm('Tu as déjà ' + nlSelectedImages.length + ' images. Les remplacer par 2 nouvelles illustrations ?', { confirmText: 'Remplacer' });
+                if (!ok) return;
+                nlSelectedImages = [];
+            }
+            const btn = document.getElementById('nl-illus-btn');
+            nlIllusBusy = true;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Création des 2 images… (environ 1 min)</span>'; }
+            nlIllusSetStatus('Je dessine l\'ouverture et une image pour la suite…');
+            try {
+                const n = nlIllusParagraphCount();
+                const suitePos = n >= 2 ? Math.min(n - 1, Math.max(1, Math.round(n * 0.6))) : 999;
+                const results = await Promise.allSettled([
+                    nlIllusCall('illustrate-image', { subject, content, slot: 'ouverture' }),
+                    nlIllusCall('illustrate-image', { subject, content, slot: 'suite' })
+                ]);
+                const slots = [
+                    { r: results[0], name: 'Illustration — ouverture', position: 0 },
+                    { r: results[1], name: 'Illustration — suite', position: suitePos }
+                ];
+                let ok = 0;
+                for (const sl of slots) {
+                    if (sl.r.status !== 'fulfilled') continue;
+                    if (nlSelectedImages.length >= 3) break;
+                    // une image déjà placée au même endroit cède sa place
+                    nlSelectedImages.forEach(s => { if ((s.position ?? -1) === sl.position) s.position = -1; });
+                    nlSelectedImages.push({ index: -Date.now() - ok, path: sl.r.value.url, name: sl.name, position: sl.position, width: 600 });
+                    ok++;
+                }
+                nlUpdateSelectedPreviews();
+                if (ok === 2) nlIllusSetStatus('2 images ajoutées. ✏️ sur une vignette pour la modifier, puis sauvegarde.');
+                else if (ok === 1) nlIllusSetStatus('1 image sur 2 a réussi. Réessaie pour la seconde.', true);
+                else {
+                    const err = results.find(r => r.status === 'rejected');
+                    nlIllusSetStatus('Échec : ' + (err?.reason?.message || 'inconnu'), true);
+                }
+            } catch (e) {
+                nlIllusSetStatus('Échec : ' + e.message, true);
+            } finally {
+                nlIllusBusy = false;
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-palette"></i><span>Illustrer la newsletter</span>'; }
+            }
+        }
+
+        async function nlModifierImage(i) {
+            const sel = nlSelectedImages[i];
+            if (!sel || nlIllusBusy) return;
+            const instruction = (window.prompt('Que faut-il changer sur cette image ?\n(ex. « plus lumineux », « enlève la femme », « ajoute un lac »)') || '').trim();
+            if (!instruction) return;
+            nlIllusBusy = true;
+            nlIllusSetStatus('Je modifie l\'image : « ' + instruction + ' »… (environ 40 s)');
+            try {
+                let data;
+                if (/supabase\.co\/storage\/v1\/object\/public\/newsletter-uploads\//.test(sel.path)) {
+                    data = await nlIllusCall('edit-illustration', { url: sel.path, instruction });
+                } else {
+                    // image hors bibliothèque : on en crée une nouvelle en tenant compte de la demande
+                    data = await nlIllusCall('illustrate-image', {
+                        subject: document.getElementById('nl-subject')?.value || '',
+                        content: (document.getElementById('nl-content')?.value || '') + '\n\nConsigne image : ' + instruction,
+                        slot: (sel.position ?? -1) === 0 ? 'ouverture' : 'suite'
+                    });
+                }
+                sel.path = data.url;
+                nlUpdateSelectedPreviews();
+                nlIllusSetStatus('Image modifiée. Pense à sauvegarder.');
+            } catch (e) {
+                nlIllusSetStatus('Échec de la modification : ' + e.message, true);
+            } finally {
+                nlIllusBusy = false;
+            }
         }
 
         function nlSetActivePlacement(i) {
