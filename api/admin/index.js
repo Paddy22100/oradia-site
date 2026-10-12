@@ -21,6 +21,7 @@ const { sendFactureEmail, sendDevisEmail, sendRelanceEmail, exempleFacture } = r
 const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
 const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
 const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
+const { generateDialogueSynthesis } = require('../../lib/dialogue-interieur-prompt.js');
 const { getWeeklyAstroTheme } = require('../../lib/astro-calendar.js');
 const sharp = require('sharp');
 
@@ -154,6 +155,161 @@ async function generateSocialImage({ subject, textContent }) {
   } catch (e) {
     console.error('[generateSocialImage] échec, image de repli conservée:', e.message);
     return null;
+  }
+}
+
+// ── Illustrations des newsletters du parcours (bouton « Illustrer la newsletter ») ──
+// Même moteur que les images validées (OpenAI gpt-image-1, celui de ChatGPT), au format
+// panoramique et dans le style des étapes déjà validées : on transmet 2 images validées
+// comme références de style (endpoint /images/edits), avec repli sur /images/generations.
+const NL_ILLUS_STYLE = [
+  'Cinematic painterly fantasy illustration, highly detailed, soft volumetric light.',
+  'Golden hour or twilight: warm glowing gold light against a deep blue starry sky,',
+  'a thin crescent moon, faint sacred-geometry circles and a vertical line of small stars or moons in the sky,',
+  'luminous golden filaments, roots or threads of light, misty valleys, mountains, a winding river reflecting the light,',
+  'white wildflowers and ivy in the foreground. When a person appears: a woman with dark hair in a bun,',
+  'wearing a flowing cream draped dress, seen from behind or in profile, serene and introspective.',
+  'Mystical, calm, hopeful mood. Wide 16:9 composition. Absolutely no text, letters, logo or watermark.'
+].join(' ');
+const NL_ILLUS_COST_USD = parseFloat(process.env.OPENAI_ILLUS_COST_USD || '0.08');
+
+async function nlIllusSupabase() {
+  return createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
+
+// Deux images d'étapes validées du parcours, au hasard, comme références de style.
+async function nlIllusStyleRefs(sb, count = 2) {
+  try {
+    const { data } = await sb.from('newsletter_drafts').select('images, extra')
+      .eq('archived', false).limit(200);
+    const urls = (data || [])
+      .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true)
+      .flatMap(d => (Array.isArray(d.images) ? d.images : []).map(i => i.path))
+      .filter(u => typeof u === 'string' && /^https:\/\//.test(u));
+    for (let i = urls.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [urls[i], urls[j]] = [urls[j], urls[i]]; }
+    return urls.slice(0, count);
+  } catch (_) { return []; }
+}
+
+// Scène concrète (en anglais) adaptée au texte, via Claude : ouverture = grand paysage,
+// suite = détail symbolique plus intime, pour que les 2 images ne se ressemblent pas.
+async function nlIllusScene({ subject, content, slot }) {
+  const fallback = slot === 'suite'
+    ? 'a close-up symbolic detail glowing with golden light, echoing the theme'
+    : 'a wide serene landscape at golden hour echoing the theme';
+  if (!process.env.ANTHROPIC_API_KEY) return fallback;
+  const text = String(content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 1500);
+  const kind = slot === 'suite'
+    ? 'a more intimate, symbolic close or medium shot (an object, hands, a gesture, a natural element) that captures the heart of the message'
+    : 'a wide establishing scene (a landscape, possibly with one figure seen from behind) that opens the theme';
+  const prompt = `Newsletter Oradia (oracle de développement personnel). Sujet : ${subject}\nTexte : ${text}\n\nDescribe in ONE English sentence (max 35 words) ${kind}. Concrete visual elements only, no style words, no text in the image. Reply with the sentence only.`;
+  try {
+    const r = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 120, messages: [{ role: 'user', content: prompt }] }),
+      signal: AbortSignal.timeout(12000)
+    });
+    if (!r.ok) return fallback;
+    const data = await r.json();
+    const out = (data.content || []).map(b => b.text || '').join('').trim().replace(/^["']|["']$/g, '');
+    return out || fallback;
+  } catch (_) { return fallback; }
+}
+
+async function nlIllusDownload(url) {
+  const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
+  if (!r.ok) throw new Error(`téléchargement ${r.status}`);
+  // gpt-image-1 accepte png/jpeg/webp : on normalise en PNG pour éviter toute surprise
+  return await sharp(Buffer.from(await r.arrayBuffer())).png().toBuffer();
+}
+
+// Appel OpenAI : avec images de référence (edits) si fournies, sinon génération simple.
+async function nlIllusOpenAI({ prompt, refBuffers }) {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) throw new Error('OPENAI_API_KEY non configurée');
+  const common = { model: 'gpt-image-1', size: '1536x1024', quality: 'medium' };
+  if (refBuffers && refBuffers.length) {
+    const form = new FormData();
+    form.append('model', common.model);
+    form.append('prompt', prompt);
+    form.append('size', common.size);
+    form.append('quality', common.quality);
+    refBuffers.forEach((buf, i) => form.append('image[]', new Blob([buf], { type: 'image/png' }), `ref${i}.png`));
+    const r = await fetch('https://api.openai.com/v1/images/edits', {
+      method: 'POST', headers: { Authorization: `Bearer ${key}` }, body: form, signal: AbortSignal.timeout(52000)
+    });
+    if (r.ok) {
+      const b64 = (await r.json())?.data?.[0]?.b64_json;
+      if (b64) return Buffer.from(b64, 'base64');
+    } else {
+      console.error('[nlIllus] edits', r.status, (await r.text().catch(() => '')).slice(0, 300));
+    }
+  }
+  const r = await fetch('https://api.openai.com/v1/images/generations', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${key}` },
+    body: JSON.stringify({ ...common, prompt, n: 1 }),
+    signal: AbortSignal.timeout(52000)
+  });
+  if (!r.ok) throw new Error(`OpenAI ${r.status} : ${(await r.text().catch(() => '')).slice(0, 200)}`);
+  const b64 = (await r.json())?.data?.[0]?.b64_json;
+  if (!b64) throw new Error('Réponse OpenAI vide');
+  return Buffer.from(b64, 'base64');
+}
+
+// Enregistre l'image (WebP 1400 px, comme les images validées) dans newsletter-uploads.
+async function nlIllusStore(sb, buf, label) {
+  const webp = await sharp(buf).resize({ width: 1400, withoutEnlargement: true }).webp({ quality: 85 }).toBuffer();
+  const filename = `${Date.now()}_ia_${String(label || 'illustration').normalize('NFD').replace(/[^a-zA-Z0-9]+/g, '_').slice(0, 40)}.webp`;
+  const { error } = await sb.storage.from('newsletter-uploads').upload(filename, webp, { contentType: 'image/webp', upsert: false });
+  if (error) throw new Error(error.message);
+  return sb.storage.from('newsletter-uploads').getPublicUrl(filename).data.publicUrl;
+}
+
+async function nlIllusLog(startedAt, status) {
+  try {
+    const { logApiUsage } = require('../../lib/api-usage-tracker.js');
+    await logApiUsage({ apiName: 'openai-images', modelName: 'gpt-image-1', costUsd: status === 'success' ? NL_ILLUS_COST_USD : 0,
+      status, requestDurationMs: Date.now() - startedAt });
+  } catch (_) {}
+}
+
+// Une illustration pour une newsletter (slot 'ouverture' ou 'suite'). Retourne l'URL publique.
+async function nlIllustrate({ subject, content, slot }) {
+  const startedAt = Date.now();
+  const sb = await nlIllusSupabase();
+  try {
+    const [scene, refUrls] = await Promise.all([nlIllusScene({ subject, content, slot }), nlIllusStyleRefs(sb, 2)]);
+    const refBuffers = (await Promise.all(refUrls.map(u => nlIllusDownload(u).catch(() => null)))).filter(Boolean);
+    const prompt = `${refBuffers.length ? 'Create a NEW original illustration in exactly the same art style, palette and lighting as the reference images (do not copy their content). ' : ''}Scene: ${scene}. Style: ${NL_ILLUS_STYLE}`;
+    const buf = await nlIllusOpenAI({ prompt, refBuffers });
+    const url = await nlIllusStore(sb, buf, `${subject}_${slot}`);
+    await nlIllusLog(startedAt, 'success');
+    return { url, scene };
+  } catch (e) {
+    await nlIllusLog(startedAt, 'error');
+    throw e;
+  }
+}
+
+// Retouche une illustration existante selon la demande de Rudy (« plus de lune », etc.).
+async function nlIllustrationEdit({ url, instruction }) {
+  const startedAt = Date.now();
+  const sb = await nlIllusSupabase();
+  try {
+    const base = await nlIllusDownload(url);
+    const prompt = `Edit this illustration: ${instruction}. Keep everything else the same: same art style, palette, golden lighting and overall composition. ${NL_ILLUS_STYLE}`;
+    const buf = await nlIllusOpenAI({ prompt, refBuffers: [base] });
+    const out = await nlIllusStore(sb, buf, 'retouche');
+    await nlIllusLog(startedAt, 'success');
+    return { url: out };
+  } catch (e) {
+    await nlIllusLog(startedAt, 'error');
+    throw e;
   }
 }
 
@@ -326,7 +482,7 @@ const STRIPE_PAYMENTS_CSV_HEADER_MAP = {
 // seule liste, jamais deux à tenir synchronisées.
 const PARCOURS_EXCLUDED_SUBJECTS = [
   "Rudy d'ORADIA - Abonnement à l'oracle, une expérience inédite",
-  "Rudy d'ORADIA - La Boussole Intérieure — Un Oracle Pas Comme Les Autres"
+  "Rudy d'ORADIA - L’Oracle des Passerelles — Un Oracle Pas Comme Les Autres"
 ];
 
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
@@ -4144,21 +4300,36 @@ async function handleData(req, res) {
     if (section === 'compose-email') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
       const body = await parseBody(req);
-      const { to, subject, message } = body;
+      const { to, subject, message, attachments } = body;
       if (!to || !subject || !message) return res.status(400).json({ error: 'destinataire, sujet et message requis' });
       const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       if (!emailRe.test(to)) return res.status(400).json({ error: 'Adresse email invalide' });
 
+      // Pièces jointes optionnelles : le filtre 3 Mo côté dashboard reste la vraie protection
+      // (au-delà, Vercel rejette la requête avant même d'exécuter ce code — limite fixe de la
+      // plateforme, hors de notre contrôle) ; ce contrôle n'est qu'un filet pour un appel
+      // direct de l'API sans passer par le formulaire.
+      let brevoAttachments;
+      if (Array.isArray(attachments) && attachments.length > 0) {
+        const totalBytes = attachments.reduce((sum, a) => sum + Buffer.byteLength(String(a.content || ''), 'base64'), 0);
+        if (totalBytes > 4 * 1024 * 1024) return res.status(400).json({ error: 'Pièces jointes trop lourdes (4 Mo max au total)' });
+        brevoAttachments = attachments
+          .filter(a => a && a.name && a.content)
+          .map(a => ({ name: String(a.name).slice(0, 200), content: a.content }));
+      }
+
       const html = buildSupportReplyEmailHtml({ message });
+      const brevoPayload = {
+        sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
+        to: [{ email: to }],
+        subject,
+        htmlContent: html
+      };
+      if (brevoAttachments && brevoAttachments.length > 0) brevoPayload.attachment = brevoAttachments;
       const brevoResp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-        body: JSON.stringify({
-          sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
-          to: [{ email: to }],
-          subject,
-          htmlContent: html
-        })
+        body: JSON.stringify(brevoPayload)
       });
       if (!brevoResp.ok) {
         const err = await brevoResp.json().catch(() => ({}));
@@ -5035,7 +5206,7 @@ const NL_TON_LABELS = {
 // Faits concrets sur le produit, à disposition du modèle pour ancrer le texte
 // dans le réel plutôt que dans des généralités marketing.
 const PRODUIT_FACTS = [
-  `Le Tore — La Boussole Intérieure : un oracle de 64 cartes (80x120mm), illustrations originales.`,
+  `Le Tore — L’Oracle des Passerelles : un oracle de 64 cartes (80x120mm), illustrations originales.`,
   `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
   `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
   `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages).`,
@@ -5119,7 +5290,7 @@ function buildSupportReplyEmailHtml({ message }) {
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.3); border-radius:14px; overflow:hidden;">
       <tr><td style="padding:24px 28px; text-align:center; background:linear-gradient(135deg,#0c1e3a,#07152b);">
         <p style="margin:0 0 4px; color:#d4af37; font-size:11px; text-transform:uppercase; letter-spacing:0.15em; font-family:Georgia,serif;">Oracle ORADIA</p>
-        <p style="margin:0 0 16px; color:#c8c0a8; font-size:13px; font-family:Georgia,serif;">La Boussole Intérieure — précommandez votre exemplaire</p>
+        <p style="margin:0 0 16px; color:#c8c0a8; font-size:13px; font-family:Georgia,serif;">L’Oracle des Passerelles — précommandez votre exemplaire</p>
         <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:13px 36px; border-radius:50px; font-weight:700; font-size:14px; letter-spacing:0.05em;">Découvrir l'Oracle</a>
       </td></tr>
     </table>
@@ -5831,7 +6002,7 @@ function buildCommunicationEmailHtml(draft) {
   const cardInner = nlForceOpaqueCells(`
   <tr><td style="padding:0; line-height:0;">
     <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
-      <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+      <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — L’Oracle des Passerelles" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
     </a>
   </td></tr>
   <tr><td style="padding:14px 32px; text-align:center; background:rgba(212,175,55,0.06); border-bottom:1px solid rgba(212,175,55,0.15);">
@@ -6895,6 +7066,37 @@ async function handleNewsletter(req, res) {
       // brut, qui déroute le générateur d'image) à partir du sujet/intention/contenu de
       // la newsletter, pour que l'illustration générée par IA reste cohérente avec le
       // propos plutôt que de dépendre de ce que l'admin a pensé à taper.
+      // ── Bouton « Illustrer la newsletter » : une image par appel (slot ouverture / suite),
+      // dans le style des étapes validées. L'éditeur place l'image puis Rudy enregistre.
+      if (action === 'illustrate-image') {
+        const subject = String(body.subject || '').slice(0, 200);
+        const content = String(body.content || '').slice(0, 20000);
+        const slot = body.slot === 'suite' ? 'suite' : 'ouverture';
+        if (!subject && !content) return res.status(400).json({ error: 'Sujet ou contenu requis' });
+        try {
+          const out = await nlIllustrate({ subject, content, slot });
+          return res.status(200).json({ success: true, ...out });
+        } catch (e) {
+          return res.status(502).json({ error: e.message });
+        }
+      }
+
+      // ── Retouche d'une illustration (« modifier cette image ») ──
+      if (action === 'edit-illustration') {
+        const url = String(body.url || '');
+        const instruction = String(body.instruction || '').trim().slice(0, 600);
+        if (!/^https:\/\/[a-z0-9.-]+\.supabase\.co\/storage\/v1\/object\/public\/newsletter-uploads\//.test(url)) {
+          return res.status(400).json({ error: 'Image inconnue (seules les images de newsletter peuvent être retouchées)' });
+        }
+        if (!instruction) return res.status(400).json({ error: 'Décris la modification souhaitée' });
+        try {
+          const out = await nlIllustrationEdit({ url, instruction });
+          return res.status(200).json({ success: true, ...out });
+        } catch (e) {
+          return res.status(502).json({ error: e.message });
+        }
+      }
+
       if (action === 'suggest-image-prompt') {
         if (!process.env.ANTHROPIC_API_KEY) {
           return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
@@ -7168,6 +7370,45 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true, sent_to: TEST_RECIPIENT, subject: finalSubject, draft_id: draft.id });
       }
 
+      // ── "Le Dialogue Intérieur" — expérience de test, admin-only (voir
+      // admin/dialogue-interieur.html, non reliée au site public). Réutilise
+      // le tirage complet du Tore (drawSevenCards, même mécanique QRNG) plutôt
+      // qu'un tirage dédié : l'ordre des familles (émotions, besoins,
+      // transmutation, archétypes, révélations, actions, mémoire cosmos) sert
+      // ici de trame au protocole — chaque carte révélée une par une, avec un
+      // rôle précis dans le dialogue (voir les textes de cadrage côté client).
+      // Cartes passerelles ignorées pour cette première version : une seule
+      // carte par famille, pour garder le protocole lisible. Pas
+      // d'enregistrement en base pour l'instant : aucune donnée personnelle
+      // à conserver tant que l'expérience reste une maquette de test.
+      if (action === 'dialogue-interieur-tirer') {
+        const { cards, qrngSource } = await drawSevenCards();
+        return res.status(200).json({
+          success: true,
+          qrngSource,
+          cards: cards.map(c => ({
+            family: c.family,
+            familyLabel: FAMILY_LABELS[c.family] || c.family,
+            name: c.name,
+            quote: c.quote,
+            imgSrc: resolveCardImageUrl(c.name) || ''
+          }))
+        });
+      }
+
+      // ── "Le Dialogue Intérieur" — synthèse de clôture (négociation,
+      // remerciement, réintégration) générée à partir des 7 cartes tirées et
+      // des réponses libres recueillies à chaque étape du protocole.
+      if (action === 'dialogue-interieur-synthese') {
+        const { intention, cards, reponses } = body;
+        if (!Array.isArray(cards) || cards.length !== 7) {
+          return res.status(400).json({ error: 'Les 7 cartes sont requises — relancez le tirage.' });
+        }
+        const synthese = await generateDialogueSynthesis({ intention, cards, reponses });
+        if (!synthese) return res.status(502).json({ error: "L'oracle n'a pas pu générer la synthèse, réessayez." });
+        return res.status(200).json({ success: true, synthese });
+      }
+
       // ── Illustre une étape du parcours pas encore validée : génère deux images via
       // generateSocialImage (même API OpenAI gpt-image-1 que les publications réseaux
       // sociaux, cf. commit 66688a4) et les place dans le corps de l'email — une avant
@@ -7199,8 +7440,8 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         const latePosition = Math.min(totalParas - 1, Math.max(1, Math.round(totalParas * 0.75)));
 
         const [openingUrl, lateUrl] = await Promise.all([
-          generateSocialImage({ subject, textContent: content }),
-          generateSocialImage({ subject, textContent: content })
+          nlIllustrate({ subject, content, slot: 'ouverture' }).then(r => r.url).catch(() => null),
+          nlIllustrate({ subject, content, slot: 'suite' }).then(r => r.url).catch(() => null)
         ]);
         if (!openingUrl && !lateUrl) {
           return res.status(502).json({ error: "Échec de génération des images (clé OpenAI absente ou API indisponible)" });
@@ -7325,27 +7566,27 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           {
             subject: "Quand l'attente devient le chemin",
             registre: 'incarnee',
-            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>L'oracle de La Boussole Intérieure ne raccourcit pas cette attente. Il aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>"
+            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>L'Oracle des Passerelles ne raccourcit pas cette attente. Il aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>"
           },
           {
             subject: "Les non-dits du cœur, ces chaînes douces",
             registre: 'incarnee',
-            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>L'oracle de La Boussole Intérieure aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>"
+            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>L'Oracle des Passerelles aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>"
           },
           {
             subject: "La répétition n'est pas une malédiction, c'est une signature",
             registre: 'incarnee',
-            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>L'oracle de La Boussole Intérieure ne vous promet pas de faire disparaître ce qui revient. Il vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>"
+            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>L'Oracle des Passerelles ne vous promet pas de faire disparaître ce qui revient. Il vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>"
           },
           {
             subject: "Vocation et sens : la sève qui vous traverse",
             registre: 'inspiree',
-            content: "<p>Une question revient souvent, sous des formes différentes : à quoi cela sert-il vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>L'oracle de La Boussole Intérieure ne vous donne pas de réponse toute faite sur votre vocation. Il vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>"
+            content: "<p>Une question revient souvent, sous des formes différentes : à quoi cela sert-il vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>L'Oracle des Passerelles ne vous donne pas de réponse toute faite sur votre vocation. Il vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>"
           },
           {
             subject: "Accueillir ce qui monte",
             registre: 'incarnee',
-            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>L'oracle de La Boussole Intérieure ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>"
+            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>L'Oracle des Passerelles ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>"
           }
         ];
 
@@ -7435,27 +7676,27 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         const FIXES = [
           {
             subject: 'Le veilleur intérieur',
-            content: "<p>Il y a des moments où quelque chose en nous sait. Avant la réflexion, avant les arguments, avant même que l'esprit ait pesé le pour et le contre, une certitude tranquille se pose. On l'appelle intuition, petite voix, pressentiment. Et parfois, contre toute logique apparente, elle voit juste.</p>\n<p>Les humains ont donné mille noms à cette présence, et cela depuis très longtemps.</p>\n<p>Socrate parlait de son daimôn : une voix intérieure qui ne lui dictait jamais quoi faire, mais qui, aux moments décisifs, lui soufflait quand s'arrêter. Les Romains l'appelaient le genius, l'esprit qui accompagne chaque être de sa naissance à son dernier souffle. Les traditions plus tardives y ont vu l'ange gardien, ce veilleur assigné à chacun, et le mot ange, en grec, signifie simplement le messager, celui qui transmet. À travers les siècles et les cultures, la même intuition revient, obstinée : nous ne sommes pas seuls à l'intérieur de nous-mêmes. Une part plus vaste veille, et parfois, elle parle.</p>\n<p>Cette part n'est pas enfermée dans l'instant comme l'est notre pensée quotidienne. Là où nous avançons pas à pas, aveugles au prochain virage, elle semble embrasser un paysage plus large. Elle sait vers quoi tend votre élan le plus profond, celui qui existait bien avant que le monde ne vous apprenne à en douter. Elle n'est pas un autre venu d'ailleurs pour vous surveiller. Elle est vous, vue depuis une hauteur que le quotidien vous cache. Elle est votre double, immatériel, hors temps et hors espace.</p>\n<p>Et elle transmet. Discrètement, sans jamais forcer. Par une image qui revient, une rencontre qui tombe au bon moment, un mot entendu qui résonne trop juste pour être fortuit. Ce sont ces instants où l'intérieur et l'extérieur semblent, l'espace d'un souffle, parler la même langue. Comme si le veilleur vous glissait, tout bas : regarde par là. Les fameuses synchronicités.</p>\n<p>Encore faut-il être assez tranquille pour l'entendre. Dans le bruit, dans la précipitation, dans la tête pleine, le message passe et se perd. Ce n'est pas qu'il n'a pas été offert. C'est que personne n'écoutait. Se relier à cette voix demande de ralentir, de faire silence, de revenir en soi, là où le murmure peut enfin devenir audible.</p>\n<p>Puis vient votre part à vous, et elle est décisive. Car le veilleur montre, mais il ne marche pas à votre place. C'est le sens même du daimôn de Socrate : il éclaire, il avertit, il oriente, mais le pas vous appartient. Là est votre pouvoir le plus précieux, votre libre arbitre : la capacité de dire oui à ce qui vous appelle, de vous engager, d'avancer dans le sens de votre vérité plutôt que de subir un chemin choisi par habitude ou par peur. Quand votre geste s'accorde à ce que cette part de vous savait déjà, quelque chose se met en place. Un alignement se fait. La vie répond.</p>\n<p>C'est tout le travail que l'oracle de La Boussole Intérieure accompagne. Elle ne vous impose rien et ne décide rien à votre place. Elle vous aide à faire silence, à revenir au centre, à percevoir ce que vous portez déjà en vous sans toujours l'entendre. Chaque tirage est une invitation à écouter cette voix plus ancienne, à retrouver l'axe, et à oser le geste qui vous rapproche de ce qui vous ressemble vraiment.</p>\n<p>Le veilleur intérieur connaît le chemin. L'oracle de La Boussole Intérieure vous aide seulement à vous en souvenir.</p>"
+            content: "<p>Il y a des moments où quelque chose en nous sait. Avant la réflexion, avant les arguments, avant même que l'esprit ait pesé le pour et le contre, une certitude tranquille se pose. On l'appelle intuition, petite voix, pressentiment. Et parfois, contre toute logique apparente, elle voit juste.</p>\n<p>Les humains ont donné mille noms à cette présence, et cela depuis très longtemps.</p>\n<p>Socrate parlait de son daimôn : une voix intérieure qui ne lui dictait jamais quoi faire, mais qui, aux moments décisifs, lui soufflait quand s'arrêter. Les Romains l'appelaient le genius, l'esprit qui accompagne chaque être de sa naissance à son dernier souffle. Les traditions plus tardives y ont vu l'ange gardien, ce veilleur assigné à chacun, et le mot ange, en grec, signifie simplement le messager, celui qui transmet. À travers les siècles et les cultures, la même intuition revient, obstinée : nous ne sommes pas seuls à l'intérieur de nous-mêmes. Une part plus vaste veille, et parfois, elle parle.</p>\n<p>Cette part n'est pas enfermée dans l'instant comme l'est notre pensée quotidienne. Là où nous avançons pas à pas, aveugles au prochain virage, elle semble embrasser un paysage plus large. Elle sait vers quoi tend votre élan le plus profond, celui qui existait bien avant que le monde ne vous apprenne à en douter. Elle n'est pas un autre venu d'ailleurs pour vous surveiller. Elle est vous, vue depuis une hauteur que le quotidien vous cache. Elle est votre double, immatériel, hors temps et hors espace.</p>\n<p>Et elle transmet. Discrètement, sans jamais forcer. Par une image qui revient, une rencontre qui tombe au bon moment, un mot entendu qui résonne trop juste pour être fortuit. Ce sont ces instants où l'intérieur et l'extérieur semblent, l'espace d'un souffle, parler la même langue. Comme si le veilleur vous glissait, tout bas : regarde par là. Les fameuses synchronicités.</p>\n<p>Encore faut-il être assez tranquille pour l'entendre. Dans le bruit, dans la précipitation, dans la tête pleine, le message passe et se perd. Ce n'est pas qu'il n'a pas été offert. C'est que personne n'écoutait. Se relier à cette voix demande de ralentir, de faire silence, de revenir en soi, là où le murmure peut enfin devenir audible.</p>\n<p>Puis vient votre part à vous, et elle est décisive. Car le veilleur montre, mais il ne marche pas à votre place. C'est le sens même du daimôn de Socrate : il éclaire, il avertit, il oriente, mais le pas vous appartient. Là est votre pouvoir le plus précieux, votre libre arbitre : la capacité de dire oui à ce qui vous appelle, de vous engager, d'avancer dans le sens de votre vérité plutôt que de subir un chemin choisi par habitude ou par peur. Quand votre geste s'accorde à ce que cette part de vous savait déjà, quelque chose se met en place. Un alignement se fait. La vie répond.</p>\n<p>C'est tout le travail que l'Oracle des Passerelles accompagne. Elle ne vous impose rien et ne décide rien à votre place. Elle vous aide à faire silence, à revenir au centre, à percevoir ce que vous portez déjà en vous sans toujours l'entendre. Chaque tirage est une invitation à écouter cette voix plus ancienne, à retrouver l'axe, et à oser le geste qui vous rapproche de ce qui vous ressemble vraiment.</p>\n<p>Le veilleur intérieur connaît le chemin. L'Oracle des Passerelles vous aide seulement à vous en souvenir.</p>"
           },
           {
             subject: "Quand l'attente devient le chemin",
-            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>L'oracle de La Boussole Intérieure ne raccourcit pas cette attente. Il aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>"
+            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>L'Oracle des Passerelles ne raccourcit pas cette attente. Il aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>"
           },
           {
             subject: "Les non-dits du cœur, ces chaînes douces",
-            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>L'oracle de La Boussole Intérieure aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>"
+            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>L'Oracle des Passerelles aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>"
           },
           {
             subject: "La répétition n'est pas une malédiction, c'est une signature",
-            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>L'oracle de La Boussole Intérieure ne vous promet pas de faire disparaître ce qui revient. Il vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>"
+            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>L'Oracle des Passerelles ne vous promet pas de faire disparaître ce qui revient. Il vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>"
           },
           {
             subject: "Vocation et sens : la sève qui vous traverse",
-            content: "<p>Une question revient souvent, sous des formes différentes : à quoi cela sert-il vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>L'oracle de La Boussole Intérieure ne vous donne pas de réponse toute faite sur votre vocation. Il vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>"
+            content: "<p>Une question revient souvent, sous des formes différentes : à quoi cela sert-il vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>L'Oracle des Passerelles ne vous donne pas de réponse toute faite sur votre vocation. Il vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>"
           },
           {
             subject: "Accueillir ce qui monte",
-            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>L'oracle de La Boussole Intérieure ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>"
+            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>L'Oracle des Passerelles ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>"
           }
         ];
 

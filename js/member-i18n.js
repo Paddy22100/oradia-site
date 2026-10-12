@@ -572,7 +572,7 @@
 
     // Pied de page partagé (components/footer-template.html)
     "Restez dans l'univers ORADIA": 'Stay in the ORADIA universe',
-    'Inspirations, actualités de La Boussole Intérieure et avant-premières.': 'Inspirations, news from The Inner Compass and previews.',
+    'Inspirations, actualités de L’Oracle des Passerelles et avant-premières.': 'Inspirations, news from L’Oracle des Passerelles and previews.',
     'Pas de spam, désinscription en un clic.': 'No spam, unsubscribe in one click.',
     "S'inscrire à la newsletter": 'Subscribe to the newsletter',
     'En vous inscrivant, vous acceptez de recevoir la newsletter Oradia. Désinscription à tout moment.': 'By subscribing, you agree to receive the Oradia newsletter. Unsubscribe at any time.',
@@ -616,8 +616,6 @@
     [/^Actif — le (\d+) de chaque mois à (.+)$/, function (m) { return 'Active — on day ' + m[1] + ' of each month at ' + m[2]; }],
     [/^Oracle Oradia — (.+)$/, function (m) { return 'Oradia Oracle — ' + (D[m[1]] || m[1]); }],
     [/^Le PDF n'a pas pu être généré ?: ?([\s\S]*?)(\. Réessaie dans un instant, et si ça persiste, signale ce message\.)?$/, function (m) { return 'The PDF could not be generated: ' + m[1] + (m[2] ? '. Please try again in a moment, and if it persists, report this message.' : ''); }],
-    [/^Oracle La Boussole Intérieure · (.*)$/, function (m) { return 'Oracle The Inner Compass · ' + m[1]; }],
-    [/^La Boussole Intérieure$/, function () { return 'The Inner Compass'; }],
     [/^\(debug: (.*)\)$/, function (m) { return '(debug: ' + (D[m[1]] || m[1]) + ')'; }]
   ];
 
@@ -687,7 +685,7 @@
 
   // Liens vers les pages publiques → version anglaise quand elle existe.
   var EN_PAGES = { '/': '/en/', '/index.html': '/en/', '/tore.html': '/en/tore.html', '/oracle.html': '/en/oracle.html',
-    '/guidance.html': '/en/guidance.html', '/a-propos.html': '/en/a-propos.html', '/contact.html': '/en/contact.html',
+    '/a-propos.html': '/en/a-propos.html', '/contact.html': '/en/contact.html',
     '/cgu.html': '/en/cgu.html', '/cgv.html': '/en/cgv.html', '/mentions-legales.html': '/en/mentions-legales.html',
     '/politique-confidentialite.html': '/en/politique-confidentialite.html', '/cartes.html': '/en/cartes.html',
     '/blog': '/en/blog/', '/blog/': '/en/blog/', '/success-tore.html': '/en/success-tore.html' };

@@ -4656,6 +4656,12 @@
                     <textarea id="composeEmailMessage" rows="8" placeholder="Votre message…"
                         class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
                 </div>
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Pièces jointes <span class="text-light-gold/30">(3 Mo max au total)</span></label>
+                    <input id="composeEmailAttachments" type="file" multiple onchange="composeRenderAttachments()"
+                        class="w-full text-sm text-light-gold/70 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gold/30 file:bg-gold/10 file:text-gold file:text-xs file:cursor-pointer">
+                    <div id="composeAttachmentsList" class="mt-2 space-y-1"></div>
+                </div>
                 <div class="flex items-center gap-3">
                     <button onclick="composeEmail()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer</button>
                     <span id="composeEmailStatus" class="text-xs text-light-gold/40"></span>
@@ -10416,6 +10422,10 @@
                 <div id="nl-image-selected-label" class="hidden mb-2 text-xs text-green-300">
                     <i class="fas fa-check-circle mr-1"></i><span></span>
                 </div>
+                <button onclick="nlIllustrerNewsletter()" id="nl-illus-btn" class="w-full mb-2 flex items-center justify-center gap-3 bg-gold/20 border-2 border-gold/60 text-gold rounded-2xl px-6 py-4 text-lg font-semibold hover:bg-gold/30 transition">
+                    <i class="fas fa-palette"></i><span>Illustrer la newsletter</span>
+                </button>
+                <p id="nl-illus-status" class="text-xs text-gold/60 mb-4 text-center">2 images dans le style des étapes validées. Ensuite ✏️ sur une image pour la modifier.</p>
                 <div id="nl-selected-previews" class="grid grid-cols-3 gap-3 mb-3"></div>
                 <button onclick="nlClearImages()" id="nl-clear-btn" class="hidden mb-4 text-xs text-gold/40 hover:text-gold/70 transition">
                     ✕ Effacer toutes les images
@@ -10910,6 +10920,7 @@
                     <img src="${sel.path}" class="w-20 h-14 object-cover rounded-lg">
                     <div class="flex items-center justify-between mt-1 gap-1">
                         <span class="text-xs truncate max-w-[64px] ${placed ? 'text-green-400' : isActive ? 'text-gold' : 'text-gold/35'}">${placed ? '✓ placée' : isActive ? '← choisir' : 'non placée'}</span>
+                        <button onclick="event.stopPropagation();nlModifierImage(${i})" title="Modifier cette image (dire ce qui ne va pas)" class="text-gold/50 hover:text-gold text-xs flex-shrink-0">✏️</button>
                         <button onclick="event.stopPropagation();nlToggleImage(${sel.index})" title="Retirer cette image" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕</button>
                     </div>
                 </div>`;
@@ -10976,6 +10987,113 @@
                 </div>
             </div>`;
             nlRenderSocialQuickPicks();
+        }
+
+        // ── Illustrer la newsletter : 2 images IA dans le style des étapes validées ──
+        let nlIllusBusy = false;
+        function nlIllusSetStatus(msg, isError) {
+            const el = document.getElementById('nl-illus-status');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = 'text-xs mb-4 text-center ' + (isError ? 'text-red-400' : 'text-gold/60');
+        }
+
+        function nlIllusParagraphCount() {
+            const contentVal = document.getElementById('nl-content')?.value || '';
+            const visible = (p) => String(p).replace(/<[^>]+>/g, '').replace(/&nbsp;|&#160;/gi, ' ').trim().length > 0;
+            const isHtml = /<[a-z][\s\S]*>/i.test(contentVal);
+            return isHtml
+                ? contentVal.split(/<\/p>\s*<p[^>]*>/i).filter(visible).length
+                : contentVal.split(/\n+/).filter(visible).length;
+        }
+
+        async function nlIllusCall(action, payload) {
+            const res = await adminFetch('/api/admin/newsletter?action=' + action, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok || !data.success || !data.url) throw new Error(data.error || ('Erreur ' + res.status));
+            return data;
+        }
+
+        async function nlIllustrerNewsletter() {
+            if (nlIllusBusy) return;
+            const subject = document.getElementById('nl-subject')?.value || '';
+            const content = document.getElementById('nl-content')?.value || '';
+            if (!content.trim()) { nlIllusSetStatus('Écris ou génère d\'abord le texte.', true); return; }
+            if (nlSelectedImages.length > 1) {
+                const ok = await adminConfirm('Tu as déjà ' + nlSelectedImages.length + ' images. Les remplacer par 2 nouvelles illustrations ?', { confirmText: 'Remplacer' });
+                if (!ok) return;
+                nlSelectedImages = [];
+            }
+            const btn = document.getElementById('nl-illus-btn');
+            nlIllusBusy = true;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Création des 2 images… (environ 1 min)</span>'; }
+            nlIllusSetStatus('Je dessine l\'ouverture et une image pour la suite…');
+            try {
+                const n = nlIllusParagraphCount();
+                const suitePos = n >= 2 ? Math.min(n - 1, Math.max(1, Math.round(n * 0.6))) : 999;
+                const results = await Promise.allSettled([
+                    nlIllusCall('illustrate-image', { subject, content, slot: 'ouverture' }),
+                    nlIllusCall('illustrate-image', { subject, content, slot: 'suite' })
+                ]);
+                const slots = [
+                    { r: results[0], name: 'Illustration — ouverture', position: 0 },
+                    { r: results[1], name: 'Illustration — suite', position: suitePos }
+                ];
+                let ok = 0;
+                for (const sl of slots) {
+                    if (sl.r.status !== 'fulfilled') continue;
+                    if (nlSelectedImages.length >= 3) break;
+                    // une image déjà placée au même endroit cède sa place
+                    nlSelectedImages.forEach(s => { if ((s.position ?? -1) === sl.position) s.position = -1; });
+                    nlSelectedImages.push({ index: -Date.now() - ok, path: sl.r.value.url, name: sl.name, position: sl.position, width: 600 });
+                    ok++;
+                }
+                nlUpdateSelectedPreviews();
+                if (ok === 2) nlIllusSetStatus('2 images ajoutées. ✏️ sur une vignette pour la modifier, puis sauvegarde.');
+                else if (ok === 1) nlIllusSetStatus('1 image sur 2 a réussi. Réessaie pour la seconde.', true);
+                else {
+                    const err = results.find(r => r.status === 'rejected');
+                    nlIllusSetStatus('Échec : ' + (err?.reason?.message || 'inconnu'), true);
+                }
+            } catch (e) {
+                nlIllusSetStatus('Échec : ' + e.message, true);
+            } finally {
+                nlIllusBusy = false;
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-palette"></i><span>Illustrer la newsletter</span>'; }
+            }
+        }
+
+        async function nlModifierImage(i) {
+            const sel = nlSelectedImages[i];
+            if (!sel || nlIllusBusy) return;
+            const instruction = (window.prompt('Que faut-il changer sur cette image ?\n(ex. « plus lumineux », « enlève la femme », « ajoute un lac »)') || '').trim();
+            if (!instruction) return;
+            nlIllusBusy = true;
+            nlIllusSetStatus('Je modifie l\'image : « ' + instruction + ' »… (environ 40 s)');
+            try {
+                let data;
+                if (/supabase\.co\/storage\/v1\/object\/public\/newsletter-uploads\//.test(sel.path)) {
+                    data = await nlIllusCall('edit-illustration', { url: sel.path, instruction });
+                } else {
+                    // image hors bibliothèque : on en crée une nouvelle en tenant compte de la demande
+                    data = await nlIllusCall('illustrate-image', {
+                        subject: document.getElementById('nl-subject')?.value || '',
+                        content: (document.getElementById('nl-content')?.value || '') + '\n\nConsigne image : ' + instruction,
+                        slot: (sel.position ?? -1) === 0 ? 'ouverture' : 'suite'
+                    });
+                }
+                sel.path = data.url;
+                nlUpdateSelectedPreviews();
+                nlIllusSetStatus('Image modifiée. Pense à sauvegarder.');
+            } catch (e) {
+                nlIllusSetStatus('Échec de la modification : ' + e.message, true);
+            } finally {
+                nlIllusBusy = false;
+            }
         }
 
         function nlSetActivePlacement(i) {
@@ -11952,18 +12070,59 @@
             panel.classList.add('hidden');
         });
 
+        // Fichiers sélectionnés pour le prochain envoi — tableau séparé plutôt que de relire
+        // l'input à chaque fois : permet de retirer un fichier précis (l'API FileList ne le
+        // permet pas nativement) sans manipuler DataTransfer. Resélectionner des fichiers dans
+        // la fenêtre de sélection remplace le tableau en entier (comportement natif standard).
+        const COMPOSE_ATTACHMENTS_MAX_BYTES = 3 * 1024 * 1024; // 3 Mo — marge sous la limite de
+        // 4,5 Mo par requête imposée par Vercel (hors notre contrôle, encodage base64 ~+33 %)
+        let composeAttachmentFiles = [];
+        function composeRenderAttachments() {
+            const input = document.getElementById('composeEmailAttachments');
+            composeAttachmentFiles = Array.from(input.files || []);
+            const list = document.getElementById('composeAttachmentsList');
+            const totalBytes = composeAttachmentFiles.reduce((sum, f) => sum + f.size, 0);
+            const overLimit = totalBytes > COMPOSE_ATTACHMENTS_MAX_BYTES;
+            list.innerHTML = composeAttachmentFiles.map((f, i) => `
+                <div class="flex items-center justify-between text-xs ${overLimit ? 'text-red-400' : 'text-light-gold/60'} bg-white/5 rounded px-2.5 py-1.5">
+                    <span class="truncate"><i class="fas fa-paperclip mr-1.5 opacity-60"></i>${escapeHtmlFront(f.name)} <span class="opacity-50">(${(f.size / 1024).toFixed(0)} Ko)</span></span>
+                    <button type="button" onclick="composeRemoveAttachment(${i})" class="shrink-0 ml-2 text-light-gold/40 hover:text-red-400 transition"><i class="fas fa-times"></i></button>
+                </div>`).join('')
+                + (overLimit ? `<p class="text-xs text-red-400 mt-1">Total ${(totalBytes / 1024 / 1024).toFixed(1)} Mo — dépasse la limite de 3 Mo, retire un fichier.</p>` : '');
+        }
+        function composeRemoveAttachment(index) {
+            composeAttachmentFiles.splice(index, 1);
+            // Resynchronise l'input (FileList en lecture seule hors DataTransfer) pour que son
+            // affichage natif ("3 fichiers sélectionnés") ne mente pas après une suppression.
+            const dt = new DataTransfer();
+            composeAttachmentFiles.forEach(f => dt.items.add(f));
+            document.getElementById('composeEmailAttachments').files = dt.files;
+            composeRenderAttachments();
+        }
+        function composeFileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result).split(',')[1] || '');
+                reader.onerror = () => reject(new Error(`Lecture de ${file.name} impossible`));
+                reader.readAsDataURL(file);
+            });
+        }
+
         async function composeEmail() {
             const to      = document.getElementById('composeEmailTo').value.trim();
             const subject = document.getElementById('composeEmailSubject').value.trim();
             const message = document.getElementById('composeEmailMessage').value.trim();
             const status  = document.getElementById('composeEmailStatus');
             if (!to || !subject || !message) { if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Destinataire, sujet et message requis.'; } return; }
+            const totalBytes = composeAttachmentFiles.reduce((sum, f) => sum + f.size, 0);
+            if (totalBytes > COMPOSE_ATTACHMENTS_MAX_BYTES) { if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Pièces jointes trop lourdes (3 Mo max au total).'; } return; }
             if (status) { status.className = 'text-xs text-light-gold/40'; status.textContent = 'Envoi…'; }
             try {
+                const attachments = await Promise.all(composeAttachmentFiles.map(async f => ({ name: f.name, content: await composeFileToBase64(f) })));
                 const res = await adminFetch('/api/admin/data?section=compose-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ to, subject, message })
+                    body: JSON.stringify({ to, subject, message, attachments })
                 });
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || 'Envoi échoué');
@@ -11971,6 +12130,9 @@
                 document.getElementById('composeEmailTo').value = '';
                 document.getElementById('composeEmailSubject').value = '';
                 document.getElementById('composeEmailMessage').value = '';
+                document.getElementById('composeEmailAttachments').value = '';
+                composeAttachmentFiles = [];
+                composeRenderAttachments();
             } catch (e) {
                 if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Erreur : ' + e.message; }
             }
@@ -12565,7 +12727,7 @@
                 doc.setFont('Lora', 'bold'); doc.setFontSize(26); doc.setTextColor(...GOLD);
                 doc.text('Parcours newsletters', W / 2, 150, { align: 'center' });
                 doc.setFont('Lora', 'normal'); doc.setFontSize(14); doc.setTextColor(245, 231, 161);
-                doc.text('La Boussole Intérieure', W / 2, 160, { align: 'center' });
+                doc.text('L’Oracle des Passerelles', W / 2, 160, { align: 'center' });
                 doc.setFontSize(9.5); doc.setTextColor(180, 190, 205);
                 doc.text(`${steps.length} étape${steps.length > 1 ? 's' : ''} — généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}`, W / 2, 168, { align: 'center' });
                 doc.setFontSize(8); doc.setTextColor(140, 150, 170);
@@ -15677,7 +15839,7 @@
                     doc.setFontSize(9);
                     doc.setFont('times', 'italic');
                     doc.setTextColor(...NAVY);
-                    doc.text('La Boussole Intérieure', W / 2, 24, { align: 'center' });
+                    doc.text('L’Oracle des Passerelles', W / 2, 24, { align: 'center' });
                     doc.setDrawColor(...GOLD);
                     doc.setLineWidth(0.4);
                     doc.line(W / 2 - 30, 27, W / 2 + 30, 27);

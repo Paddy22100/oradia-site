@@ -392,7 +392,7 @@ async function handleSendEmail(req, res) {
         textGratitude: 'Avec gratitude,'
       },
       en: {
-        title: 'Your Torus Draw', tagline: 'The Inner Compass',
+        title: 'Your Torus Draw', tagline: 'L’Oracle des Passerelles',
         yourIntention: 'Your intention', yourCards: 'Your Cards',
         messageFromOracle: 'Message from the Oracle', pathsToExplore: 'Paths to Explore',
         synthesis: 'Synthesis', newDraw: 'New Draw',
@@ -953,7 +953,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false, l
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — L’Oracle des Passerelles' : 'Oradia — L’Oracle des Passerelles'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
     <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${lang === 'en' ? `What if you went further?` : `Et si vous alliez plus loin ?`}</h2>
@@ -1043,7 +1043,7 @@ function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false, lang 
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — L’Oracle des Passerelles' : 'Oradia — L’Oracle des Passerelles'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
     <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">${lang === 'en' ? `Three days have passed…` : `Trois jours ont passé…`}</h2>
@@ -1244,7 +1244,7 @@ function buildRelanceInactifsEmailHtml(isSubscribed = false, hidePreorder = fals
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — The Inner Compass' : 'Oradia — La Boussole Intérieure'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <img src="${bandeau}" alt="${lang === 'en' ? 'Oradia — L’Oracle des Passerelles' : 'Oradia — L’Oracle des Passerelles'}" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
     <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">${lang === 'en' ? `A little sign from the oracle` : `Un petit signe de l'oracle`}</h2>
