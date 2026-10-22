@@ -6500,7 +6500,7 @@ async function computeParcoursDue(supabase) {
   const steps = (allDrafts || [])
     .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && (Number(d.extra?.ordre) || 0) > 0)
     .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
-  if (steps.length === 0) return { allDrafts, steps, dueByStepId: new Map(), blocked: new Map() };
+  if (steps.length === 0) return { allDrafts, steps, dueByStepId: new Map(), blocked: new Map(), overdue: new Map() };
 
   // Date du dernier envoi groupé historique (étape 6) : tout contact inscrit après
   // cette date n'a jamais reçu 1-6 par campagne et doit démarrer la séquence
@@ -6550,6 +6550,15 @@ async function computeParcoursDue(supabase) {
   const SAME_DAY_GUARD_MS = 20 * 3600000; // 20h, couvre un double-déclenchement le même jour
   const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
   const blocked = new Map(); // ordre sans étape validée -> nb de contacts qui l'attendent
+  // Dernier mercredi 17h UTC (cron) déjà écoulé depuis plus d'une heure : un contact dû
+  // dont le dernier envoi (ou l'inscription) est antérieur n'a PAS reçu l'envoi de ce
+  // mercredi-là. overdue : ordre -> nb de ces contacts, pour signaler un retard dans le
+  // dashboard au lieu d'afficher "mercredi prochain" (cf. 21/10/2026, étape 14).
+  const lastWed = new Date(now - 3600000);
+  lastWed.setUTCHours(17, 0, 0, 0);
+  while (lastWed.getUTCDay() !== 3 || lastWed.getTime() > now - 3600000) lastWed.setUTCDate(lastWed.getUTCDate() - 1);
+  const lastWedMs = lastWed.getTime();
+  const overdue = new Map();
   for (const c of contacts || []) {
     const last = lastSendByEmail.get(c.email);
     const createdAt = new Date(c.created_at).getTime();
@@ -6571,8 +6580,11 @@ async function computeParcoursDue(supabase) {
     if (!step) { blocked.set(nextOrdre, (blocked.get(nextOrdre) || 0) + 1); continue; } // à jour ou étape suivante pas encore validée : signalé à Rudy (parcoursStockGaps)
     if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
     dueByStepId.get(step.id).emails.push(c.email);
+    if ((last ? new Date(last.sent_at).getTime() : createdAt) < lastWedMs) {
+      overdue.set(nextOrdre, (overdue.get(nextOrdre) || 0) + 1);
+    }
   }
-  return { allDrafts, steps, dueByStepId, blocked };
+  return { allDrafts, steps, dueByStepId, blocked, overdue };
 }
 
 // Transforme le résultat de computeParcoursDue en liste lisible pour l'alerte à Rudy :
@@ -6994,8 +7006,22 @@ async function handleNewsletter(req, res) {
 
         const pick = d => d ? { id: d.id, subject: d.subject, ordre: ordreOf(d) || null, scheduled_at: d.scheduled_at || null, statut: d.statut } : null;
 
+        // Retard : étape validée dont des contacts auraient dû recevoir l'envoi du dernier
+        // mercredi (même calcul que le cron). Prioritaire sur "Opérationnel" : sans ça, la
+        // carte annonçait l'étape en retard comme "envoi auto. mercredi prochain".
+        let overdueSteps = [];
+        try {
+          const due = await computeParcoursDue(supabase);
+          overdueSteps = [...due.overdue.entries()].sort((x, y) => x[0] - y[0]).map(([ordre, count]) => {
+            const st = due.steps.find(x => ordreOf(x) === ordre);
+            return { ordre, count, subject: st?.subject || '' };
+          });
+        } catch (e) { console.error('[parcours-status] retard:', e.message); }
+        if (overdueSteps.length > 0) { alertNeeded = true; reason = 'overdue'; }
+
         return res.status(200).json({
           success: true,
+          overdueSteps,
           totalWrittenSteps: validated.length,
           sentCount: sent.length,
           maxSentOrdre,

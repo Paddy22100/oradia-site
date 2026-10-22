@@ -12501,8 +12501,11 @@
                 const badge = operational
                     ? `<span class="text-green-300"><i class="fas fa-circle-check mr-1.5"></i>Opérationnel</span>`
                     : `<span class="text-orange-300"><i class="fas fa-triangle-exclamation mr-1.5"></i>Action requise</span>`;
+                const overdueSteps = s.overdueSteps || [];
                 const reasonText = !operational
-                    ? (s.alert.reason === 'none-scheduled'
+                    ? (s.alert.reason === 'overdue'
+                        ? overdueSteps.map(o => `Étape ${o.ordre} en retard : ${o.count} contact${o.count > 1 ? 's' : ''} auraient dû la recevoir mercredi dernier. Clique sur « Envoyer maintenant » (onglet Parcours) pour rattraper.`).join(' ')
+                        : s.alert.reason === 'none-scheduled'
                         ? "Aucune étape validée n'est prête à partir — écris et valide la prochaine étape avant mercredi."
                         : `Il ne reste que ${s.alert.daysUntilLastScheduled} jour${s.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant le dernier envoi programmé manuellement, et rien n'est prêt derrière.`)
                     : '';
@@ -12516,7 +12519,7 @@
                         <div class="text-base font-semibold mb-3">${badge}</div>
                         <div class="grid grid-cols-1 md:grid-cols-${s.lastScheduled ? '3' : '2'} gap-4 text-sm">
                             <div>
-                                <div class="text-light-gold/40 text-xs mb-1">Prochaine étape (envoi auto. mercredi prochain)</div>
+                                <div class="text-light-gold/40 text-xs mb-1">${overdueSteps.length ? 'Étape en retard (à envoyer maintenant)' : 'Prochaine étape (envoi auto. mercredi prochain)'}</div>
                                 <div class="text-light-gold">${s.nextReady ? `Étape ${s.nextReady.ordre} — "${escapeHtmlFront(s.nextReady.subject || '')}"` : '<span class="text-orange-300">Aucune — rien à envoyer</span>'}</div>
                             </div>
                             ${s.lastScheduled ? `
