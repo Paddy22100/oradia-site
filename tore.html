@@ -6862,6 +6862,22 @@ function showArrowForStep(stepIndex, isMatch) {
     return s.split(/\s+/).length >= 3;
   }
 
+  // Filtre anti-charabia : le filet de sécurité ci-dessus (3 mots + « ? ») laisse passer du
+  // remplissage clavier aléatoire (ex. « Gdjdjf dbdk fxui ? ») — aucun mot français ou anglais
+  // de 4 lettres ou plus n'est dépourvu de voyelle, et plusieurs mots consécutifs de 3+ lettres
+  // sans voyelle ne sont jamais un vrai texte. Heuristique légère (pas d'analyse linguistique
+  // réelle), posée avant de consommer un tirage gratuit et un appel IA pour rien.
+  function looksLikeGibberish(txt) {
+    const words = (txt || '').trim().split(/\s+/)
+      .map(w => w.replace(/[^a-zàâäéèêëïîôöùûüÿçñ]/gi, ''))
+      .filter(w => w.length >= 3);
+    if (words.length === 0) return false;
+    const hasVowel = w => /[aeiouyàâäéèêëïîôöùûüÿ]/i.test(w);
+    if (words.some(w => w.length >= 4 && !hasVowel(w))) return true;
+    const noVowelCount = words.filter(w => !hasVowel(w)).length;
+    return noVowelCount / words.length >= 0.5;
+  }
+
   // Détecte plusieurs questions dans une même intention : soit plusieurs « ? »,
   // soit plusieurs amorces interrogatives en début de proposition
   // (début du texte, ou après « , ; . ? », ou après « et / ou »).
@@ -7133,7 +7149,7 @@ function maybePromptToreReconnect() {
 
   // Vérifier que la question est ouverte et unique
   const intentionValue = toreIntentionInput?.value || '';
-  if (!isOpenQuestion(intentionValue) || hasMultipleQuestions(intentionValue)) {
+  if (!isOpenQuestion(intentionValue) || hasMultipleQuestions(intentionValue) || looksLikeGibberish(intentionValue)) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.dataset.submitting = '0';
@@ -7142,6 +7158,8 @@ function maybePromptToreReconnect() {
     }
     toreIntentionInput?.setCustomValidity(hasMultipleQuestions(intentionValue)
       ? "Votre intention contient plusieurs questions. Reformulez-la en UNE seule question."
+      : looksLikeGibberish(intentionValue)
+      ? "Cette intention ne ressemble pas à une vraie question. Formulez-la avec de vrais mots."
       : "Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »");
     toreIntentionInput?.reportValidity();
     return;
