@@ -12504,7 +12504,7 @@
                 const overdueSteps = s.overdueSteps || [];
                 const reasonText = !operational
                     ? (s.alert.reason === 'overdue'
-                        ? overdueSteps.map(o => `Étape ${o.ordre} en retard : ${o.count} contact${o.count > 1 ? 's' : ''} auraient dû la recevoir mercredi dernier. Clique sur « Envoyer maintenant » (onglet Parcours) pour rattraper.`).join(' ')
+                        ? overdueSteps.map(o => `Étape ${o.ordre} en retard : ${o.count} contact${o.count > 1 ? 's' : ''} auraient dû la recevoir mercredi dernier. Clique sur « Lancer l'envoi individualisé » (onglet Parcours newsletters) pour rattraper.`).join(' ')
                         : s.alert.reason === 'none-scheduled'
                         ? "Aucune étape validée n'est prête à partir — écris et valide la prochaine étape avant mercredi."
                         : `Il ne reste que ${s.alert.daysUntilLastScheduled} jour${s.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant le dernier envoi programmé manuellement, et rien n'est prêt derrière.`)
