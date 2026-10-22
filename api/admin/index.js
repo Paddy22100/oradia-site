@@ -15,6 +15,7 @@ const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminde
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail, formatGuidanceDate } = require('../../lib/guidance-email.js');
 const { sendAppBetaAccessEmail } = require('../../lib/app-beta-access-email.js');
+const { sendParcoursStockAlert } = require('../../lib/parcours-stock-alert.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 const { parisDate, computeUrssaf, CATEGORY_BY_SOURCE } = require('../../lib/urssaf.js');
 const { sendFactureEmail, sendDevisEmail, sendRelanceEmail, exempleFacture } = require('../../lib/facture-email.js');
@@ -1295,6 +1296,13 @@ async function handleData(req, res) {
       // quoi et quand.
       if (getAction === 'cron-send-parcours-individual') {
         const result = await runParcoursIndividualCron(supabase);
+        return res.status(200).json(result);
+      }
+
+      // Contrôle d'avance (lundi/mardi) : alerte Rudy s'il manque une étape validée avant
+      // l'envoi du mercredi 19h.
+      if (getAction === 'cron-parcours-stock-check') {
+        const result = await runParcoursStockCheck(supabase);
         return res.status(200).json(result);
       }
 
@@ -6179,86 +6187,8 @@ async function runParcoursIndividualCron(supabase) {
     const BREVO_API_KEY = process.env.BREVO_API_KEY;
     if (!BREVO_API_KEY) return { success: false, error: 'BREVO_API_KEY manquante' };
 
-    const { data: allDrafts, error: draftsErr } = await supabase.from('newsletter_drafts').select('*');
-    if (draftsErr) throw draftsErr;
-    // Les étapes 1-6 (historique envoyé par campagne groupée avant la mise en place
-    // du parcours) restent dans cette liste : elles servent de modèle pour démarrer
-    // la séquence complète des nouveaux inscrits (voir cutoff ci-dessous), sans
-    // jamais être renvoyées à ceux qui les ont déjà reçues via la campagne d'origine.
-    const steps = (allDrafts || [])
-      .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && (Number(d.extra?.ordre) || 0) > 0)
-      .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+    const { allDrafts, steps, dueByStepId, blocked } = await computeParcoursDue(supabase);
     if (steps.length === 0) return { success: true, sent: 0, message: "Aucune étape validée dans le parcours." };
-
-    // Date du dernier envoi groupé historique (étape 6) : tout contact inscrit après
-    // cette date n'a jamais reçu 1-6 par campagne et doit démarrer la séquence
-    // complète à l'étape 1 ; tout contact inscrit avant les a déjà reçues et
-    // continue directement à partir de l'étape 7.
-    const historicalCutoff = steps
-      .filter(s => (Number(s.extra?.ordre) || 0) > 0 && (Number(s.extra?.ordre) || 0) <= 6 && s.sent_at)
-      .reduce((max, s) => Math.max(max, new Date(s.sent_at).getTime()), 0);
-
-    const { data: contacts, error: contactsErr } = await supabase
-      .from('newsletter_contacts')
-      .select('email, created_at')
-      .eq('status', 'active')
-      .eq('brevo_synced', true)
-      .eq('pref_newsletter_mercredi', true);
-    if (contactsErr) throw contactsErr;
-
-    // Étape la plus avancée jamais reçue par contact — sert à la fois à connaître la
-    // prochaine étape due et l'ancienneté de ce dernier envoi. Basé sur l'ordre MAXIMAL
-    // jamais atteint, pas sur l'envoi le plus récent par date : un envoi isolé d'une
-    // étape antérieure (test manuel, resend...) est plus récent en date mais ne doit
-    // jamais faire régresser un contact déjà plus avancé. Cause identifiée le
-    // 17/09/2026 : un envoi de l'étape 1 hors cron, sans trace dans les logs, avait fait
-    // repartir 3 contacts déjà à l'étape 7 depuis le début de la séquence.
-    const { data: sends, error: sendsErr } = await supabase
-      .from('newsletter_sends')
-      .select('contact_email, ordre, sent_at')
-      .not('ordre', 'is', null)
-      .order('sent_at', { ascending: false });
-    if (sendsErr) throw sendsErr;
-    const lastSendByEmail = new Map();
-    for (const s of sends || []) {
-      const current = lastSendByEmail.get(s.contact_email);
-      if (!current || Number(s.ordre) > Number(current.ordre)) lastSendByEmail.set(s.contact_email, s);
-    }
-
-    // Règle produit explicite (Rudy, 18/09/2026) : TOUS les contacts actifs opt-in
-    // reçoivent la prochaine étape de leur parcours chaque mercredi soir, une étape à
-    // la fois, quelle que soit leur date d'inscription ou la date de leur dernier
-    // envoi — pas d'attente minimale de 7 jours par contact. Avant ce changement, un
-    // contact fraîchement servi (même par un passage exceptionnel hors mercredi)
-    // pouvait se retrouver à sauter le(s) mercredi(s) suivant(s) tant que 7 jours
-    // pleins ne s'étaient pas écoulés depuis SON dernier envoi — ce qui n'était pas
-    // le comportement voulu. Le seul garde-fou qui reste : ne jamais renvoyer deux
-    // fois la même journée (double-clic sur le bouton manuel, relance du cron...).
-    const now = Date.now();
-    const SAME_DAY_GUARD_MS = 20 * 3600000; // 20h, couvre un double-déclenchement le même jour
-    const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
-    for (const c of contacts || []) {
-      const last = lastSendByEmail.get(c.email);
-      const createdAt = new Date(c.created_at).getTime();
-      let nextOrdre;
-      if (last) {
-        if (now - new Date(last.sent_at).getTime() < SAME_DAY_GUARD_MS) continue;
-        nextOrdre = Number(last.ordre) + 1;
-      } else if (historicalCutoff && createdAt > historicalCutoff) {
-        // Nouvel inscrit depuis l'arrêt des campagnes groupées 1-6 : démarre le
-        // parcours complet à l'étape 1, comme n'importe quel autre abonné, dès le
-        // premier mercredi qui suit son inscription.
-        nextOrdre = 1;
-      } else {
-        // Inscrit avant la fin de l'historique groupé : a déjà reçu 1-6 par
-        // campagne, ne rejoue jamais cet historique.
-        nextOrdre = 7;
-      }
-      const step = steps.find(s => Number(s.extra?.ordre) === nextOrdre);
-      if (!step) continue; // à jour (dernière étape disponible déjà reçue) ou étape suivante pas encore validée
-      if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
-      dueByStepId.get(step.id).emails.push(c.email);
-    }
 
     let totalSent = 0;
     const details = [];
@@ -6382,9 +6312,163 @@ async function runParcoursIndividualCron(supabase) {
       details: { sent: totalSent, steps: details, social }
     }).catch(() => {});
 
+    // Prévient Rudy si des contacts n'ont rien reçu (ou si aucun post social ne part)
+    // faute d'étape validée — sinon le manque est invisible (cf. 21/10/2026).
+    const gaps = parcoursStockGaps(allDrafts, steps, blocked, usedOrdres);
+    if (gaps.blocked.length > 0 || gaps.social) {
+      const alerted = await sendParcoursStockAlert({ blocked: gaps.blocked, social: gaps.social, phase: 'cron', sent: totalSent }).catch(() => false);
+      await logSystemEvent(supabase, {
+        level: 'warn', source: 'cron-send-parcours-individual',
+        message: 'Parcours individualisé : étape à valider' + (alerted ? ' (alerte envoyée)' : ' (ALERTE NON ENVOYÉE)'),
+        details: gaps
+      }).catch(() => {});
+    }
+
     return { success: true, sent: totalSent, details, social };
   } catch (e) {
     await logSystemEvent(supabase, { level: 'error', source: 'cron-send-parcours-individual', message: e.message }).catch(() => {});
+    return { success: false, error: e.message };
+  }
+}
+
+// Calcule, sans rien envoyer, qui est dû pour le parcours individualisé : contacts dus
+// groupés par étape validée (dueByStepId) et contacts bloqués faute d'étape validée
+// (blocked : ordre -> nombre). Partagé par l'envoi du mercredi et par le contrôle
+// d'avance (cron-parcours-stock-check) pour que les deux voient exactement la même chose.
+async function computeParcoursDue(supabase) {
+  const { data: allDrafts, error: draftsErr } = await supabase.from('newsletter_drafts').select('*');
+  if (draftsErr) throw draftsErr;
+  // Les étapes 1-6 (historique envoyé par campagne groupée avant la mise en place
+  // du parcours) restent dans cette liste : elles servent de modèle pour démarrer
+  // la séquence complète des nouveaux inscrits (voir cutoff ci-dessous), sans
+  // jamais être renvoyées à ceux qui les ont déjà reçues via la campagne d'origine.
+  const steps = (allDrafts || [])
+    .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && (Number(d.extra?.ordre) || 0) > 0)
+    .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+  if (steps.length === 0) return { allDrafts, steps, dueByStepId: new Map(), blocked: new Map() };
+
+  // Date du dernier envoi groupé historique (étape 6) : tout contact inscrit après
+  // cette date n'a jamais reçu 1-6 par campagne et doit démarrer la séquence
+  // complète à l'étape 1 ; tout contact inscrit avant les a déjà reçues et
+  // continue directement à partir de l'étape 7.
+  const historicalCutoff = steps
+    .filter(s => (Number(s.extra?.ordre) || 0) > 0 && (Number(s.extra?.ordre) || 0) <= 6 && s.sent_at)
+    .reduce((max, s) => Math.max(max, new Date(s.sent_at).getTime()), 0);
+
+  const { data: contacts, error: contactsErr } = await supabase
+    .from('newsletter_contacts')
+    .select('email, created_at')
+    .eq('status', 'active')
+    .eq('brevo_synced', true)
+    .eq('pref_newsletter_mercredi', true);
+  if (contactsErr) throw contactsErr;
+
+  // Étape la plus avancée jamais reçue par contact — sert à la fois à connaître la
+  // prochaine étape due et l'ancienneté de ce dernier envoi. Basé sur l'ordre MAXIMAL
+  // jamais atteint, pas sur l'envoi le plus récent par date : un envoi isolé d'une
+  // étape antérieure (test manuel, resend...) est plus récent en date mais ne doit
+  // jamais faire régresser un contact déjà plus avancé. Cause identifiée le
+  // 17/09/2026 : un envoi de l'étape 1 hors cron, sans trace dans les logs, avait fait
+  // repartir 3 contacts déjà à l'étape 7 depuis le début de la séquence.
+  const { data: sends, error: sendsErr } = await supabase
+    .from('newsletter_sends')
+    .select('contact_email, ordre, sent_at')
+    .not('ordre', 'is', null)
+    .order('sent_at', { ascending: false });
+  if (sendsErr) throw sendsErr;
+  const lastSendByEmail = new Map();
+  for (const s of sends || []) {
+    const current = lastSendByEmail.get(s.contact_email);
+    if (!current || Number(s.ordre) > Number(current.ordre)) lastSendByEmail.set(s.contact_email, s);
+  }
+
+  // Règle produit explicite (Rudy, 18/09/2026) : TOUS les contacts actifs opt-in
+  // reçoivent la prochaine étape de leur parcours chaque mercredi soir, une étape à
+  // la fois, quelle que soit leur date d'inscription ou la date de leur dernier
+  // envoi — pas d'attente minimale de 7 jours par contact. Avant ce changement, un
+  // contact fraîchement servi (même par un passage exceptionnel hors mercredi)
+  // pouvait se retrouver à sauter le(s) mercredi(s) suivant(s) tant que 7 jours
+  // pleins ne s'étaient pas écoulés depuis SON dernier envoi — ce qui n'était pas
+  // le comportement voulu. Le seul garde-fou qui reste : ne jamais renvoyer deux
+  // fois la même journée (double-clic sur le bouton manuel, relance du cron...).
+  const now = Date.now();
+  const SAME_DAY_GUARD_MS = 20 * 3600000; // 20h, couvre un double-déclenchement le même jour
+  const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
+  const blocked = new Map(); // ordre sans étape validée -> nb de contacts qui l'attendent
+  for (const c of contacts || []) {
+    const last = lastSendByEmail.get(c.email);
+    const createdAt = new Date(c.created_at).getTime();
+    let nextOrdre;
+    if (last) {
+      if (now - new Date(last.sent_at).getTime() < SAME_DAY_GUARD_MS) continue;
+      nextOrdre = Number(last.ordre) + 1;
+    } else if (historicalCutoff && createdAt > historicalCutoff) {
+      // Nouvel inscrit depuis l'arrêt des campagnes groupées 1-6 : démarre le
+      // parcours complet à l'étape 1, comme n'importe quel autre abonné, dès le
+      // premier mercredi qui suit son inscription.
+      nextOrdre = 1;
+    } else {
+      // Inscrit avant la fin de l'historique groupé : a déjà reçu 1-6 par
+      // campagne, ne rejoue jamais cet historique.
+      nextOrdre = 7;
+    }
+    const step = steps.find(s => Number(s.extra?.ordre) === nextOrdre);
+    if (!step) { blocked.set(nextOrdre, (blocked.get(nextOrdre) || 0) + 1); continue; } // à jour ou étape suivante pas encore validée : signalé à Rudy (parcoursStockGaps)
+    if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
+    dueByStepId.get(step.id).emails.push(c.email);
+  }
+  return { allDrafts, steps, dueByStepId, blocked };
+}
+
+// Transforme le résultat de computeParcoursDue en liste lisible pour l'alerte à Rudy :
+// étapes manquantes (avec le nombre de contacts en attente) et, si aucun post social
+// ne peut partir, la prochaine étape non encore utilisée pour une publication.
+function parcoursStockGaps(allDrafts, steps, blocked, usedOrdres) {
+  const byOrdre = new Map((allDrafts || [])
+    .filter(d => d.extra?.canal === 'parcours')
+    .map(d => [Number(d.extra?.ordre) || 0, d]));
+  // Au-delà de la dernière étape rédigée, le contact a fini le parcours : pas un manque.
+  const maxOrdre = Math.max(0, ...byOrdre.keys());
+  const blockedList = [...blocked.entries()]
+    .filter(([ordre]) => ordre <= maxOrdre)
+    .sort((x, y) => x[0] - y[0])
+    .map(([ordre, count]) => ({ ordre, count, draftExists: byOrdre.has(ordre), subject: byOrdre.get(ordre)?.subject || '' }));
+  const hasSocialStep = steps.some(s => {
+    const o = Number(s.extra?.ordre) || 0;
+    return o > 1 && !usedOrdres.has(o);
+  });
+  let social = null;
+  if (!hasSocialStep) {
+    let o = 2;
+    while (usedOrdres.has(o)) o++;
+    social = { ordre: o, draftExists: byOrdre.has(o), subject: byOrdre.get(o)?.subject || '' };
+  }
+  return { blocked: blockedList, social };
+}
+
+// Contrôle d'avance (lundi et mardi, cron-parcours-stock-check) : prévient Rudy AVANT
+// le mercredi 19h s'il manque une étape validée pour faire avancer des contacts ou
+// publier sur les réseaux. Sans alerte, le manque ne se voyait pas : les contacts à
+// jour ne recevaient simplement rien (constaté le 21/10/2026, étape 14 non validée).
+async function runParcoursStockCheck(supabase) {
+  if (!(await isFeatureEnabled(supabase, 'newsletter_parcours_individuel'))) {
+    return { success: true, skipped_reason: 'feature_disabled' };
+  }
+  try {
+    const { allDrafts, steps, blocked } = await computeParcoursDue(supabase);
+    const { data: usedOrdreRows } = await supabase.from('social_posts').select('ordre').not('ordre', 'is', null);
+    const usedOrdres = new Set((usedOrdreRows || []).map(r => Number(r.ordre)));
+    const gaps = parcoursStockGaps(allDrafts, steps, blocked, usedOrdres);
+    if (gaps.blocked.length === 0 && !gaps.social) return { success: true, alerted: false };
+    const alerted = await sendParcoursStockAlert({ blocked: gaps.blocked, social: gaps.social, phase: 'avance' });
+    await logSystemEvent(supabase, {
+      level: 'warn', source: 'cron-parcours-stock-check',
+      message: 'Parcours : étape à valider avant mercredi' + (alerted ? ' (alerte envoyée)' : " (ALERTE NON ENVOYÉE, config Brevo ?)"),
+      details: gaps
+    }).catch(() => {});
+    return { success: true, alerted, ...gaps };
+  } catch (e) {
+    await logSystemEvent(supabase, { level: 'error', source: 'cron-parcours-stock-check', message: e.message }).catch(() => {});
     return { success: false, error: e.message };
   }
 }
