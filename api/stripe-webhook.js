@@ -569,6 +569,22 @@ async function processEvent(event) {
                 break;
             }
 
+            // Événement ancien rejoué (Stripe retente un webhook en 500 pendant 3 jours, ou
+            // renvoi manuel depuis le dashboard) : si la facture a été réglée entre-temps
+            // (nouvelle tentative de prélèvement réussie), ne pas repasser l'abonné en
+            // payment_failed ni lui envoyer un email d'échec à tort. Constaté le 28/10/2026 :
+            // webhooks invoice.payment_failed en 500 (contrainte CHECK, corrigée le 27/10)
+            // pour des abonnés ayant payé depuis.
+            try {
+                const freshInvoice = await stripe.invoices.retrieve(invoice.id);
+                if (freshInvoice.status === 'paid') {
+                    console.log(`[webhook] invoice.payment_failed ignoré : facture ${invoice.id} déjà réglée (${row.email})`);
+                    break;
+                }
+            } catch (e) {
+                console.error('[webhook] invoice.payment_failed: relecture facture impossible, traitement normal:', e.message);
+            }
+
             const { error: failError } = await supabase
                 .from('tore_subscriptions')
                 .update({
