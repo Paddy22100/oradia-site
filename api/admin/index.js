@@ -2385,6 +2385,46 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // Suppression définitive de la ligne tore_subscriptions (accès membre retiré, ligne
+      // disparue du dashboard). Le compte Supabase Auth et l'historique des tirages ne
+      // sont pas touchés. Refusée tant que l'abonnement Stripe est encore vivant, sinon
+      // l'abonné continuerait d'être prélevé sans plus aucun accès : annuler d'abord
+      // dans Stripe (ou attendre la fin de la période).
+      if (action === 'delete-subscription' && subscriptionId) {
+        const { data: subRow, error: fetchErr } = await supabase
+          .from('tore_subscriptions')
+          .select('id, email, status, stripe_subscription_id')
+          .eq('id', subscriptionId)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!subRow) return res.status(404).json({ error: 'Abonnement introuvable (déjà supprimé ?)' });
+
+        if (subRow.stripe_subscription_id) {
+          if (!process.env.STRIPE_SECRET_KEY) return res.status(500).json({ error: "STRIPE_SECRET_KEY manquante : impossible de vérifier l'abonnement Stripe" });
+          try {
+            const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+            const sub = await stripe.subscriptions.retrieve(subRow.stripe_subscription_id);
+            if (['active', 'trialing', 'past_due', 'unpaid', 'incomplete'].includes(sub.status)) {
+              return res.status(409).json({ error: `L'abonnement Stripe de ${subRow.email} est encore ${sub.status === 'active' ? 'actif' : sub.status} : il serait prélevé sans accès. Annule-le d'abord dans Stripe (Abonnements), puis supprime-le ici.` });
+            }
+          } catch (e) {
+            if (e.code !== 'resource_missing') {
+              console.error('[delete-subscription] stripe:', e.message);
+              return res.status(502).json({ error: 'Vérification Stripe impossible : ' + e.message });
+            }
+          }
+        }
+
+        const { error: delErr } = await supabase.from('tore_subscriptions').delete().eq('id', subscriptionId);
+        if (delErr) throw delErr;
+        await logSystemEvent(supabase, {
+          level: 'warn', source: 'admin-delete-subscription',
+          message: `Abonnement supprimé depuis le dashboard : ${subRow.email} (statut ${subRow.status})`,
+          details: { subscription_id: subRow.id, stripe_subscription_id: subRow.stripe_subscription_id || null }
+        }).catch(() => {});
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'set-expiry' && subscriptionId) {
         const newExpiresAt = body.expiresAt || null;
         const { data: subRow, error: fetchErr } = await supabase
