@@ -3016,7 +3016,10 @@ async function handleData(req, res) {
             if (!(rl.ok || rl.status === 204)) listBody = (await rl.text().catch(() => '')).slice(0, 300);
           } catch (e) { listStatus = 'exception'; listBody = e.message; }
 
-          const unblOk = unblacklistStatus === 204 || unblacklistStatus === 200;
+          // 404 = le contact n'existe plus chez Brevo (ex. supprimé avec un doublon) : rien
+          // à débloquer, et l'étape 2 ci-dessous le recrée. Le traiter en échec faisait
+          // afficher « ÉCHEC Brevo » alors que la réinscription avait réussi.
+          const unblOk = unblacklistStatus === 204 || unblacklistStatus === 200 || unblacklistStatus === 404;
           const listOk = listStatus === 201 || listStatus === 204 || listStatus === 200;
           brevoRestored = unblOk && listOk;
         }
