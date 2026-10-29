@@ -42,6 +42,13 @@ jobs:
           cache-dependency-path: audit/package-lock.json
 
       # ─── 3. Dépendances ───────────────────────────────────
+      # unzip : absent de l'image mcr.microsoft.com/playwright (conçue pour Playwright,
+      # qui ne l'utilise pas) — mais nécessaire au téléchargement de Chrome par
+      # @puppeteer/browsers (dépendance de puppeteer, une des libs de l'audit), sans
+      # quoi `npm ci` échoue ("Required native binary ... unzip ... was not found").
+      - name: Install unzip (required by puppeteer's browser download)
+        run: apt-get update -qq && apt-get install -y -qq unzip
+
       - name: Install dependencies
         working-directory: ./audit
         run: npm ci
