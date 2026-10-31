@@ -88,11 +88,18 @@
     var errSent = 0;
     var errSeen = {};
     var ERR_MAX = 5;
+    // Bruit connu d'extensions de navigateur (gestionnaires de mots de passe, bloqueurs...),
+    // qui injectent leurs propres scripts dans la page et déclenchent des erreurs internes
+    // sans rapport avec Oradia — ce tracker générique les capte par erreur comme n'importe
+    // quelle autre. Liste à étendre si d'autres signatures de ce type apparaissent dans le
+    // dashboard (repérable à : même message sur plusieurs pages d'une même session, sans
+    // fichier source ni ligne).
+    var EXTENSION_NOISE = /No Listener: tabs:outgoing\.message\.ready/;
     function reportClientError(message, sourceFile, lineno, colno) {
       try {
         if (errSent >= ERR_MAX) return;
         var msg = String(message || '').slice(0, 300);
-        if (!msg) return;
+        if (!msg || EXTENSION_NOISE.test(msg)) return;
         var sig = msg + '@' + (sourceFile || '') + ':' + (lineno || 0);
         if (errSeen[sig]) return; // déjà signalée dans cette session
         errSeen[sig] = true;
