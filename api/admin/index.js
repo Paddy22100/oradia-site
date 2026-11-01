@@ -2000,6 +2000,33 @@ async function handleData(req, res) {
         req.on('error', reject);
       });
 
+      // Action appelée par un service tiers (scénario Make) plutôt qu'une tâche interne :
+      // authentifiée par son propre secret (MAKE_ASTRO_INGEST_SECRET), jamais par
+      // CRON_SECRET — ce dernier protège aussi des actions bien plus sensibles (export de
+      // données, réconciliation Stripe) qu'on ne veut pas exposer à un tiers externe.
+      if (body.action === 'ingest-astro-reference-post') {
+        const providedSecret = req.headers['x-astro-ingest-secret'] || '';
+        if (!process.env.MAKE_ASTRO_INGEST_SECRET || providedSecret !== process.env.MAKE_ASTRO_INGEST_SECRET) {
+          return res.status(403).json({ error: 'Action non autorisée' });
+        }
+        const postText = String(body.postText || '').trim();
+        if (!postText) {
+          return res.status(200).json({ success: false, error: 'postText manquant ou vide' });
+        }
+        const { error } = await supabase.from('astro_reference_posts').insert({
+          source: body.source || 'allo_allo_mercure',
+          post_text: postText.slice(0, 5000),
+          post_url: body.postUrl || null,
+          posted_at: body.postedAt || null
+        });
+        if (error) {
+          await logSystemEvent(supabase, { level: 'error', source: 'make-astro-ingest', message: `Échec ingestion post de référence astro : ${error.message}` }).catch(() => {});
+          return res.status(200).json({ success: false, error: error.message });
+        }
+        await logSystemEvent(supabase, { level: 'info', source: 'make-astro-ingest', message: `Post de référence astro ingéré (${body.source || 'allo_allo_mercure'})` }).catch(() => {});
+        return res.status(200).json({ success: true });
+      }
+
       const { email, fullName, accessCode, expiresAt, subscriptionId, isFree } = body;
       // L'action peut arriver dans le corps OU dans l'URL (?action=...). Les boutons
       // "Envoyer test" du dashboard la passent en query — sans ce fallback, body.action
@@ -2022,28 +2049,6 @@ async function handleData(req, res) {
           }
           const sent = await sendExportEmail({ toEmail: process.env.ADMIN_EMAIL, files });
           return res.status(200).json({ success: sent });
-        }
-        // Poussé par le scénario Make qui surveille la page Facebook publique "Allô Allô
-        // Mercure" (module Watch Posts (public page)) à chaque nouveau post — voir
-        // supabase-migration-astro-reference-posts.sql et runWeeklyTirageCron, qui lit le
-        // post le plus récent comme inspiration pour le tirage hebdomadaire.
-        if (action === 'ingest-astro-reference-post') {
-          const postText = String(body.postText || '').trim();
-          if (!postText) {
-            return res.status(200).json({ success: false, error: 'postText manquant ou vide' });
-          }
-          const { error } = await supabase.from('astro_reference_posts').insert({
-            source: body.source || 'allo_allo_mercure',
-            post_text: postText.slice(0, 5000),
-            post_url: body.postUrl || null,
-            posted_at: body.postedAt || null
-          });
-          if (error) {
-            await logSystemEvent(supabase, { level: 'error', source: 'make-astro-ingest', message: `Échec ingestion post de référence astro : ${error.message}` }).catch(() => {});
-            return res.status(200).json({ success: false, error: error.message });
-          }
-          await logSystemEvent(supabase, { level: 'info', source: 'make-astro-ingest', message: `Post de référence astro ingéré (${body.source || 'allo_allo_mercure'})` }).catch(() => {});
-          return res.status(200).json({ success: true });
         }
         return res.status(403).json({ error: 'Action non autorisée' });
       }
@@ -5749,7 +5754,9 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
     const { cards, qrngSource } = await drawSevenCards();
 
     // Post le plus récent d'un compte d'astrologie suivi par Rudy (Allô Allô Mercure),
-    // ingéré par un scénario Make — voir action=ingest-astro-reference-post ci-dessus.
+    // ingéré par un scénario Make qui surveille sa page Facebook publique et pousse
+    // chaque nouveau post vers action=ingest-astro-reference-post (handleData, secret
+    // dédié MAKE_ASTRO_INGEST_SECRET) — voir supabase-migration-astro-reference-posts.sql.
     // Fenêtre de 10 jours : au-delà, un post n'a plus de lien avec la semaine en cours
     // et ne doit pas se glisser dans une analyse qui n'a rien à voir.
     let referencePost = null;
