@@ -75,6 +75,10 @@ jobs:
       # ─── 6. Lancement de l'audit ──────────────────────────
       - name: Run audit
         working-directory: ./audit
+        env:
+          # Permet à la section CI/CD de l'audit (auditCICD) d'interroger l'API
+          # GitHub Actions. GITHUB_REPOSITORY est déjà fourni automatiquement.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node audit-oradia.js
 
       # ─── 6b. Vérification automatique des livraisons Mondial Relay ─
