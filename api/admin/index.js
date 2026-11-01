@@ -5740,7 +5740,8 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
     const analysis = await generateAnalysisViaClaude({
       intention: theme.intention,
       cards,
-      userEmail: 'cron-tirage-hebdo@oradia.fr'
+      userEmail: 'cron-tirage-hebdo@oradia.fr',
+      astroContext: theme.contextSentence
     });
 
     const { subject, content, rawContentAppend } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
