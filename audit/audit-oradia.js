@@ -1223,7 +1223,7 @@ async function auditCICD() {
 
   try {
     const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs`, {
-      params: { per_page: 20 },
+      params: { per_page: 30 },
       headers: {
         Authorization: `Bearer ${GITHUB_TOKEN}`,
         Accept: 'application/vnd.github+json',
@@ -1231,20 +1231,32 @@ async function auditCICD() {
       timeout: 10000,
     });
 
-    // Exclut les runs encore en cours (dont celui-ci même, toujours "in_progress").
-    const runs = (res.data?.workflow_runs || []).filter(r => r.status === 'completed');
-    const recentFailures = runs.filter(r => r.conclusion === 'failure');
+    // Fenêtre de 24h (comme auditSupabaseLogs) plutôt qu'un simple "20 derniers runs" :
+    // sinon un incident déjà corrigé (ex. #138/#139, 28-29/10) continue à plomber le score
+    // tant qu'il reste dans les 20 derniers runs, plusieurs jours après sa résolution.
+    // Exclut aussi les runs encore en cours (dont celui-ci même, toujours "in_progress").
+    const since = Date.now() - 24 * 3600 * 1000;
+    const runs = (res.data?.workflow_runs || [])
+      .filter(r => r.status === 'completed' && new Date(r.created_at).getTime() >= since);
+    const failures = runs.filter(r => r.conclusion === 'failure');
+    const successes = runs.filter(r => r.conclusion === 'success');
 
     if (runs.length === 0) {
-      addIssue('cicd', 'info', 'Aucun run GitHub Actions terminé trouvé à vérifier');
-    } else if (recentFailures.length === 0) {
-      addIssue('cicd', 'ok', `Aucun run GitHub Actions en échec parmi les ${runs.length} derniers`);
+      addIssue('cicd', 'info', 'Aucun run GitHub Actions terminé dans les dernières 24h');
+    } else if (failures.length === 0) {
+      addIssue('cicd', 'ok', `Aucun run GitHub Actions en échec parmi les ${runs.length} dernier(s) run(s) (24h)`);
     } else {
-      const sample = recentFailures.slice(0, 3)
-        .map(r => `${r.name} #${r.run_number} (${new Date(r.created_at).toLocaleDateString('fr-FR')})`)
+      const sample = failures.slice(0, 3)
+        .map(r => `${r.name} #${r.run_number} (${new Date(r.created_at).toLocaleString('fr-FR')})`)
         .join(' | ');
-      addIssue('cicd', recentFailures.length >= 3 ? 'important' : 'minor',
-        `${recentFailures.length} run(s) GitHub Actions en échec récemment`, sample);
+      // "important" seulement si TOUS les runs de la fenêtre ont échoué (pas un simple
+      // aléa isolé) ; sinon "minor", et un item "ok" complémentaire évite que le score
+      // ne tombe injustement à 0 pour un seul run en échec parmi plusieurs réussis.
+      addIssue('cicd', failures.length >= runs.length ? 'important' : 'minor',
+        `${failures.length}/${runs.length} run(s) GitHub Actions en échec (24h)`, sample);
+      if (successes.length > 0) {
+        addIssue('cicd', 'ok', `${successes.length}/${runs.length} run(s) GitHub Actions réussis (24h)`);
+      }
     }
   } catch (e) {
     addIssue('cicd', 'minor', "Impossible d'interroger l'API GitHub Actions", e.response?.data?.message || e.message);
