@@ -2023,6 +2023,28 @@ async function handleData(req, res) {
           const sent = await sendExportEmail({ toEmail: process.env.ADMIN_EMAIL, files });
           return res.status(200).json({ success: sent });
         }
+        // Poussé par le scénario Make qui surveille la page Facebook publique "Allô Allô
+        // Mercure" (module Watch Posts (public page)) à chaque nouveau post — voir
+        // supabase-migration-astro-reference-posts.sql et runWeeklyTirageCron, qui lit le
+        // post le plus récent comme inspiration pour le tirage hebdomadaire.
+        if (action === 'ingest-astro-reference-post') {
+          const postText = String(body.postText || '').trim();
+          if (!postText) {
+            return res.status(200).json({ success: false, error: 'postText manquant ou vide' });
+          }
+          const { error } = await supabase.from('astro_reference_posts').insert({
+            source: body.source || 'allo_allo_mercure',
+            post_text: postText.slice(0, 5000),
+            post_url: body.postUrl || null,
+            posted_at: body.postedAt || null
+          });
+          if (error) {
+            await logSystemEvent(supabase, { level: 'error', source: 'make-astro-ingest', message: `Échec ingestion post de référence astro : ${error.message}` }).catch(() => {});
+            return res.status(200).json({ success: false, error: error.message });
+          }
+          await logSystemEvent(supabase, { level: 'info', source: 'make-astro-ingest', message: `Post de référence astro ingéré (${body.source || 'allo_allo_mercure'})` }).catch(() => {});
+          return res.status(200).json({ success: true });
+        }
         return res.status(403).json({ error: 'Action non autorisée' });
       }
 
@@ -5725,11 +5747,31 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
 
     const theme = getWeeklyAstroTheme(now);
     const { cards, qrngSource } = await drawSevenCards();
+
+    // Post le plus récent d'un compte d'astrologie suivi par Rudy (Allô Allô Mercure),
+    // ingéré par un scénario Make — voir action=ingest-astro-reference-post ci-dessus.
+    // Fenêtre de 10 jours : au-delà, un post n'a plus de lien avec la semaine en cours
+    // et ne doit pas se glisser dans une analyse qui n'a rien à voir.
+    let referencePost = null;
+    try {
+      const since = new Date(now.getTime() - 10 * 86400000).toISOString();
+      const { data: refRows } = await supabase
+        .from('astro_reference_posts')
+        .select('post_text')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      referencePost = refRows?.[0]?.post_text || null;
+    } catch (e) {
+      console.error('[cron-tirage-hebdo] lecture astro_reference_posts', e.message);
+    }
+
     const analysis = await generateAnalysisViaClaude({
       intention: theme.intention,
       cards,
       userEmail: 'cron-tirage-hebdo@oradia.fr',
-      astroContext: theme.contextSentence
+      astroContext: theme.contextSentence,
+      referencePost
     });
 
     const { subject, content, rawContentAppend } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
