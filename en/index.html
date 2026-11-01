@@ -6,7 +6,12 @@
       window.location.replace('/app-home.html');
     }
   </script>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Preconnect + une seule requête Google Fonts (au lieu de 2, dont un @import plus
+       bas qui bloquait le parsing de tout le <style> avant de démarrer son propre
+       téléchargement) : gain direct sur le FCP, signalé par l'audit du 01/11/2026. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
 
@@ -103,7 +108,9 @@
   <script src="/security.js"></script>
 
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+    /* Cormorant Garamond + Lora chargées avec Cinzel dans l'unique <link> du <head>
+       (voir plus haut) — cet @import, en plus de dupliquer la requête, bloquait le
+       parsing de tout ce <style> avant de pouvoir démarrer son propre téléchargement. */
 
     .font-cormorant { font-family: 'Cormorant Garamond', serif; }
     .font-lora { font-family: 'Lora', serif; }
