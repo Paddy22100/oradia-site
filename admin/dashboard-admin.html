@@ -4437,7 +4437,6 @@
 
                         <div class="flex flex-wrap items-center justify-end gap-2">
                             <button onclick="factCloseEditor()" class="px-4 py-2 text-sm rounded-lg border border-gold/20 text-gold/50 hover:text-gold/80 transition">Annuler</button>
-                            <button onclick="factSendTest()" title="Vous envoie l'email et le PDF tels que le client les recevrait, avec les données du formulaire. Rien n'est enregistré ni envoyé au client." class="px-4 py-2 text-sm rounded-lg border border-gold/25 text-gold/70 hover:text-gold transition"><i class="fas fa-vial mr-1.5"></i>M'envoyer un test</button>
                             <button onclick="factSave(false)" class="px-4 py-2 text-sm rounded-lg border border-gold/25 text-gold/70 hover:text-gold transition">Enregistrer le brouillon</button>
                             <button onclick="factSaveAndSend()" class="px-5 py-2 text-sm rounded-lg bg-gold/20 text-gold border border-gold/40 font-semibold hover:bg-gold/30 transition">
                                 <i class="fas fa-paper-plane mr-1.5"></i>Enregistrer et envoyer
@@ -5577,39 +5576,6 @@
             const id = json.data?.id || json.id || payload.id;
             if (!silencieux) { adminAlert(`${json.data?.numero || 'Pièce'} enregistrée en brouillon.`); factCloseEditor(); factLoadList(); }
             return id;
-        }
-
-        // Test : email + PDF construits depuis le formulaire tel qu'il est, envoyés à l'adresse
-        // de l'émetteur seulement. N'enregistre rien, ne consomme aucun numéro, ne touche pas le client.
-        async function factSendTest() {
-            if (!_factCurrent) return;
-            const p = factCollect();
-            if (!p.client_id) { adminAlert('Choisissez un client.'); return; }
-            if (!p.lignes.length) { adminAlert('Ajoutez au moins une ligne.'); return; }
-            const client = _factClients.find(c => c.id === p.client_id) || {};
-            const lignes = p.lignes.map(l => {
-                const q = parseFloat(l.quantite) || 1, pu = parseFloat(l.prix_unitaire) || 0;
-                return { designation: l.designation, date_prestation: l.date_prestation || null, quantite: q, prix_unitaire: pu, total: q * pu };
-            });
-            const facture = {
-                type: p.type,
-                numero: p.numero || 'APERÇU',
-                date_emission: p.date_emission,
-                date_echeance: factAddDays(p.date_emission, p.delai_paiement_jours),
-                delai_paiement_jours: p.delai_paiement_jours,
-                periode_label: p.periode_label,
-                total_ht: lignes.reduce((s, l) => s + l.total, 0)
-            };
-            try {
-                const pdfBase64 = await factBuildPdf({ ...facture, lignes }, client);
-                const res = await adminFetch('/api/admin/factures/send', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ test: true, pdfBase64, preview: { facture, lignes, clientId: p.client_id } })
-                });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error || 'Envoi impossible');
-                adminAlert('Test envoyé à ' + (json.sentTo || 'votre adresse') + '. Vérifiez votre boîte (et les indésirables).');
-            } catch (e) { adminAlert('Test impossible : ' + e.message); }
         }
 
         async function factSaveAndSend() {
