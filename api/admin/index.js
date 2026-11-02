@@ -10596,6 +10596,27 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (!client.email) return res.status(400).json({ error: `Aucune adresse email pour ${client.nom || 'ce client'}. Complétez sa fiche avant d'envoyer.` });
       if (!pdfBase64) return res.status(400).json({ error: 'PDF manquant' });
 
+      // Continuité de la numérotation : une pièce ne peut être émise que sous le numéro
+      // qui suit immédiatement la dernière pièce déjà émise de sa série (obligation
+      // légale, pas de trou ni de saut). Le numéro d'un brouillon reste modifiable
+      // dans l'éditeur pour se remettre en ordre avant l'envoi.
+      if (facture.statut === 'brouillon' && facture.serie) {
+        const { data: emises, error: eEm } = await sb.from('factures').select('numero').eq('serie', facture.serie).neq('statut', 'brouillon');
+        if (eEm) throw eEm;
+        const suffixe = n => parseInt(String(n).split('-')[1], 10) || 0;
+        const attendu = (emises || []).reduce((m, r) => Math.max(m, suffixe(r.numero)), 0) + 1;
+        if (suffixe(facture.numero) !== attendu) {
+          const numeroAttendu = facture.serie + '-' + String(attendu).padStart(5, '0');
+          const { data: occupant } = await sb.from('factures').select('id').eq('numero', numeroAttendu).neq('id', id).limit(1);
+          return res.status(409).json({
+            error: 'Envoi bloqué : la prochaine pièce à émettre doit porter le numéro ' + numeroAttendu + ' (celle-ci est ' + facture.numero + '). ' +
+              (occupant && occupant.length
+                ? 'Ce numéro est pris par un autre brouillon : envoyez-le d\'abord, ou renumérotez-le.'
+                : 'Ouvrez ce brouillon et mettez ' + numeroAttendu + ' dans le champ Numéro, puis renvoyez.')
+          });
+        }
+      }
+
       // Archivage avant envoi : la pièce émise doit être conservée dix ans, et c'est
       // ce même fichier qui sera rattaché aux relances.
       const storagePath = `${facture.date_emission.slice(0, 4)}/${facture.numero}.pdf`;
