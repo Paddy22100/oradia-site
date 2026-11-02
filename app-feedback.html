@@ -81,7 +81,7 @@
     <div id="feedbackMsg" class="feedback-msg"></div>
 
     <div id="panel-probleme" class="panel active">
-      <form onsubmit="submitForm(event, 'support')">
+      <form data-turnstile onsubmit="submitForm(event, 'support')">
         <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le remplissent.
              Voir api/support.js (champ "website"). FormData(form) le ramasse
              automatiquement, pas de JS supplémentaire nécessaire. -->
@@ -114,7 +114,7 @@
     </div>
 
     <div id="panel-idee" class="panel">
-      <form onsubmit="submitForm(event, 'suggestion')">
+      <form data-turnstile onsubmit="submitForm(event, 'suggestion')">
         <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le remplissent.
              Voir api/support.js (champ "website"). FormData(form) le ramasse
              automatiquement, pas de JS supplémentaire nécessaire. -->
@@ -185,6 +185,7 @@
           : 'Merci pour votre idée, elle nourrit l\'évolution d\'Oradia !';
         msg.style.display = 'block';
         form.reset();
+        if (window.oradiaTurnstileReset) window.oradiaTurnstileReset(form);
 
         // Ajoute l'email à la newsletter (upsert — sans effet s'il y est déjà).
         // Non-bloquant : un échec ici ne doit pas remettre en cause l'envoi du message.
@@ -200,10 +201,12 @@
         msg.textContent = 'Erreur d\'envoi. Réessayez, ou écrivez à contact@oradia.fr.';
         msg.style.display = 'block';
       } finally {
+        if (window.oradiaTurnstileReset) window.oradiaTurnstileReset(form);
         btn.disabled = false;
         btn.textContent = origBtnText;
       }
     }
   </script>
+<script src="js/turnstile.js" defer></script>
 </body>
 </html>

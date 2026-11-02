@@ -159,6 +159,26 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
+// Vérification Cloudflare Turnstile. Inactive tant que TURNSTILE_SECRET_KEY n'est pas
+// définie dans Vercel (le formulaire reste alors protégé par le honeypot, le filtre de
+// contenu et la limite de débit). Quand elle l'est, un jeton absent ou refusé bloque
+// l'envoi. Poser d'abord la clé publique dans js/turnstile.js, puis la clé secrète.
+async function verifyTurnstile(token, ip) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+  if (typeof token !== 'string' || !token) return false;
+  try {
+    const params = new URLSearchParams({ secret, response: token });
+    if (ip && ip !== 'unknown') params.set('remoteip', ip);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: params });
+    const result = await r.json();
+    return !!result.success;
+  } catch (err) {
+    console.warn('[Support] Turnstile indisponible:', err.message);
+    return false;
+  }
+}
+
 function createRateLimitClient() {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -209,6 +229,7 @@ export default async function handler(req, res) {
   }
 
   const { type, message, email, name, sujet, categorie, publication, website } = body;
+  const turnstileToken = body['cf-turnstile-response'];
 
   // Honeypot anti-bot : champ "website" invisible pour un humain (caché en CSS dans
   // les 4 formulaires qui postent ici — contact.html, en/contact.html, member/support.html,
@@ -230,6 +251,10 @@ export default async function handler(req, res) {
   if (spamReason) {
     console.warn(`[Support] Spam ignoré (${spamReason}):`, email);
     return res.status(200).json({ success: true, emailSent: true });
+  }
+
+  if (!(await verifyTurnstile(turnstileToken, getClientIP(req)))) {
+    return res.status(400).json({ success: false, error: 'La vérification anti-robot a échoué. Merci de réessayer dans un instant.' });
   }
 
   // Limitation de débit persistante (Supabase) : 5 messages/heure par IP et 3/jour par
