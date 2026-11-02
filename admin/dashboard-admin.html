@@ -5769,6 +5769,23 @@
             return _factEmetteurCache;
         }
 
+        // Logo du PDF : même fichier que dans l'email. Un échec de chargement ne doit jamais
+        // empêcher l'envoi de la facture : on l'omet simplement.
+        let _factLogoDataUrl;
+        async function factLogoDataUrl() {
+            if (_factLogoDataUrl !== undefined) return _factLogoDataUrl;
+            try {
+                const blob = await (await fetch('/images/logo-facture.png')).blob();
+                _factLogoDataUrl = await new Promise((resolve, reject) => {
+                    const r = new FileReader();
+                    r.onload = () => resolve(r.result);
+                    r.onerror = reject;
+                    r.readAsDataURL(blob);
+                });
+            } catch (e) { _factLogoDataUrl = null; }
+            return _factLogoDataUrl;
+        }
+
         async function factBuildPdf(f, client) {
             if (!window.jspdf?.jsPDF) throw new Error('librairie PDF non chargée, rechargez la page');
             const emetteur = await factGetEmetteur();
@@ -5777,6 +5794,9 @@
             const estDevis = f.type === 'devis';
             const M = 18;
             let y = M;
+
+            const logo = await factLogoDataUrl();
+            if (logo) doc.addImage(logo, 'PNG', 210 - M - 26, M - 3, 26, 26 * 610 / 504);
 
             doc.setFont('helvetica', 'bold'); doc.setFontSize(11); doc.setTextColor(20);
             doc.text(emetteur.nom || 'Rudy BOUCHERON — EI', M, y); y += 5;
