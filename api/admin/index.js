@@ -4255,7 +4255,9 @@ async function handleData(req, res) {
         .range(offset, offset + limit - 1);
 
       if (type   !== 'all') query = query.eq('type',   type);
-      if (status !== 'all') query = query.eq('status', status);
+      // « Tous statuts » n'affiche pas le spam : il a sa propre catégorie.
+      if (status === 'all') query = query.neq('status', 'spam');
+      else query = query.eq('status', status);
 
       const { data, count, error } = await query;
       if (error) {
@@ -4267,10 +4269,14 @@ async function handleData(req, res) {
         });
       }
 
+      const { count: spamCount } = await supabase.from('support_messages')
+        .select('id', { count: 'exact', head: true }).eq('status', 'spam');
+
       const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
       return res.status(200).json({
         success: true,
         data: (data || []).map(r => ({ ...r, created_at_fr: fmt(r.created_at) })),
+        spam_count: spamCount || 0,
         pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
       });
     }
@@ -4282,6 +4288,9 @@ async function handleData(req, res) {
       const { id, status: newStatus, admin_note } = body;
       if (!id) return res.status(400).json({ error: 'id requis' });
 
+      if (newStatus && !['new', 'read', 'replied', 'archived', 'spam'].includes(newStatus)) {
+        return res.status(400).json({ error: 'statut invalide' });
+      }
       const updates = { status: newStatus || 'read' };
       if (newStatus === 'read' || newStatus === 'replied') updates.read_at = new Date().toISOString();
       if (admin_note !== undefined) updates.admin_note = admin_note;

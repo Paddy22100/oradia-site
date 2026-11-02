@@ -3318,6 +3318,7 @@
                     <option value="read">Lus</option>
                     <option value="replied">Répondus</option>
                     <option value="archived">Archivés</option>
+                    <option value="spam" id="supportSpamOption">Spam</option>
                 </select>
             </div>
 
@@ -14596,6 +14597,8 @@
 
                 const rows = data.data || [];
                 const pg   = data.pagination || {};
+                const spamOpt = document.getElementById('supportSpamOption');
+                if (spamOpt && data.spam_count !== undefined) spamOpt.textContent = data.spam_count ? 'Spam (' + data.spam_count + ')' : 'Spam';
 
                 if (rows.length === 0) {
                     list.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8">Aucun message pour ces filtres.</p>';
@@ -14612,9 +14615,10 @@
                     new:      'bg-orange-500/20 text-orange-300',
                     read:     'bg-gold/10 text-gold/70',
                     replied:  'bg-green-500/20 text-green-300',
-                    archived: 'bg-light-gold/10 text-light-gold/30'
+                    archived: 'bg-light-gold/10 text-light-gold/30',
+                    spam:     'bg-red-500/20 text-red-300'
                 };
-                const statusLabels = { new:'Nouveau', read:'Lu', replied:'Répondu', archived:'Archivé' };
+                const statusLabels = { new:'Nouveau', read:'Lu', replied:'Répondu', archived:'Archivé', spam:'Spam' };
 
                 list.innerHTML = rows.map(r => `
                     <div class="bg-[rgba(5,20,40,0.6)] border ${r.status==='new' ? 'border-orange-500/40' : 'border-gold/20'} rounded-xl p-5">
@@ -14634,6 +14638,9 @@
                             ${r.status !== 'read'     ? `<button onclick="updateSupportMsg('${r.id}','read')"     class="text-xs bg-gold/10 text-gold border border-gold/20 rounded-lg px-3 py-1 hover:bg-gold/20 transition">Marquer lu</button>` : ''}
                             ${r.status !== 'replied'  ? `<button onclick="updateSupportMsg('${r.id}','replied')"  class="text-xs bg-green-500/10 text-green-300 border border-green-500/20 rounded-lg px-3 py-1 hover:bg-green-500/20 transition">Répondu</button>` : ''}
                             ${r.status !== 'archived' ? `<button onclick="updateSupportMsg('${r.id}','archived')" class="text-xs bg-light-gold/10 text-light-gold/50 border border-light-gold/10 rounded-lg px-3 py-1 hover:bg-light-gold/20 transition">Archiver</button>` : ''}
+                            ${r.status === 'spam'
+                                ? `<button onclick="updateSupportMsg('${r.id}','read')" class="text-xs bg-green-500/10 text-green-300 border border-green-500/20 rounded-lg px-3 py-1 hover:bg-green-500/20 transition"><i class="fas fa-rotate-left mr-1"></i>Pas du spam</button>`
+                                : `<button onclick="updateSupportMsg('${r.id}','spam')" class="text-xs bg-red-500/10 text-red-300 border border-red-500/20 rounded-lg px-3 py-1 hover:bg-red-500/20 transition"><i class="fas fa-ban mr-1"></i>Spam</button>`}
                             <button onclick="toggleSupportReply('${r.id}')" class="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg px-3 py-1 hover:bg-blue-500/20 transition"><i class="fas fa-reply mr-1"></i>Répondre</button>
                             <button onclick="deleteSupportMsg('${r.id}')" class="text-xs bg-red-500/10 text-red-300 border border-red-500/20 rounded-lg px-3 py-1 hover:bg-red-500/20 transition"><i class="fas fa-trash mr-1"></i>Supprimer</button>
                             ${r.type === 'temoignage' ? (
