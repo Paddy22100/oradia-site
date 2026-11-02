@@ -146,6 +146,13 @@
                     <p class="text-light-gold/60 text-sm mb-6">Un problème technique, une question sur votre abonnement ou votre compte ? Je vous réponds personnellement sous 24–48h.</p>
                     <div id="support-msg" class="hidden mb-4 text-sm px-4 py-3 rounded-lg"></div>
                     <form onsubmit="submitForm(event,'support')">
+                        <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le
+                             remplissent. Voir api/support.js (champ "website"). FormData(form)
+                             le ramasse automatiquement, pas de JS supplémentaire nécessaire. -->
+                        <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+                            <label for="support-website">Laissez ce champ vide</label>
+                            <input type="text" id="support-website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
                         <div class="mb-4">
                             <label class="block text-gold/80 text-sm mb-2">Sujet</label>
                             <select name="sujet" required class="input-field w-full rounded-lg px-4 py-3 text-sm">
@@ -189,6 +196,13 @@
                     <p class="text-light-gold/60 text-sm mb-6">Votre retour d'expérience est précieux. Il peut inspirer d'autres personnes en chemin et nourrir le développement d'Oradia.</p>
                     <div id="temoignage-msg" class="hidden mb-4 text-sm px-4 py-3 rounded-lg"></div>
                     <form onsubmit="submitForm(event,'temoignage')">
+                        <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le
+                             remplissent. Voir api/support.js (champ "website"). FormData(form)
+                             le ramasse automatiquement, pas de JS supplémentaire nécessaire. -->
+                        <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+                            <label for="temoignage-website">Laissez ce champ vide</label>
+                            <input type="text" id="temoignage-website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
                         <div class="mb-4">
                             <label class="block text-gold/80 text-sm mb-2">Votre expérience avec Oradia</label>
                             <textarea name="message" required rows="6" placeholder="Racontez ce que les tirages ont mis en lumière pour vous, une prise de conscience, un changement remarqué..." class="input-field w-full rounded-lg px-4 py-3 text-sm resize-none"></textarea>
@@ -223,6 +237,13 @@
                     <p class="text-light-gold/60 text-sm mb-6">Oradia est un outil vivant. Vos idées participent à son évolution — une fonctionnalité manquante, une interface à améliorer, une nouvelle forme de tirage…</p>
                     <div id="suggestion-msg" class="hidden mb-4 text-sm px-4 py-3 rounded-lg"></div>
                     <form onsubmit="submitForm(event,'suggestion')">
+                        <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le
+                             remplissent. Voir api/support.js (champ "website"). FormData(form)
+                             le ramasse automatiquement, pas de JS supplémentaire nécessaire. -->
+                        <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+                            <label for="suggestion-website">Laissez ce champ vide</label>
+                            <input type="text" id="suggestion-website" name="website" tabindex="-1" autocomplete="off">
+                        </div>
                         <div class="mb-4">
                             <label class="block text-gold/80 text-sm mb-2">Catégorie</label>
                             <select name="categorie" required class="input-field w-full rounded-lg px-4 py-3 text-sm">

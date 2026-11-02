@@ -75,6 +75,8 @@ const report = {
     accessibility: [],
     performance: [],
     misc: [],
+    supabase: [],
+    cicd: [],
   },
   screenshots: [],
   summary: { critical: 0, important: 0, minor: 0, ok: 0 },
@@ -865,6 +867,8 @@ function computeScores() {
     'Accessibilité':   'accessibility',
     'Performance':     'performance',
     'Divers':          'misc',
+    'Supabase':        'supabase',
+    'CI/CD':           'cicd',
   };
 
   for (const [label, key] of Object.entries(categories)) {
@@ -919,6 +923,7 @@ function generateHTML() {
         seo: '🔎 SEO', rgpd: '⚖️ RGPD & Légalité', auth: '🔐 Authentification',
         api: '⚡ API & Fonctionnel', links: '🔗 Liens brisés',
         accessibility: '♿ Accessibilité', performance: '🚀 Performance', misc: '🔧 Divers',
+        supabase: '🗄️ Supabase — Journaux système', cicd: '⚙️ CI/CD — GitHub Actions',
       }[key] || key;
       const rows = items.map(i => `
         <tr class="${levelClass(i.level)}">
@@ -1137,6 +1142,127 @@ async function cleanupOldReports() {
   }
 }
 
+// ─── 10b. SUPABASE — JOURNAUX SYSTÈME (erreurs serveur récentes) ──
+// Contrairement aux autres sections, qui vérifient la forme (pages qui répondent,
+// en-têtes, SEO...), celle-ci regarde si des erreurs réelles se sont produites côté
+// serveur ces dernières 24h — le genre d'incident (webhook Stripe en échec sur une
+// contrainte DB, par exemple) qu'un audit "tout est vert en façade" ne voit jamais.
+async function auditSupabaseLogs() {
+  log('🗄️  Audit Supabase (journaux système)...');
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    addIssue('supabase', 'info', "Audit Supabase ignoré (SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY non configurés dans .env.audit)");
+    return;
+  }
+
+  try {
+    const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+    const res = await axios.get(`${SUPABASE_URL}/rest/v1/system_logs`, {
+      params: {
+        select: 'level,source,message,path,created_at',
+        created_at: `gte.${since}`,
+        order: 'created_at.desc',
+        limit: 200,
+      },
+      headers: {
+        apikey: SUPABASE_SERVICE_ROLE_KEY,
+        Authorization: `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+      },
+      timeout: 10000,
+    });
+
+    const logs = res.data || [];
+    // Mêmes règles de distinction que api/admin/index.js (ligne ~10963) : les erreurs
+    // "client" sont des bugs JS vécus dans le navigateur (impact UX), pas des incidents
+    // serveur — on les compte séparément pour ne pas les mélanger.
+    const errors = logs.filter(l => l.level === 'error');
+    const serverErrors = errors.filter(l => l.source !== 'client');
+    const clientErrors = errors.filter(l => l.source === 'client');
+    const warnings = logs.filter(l => l.level === 'warning');
+
+    if (serverErrors.length === 0) {
+      addIssue('supabase', 'ok', 'Aucune erreur serveur dans system_logs (24h)');
+    } else {
+      const sample = serverErrors.slice(0, 3).map(e => `${e.path || '?'} — ${String(e.message || '').slice(0, 120)}`).join(' | ');
+      addIssue('supabase', serverErrors.length >= 5 ? 'important' : 'minor',
+        `${serverErrors.length} erreur(s) serveur dans system_logs (24h)`, sample);
+    }
+
+    if (clientErrors.length > 0) {
+      addIssue('supabase', 'info', `${clientErrors.length} erreur(s) JS côté client journalisée(s) (24h) — impact UX, pas un incident serveur`);
+    } else {
+      addIssue('supabase', 'ok', 'Aucune erreur JS client journalisée (24h)');
+    }
+
+    if (warnings.length > 10) {
+      addIssue('supabase', 'minor', `${warnings.length} avertissement(s) dans system_logs (24h)`);
+    }
+  } catch (e) {
+    addIssue('supabase', 'minor', "Impossible d'interroger system_logs", e.response?.data?.message || e.message);
+  }
+}
+
+// ─── 10c. CI/CD — DERNIERS RUNS GITHUB ACTIONS ──────────────
+// Un workflow qui échoue silencieusement (ex. l'audit lui-même cassé par un
+// changement d'image Ubuntu côté GitHub, cf. incident du 28/10/2026) ne remonte nulle
+// part tant que quelqu'un ne va pas vérifier l'onglet Actions à la main. Cette section
+// le détecte automatiquement, pour tous les workflows du repo, pas seulement celui-ci.
+async function auditCICD() {
+  log('⚙️  Audit CI/CD (GitHub Actions)...');
+  const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+  // GITHUB_REPOSITORY ("owner/repo") est fourni automatiquement par GitHub Actions à
+  // chaque étape — pas besoin de le configurer dans .env.audit.
+  const GITHUB_REPOSITORY = process.env.GITHUB_REPOSITORY;
+
+  if (!GITHUB_TOKEN || !GITHUB_REPOSITORY) {
+    addIssue('cicd', 'info', 'Audit CI/CD ignoré (GITHUB_TOKEN non fourni — hors environnement GitHub Actions)');
+    return;
+  }
+
+  try {
+    const res = await axios.get(`https://api.github.com/repos/${GITHUB_REPOSITORY}/actions/runs`, {
+      params: { per_page: 30 },
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: 'application/vnd.github+json',
+      },
+      timeout: 10000,
+    });
+
+    // Fenêtre de 24h (comme auditSupabaseLogs) plutôt qu'un simple "20 derniers runs" :
+    // sinon un incident déjà corrigé (ex. #138/#139, 28-29/10) continue à plomber le score
+    // tant qu'il reste dans les 20 derniers runs, plusieurs jours après sa résolution.
+    // Exclut aussi les runs encore en cours (dont celui-ci même, toujours "in_progress").
+    const since = Date.now() - 24 * 3600 * 1000;
+    const runs = (res.data?.workflow_runs || [])
+      .filter(r => r.status === 'completed' && new Date(r.created_at).getTime() >= since);
+    const failures = runs.filter(r => r.conclusion === 'failure');
+    const successes = runs.filter(r => r.conclusion === 'success');
+
+    if (runs.length === 0) {
+      addIssue('cicd', 'info', 'Aucun run GitHub Actions terminé dans les dernières 24h');
+    } else if (failures.length === 0) {
+      addIssue('cicd', 'ok', `Aucun run GitHub Actions en échec parmi les ${runs.length} dernier(s) run(s) (24h)`);
+    } else {
+      const sample = failures.slice(0, 3)
+        .map(r => `${r.name} #${r.run_number} (${new Date(r.created_at).toLocaleString('fr-FR')})`)
+        .join(' | ');
+      // "important" seulement si TOUS les runs de la fenêtre ont échoué (pas un simple
+      // aléa isolé) ; sinon "minor", et un item "ok" complémentaire évite que le score
+      // ne tombe injustement à 0 pour un seul run en échec parmi plusieurs réussis.
+      addIssue('cicd', failures.length >= runs.length ? 'important' : 'minor',
+        `${failures.length}/${runs.length} run(s) GitHub Actions en échec (24h)`, sample);
+      if (successes.length > 0) {
+        addIssue('cicd', 'ok', `${successes.length}/${runs.length} run(s) GitHub Actions réussis (24h)`);
+      }
+    }
+  } catch (e) {
+    addIssue('cicd', 'minor', "Impossible d'interroger l'API GitHub Actions", e.response?.data?.message || e.message);
+  }
+}
+
 // ─── ENVOI DU RÉSUMÉ VERS SUPABASE (pour le dashboard admin) ──
 async function pushReportToSupabase() {
   const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -1210,6 +1336,8 @@ async function main() {
     await auditAccessibility(browser);
     await auditPerformance(browser);
     await auditMisc(browser);
+    await auditSupabaseLogs();
+    await auditCICD();
   } finally {
     await browser.close();
   }

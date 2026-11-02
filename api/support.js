@@ -200,7 +200,17 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'Invalid JSON' });
   }
 
-  const { type, message, email, name, sujet, categorie, publication } = body;
+  const { type, message, email, name, sujet, categorie, publication, website } = body;
+
+  // Honeypot anti-bot : champ "website" invisible pour un humain (caché en CSS dans
+  // les 4 formulaires qui postent ici — contact.html, en/contact.html, member/support.html,
+  // app-feedback.html), que seuls les bots remplissent automatiquement. On répond un faux
+  // succès plutôt qu'une erreur, pour ne pas leur signaler qu'ils sont détectés — ni
+  // stockage en BDD ni email, le message s'arrête ici.
+  if (website) {
+    console.warn('[Support] Honeypot déclenché, message ignoré:', email || '(sans email)');
+    return res.status(200).json({ success: true, emailSent: true });
+  }
 
   if (!message || !email) {
     return res.status(400).json({ success: false, error: 'Message et email requis' });

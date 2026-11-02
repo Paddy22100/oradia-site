@@ -2000,6 +2000,33 @@ async function handleData(req, res) {
         req.on('error', reject);
       });
 
+      // Action appelée par un service tiers (scénario Make) plutôt qu'une tâche interne :
+      // authentifiée par son propre secret (MAKE_ASTRO_INGEST_SECRET), jamais par
+      // CRON_SECRET — ce dernier protège aussi des actions bien plus sensibles (export de
+      // données, réconciliation Stripe) qu'on ne veut pas exposer à un tiers externe.
+      if (body.action === 'ingest-astro-reference-post') {
+        const providedSecret = req.headers['x-astro-ingest-secret'] || '';
+        if (!process.env.MAKE_ASTRO_INGEST_SECRET || providedSecret !== process.env.MAKE_ASTRO_INGEST_SECRET) {
+          return res.status(403).json({ error: 'Action non autorisée' });
+        }
+        const postText = String(body.postText || '').trim();
+        if (!postText) {
+          return res.status(200).json({ success: false, error: 'postText manquant ou vide' });
+        }
+        const { error } = await supabase.from('astro_reference_posts').insert({
+          source: body.source || 'allo_allo_mercure',
+          post_text: postText.slice(0, 5000),
+          post_url: body.postUrl || null,
+          posted_at: body.postedAt || null
+        });
+        if (error) {
+          await logSystemEvent(supabase, { level: 'error', source: 'make-astro-ingest', message: `Échec ingestion post de référence astro : ${error.message}` }).catch(() => {});
+          return res.status(200).json({ success: false, error: error.message });
+        }
+        await logSystemEvent(supabase, { level: 'info', source: 'make-astro-ingest', message: `Post de référence astro ingéré (${body.source || 'allo_allo_mercure'})` }).catch(() => {});
+        return res.status(200).json({ success: true });
+      }
+
       const { email, fullName, accessCode, expiresAt, subscriptionId, isFree } = body;
       // L'action peut arriver dans le corps OU dans l'URL (?action=...). Les boutons
       // "Envoyer test" du dashboard la passent en query — sans ce fallback, body.action
@@ -5682,19 +5709,7 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   // notables — voir lib/astro-calendar.js) suivi d'une invitation à l'interpréter :
   // pas besoin de le reconstruire ici, ni de répéter theme.label qui redirait la
   // même chose en plus court.
-  // Liste des cartes en texte simple, dans le pipeline normal des paragraphes : la
-  // grille d'images (raw_content_append, tableaux + images) n'apparaît pas dans
-  // certaines messageries (tableaux retirés, images bloquées) — les lecteurs ne
-  // voyaient alors aucune carte. Ce paragraphe s'affiche partout.
-  // Noms stockés en capitales (« LE RÊVEUR ») : mis en casse de phrase pour le texte.
-  const nice = (n) => { const t = String(n || '').toLocaleLowerCase('fr-FR'); return t.charAt(0).toLocaleUpperCase('fr-FR') + t.slice(1); };
-  const cardsText = cards.map(card => {
-    const family = FAMILY_LABELS[card.family] || card.family;
-    const bridge = card.bridgeCard ? ` → passerelle <i>${nlEscHtml(nice(card.bridgeCard.name))}</i>` : '';
-    return `<b>${nlEscHtml(nice(card.name))}</b> (${nlEscHtml(family)})${bridge}`;
-  }).join(' · ');
-  const content = `<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`
-    + `<p><b>Les cartes tirées cette semaine :</b> ${cardsText}.</p>`;
+  const content = `<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`;
 
   let rawContentAppend = buildTirageCardsGridHtml(cards);
   if (analysis?.explore) rawContentAppend += tirageCardBox('Ce que cela invite à explorer', analysis.explore, '#8b6fc0');
@@ -5737,10 +5752,33 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
 
     const theme = getWeeklyAstroTheme(now);
     const { cards, qrngSource } = await drawSevenCards();
+
+    // Post le plus récent d'un compte d'astrologie suivi par Rudy (Allô Allô Mercure),
+    // ingéré par un scénario Make qui surveille sa page Facebook publique et pousse
+    // chaque nouveau post vers action=ingest-astro-reference-post (handleData, secret
+    // dédié MAKE_ASTRO_INGEST_SECRET) — voir supabase-migration-astro-reference-posts.sql.
+    // Fenêtre de 10 jours : au-delà, un post n'a plus de lien avec la semaine en cours
+    // et ne doit pas se glisser dans une analyse qui n'a rien à voir.
+    let referencePost = null;
+    try {
+      const since = new Date(now.getTime() - 10 * 86400000).toISOString();
+      const { data: refRows } = await supabase
+        .from('astro_reference_posts')
+        .select('post_text')
+        .gte('created_at', since)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      referencePost = refRows?.[0]?.post_text || null;
+    } catch (e) {
+      console.error('[cron-tirage-hebdo] lecture astro_reference_posts', e.message);
+    }
+
     const analysis = await generateAnalysisViaClaude({
       intention: theme.intention,
       cards,
-      userEmail: 'cron-tirage-hebdo@oradia.fr'
+      userEmail: 'cron-tirage-hebdo@oradia.fr',
+      astroContext: theme.contextSentence,
+      referencePost
     });
 
     const { subject, content, rawContentAppend } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });

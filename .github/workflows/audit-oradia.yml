@@ -17,6 +17,15 @@ jobs:
   audit:
     name: Audit complet oradia.fr
     runs-on: ubuntu-latest
+    # Le pin runs-on: ubuntu-24.04 ne suffisait plus à partir du 28/10/2026 : GitHub a
+    # fait basculer ce label vers une image Ubuntu 26.04, que Playwright 1.60.0 ne sait
+    # pas encore gérer ("Cannot install dependencies for ubuntu26.04-x64 with
+    # Playwright 1.60.0", job en échec en 27s). Le job tourne maintenant dans l'image
+    # Docker officielle de Playwright, qui fixe l'OS indépendamment du runner GitHub —
+    # robuste à ce genre de changement côté GitHub. Adapter le tag si package.json
+    # change de version Playwright.
+    container:
+      image: mcr.microsoft.com/playwright:v1.60.0-noble
     timeout-minutes: 30
 
     steps:
@@ -28,19 +37,24 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
           cache: 'npm'
           cache-dependency-path: audit/package-lock.json
 
       # ─── 3. Dépendances ───────────────────────────────────
+      # unzip : absent de l'image mcr.microsoft.com/playwright (conçue pour Playwright,
+      # qui ne l'utilise pas) — mais nécessaire au téléchargement de Chrome par
+      # @puppeteer/browsers (dépendance de puppeteer, une des libs de l'audit), sans
+      # quoi `npm ci` échoue ("Required native binary ... unzip ... was not found").
+      - name: Install unzip (required by puppeteer's browser download)
+        run: apt-get update -qq && apt-get install -y -qq unzip
+
       - name: Install dependencies
         working-directory: ./audit
         run: npm ci
 
       # ─── 4. Playwright browsers ───────────────────────────
-      - name: Install Playwright browsers
-        working-directory: ./audit
-        run: npx playwright install chromium --with-deps
+      # Déjà préinstallés dans l'image mcr.microsoft.com/playwright — rien à faire ici.
 
       # ─── 5. Création du .env.audit depuis les secrets ─────
       - name: Create .env.audit from secrets
@@ -61,6 +75,10 @@ jobs:
       # ─── 6. Lancement de l'audit ──────────────────────────
       - name: Run audit
         working-directory: ./audit
+        env:
+          # Permet à la section CI/CD de l'audit (auditCICD) d'interroger l'API
+          # GitHub Actions. GITHUB_REPOSITORY est déjà fourni automatiquement.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: node audit-oradia.js
 
       # ─── 6b. Vérification automatique des livraisons Mondial Relay ─

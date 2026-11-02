@@ -82,6 +82,13 @@
 
     <div id="panel-probleme" class="panel active">
       <form onsubmit="submitForm(event, 'support')">
+        <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le remplissent.
+             Voir api/support.js (champ "website"). FormData(form) le ramasse
+             automatiquement, pas de JS supplémentaire nécessaire. -->
+        <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+          <label for="feedback-support-website">Laissez ce champ vide</label>
+          <input type="text" id="feedback-support-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
         <div class="field">
           <label>De quoi s'agit-il ?</label>
           <select name="sujet" required>
@@ -108,6 +115,13 @@
 
     <div id="panel-idee" class="panel">
       <form onsubmit="submitForm(event, 'suggestion')">
+        <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le remplissent.
+             Voir api/support.js (champ "website"). FormData(form) le ramasse
+             automatiquement, pas de JS supplémentaire nécessaire. -->
+        <div style="position:absolute;left:-9999px;top:-9999px;" aria-hidden="true">
+          <label for="feedback-suggestion-website">Laissez ce champ vide</label>
+          <input type="text" id="feedback-suggestion-website" name="website" tabindex="-1" autocomplete="off">
+        </div>
         <div class="field">
           <label>Catégorie</label>
           <select name="categorie" required>
