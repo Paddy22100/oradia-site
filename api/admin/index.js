@@ -10540,7 +10540,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (eUp) throw eUp;
 
       const send = facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
-      const result = await send({ facture, lignes: lignes || [], client, pdfBase64, supabase: sb });
+      const result = await send({ facture, lignes: lignes || [], client, pdfBase64, supabase: sb, copie: true });
       if (!result.ok) return res.status(502).json({ error: `Envoi impossible : ${result.error}` });
 
       const { error: eUpd } = await sb.from('factures').update({
