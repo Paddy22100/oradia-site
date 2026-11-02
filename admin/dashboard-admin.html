@@ -4384,6 +4384,7 @@
                             <div>
                                 <h4 class="text-gold text-xl font-semibold" id="fact-editor-title">Nouvelle facture</h4>
                                 <p class="text-gold/40 text-xs mt-1" id="fact-editor-numero">Le numéro sera attribué à l'enregistrement</p>
+                                <input id="fact-numero-input" type="text" maxlength="12" class="hidden mt-2 w-40 bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-1.5 text-sm" title="Modifiable tant que le brouillon n'est pas envoyé" placeholder="F01-00001">
                             </div>
                             <button onclick="factCloseEditor()" class="text-gold/40 hover:text-gold text-xl leading-none">&times;</button>
                         </div>
@@ -5461,6 +5462,7 @@
             _factCurrent = { id: null, type, lignes: [] };
             document.getElementById('fact-editor-title').textContent = type === 'devis' ? 'Nouveau devis' : 'Nouvelle facture';
             document.getElementById('fact-editor-numero').textContent = "Le numéro sera attribué à l'enregistrement, à la suite du précédent.";
+            document.getElementById('fact-numero-input').classList.add('hidden');
             document.getElementById('fact-client').innerHTML = _factClients.map(c => `<option value="${c.id}">${factEsc(c.nom)}</option>`).join('') || '<option value="">Aucun client — créez-en un</option>';
             document.getElementById('fact-modele').innerHTML = _factModeles.map(m => `<option value="${m.id}">${factEsc(m.libelle)} — ${factEur(m.prix_unitaire)}</option>`).join('');
             document.getElementById('fact-periode').value = '';
@@ -5478,7 +5480,11 @@
             const f = json.data;
             _factCurrent = { id: f.id, type: f.type, lignes: (f.lignes || []).map(l => ({ designation: l.designation, date_prestation: l.date_prestation, quantite: l.quantite, prix_unitaire: l.prix_unitaire })) };
             document.getElementById('fact-editor-title').textContent = f.type === 'devis' ? 'Devis' : 'Facture';
-            document.getElementById('fact-editor-numero').textContent = f.numero;
+            document.getElementById('fact-editor-numero').textContent = f.statut === 'brouillon'
+                ? 'Numéro (modifiable tant que le brouillon n\'est pas envoyé) :' : f.numero;
+            const numInput = document.getElementById('fact-numero-input');
+            numInput.value = f.numero;
+            numInput.classList.toggle('hidden', f.statut !== 'brouillon');
             document.getElementById('fact-client').innerHTML = _factClients.map(c => `<option value="${c.id}" ${c.id === f.client_id ? 'selected' : ''}>${factEsc(c.nom)}</option>`).join('');
             document.getElementById('fact-modele').innerHTML = _factModeles.map(m => `<option value="${m.id}">${factEsc(m.libelle)} — ${factEur(m.prix_unitaire)}</option>`).join('');
             document.getElementById('fact-periode').value = f.periode_label || '';
@@ -5548,6 +5554,7 @@
             return {
                 id: _factCurrent.id || undefined,
                 type: _factCurrent.type,
+                numero: _factCurrent.id ? (document.getElementById('fact-numero-input').value || '').trim() || undefined : undefined,
                 client_id: document.getElementById('fact-client').value || null,
                 periode_label: document.getElementById('fact-periode').value || null,
                 date_emission: document.getElementById('fact-date-emission').value,

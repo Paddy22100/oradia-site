@@ -6408,6 +6408,16 @@ async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, c
 // tous les mercredis 19h heure de Paris) et le bouton de test manuel
 // (action=send-parcours-individual-now, POST admin) — un seul endroit fait
 // réellement l'envoi.
+// Recale le compteur de numérotation sur la plus haute pièce existante de la série :
+// après suppression ou renumérotation d'un brouillon, le prochain numéro attribué suit
+// sans laisser de trou (la continuité des numéros émis est une obligation légale).
+async function resyncFactureSequence(sb, serie) {
+  const { data } = await sb.from('factures').select('numero').eq('serie', serie);
+  const max = (data || []).reduce((m, r) => Math.max(m, parseInt(String(r.numero).split('-')[1], 10) || 0), 0);
+  const { error } = await sb.from('facture_sequences').update({ last_number: max, updated_at: new Date().toISOString() }).eq('serie', serie);
+  if (error) console.error('[factures] resync séquence', serie, error.message);
+}
+
 async function runParcoursIndividualCron(supabase) {
   // Coupe-circuit sans redéploiement : insérer {key:'newsletter_parcours_individuel',
   // enabled:false} dans feature_flags pour revenir temporairement à la diffusion
@@ -10460,7 +10470,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         };
 
         if (body.id) {
-          const { data: existing, error: eExist } = await sb.from('factures').select('statut, numero').eq('id', body.id).single();
+          const { data: existing, error: eExist } = await sb.from('factures').select('statut, numero, serie').eq('id', body.id).single();
           if (eExist) throw eExist;
           // Une pièce envoyée est figée : la modifier après coup reviendrait à changer
           // un document que le client détient déjà.
@@ -10469,9 +10479,23 @@ Réponds en français, sans tiret long, format markdown compact.`
           }
           const updates = { ...entete, total_ht: totalFromLignes, updated_at: new Date().toISOString() };
           delete updates.id; delete updates.numero; delete updates.serie;
+          // Le numéro d'un BROUILLON reste modifiable : il n'a pas encore de valeur
+          // légale, et supprimer un brouillon au milieu de la série laisse sinon un trou
+          // (F01-00003, F01-00005…). Même série (préfixe), 5 chiffres, jamais en double.
+          const wanted = String(body.numero || '').trim().toUpperCase();
+          if (wanted && wanted !== existing.numero) {
+            const prefix = existing.numero.split('-')[0];
+            if (!new RegExp('^' + prefix + '-\\d{5}$').test(wanted)) {
+              return res.status(400).json({ error: 'Numéro invalide : format attendu ' + prefix + '-00001' });
+            }
+            const { data: dup } = await sb.from('factures').select('id').eq('numero', wanted).neq('id', body.id).limit(1);
+            if (dup && dup.length) return res.status(409).json({ error: 'Le numéro ' + wanted + ' est déjà utilisé par une autre pièce.' });
+            updates.numero = wanted;
+          }
           if (updates.date_emission) updates.date_echeance = addDays(updates.date_emission, updates.delai_paiement_jours || 30);
           const { error } = await sb.from('factures').update(updates).eq('id', body.id);
           if (error) throw error;
+          if (updates.numero) await resyncFactureSequence(sb, existing.serie || existing.numero.split('-')[0]);
           await sb.from('facture_lignes').delete().eq('facture_id', body.id);
           if (lignes.length) {
             const { error: eL } = await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
@@ -10525,13 +10549,15 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (req.method === 'DELETE') {
         const id = urlParams.get('id');
         if (!id) return res.status(400).json({ error: 'id requis' });
-        const { data: f, error: eGet } = await sb.from('factures').select('statut, numero').eq('id', id).single();
+        const { data: f, error: eGet } = await sb.from('factures').select('statut, numero, serie').eq('id', id).single();
         if (eGet) throw eGet;
         // Un brouillon n'a aucune valeur juridique : il se supprime. Une pièce émise
         // ne se supprime jamais (trou dans la numérotation), elle s'annule.
         if (f.statut === 'brouillon') {
           const { error } = await sb.from('factures').delete().eq('id', id);
           if (error) throw error;
+          // Le prochain numéro attribué reprend juste après la plus haute pièce restante.
+          await resyncFactureSequence(sb, f.serie || f.numero.split('-')[0]);
           return res.status(200).json({ success: true, deleted: true });
         }
         const { error } = await sb.from('factures').update({ statut: 'annulee', updated_at: new Date().toISOString() }).eq('id', id);
