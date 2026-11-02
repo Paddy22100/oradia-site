@@ -13,7 +13,7 @@
 // lui-même le champ "cf-turnstile-response" dans le formulaire. Après un envoi, appeler
 // window.oradiaTurnstileReset(form) pour renouveler le jeton (à usage unique).
 (function () {
-  var SITE_KEY = '';
+  var SITE_KEY = '0x4AAAAAAFwwfV0hOLK3dw37';
   if (!SITE_KEY) return;
 
   function mount() {
