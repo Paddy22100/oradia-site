@@ -10579,9 +10579,27 @@ Réponds en français, sans tiret long, format markdown compact.`
       // Test depuis l'onglet Mails : mêmes fonctions d'envoi, données d'exemple.
       // Jamais de second template écrit ici (règle CLAUDE.md).
       if (test) {
-        const ex = exempleFacture();
-        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null, supabase: sb });
-        return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null });
+        // Sans destinataire précisé : l'adresse de l'émetteur (Paramètres > Entreprise).
+        let toEmail = body.toEmail;
+        if (!toEmail) {
+          const { data: ci } = await sb.from('app_settings').select('value').eq('key', 'company_info').maybeSingle();
+          toEmail = ci?.value?.email || 'contact@oradia.fr';
+        }
+        // Bouton « M'envoyer un test » de l'éditeur : les vraies données du formulaire
+        // (preview), mêmes fonctions d'envoi que l'envoi réel. Sinon jeu d'exemple.
+        let data = exempleFacture();
+        const pv = body.preview;
+        if (pv && pv.facture && Array.isArray(pv.lignes)) {
+          let client = {};
+          if (pv.clientId) {
+            const { data: c } = await sb.from('clients').select('*').eq('id', pv.clientId).maybeSingle();
+            if (c) client = c;
+          }
+          data = { facture: pv.facture, lignes: pv.lignes, client };
+        }
+        const send = data.facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
+        const result = await send({ ...data, client: { ...data.client, email: toEmail }, pdfBase64: pdfBase64 || null, supabase: sb, test: true });
+        return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null, sentTo: toEmail });
       }
 
       if (!id) return res.status(400).json({ error: 'id requis' });
