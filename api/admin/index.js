@@ -1815,7 +1815,11 @@ async function handleData(req, res) {
             const BENIGN_STDERR_PATTERNS = [
                 /^Vercel CLI \d/,
                 /^Build Completed in /,
-                /^Warning: Node\.js functions are compiled from ESM to CommonJS/
+                /^Warning: Node\.js functions are compiled from ESM to CommonJS/,
+                // Avertissements npm de l'installation des dépendances (paquets dépréciés) :
+                // écrits sur stderr à chaque build, sans effet sur le site. L'audit du
+                // 02/11/2026 les comptait comme 11 erreurs serveur.
+                /^npm (warn|notice)\b/i
             ];
             const candidateLogs = (Array.isArray(events) ? events : [])
                 .filter(e => {
