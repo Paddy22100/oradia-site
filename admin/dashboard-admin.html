@@ -8085,7 +8085,7 @@
                 if (!confirmed) return;
 
                 kickstarterShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
-                const response = await adminFetch('/api/admin?action=kickstarter-import', {
+                const response = await adminFetch('/api/admin/data?action=kickstarter-import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ rows })
@@ -8207,7 +8207,7 @@
                 if (!confirmed) return;
 
                 ululeShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
-                const response = await adminFetch('/api/admin?action=ulule-import', {
+                const response = await adminFetch('/api/admin/data?action=ulule-import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ rows })
@@ -8238,7 +8238,7 @@
             if (!batchId) return;
             if (!(await adminConfirm('Annuler le dernier import ? Les contributeurs ajoutés/mis à jour lors de ce lot seront supprimés.', { danger: true }))) return;
             try {
-                const response = await adminFetch('/api/admin?action=ulule-delete-batch', {
+                const response = await adminFetch('/api/admin/data?action=ulule-delete-batch', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ batchId })
@@ -8261,7 +8261,7 @@
             const month = document.getElementById('compta-month')?.value || '';
             stripePaymentsShowStatus('Synchronisation avec Stripe en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
             try {
-                const response = await adminFetch('/api/admin?action=stripe-fees-sync', {
+                const response = await adminFetch('/api/admin/data?action=stripe-fees-sync', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ year, month: month || null })
@@ -8338,7 +8338,7 @@
                 if (!confirmed) return;
 
                 stripePaymentsShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
-                const response = await adminFetch('/api/admin?action=stripe-payments-import', {
+                const response = await adminFetch('/api/admin/data?action=stripe-payments-import', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ rows })
@@ -8374,7 +8374,7 @@
             if (!batchId) return;
             if (!(await adminConfirm('Annuler le dernier import ? Les backers ajoutés/mis à jour lors de ce lot seront supprimés.', { danger: true }))) return;
             try {
-                const response = await adminFetch('/api/admin?action=kickstarter-delete-batch', {
+                const response = await adminFetch('/api/admin/data?action=kickstarter-delete-batch', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ batchId })
