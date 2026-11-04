@@ -6104,7 +6104,7 @@ function buildCommunicationEmailHtml(draft) {
   const cardInner = nlForceOpaqueCells(`
   <tr><td style="padding:0; line-height:0;">
     <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
-      <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — L’Oracle des Passerelles" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+      <img src="https://oradia.fr/images/medias/bandeau_newsletter-2026-11.webp" alt="Oradia — L’Oracle des Passerelles" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
     </a>
   </td></tr>
   <tr><td style="padding:14px 32px; text-align:center; background:rgba(212,175,55,0.06); border-bottom:1px solid rgba(212,175,55,0.15);">
