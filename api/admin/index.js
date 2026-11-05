@@ -586,6 +586,19 @@ async function sendDueSocialPosts(supabase) {
     .limit(10);
   const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
   for (const post of dueSocial || []) {
+    // Réservation atomique avant l'envoi : cron-send-scheduled (toutes les 15 min) et
+    // cron-social-due (horaire) tombent ensemble à chaque heure pile. Sans ce verrou, les
+    // deux lisaient le même post « programmé » et l'envoyaient chacun à Make : double
+    // publication sur les réseaux (newsletter du 04/11/2026). Seul l'appel qui fait passer
+    // la ligne de « programmé » à « en_cours » la publie ; l'autre la saute.
+    const { data: claimed, error: claimError } = await supabase
+      .from('social_posts')
+      .update({ statut: 'en_cours' })
+      .eq('id', post.id)
+      .eq('statut', 'programmé')
+      .select('id');
+    if (claimError) { console.error('[social] réservation impossible', post.id, claimError.message); continue; }
+    if (!claimed || claimed.length === 0) continue; // déjà pris par l'autre cron
     try {
       if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
       // post.networks : absent tant que la migration social-posts-networks n'est pas
@@ -9137,11 +9150,19 @@ module.exports = async (req, res) => {
           if (!post) return res.status(404).json({ error: 'Post introuvable' });
           const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
           if (!MAKE_WEBHOOK_URL) return res.status(400).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL manquant côté serveur' });
+          // Même réservation que sendDueSocialPosts : un clic pendant le passage d'un cron
+          // (ou un double clic) ne doit jamais publier deux fois.
+          const { data: claimed, error: claimError } = await sbSocialList.from('social_posts')
+            .update({ statut: 'en_cours' }).eq('id', post.id).eq('statut', 'programmé').select('id');
+          if (claimError) return res.status(500).json({ error: claimError.message });
+          if (!claimed || claimed.length === 0) return res.status(409).json({ error: 'Ce post est déjà en cours de publication ou publié.' });
+          const netw = { facebook: true, instagram: true, linkedin: true, ...(post.networks || {}) };
           try {
             const makeRes = await fetch(MAKE_WEBHOOK_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString(),
+                networks: netw, send_facebook: netw.facebook, send_instagram: netw.instagram, send_linkedin: netw.linkedin })
             });
             if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
             await sbSocialList.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
