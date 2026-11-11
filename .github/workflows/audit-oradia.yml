@@ -46,8 +46,16 @@ jobs:
       # qui ne l'utilise pas) — mais nécessaire au téléchargement de Chrome par
       # @puppeteer/browsers (dépendance de puppeteer, une des libs de l'audit), sans
       # quoi `npm ci` échoue ("Required native binary ... unzip ... was not found").
+      # Jusqu'à 4 tentatives : un miroir de paquets Ubuntu momentanément injoignable a fait
+      # échouer l'audit du 11/11/2026 (étape seule en cause, mêmes réglages OK la veille).
       - name: Install unzip (required by puppeteer's browser download)
-        run: apt-get update -qq && apt-get install -y -qq unzip
+        run: |
+          for i in 1 2 3 4; do
+            apt-get update -qq && apt-get install -y -qq unzip && exit 0
+            echo "apt a échoué (tentative $i/4), nouvel essai dans $((i * 20)) s"
+            sleep $((i * 20))
+          done
+          exit 1
 
       - name: Install dependencies
         working-directory: ./audit
