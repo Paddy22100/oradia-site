@@ -3,10 +3,6 @@ const { estimateStripeFees } = require('../../lib/stripe-fees.js');
 const { getPublicCatalog } = require('../../lib/shop-config.js');
 const { getShopMode, countSoldByOffer, SHOP_FLAG_DEFAULTS } = require('../../lib/shop-mode.js');
 
-// Même taux que côté dashboard admin (api/admin/index.js) — commission +
-// traitement paiement Kickstarter, distincte des frais Stripe classiques.
-const KICKSTARTER_FEE_RATE = parseFloat(process.env.KICKSTARTER_FEE_RATE || '0.08');
-
 // Paliers de financement — montants issus des devis fabricant réels (WJPC,
 // août 2026, 1000 exemplaires, conversion $→€ ~0,863). Constantes de config,
 // à mettre à jour manuellement si les devis changent — jamais recalculées
@@ -85,15 +81,13 @@ module.exports = async (req, res) => {
     // précommandes nettes des frais Stripe et hors part livraison (fléchée
     // vers l'affranchissement, pas la fabrication), + tous les dons nets
     // (Stripe ET espèces — cet argent finance réellement la fabrication même
-    // s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions),
-    // + pledges Kickstarter nets de la commission Kickstarter.
+    // s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions).
     let preordersTotal = 0;
     let preordersShippingTotal = 0;
     let preordersCount = 0;
     let stripeDonorsTotal = 0;
     let stripeDonorsCount = 0;
     let cashDonorsTotal = 0;
-    let kickstarterTotal = 0;
     // Mode boutique (interrupteurs du dashboard) et ventes par offre (stock limité),
     // exposés aux pages publiques via cette route déjà publique : aucune nouvelle
     // fonction serverless (12/12 sur Vercel Hobby).
@@ -110,8 +104,7 @@ module.exports = async (req, res) => {
         // 14/09/2026, "API Précommandes inaccessible : timeout of 10000ms exceeded").
         const [
           { data, error },
-          { data: donorRows, error: donorsError },
-          { data: ksRows, error: ksError }
+          { data: donorRows, error: donorsError }
         ] = await Promise.all([
           supabase
             .from('preorders')
@@ -125,17 +118,7 @@ module.exports = async (req, res) => {
           supabase
             .from('donors')
             .select('amount_total, paid_status, source')
-            .eq('paid_status', 'completed'),
-          // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au
-          // même titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau
-          // d'estimation que le reste de ce compteur), et leur pledge entre dans la
-          // cagnotte au même titre qu'une précommande ou un don. Seuls les pledges en
-          // EUR sont sommés — même règle que côté dashboard admin (lib/stripe-fees.js,
-          // import-transactions) : pas de taux de change inventé pour les autres
-          // devises. La table peut ne pas encore exister si la migration
-          // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
-          // ignore l'erreur plutôt que de casser le compteur public de précommandes.
-          supabase.from('kickstarter_backers').select('id, pledge_amount, currency')
+            .eq('paid_status', 'completed')
         ]);
 
         shopMode = await getShopMode(supabase);
@@ -178,14 +161,6 @@ module.exports = async (req, res) => {
           }
         }
 
-        if (!ksError && Array.isArray(ksRows)) {
-          sold += ksRows.length;
-          for (const row of ksRows) {
-            if ((row.currency || 'EUR').toUpperCase() === 'EUR') {
-              kickstarterTotal += Number(row.pledge_amount) || 0;
-            }
-          }
-        }
       } catch (dbError) {
         console.error('Database error:', dbError.message);
       }
@@ -196,8 +171,7 @@ module.exports = async (req, res) => {
     const preordersNet = preordersTotal - estimateStripeFees(preordersTotal, preordersCount);
     const stripeDonorsNet = stripeDonorsTotal - estimateStripeFees(stripeDonorsTotal, stripeDonorsCount);
     const donorsNet = stripeDonorsNet + cashDonorsTotal;
-    const kickstarterNet = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
-    const cagnotte = Math.max(0, preordersNet - preordersShippingTotal + donorsNet + kickstarterNet);
+    const cagnotte = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
 
     // Objectif de prévente (jamais affiché tel quel sur le site — seuls le
     // pourcentage et le nombre vendu sont montrés publiquement)

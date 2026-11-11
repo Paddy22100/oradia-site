@@ -88,6 +88,14 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - `precommande_subscribers` — n'existait pas en production
 - `analytics_events` — n'existait pas en production
 
+### Tables supprimées (novembre 2026)
+
+- `kickstarter_backers` (0 ligne) — campagne Kickstarter finalement abandonnée — **supprimée**
+- `ulule_backers` (0 ligne) — campagne Ulule finalement abandonnée — **supprimée**
+- Fonctionnalité entièrement retirée (pas seulement les tables) : import CSV, onglets dashboard,
+  agrégation dans la cagnotte publique (`api/preorders/progress.js`) et la comptabilité
+  (`api/admin/index.js`) — ne pas la réintroduire sans demande explicite.
+
 ---
 
 ## Audit pré-production — à exécuter à chaque session
