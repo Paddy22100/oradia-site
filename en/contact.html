@@ -170,7 +170,7 @@
         <div class="bg-night-blue/60 border border-gold/30 rounded-2xl p-8 backdrop-blur-sm">
           <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-6 text-center">Send me a message</h2>
 
-          <form id="contactForm" class="space-y-6">
+          <form id="contactForm" class="space-y-6" data-turnstile>
             <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le remplissent.
                  Voir api/support.js (champ "website") — jamais de type="hidden" seul, certains
                  bots l'ignorent ; positionné hors-écran + aria-hidden à la place. -->
@@ -289,7 +289,8 @@
         email: document.getElementById('email').value,
         sujet: document.getElementById('subject').value,
         message: document.getElementById('message').value,
-        website: document.getElementById('website').value
+        website: document.getElementById('website').value,
+        'cf-turnstile-response': ((this.querySelector('[name="cf-turnstile-response"]') || {}).value) || ''
       };
 
       submitButton.disabled = true;
@@ -345,6 +346,7 @@
         formMessage.classList.remove('hidden');
 
       } finally {
+        if (window.oradiaTurnstileReset) window.oradiaTurnstileReset(this);
         submitButton.disabled = false;
         buttonIcon.className = 'fas fa-paper-plane mr-2';
         buttonText.textContent = 'Send message';
@@ -378,6 +380,7 @@
     });
   </script>
 
+<script src="/js/turnstile.js" defer></script>
 <script src="/js/page-tracker.js" defer></script>
 </body>
 </html>

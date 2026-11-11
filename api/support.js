@@ -4,6 +4,8 @@
 // + stockage dans Supabase (table support_messages) pour le dashboard admin
 
 import { createClient } from '@supabase/supabase-js';
+import { looksLikeSpam } from '../lib/support-spam.js';
+import { getClientIP, hitRateLimit } from '../lib/rate-limit.js';
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const TO_EMAIL = 'contact@oradia.fr';
 const FROM_EMAIL = 'oracle@oradia.fr';
@@ -157,6 +159,32 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
+// Vérification Cloudflare Turnstile. Inactive tant que TURNSTILE_SECRET_KEY n'est pas
+// définie dans Vercel (le formulaire reste alors protégé par le honeypot, le filtre de
+// contenu et la limite de débit). Quand elle l'est, un jeton absent ou refusé bloque
+// l'envoi. Poser d'abord la clé publique dans js/turnstile.js, puis la clé secrète.
+async function verifyTurnstile(token, ip) {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+  if (!secret) return true;
+  if (typeof token !== 'string' || !token) return false;
+  try {
+    const params = new URLSearchParams({ secret, response: token });
+    if (ip && ip !== 'unknown') params.set('remoteip', ip);
+    const r = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', { method: 'POST', body: params });
+    const result = await r.json();
+    return !!result.success;
+  } catch (err) {
+    console.warn('[Support] Turnstile indisponible:', err.message);
+    return false;
+  }
+}
+
+function createRateLimitClient() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return url && key ? createClient(url, key) : null;
+}
+
 // Stockage Supabase non-bloquant — indépendant de l'envoi email
 async function saveToSupabase({ type, email, name, sujet, categorie, publication, message }) {
   try {
@@ -201,6 +229,7 @@ export default async function handler(req, res) {
   }
 
   const { type, message, email, name, sujet, categorie, publication, website } = body;
+  const turnstileToken = body['cf-turnstile-response'];
 
   // Honeypot anti-bot : champ "website" invisible pour un humain (caché en CSS dans
   // les 4 formulaires qui postent ici — contact.html, en/contact.html, member/support.html,
@@ -214,6 +243,32 @@ export default async function handler(req, res) {
 
   if (!message || !email) {
     return res.status(400).json({ success: false, error: 'Message et email requis' });
+  }
+
+  // Filtre de contenu (liens, adresses jetables) : même traitement que le honeypot, faux
+  // succès, rien en BDD ni par email (voir lib/support-spam.js pour le constat d'origine).
+  const spamReason = looksLikeSpam({ message, email, name, sujet });
+  if (spamReason) {
+    console.warn(`[Support] Spam ignoré (${spamReason}):`, email);
+    return res.status(200).json({ success: true, emailSent: true });
+  }
+
+  if (!(await verifyTurnstile(turnstileToken, getClientIP(req)))) {
+    return res.status(400).json({ success: false, error: 'La vérification anti-robot a échoué. Merci de réessayer dans un instant.' });
+  }
+
+  // Limitation de débit persistante (Supabase) : 5 messages/heure par IP et 3/jour par
+  // adresse email. Un vrai visiteur n'écrit pas davantage ; un script qui varie ses
+  // adresses se heurte à la limite par IP, et inversement.
+  const rlClient = createRateLimitClient();
+  if (rlClient) {
+    const byIp = await hitRateLimit(rlClient, { bucket: 'support-ip', key: getClientIP(req), windowSeconds: 3600, max: 5 });
+    const byEmail = byIp.allowed
+      ? await hitRateLimit(rlClient, { bucket: 'support-email', key: String(email).toLowerCase().trim(), windowSeconds: 86400, max: 3 })
+      : null;
+    if (!byIp.allowed || (byEmail && !byEmail.allowed)) {
+      return res.status(429).json({ success: false, error: 'Trop de messages envoyés. Réessaie un peu plus tard.' });
+    }
   }
 
   // Stocker en BDD. Attendu (pas "fire and forget") : sur Vercel, une fonction serverless

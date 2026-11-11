@@ -145,7 +145,7 @@
                     <h3 class="cormorant text-xl text-gold mb-1">Me contacter</h3>
                     <p class="text-light-gold/60 text-sm mb-6">Un problème technique, une question sur votre abonnement ou votre compte ? Je vous réponds personnellement sous 24–48h.</p>
                     <div id="support-msg" class="hidden mb-4 text-sm px-4 py-3 rounded-lg"></div>
-                    <form onsubmit="submitForm(event,'support')">
+                    <form data-turnstile onsubmit="submitForm(event,'support')">
                         <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le
                              remplissent. Voir api/support.js (champ "website"). FormData(form)
                              le ramasse automatiquement, pas de JS supplémentaire nécessaire. -->
@@ -195,7 +195,7 @@
                     <h3 class="cormorant text-xl text-gold mb-1">Partager votre témoignage</h3>
                     <p class="text-light-gold/60 text-sm mb-6">Votre retour d'expérience est précieux. Il peut inspirer d'autres personnes en chemin et nourrir le développement d'Oradia.</p>
                     <div id="temoignage-msg" class="hidden mb-4 text-sm px-4 py-3 rounded-lg"></div>
-                    <form onsubmit="submitForm(event,'temoignage')">
+                    <form data-turnstile onsubmit="submitForm(event,'temoignage')">
                         <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le
                              remplissent. Voir api/support.js (champ "website"). FormData(form)
                              le ramasse automatiquement, pas de JS supplémentaire nécessaire. -->
@@ -236,7 +236,7 @@
                     <h3 class="cormorant text-xl text-gold mb-1">Suggérer une amélioration</h3>
                     <p class="text-light-gold/60 text-sm mb-6">Oradia est un outil vivant. Vos idées participent à son évolution — une fonctionnalité manquante, une interface à améliorer, une nouvelle forme de tirage…</p>
                     <div id="suggestion-msg" class="hidden mb-4 text-sm px-4 py-3 rounded-lg"></div>
-                    <form onsubmit="submitForm(event,'suggestion')">
+                    <form data-turnstile onsubmit="submitForm(event,'suggestion')">
                         <!-- Honeypot anti-bot : invisible pour un humain, seuls les bots le
                              remplissent. Voir api/support.js (champ "website"). FormData(form)
                              le ramasse automatiquement, pas de JS supplémentaire nécessaire. -->
@@ -410,6 +410,7 @@
                         : 'Suggestion reçue, merci pour votre contribution !';
                     msgEl.classList.remove('hidden');
                     form.reset();
+                    if (window.oradiaTurnstileReset) window.oradiaTurnstileReset(form);
                 } else {
                     throw new Error();
                 }
@@ -419,11 +420,13 @@
                 const body    = encodeURIComponent((data.message || '') + '\n\n— ' + (data.email || ''));
                 window.location.href = 'mailto:contact@oradia.fr?subject=' + subject + '&body=' + body;
             } finally {
+                if (window.oradiaTurnstileReset) window.oradiaTurnstileReset(form);
                 btn.disabled = false;
                 btn.innerHTML = origBtnHTML;
             }
         }
     </script>
+<script src="../js/turnstile.js" defer></script>
 <script src="../js/page-tracker.js" defer></script>
 </body>
 </html>

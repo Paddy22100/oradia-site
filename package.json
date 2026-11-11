@@ -4,17 +4,13 @@
   "description": "ORADIA Précommandes Stripe + Supabase - Production Ready",
   "main": "api/lib/supabase.js",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.97.1",
     "@supabase/supabase-js": "^2.107.0",
-    "@vercel/analytics": "^2.0.1",
     "@vercel/functions": "^3.9.5",
     "astronomy-engine": "^2.1.19",
-    "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
     "cookie": "^0.6.0",
     "jsonwebtoken": "^9.0.2",
     "qrcode": "^1.5.4",
-    "sib-api-v3-sdk": "^8.5.0",
     "stripe": "^14.9.0",
     "xml2js": "^0.6.2"
   },

@@ -233,7 +233,7 @@ async function sendWaitlistConfirmationEmail(email, lang = 'fr') {
           <!-- Bandeau newsletter -->
           <tr>
             <td style="padding:0; line-height:0; font-size:0;">
-              <img src="https://oradia.fr/images/medias/bandeau_newsletter${en ? '-en' : ''}.webp" alt="${en ? 'Oradia — L’Oracle des Passerelles' : 'Oradia — L’Oracle des Passerelles'}" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
+              <img src="https://oradia.fr/images/medias/${en ? 'bandeau_newsletter-en' : 'bandeau_newsletter-2026-11'}.webp" alt="${en ? 'Oradia — L’Oracle des Passerelles' : 'Oradia — L’Oracle des Passerelles'}" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
             </td>
           </tr>
 

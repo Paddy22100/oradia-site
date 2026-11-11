@@ -544,6 +544,19 @@ async function sendDueSocialPosts(supabase) {
     .limit(10);
   const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
   for (const post of dueSocial || []) {
+    // Réservation atomique avant l'envoi : cron-send-scheduled (toutes les 15 min) et
+    // cron-social-due (horaire) tombent ensemble à chaque heure pile. Sans ce verrou, les
+    // deux lisaient le même post « programmé » et l'envoyaient chacun à Make : double
+    // publication sur les réseaux (newsletter du 04/11/2026). Seul l'appel qui fait passer
+    // la ligne de « programmé » à « en_cours » la publie ; l'autre la saute.
+    const { data: claimed, error: claimError } = await supabase
+      .from('social_posts')
+      .update({ statut: 'en_cours' })
+      .eq('id', post.id)
+      .eq('statut', 'programmé')
+      .select('id');
+    if (claimError) { console.error('[social] réservation impossible', post.id, claimError.message); continue; }
+    if (!claimed || claimed.length === 0) continue; // déjà pris par l'autre cron
     try {
       if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
       // post.networks : absent tant que la migration social-posts-networks n'est pas
@@ -1773,7 +1786,11 @@ async function handleData(req, res) {
             const BENIGN_STDERR_PATTERNS = [
                 /^Vercel CLI \d/,
                 /^Build Completed in /,
-                /^Warning: Node\.js functions are compiled from ESM to CommonJS/
+                /^Warning: Node\.js functions are compiled from ESM to CommonJS/,
+                // Avertissements npm de l'installation des dépendances (paquets dépréciés) :
+                // écrits sur stderr à chaque build, sans effet sur le site. L'audit du
+                // 02/11/2026 les comptait comme 11 erreurs serveur.
+                /^npm (warn|notice)\b/i
             ];
             const candidateLogs = (Array.isArray(events) ? events : [])
                 .filter(e => {
@@ -3924,7 +3941,9 @@ async function handleData(req, res) {
         .range(offset, offset + limit - 1);
 
       if (type   !== 'all') query = query.eq('type',   type);
-      if (status !== 'all') query = query.eq('status', status);
+      // « Tous statuts » n'affiche pas le spam : il a sa propre catégorie.
+      if (status === 'all') query = query.neq('status', 'spam');
+      else query = query.eq('status', status);
 
       const { data, count, error } = await query;
       if (error) {
@@ -3936,10 +3955,14 @@ async function handleData(req, res) {
         });
       }
 
+      const { count: spamCount } = await supabase.from('support_messages')
+        .select('id', { count: 'exact', head: true }).eq('status', 'spam');
+
       const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
       return res.status(200).json({
         success: true,
         data: (data || []).map(r => ({ ...r, created_at_fr: fmt(r.created_at) })),
+        spam_count: spamCount || 0,
         pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
       });
     }
@@ -3951,6 +3974,9 @@ async function handleData(req, res) {
       const { id, status: newStatus, admin_note } = body;
       if (!id) return res.status(400).json({ error: 'id requis' });
 
+      if (newStatus && !['new', 'read', 'replied', 'archived', 'spam'].includes(newStatus)) {
+        return res.status(400).json({ error: 'statut invalide' });
+      }
       const updates = { status: newStatus || 'read' };
       if (newStatus === 'read' || newStatus === 'replied') updates.read_at = new Date().toISOString();
       if (admin_note !== undefined) updates.admin_note = admin_note;
@@ -5731,7 +5757,7 @@ function buildCommunicationEmailHtml(draft) {
   const cardInner = nlForceOpaqueCells(`
   <tr><td style="padding:0; line-height:0;">
     <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
-      <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — L’Oracle des Passerelles" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+      <img src="https://oradia.fr/images/medias/bandeau_newsletter-2026-11.webp" alt="Oradia — L’Oracle des Passerelles" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
     </a>
   </td></tr>
   <tr><td style="padding:14px 32px; text-align:center; background:rgba(212,175,55,0.06); border-bottom:1px solid rgba(212,175,55,0.15);">
@@ -6048,6 +6074,16 @@ async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, c
 // tous les mercredis 19h heure de Paris) et le bouton de test manuel
 // (action=send-parcours-individual-now, POST admin) — un seul endroit fait
 // réellement l'envoi.
+// Recale le compteur de numérotation sur la plus haute pièce existante de la série :
+// après suppression ou renumérotation d'un brouillon, le prochain numéro attribué suit
+// sans laisser de trou (la continuité des numéros émis est une obligation légale).
+async function resyncFactureSequence(sb, serie) {
+  const { data } = await sb.from('factures').select('numero').eq('serie', serie);
+  const max = (data || []).reduce((m, r) => Math.max(m, parseInt(String(r.numero).split('-')[1], 10) || 0), 0);
+  const { error } = await sb.from('facture_sequences').update({ last_number: max, updated_at: new Date().toISOString() }).eq('serie', serie);
+  if (error) console.error('[factures] resync séquence', serie, error.message);
+}
+
 async function runParcoursIndividualCron(supabase) {
   // Coupe-circuit sans redéploiement : insérer {key:'newsletter_parcours_individuel',
   // enabled:false} dans feature_flags pour revenir temporairement à la diffusion
@@ -8754,11 +8790,19 @@ module.exports = async (req, res) => {
           if (!post) return res.status(404).json({ error: 'Post introuvable' });
           const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
           if (!MAKE_WEBHOOK_URL) return res.status(400).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL manquant côté serveur' });
+          // Même réservation que sendDueSocialPosts : un clic pendant le passage d'un cron
+          // (ou un double clic) ne doit jamais publier deux fois.
+          const { data: claimed, error: claimError } = await sbSocialList.from('social_posts')
+            .update({ statut: 'en_cours' }).eq('id', post.id).eq('statut', 'programmé').select('id');
+          if (claimError) return res.status(500).json({ error: claimError.message });
+          if (!claimed || claimed.length === 0) return res.status(409).json({ error: 'Ce post est déjà en cours de publication ou publié.' });
+          const netw = { facebook: true, instagram: true, linkedin: true, ...(post.networks || {}) };
           try {
             const makeRes = await fetch(MAKE_WEBHOOK_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString(),
+                networks: netw, send_facebook: netw.facebook, send_instagram: netw.instagram, send_linkedin: netw.linkedin })
             });
             if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
             await sbSocialList.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
@@ -10100,7 +10144,7 @@ Réponds en français, sans tiret long, format markdown compact.`
         };
 
         if (body.id) {
-          const { data: existing, error: eExist } = await sb.from('factures').select('statut, numero').eq('id', body.id).single();
+          const { data: existing, error: eExist } = await sb.from('factures').select('statut, numero, serie').eq('id', body.id).single();
           if (eExist) throw eExist;
           // Une pièce envoyée est figée : la modifier après coup reviendrait à changer
           // un document que le client détient déjà.
@@ -10109,9 +10153,23 @@ Réponds en français, sans tiret long, format markdown compact.`
           }
           const updates = { ...entete, total_ht: totalFromLignes, updated_at: new Date().toISOString() };
           delete updates.id; delete updates.numero; delete updates.serie;
+          // Le numéro d'un BROUILLON reste modifiable : il n'a pas encore de valeur
+          // légale, et supprimer un brouillon au milieu de la série laisse sinon un trou
+          // (F01-00003, F01-00005…). Même série (préfixe), 5 chiffres, jamais en double.
+          const wanted = String(body.numero || '').trim().toUpperCase();
+          if (wanted && wanted !== existing.numero) {
+            const prefix = existing.numero.split('-')[0];
+            if (!new RegExp('^' + prefix + '-\\d{5}$').test(wanted)) {
+              return res.status(400).json({ error: 'Numéro invalide : format attendu ' + prefix + '-00001' });
+            }
+            const { data: dup } = await sb.from('factures').select('id').eq('numero', wanted).neq('id', body.id).limit(1);
+            if (dup && dup.length) return res.status(409).json({ error: 'Le numéro ' + wanted + ' est déjà utilisé par une autre pièce.' });
+            updates.numero = wanted;
+          }
           if (updates.date_emission) updates.date_echeance = addDays(updates.date_emission, updates.delai_paiement_jours || 30);
           const { error } = await sb.from('factures').update(updates).eq('id', body.id);
           if (error) throw error;
+          if (updates.numero) await resyncFactureSequence(sb, existing.serie || existing.numero.split('-')[0]);
           await sb.from('facture_lignes').delete().eq('facture_id', body.id);
           if (lignes.length) {
             const { error: eL } = await sb.from('facture_lignes').insert(lignes.map((l, i) => ({
@@ -10165,13 +10223,15 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (req.method === 'DELETE') {
         const id = urlParams.get('id');
         if (!id) return res.status(400).json({ error: 'id requis' });
-        const { data: f, error: eGet } = await sb.from('factures').select('statut, numero').eq('id', id).single();
+        const { data: f, error: eGet } = await sb.from('factures').select('statut, numero, serie').eq('id', id).single();
         if (eGet) throw eGet;
         // Un brouillon n'a aucune valeur juridique : il se supprime. Une pièce émise
         // ne se supprime jamais (trou dans la numérotation), elle s'annule.
         if (f.statut === 'brouillon') {
           const { error } = await sb.from('factures').delete().eq('id', id);
           if (error) throw error;
+          // Le prochain numéro attribué reprend juste après la plus haute pièce restante.
+          await resyncFactureSequence(sb, f.serie || f.numero.split('-')[0]);
           return res.status(200).json({ success: true, deleted: true });
         }
         const { error } = await sb.from('factures').update({ statut: 'annulee', updated_at: new Date().toISOString() }).eq('id', id);
@@ -10193,9 +10253,27 @@ Réponds en français, sans tiret long, format markdown compact.`
       // Test depuis l'onglet Mails : mêmes fonctions d'envoi, données d'exemple.
       // Jamais de second template écrit ici (règle CLAUDE.md).
       if (test) {
-        const ex = exempleFacture();
-        const result = await sendFactureEmail({ ...ex, client: { ...ex.client, email: body.toEmail }, pdfBase64: pdfBase64 || null, supabase: sb });
-        return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null });
+        // Sans destinataire précisé : l'adresse de l'émetteur (Paramètres > Entreprise).
+        let toEmail = body.toEmail;
+        if (!toEmail) {
+          const { data: ci } = await sb.from('app_settings').select('value').eq('key', 'company_info').maybeSingle();
+          toEmail = ci?.value?.email || 'contact@oradia.fr';
+        }
+        // Bouton « M'envoyer un test » de l'éditeur : les vraies données du formulaire
+        // (preview), mêmes fonctions d'envoi que l'envoi réel. Sinon jeu d'exemple.
+        let data = exempleFacture();
+        const pv = body.preview;
+        if (pv && pv.facture && Array.isArray(pv.lignes)) {
+          let client = {};
+          if (pv.clientId) {
+            const { data: c } = await sb.from('clients').select('*').eq('id', pv.clientId).maybeSingle();
+            if (c) client = c;
+          }
+          data = { facture: pv.facture, lignes: pv.lignes, client };
+        }
+        const send = data.facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
+        const result = await send({ ...data, client: { ...data.client, email: toEmail }, pdfBase64: pdfBase64 || null, supabase: sb, test: true });
+        return res.status(result.ok ? 200 : 502).json({ success: result.ok, error: result.error || null, sentTo: toEmail });
       }
 
       if (!id) return res.status(400).json({ error: 'id requis' });
@@ -10210,6 +10288,27 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (!client.email) return res.status(400).json({ error: `Aucune adresse email pour ${client.nom || 'ce client'}. Complétez sa fiche avant d'envoyer.` });
       if (!pdfBase64) return res.status(400).json({ error: 'PDF manquant' });
 
+      // Continuité de la numérotation : une pièce ne peut être émise que sous le numéro
+      // qui suit immédiatement la dernière pièce déjà émise de sa série (obligation
+      // légale, pas de trou ni de saut). Le numéro d'un brouillon reste modifiable
+      // dans l'éditeur pour se remettre en ordre avant l'envoi.
+      if (facture.statut === 'brouillon' && facture.serie) {
+        const { data: emises, error: eEm } = await sb.from('factures').select('numero').eq('serie', facture.serie).neq('statut', 'brouillon');
+        if (eEm) throw eEm;
+        const suffixe = n => parseInt(String(n).split('-')[1], 10) || 0;
+        const attendu = (emises || []).reduce((m, r) => Math.max(m, suffixe(r.numero)), 0) + 1;
+        if (suffixe(facture.numero) !== attendu) {
+          const numeroAttendu = facture.serie + '-' + String(attendu).padStart(5, '0');
+          const { data: occupant } = await sb.from('factures').select('id').eq('numero', numeroAttendu).neq('id', id).limit(1);
+          return res.status(409).json({
+            error: 'Envoi bloqué : la prochaine pièce à émettre doit porter le numéro ' + numeroAttendu + ' (celle-ci est ' + facture.numero + '). ' +
+              (occupant && occupant.length
+                ? 'Ce numéro est pris par un autre brouillon : envoyez-le d\'abord, ou renumérotez-le.'
+                : 'Ouvrez ce brouillon et mettez ' + numeroAttendu + ' dans le champ Numéro, puis renvoyez.')
+          });
+        }
+      }
+
       // Archivage avant envoi : la pièce émise doit être conservée dix ans, et c'est
       // ce même fichier qui sera rattaché aux relances.
       const storagePath = `${facture.date_emission.slice(0, 4)}/${facture.numero}.pdf`;
@@ -10218,7 +10317,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (eUp) throw eUp;
 
       const send = facture.type === 'devis' ? sendDevisEmail : sendFactureEmail;
-      const result = await send({ facture, lignes: lignes || [], client, pdfBase64, supabase: sb });
+      const result = await send({ facture, lignes: lignes || [], client, pdfBase64, supabase: sb, copie: true });
       if (!result.ok) return res.status(502).json({ error: `Envoi impossible : ${result.error}` });
 
       const { error: eUpd } = await sb.from('factures').update({
