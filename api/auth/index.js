@@ -261,6 +261,29 @@ async function handleCheckSubscription(req, res) {
 
   const supabase = createClient(supabaseUrl, supabaseKey);
 
+  // PROTECTION : le détail d'un abonnement (statut, dates, naissance) n'est donné qu'à la personne
+  // connectée concernée. Sans jeton : seulement « abonné ou non » (la page d'abonnement s'en sert pour
+  // éviter un doublon avant paiement), limité en nombre d'essais. Jeton invalide ou expiré : 401, pour
+  // que la page le renouvelle. Jeton d'une autre personne : même réponse réduite.
+  const authHeader = req.headers.authorization || '';
+  let detail = false;
+  if (authHeader) {
+    const jeton = authHeader.replace(/^Bearer\s+/i, '').trim();
+    const { data: u, error: ue } = jeton ? await supabase.auth.getUser(jeton) : { data: null, error: true };
+    if (ue || !u?.user) {
+      res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ subscribed: false, error: 'Session invalide ou expirée' }));
+    }
+    detail = (u.user.email || '').toLowerCase().trim() === email;
+  }
+  if (!detail) {
+    const ip = (req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection?.remoteAddress || 'unknown').toString().split(',')[0].trim();
+    if (!checkRateLimit(ip, 20, 60000, 'check-subscription')) {
+      res.writeHead(429, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ subscribed: false, error: 'Trop de requêtes' }));
+    }
+  }
+
   try {
     // Ne filtre plus sur status='active' ici : on a besoin du statut réel (payment_failed,
     // cancelled...) pour que le front distingue "paiement à corriger" (portail Stripe, même
@@ -278,6 +301,10 @@ async function handleCheckSubscription(req, res) {
       subscribed = !subData.expires_at || new Date(subData.expires_at) > new Date();
     }
 
+    if (!detail) {
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ subscribed }));
+    }
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({
       subscribed,

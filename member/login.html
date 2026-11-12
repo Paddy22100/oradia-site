@@ -298,7 +298,7 @@
 
                 let subscribed = false;
                 try {
-                    const subRes = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(session.user.email));
+                    const subRes = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(session.user.email), { headers: { Authorization: 'Bearer ' + session.access_token } });
                     const subData = await subRes.json();
                     subscribed = !!subData.subscribed;
                 } catch (_) {}

@@ -2073,8 +2073,24 @@ async function runScheduledDrawsBackground(supabase, due, now) {
 }
 
 // ============ DISPATCH PRINCIPAL ============
+// L'application ORADIA - Mon quotidien (app.oradia.fr) peut lire l'historique des tirages
+// d'une personne connectée à son compte Oradia (lecture seule, jeton de la personne exigé).
+// Seule l'action « list » et seule cette origine sont autorisées : rien d'autre n'est ouvert.
+const ORIGINES_APPLI = ['https://app.oradia.fr'];
+
 export default async function handler(req, res) {
   const action = req.query.action || 'send-email';
+
+  if (action === 'list') {
+    const origine = req.headers.origin;
+    if (ORIGINES_APPLI.includes(origine)) {
+      res.setHeader('Access-Control-Allow-Origin', origine);
+      res.setHeader('Vary', 'Origin');
+      res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    }
+    if (req.method === 'OPTIONS') return res.status(204).end();
+  }
 
   switch (action) {
     case 'save':          return handleSaveTirage(req, res);

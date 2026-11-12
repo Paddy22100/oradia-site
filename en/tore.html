@@ -242,7 +242,8 @@
   </style>
 
   <!-- Script Freemium Tracker -->
-  <script src="/js/freemium-tracker.js" defer></script>
+  <script src="/js/member-api.js"></script>
+    <script src="/js/freemium-tracker.js" defer></script>
   <script src="/js/referral.js" defer></script>
   <script>
     document.addEventListener('DOMContentLoaded', function () {
@@ -7102,7 +7103,7 @@ async function checkToreAccess(resetButton) {
       try {
         const sess = JSON.parse(sessStr);
         if (sess.email) {
-          const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(sess.email));
+          const resp = await oradiaCheckSubscription(sess.email);
           if (resp.ok) {
             const data = await resp.json();
             if (data.subscribed) {
@@ -7880,7 +7881,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const sess = JSON.parse(sessStr);
     if (!sess.email) return;
     if (sess.subscribed === true) return; // déjà synchro
-    const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(sess.email));
+    const resp = await oradiaCheckSubscription(sess.email);
     if (!resp.ok) return;
     const data = await resp.json();
     if (data.subscribed) {
