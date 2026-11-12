@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-api.js"></script>
     <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mon Profil - ORADIA</title>
@@ -532,7 +533,7 @@
                 // Vérifier le statut réel depuis Supabase si email disponible (et récupérer date/lieu de naissance)
                 if (email) {
                     try {
-                        const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+                        const resp = await oradiaCheckSubscription(email);
                         if (resp.ok) {
                             const data = await resp.json();
                             if (!subscribed) {

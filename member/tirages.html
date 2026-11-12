@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-api.js"></script>
     <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historique des Tirages - ORADIA</title>
@@ -1316,7 +1317,7 @@
             document.getElementById('loadingSchedulePanel').classList.remove('hidden');
 
             try {
-                const r = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+                const r = await oradiaCheckSubscription(email);
                 const d = await r.json();
                 if (!d.subscribed) {
                     document.getElementById('loadingSchedulePanel').classList.add('hidden');

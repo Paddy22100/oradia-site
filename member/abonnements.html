@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <!-- Traduction anglaise de l'espace membre (visiteurs venus de /en/) -->
+    <script src="/js/member-api.js"></script>
     <script src="/js/member-i18n.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Abonnements - ORADIA</title>
@@ -482,7 +483,7 @@
             
             // Vérifier le statut réel de l'abonnement
             try {
-                const response = await fetch(`/api/auth/check-subscription?email=${encodeURIComponent(email || '')}`);
+                const response = await oradiaCheckSubscription(email || '');
                 const data = await response.json();
                 
                 const statusEl = document.querySelector('#main-content .text-gold\\/60.text-sm');

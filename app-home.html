@@ -367,7 +367,8 @@
     </div>
   </div>
 
-  <script src="js/push-notifications.js"></script>
+  <script src="/js/member-api.js"></script>
+    <script src="js/push-notifications.js"></script>
   <script>
     if (window.oradiaPushNotifications) window.oradiaPushNotifications.init();
   </script>
@@ -465,7 +466,7 @@
       try { email = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || ''; } catch (e) {}
       if (!email) return;
       try {
-        var res = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+        var res = await oradiaCheckSubscription(email);
         var data = await res.json();
         if (data.subscribed) {
           var subscribeCard = document.getElementById('subscribeCard');
