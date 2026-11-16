@@ -25,6 +25,35 @@ const DAY_SECONDS = 86400;
 // Importer le tracker d'utilisation (en ESM)
 import { logApiUsage } from '../lib/api-usage-tracker.js';
 import { getClientIP, hitRateLimit } from '../lib/rate-limit.js';
+import { detectLeaks } from '../lib/structure/anti-fuite.js';
+
+// Garde-fou de production pour la lecture fractale (voir lib/structure/derivees.js) :
+// journalise sans jamais bloquer l'affichage — l'utilisateur voit son analyse quoi
+// qu'il arrive, c'est Rudy qui ajuste le prompt a posteriori si une fuite apparaît.
+async function logLeaksIfAny(text, { lang, source }) {
+  try {
+    const leaks = detectLeaks(text);
+    if (leaks.length === 0) return;
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    await supabase.from('synthese_leak_logs').insert(
+      leaks.map(l => ({
+        type: l.type,
+        terme: l.terme,
+        numero_figure: l.numero ?? null,
+        excerpt: l.excerpt.slice(0, 500),
+        lang: lang || 'fr',
+        source,
+      }))
+    );
+    console.warn(`[analyse-tirage] ${leaks.length} fuite(s) de lecture fractale détectée(s) et journalisée(s).`);
+  } catch (e) {
+    console.warn('[analyse-tirage] Erreur journalisation fuite (ignorée, ne bloque pas l\'affichage):', e.message);
+  }
+}
 
 async function sendDailyCapAlert(count) {
     try {
@@ -350,6 +379,14 @@ export default async function handler(req, res) {
   }
 
   // ── Limitation persistante par IP + plafond global ──────────────────────
+  // Appel interne du script anti-fuite (scripts/test-fuites-synthese.js, Étape 4 de la
+  // lecture fractale) : il doit passer par la vraie route (vrai prompt, vrai appel
+  // Anthropic, vrai nettoyage) sans consommer le quota des visiteurs anonymes ni risquer
+  // de déclencher l'alerte de plafond global — secret dédié, jamais utilisé par un vrai
+  // client, distinct de CRON_SECRET (voir même logique que MAKE_ASTRO_INGEST_SECRET).
+  const isInternalTestCall = !!process.env.TEST_FUITES_SECRET
+    && req.headers['x-internal-test-secret'] === process.env.TEST_FUITES_SECRET;
+
   let sbLimit = null;
   try {
     const { createClient } = require('@supabase/supabase-js');
@@ -360,7 +397,7 @@ export default async function handler(req, res) {
   } catch (e) {
     console.warn('[analyse-tirage] client Supabase indisponible, limitation désactivée:', e.message);
   }
-  if (sbLimit) {
+  if (sbLimit && !isInternalTestCall) {
     const ipCheck = await hitRateLimit(sbLimit, {
       bucket: 'analyse-ip',
       key: clientIP,
@@ -427,6 +464,7 @@ export default async function handler(req, res) {
 
     const data = await anthropicResponse.json();
     const analysis = cleanAnalysisText(data.content?.[0]?.text || '');
+    logLeaksIfAny(analysis, { lang, source: 'json' }).catch(() => {});
 
     return res.status(200).json({
       success: true, 
@@ -510,7 +548,9 @@ async function relayAnthropicStream(anthropicResponse, res, { userEmail, clientI
         : "La lecture a été interrompue. Rechargez la page pour réessayer."
     });
   } else {
-    send('done', { success: true, analysis: cleanAnalysisText(text) });
+    const finalAnalysis = cleanAnalysisText(text);
+    logLeaksIfAny(finalAnalysis, { lang, source: 'stream' }).catch(() => {});
+    send('done', { success: true, analysis: finalAnalysis });
   }
   return res.end();
 }
