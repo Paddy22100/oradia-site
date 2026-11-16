@@ -2006,7 +2006,7 @@ async function handleData(req, res) {
       // section tab-etude) — voir lib/structure/concordance-tirage.js. Normalement calculée
       // automatiquement après chaque tirage (api/tirages/send-email.js) ; ce bouton sert au
       // calcul initial sur les tirages antérieurs à cette fonctionnalité, et au recalcul.
-      if (action === 'compute-concordance') {
+      if ((body.action || req.query?.action) === 'compute-concordance') {
         const concordanceId = body.id || req.query?.id;
         if (!concordanceId) return res.status(400).json({ error: 'id requis' });
 
