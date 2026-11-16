@@ -283,7 +283,7 @@
                             class="text-sm bg-gold/10 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/20 transition">
                             <i class="fas fa-credit-card mr-2"></i>Gérer mon moyen de paiement
                         </button>
-                        <button id="btn-cancel-sub" onclick="openCancelRecap()"
+                        <button id="btn-cancel-sub" onclick="window.location.href='resiliation.html'"
                             class="ml-0 sm:ml-3 mt-2 sm:mt-0 text-sm bg-transparent text-light-gold/70 border border-gold/20 rounded-lg px-4 py-2 hover:bg-gold/10 transition">
                             <i class="fas fa-ban mr-2"></i>Résilier mon abonnement
                         </button>
@@ -884,39 +884,6 @@
                 btn.disabled = false; btn.innerHTML = original;
                 alert('Erreur réseau. Veuillez réessayer.');
             }
-        }
-
-        // Résiliation en ligne : récapitulatif puis bouton « Confirmer la résiliation »
-        // (cancel_at_period_end côté Stripe + e-mail de confirmation envoyé par l'API).
-        function openCancelRecap() {
-            if (document.getElementById('cancel-recap-overlay')) return;
-            const en = window.ORADIA_LANG === 'en';
-            const next = (document.getElementById('nextBillingDate') || {}).textContent || '';
-            const overlay = document.createElement('div');
-            overlay.id = 'cancel-recap-overlay';
-            overlay.setAttribute('role', 'dialog');
-            overlay.setAttribute('aria-modal', 'true');
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(4,10,20,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
-            overlay.innerHTML = '<div style="background:#0a1628;border:1px solid rgba(212,175,55,0.3);border-radius:16px;max-width:440px;width:100%;padding:28px 24px;font-family:Georgia,serif;">' +
-                '<h3 style="color:#d4af37;font-size:1.1rem;margin:0 0 14px;">' + (en ? 'Cancel my subscription' : 'Résilier mon abonnement') + '</h3>' +
-                '<p style="color:rgba(229,231,235,0.85);font-size:0.85rem;line-height:1.6;margin:0 0 10px;"><strong>' + (en ? 'Summary' : 'Récapitulatif') + '</strong></p>' +
-                '<ul style="color:rgba(229,231,235,0.85);font-size:0.85rem;line-height:1.7;margin:0 0 18px;padding-left:18px;list-style:disc;">' +
-                    '<li>' + (en ? 'Subscription: The Tore (€8/month)' : 'Abonnement : Le Tore (8 €/mois)') + '</li>' +
-                    '<li>' + (en ? 'No further payment will be taken.' : 'Aucun nouveau prélèvement ne sera effectué.') + '</li>' +
-                    '<li>' + (en ? 'You keep your access until the end of the current period' : 'Vous conservez votre accès jusqu\'à la fin de la période en cours') + (next ? ' (' + next + ')' : '') + '.</li>' +
-                    '<li>' + (en ? 'A confirmation e-mail will be sent to you.' : 'Un e-mail de confirmation vous sera envoyé.') + '</li>' +
-                '</ul>' +
-                '<div style="display:flex;gap:10px;">' +
-                    '<button type="button" id="cancel-recap-back" style="flex:1;padding:11px;border-radius:9999px;border:1px solid rgba(212,175,55,0.3);background:transparent;color:rgba(212,175,55,0.7);font-family:inherit;font-size:0.85rem;cursor:pointer;">' + (en ? 'Back' : 'Retour') + '</button>' +
-                    '<button type="button" id="cancel-recap-ok" style="flex:1;padding:11px;border-radius:9999px;border:none;background:linear-gradient(to right,#d4af37,#f0c75e);color:#0a1628;font-weight:700;font-family:inherit;font-size:0.85rem;cursor:pointer;">' + (en ? 'Confirm cancellation' : 'Confirmer la résiliation') + '</button>' +
-                '</div></div>';
-            document.body.appendChild(overlay);
-            document.getElementById('cancel-recap-back').onclick = () => overlay.remove();
-            document.getElementById('cancel-recap-ok').onclick = async () => {
-                overlay.remove();
-                window.__cancelConfirmed = true;
-                try { await toggleAutoRenew(); } finally { window.__cancelConfirmed = false; }
-            };
         }
 
         function updateToggleUI(active) {
