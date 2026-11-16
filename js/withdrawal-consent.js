@@ -14,7 +14,8 @@
             checkbox: 'Je demande l\'exécution immédiate et je renonce expressément à mon droit de rétractation.',
             cancel: 'Annuler',
             confirm: 'Confirmer et continuer',
-            price: 'Essai gratuit 30 jours, puis 8 €/mois, sans engagement, résiliable à tout moment depuis votre espace membre.',
+            price: 'Offre de lancement : 5 €/mois le premier mois, puis 8 €/mois, sans engagement, résiliable à tout moment depuis votre espace membre.',
+            priceTrial: 'Essai gratuit de 30 jours, puis 8 €/mois, sans engagement, résiliable à tout moment depuis votre espace membre.',
             guidanceTitle: 'Avant de réserver votre guidance',
             guidanceBody: 'Merci de confirmer les deux points suivants pour accéder au calendrier de réservation.',
             guidanceCgv: 'J\'ai lu et j\'accepte les <a href="/cgv.html" target="_blank" rel="noopener" style="color:#d4af37;text-decoration:underline;">Conditions Générales de Vente</a>.',
@@ -27,7 +28,8 @@
             checkbox: 'I request immediate performance and expressly waive my right of withdrawal.',
             cancel: 'Cancel',
             confirm: 'Confirm and continue',
-            price: '30-day free trial, then €8/month, no commitment, cancellable at any time from your member area.',
+            price: 'Launch offer: €5 for the first month, then €8/month, no commitment, cancellable at any time from your member area.',
+            priceTrial: '30-day free trial, then €8/month, no commitment, cancellable at any time from your member area.',
             guidanceTitle: 'Before booking your guidance session',
             guidanceBody: 'Please confirm both points below to access the booking calendar.',
             guidanceCgv: 'I have read and accept the <a href="/en/cgv.html" target="_blank" rel="noopener" style="color:#d4af37;text-decoration:underline;">Terms and Conditions of Sale</a>.',
@@ -51,7 +53,7 @@
                 '<div style="background:#0a1628;border:1px solid rgba(212,175,55,0.3);border-radius:16px;max-width:440px;width:100%;padding:28px 24px;font-family:Georgia,serif;box-shadow:0 20px 60px rgba(0,0,0,0.5);">' +
                     '<h3 style="color:#d4af37;font-size:1.1rem;margin:0 0 14px;">' + (isGuidance ? t.guidanceTitle : t.title) + '</h3>' +
                     '<p style="color:rgba(229,231,235,0.85);font-size:0.85rem;line-height:1.6;margin:0 0 16px;">' +
-                        (isGuidance ? t.guidanceBody : label + t.body + ' <strong>' + t.price + '</strong>') +
+                        (isGuidance ? t.guidanceBody : label + t.body + ' <strong>' + (opts.trial ? t.priceTrial : t.price) + '</strong>') +
                     '</p>' +
                     (isGuidance
                         ? '<label style="display:flex;align-items:flex-start;gap:10px;color:rgba(229,231,235,0.9);font-size:0.82rem;line-height:1.5;cursor:pointer;margin-bottom:12px;">' +
