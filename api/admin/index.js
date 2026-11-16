@@ -2002,6 +2002,42 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Action : (re)calculer la concordance Oracle ↔ Yi King d'un tirage (dashboard,
+      // section tab-etude) — voir lib/structure/concordance-tirage.js. Normalement calculée
+      // automatiquement après chaque tirage (api/tirages/send-email.js) ; ce bouton sert au
+      // calcul initial sur les tirages antérieurs à cette fonctionnalité, et au recalcul.
+      if (action === 'compute-concordance') {
+        const concordanceId = body.id || req.query?.id;
+        if (!concordanceId) return res.status(400).json({ error: 'id requis' });
+
+        const { data: tirageRow, error: tirageErr } = await supabase
+          .from('tirages')
+          .select('id, cartes, passerelles, intention, synthese, analyse_ia')
+          .eq('id', concordanceId)
+          .single();
+        if (tirageErr) return res.status(404).json({ success: false, error: 'Tirage introuvable.' });
+
+        const { calculerConcordanceTirage } = require('../../lib/structure/concordance-tirage.js');
+        const result = await calculerConcordanceTirage({
+          cartes: tirageRow.cartes,
+          passerelles: tirageRow.passerelles,
+          intention: tirageRow.intention,
+          synthese: tirageRow.synthese,
+          analyseIA: tirageRow.analyse_ia
+        });
+        if (!result) {
+          return res.status(200).json({ success: false, message: "Calcul impossible (tirage incomplet, carte introuvable dans le deck actuel, ou modèle indisponible — réessayer dans un instant)." });
+        }
+
+        const { error: updErr } = await supabase
+          .from('tirages')
+          .update({ concordance_yiking: result, concordance_computed_at: new Date().toISOString() })
+          .eq('id', concordanceId);
+        if (updErr) return res.status(500).json({ success: false, error: updErr.message });
+
+        return res.status(200).json({ success: true, data: result });
+      }
+
       const { email, fullName, accessCode, expiresAt, subscriptionId, isFree } = body;
       // L'action peut arriver dans le corps OU dans l'URL (?action=...). Les boutons
       // "Envoyer test" du dashboard la passent en query — sans ce fallback, body.action
@@ -3704,6 +3740,36 @@ async function handleData(req, res) {
         throw tErr;
       }
       return res.status(200).json({ success: true, data: tirages || [] });
+    }
+
+    // ── Section concordance-tirages (dashboard, tab-etude : concordance Oracle ↔ Yi King) ──
+    if (section === 'concordance-tirages') {
+      const limit = Math.min(parseInt(req.query?.limit, 10) || 20, 100);
+      const { data: rows, error: cErr } = await supabase
+        .from('tirages')
+        .select('id, user_id, created_at, intention, cartes, concordance_yiking, concordance_computed_at')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      if (cErr) throw cErr;
+
+      let userEmails = {};
+      const userIds = [...new Set((rows || []).map(r => r.user_id).filter(Boolean))];
+      if (userIds.length) {
+        const { data: { users } = {} } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+        if (users) users.forEach(u => { userEmails[u.id] = u.email; });
+      }
+
+      const data = (rows || []).map(r => ({
+        id: r.id,
+        email: userEmails[r.user_id] || null,
+        created_at: r.created_at,
+        intention: r.intention,
+        cartes: r.cartes || [],
+        concordance: r.concordance_yiking || null,
+        computed_at: r.concordance_computed_at
+      }));
+
+      return res.status(200).json({ success: true, data });
     }
 
     // ── Section subscription-payments (historique des paiements Stripe d'un abonné, pour modal admin) ──

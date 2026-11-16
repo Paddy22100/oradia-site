@@ -207,6 +207,31 @@ async function handleSaveTirage(req, res) {
   return res.status(200).json({ success: true, tirage: data });
 }
 
+// Calcule (lib/structure/concordance-tirage.js) puis enregistre la concordance
+// Oracle ↔ Yi King d'un tirage déjà complet (analyse/synthèse présentes). Toujours
+// appelé en arrière-plan (waitUntil) après avoir répondu au client : jamais sur le
+// chemin critique d'un tirage, et jamais exposé côté client. N'écrit rien si le
+// calcul renonce (tirage incomplet, carte introuvable, modèle indisponible).
+async function computeAndStoreConcordance(tirageRow) {
+  const { calculerConcordanceTirage } = require('../../lib/structure/concordance-tirage.js');
+  const result = await calculerConcordanceTirage({
+    cartes: tirageRow.cartes,
+    passerelles: tirageRow.passerelles,
+    intention: tirageRow.intention,
+    synthese: tirageRow.synthese,
+    analyseIA: tirageRow.analyse_ia
+  });
+  if (!result) return;
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const { error } = await supabase
+    .from('tirages')
+    .update({ concordance_yiking: result, concordance_computed_at: new Date().toISOString() })
+    .eq('id', tirageRow.id);
+  if (error) console.error('[concordance] échec enregistrement:', error.message);
+}
+
 // ============ ACTION : compléter un tirage déjà enregistré (analyse IA, synthèse, fenêtre d'observation) ============
 async function handleUpdateTirage(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -250,7 +275,12 @@ async function handleUpdateTirage(req, res) {
     return res.status(500).json({ success: false, message: 'Impossible de mettre à jour le tirage.' });
   }
 
-  return res.status(200).json({ success: true, tirage: data });
+  res.status(200).json({ success: true, tirage: data });
+
+  if (updates.analyse_ia !== undefined || updates.synthese !== undefined) {
+    const { waitUntil } = require('@vercel/functions');
+    waitUntil(computeAndStoreConcordance(data).catch(e => console.error('[concordance] exception:', e.message)));
+  }
 }
 
 // ============ ACTION : lister l'historique des tirages de l'utilisateur connecté ============
@@ -2011,6 +2041,21 @@ async function runScheduledDrawsBackground(supabase, due, now) {
 
       const passerelles = cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
 
+      // Concordance Oracle ↔ Yi King (lib/structure/concordance-tirage.js) : les cartes
+      // sont déjà au format complet ici (contrairement au tirage manuel, reconstruit
+      // depuis de simples noms dans computeAndStoreConcordance), donc calculée directement
+      // avant l'insertion plutôt qu'en second aller-retour. Ne bloque jamais l'insertion
+      // du tirage lui-même en cas d'échec (modèle indisponible, etc.).
+      const concordanceResult = await require('../../lib/structure/concordance-tirage.js')
+        .calculerConcordanceTirage({
+          cards,
+          intention: sched.intention,
+          synthese: analysis.synthesis,
+          analyseIA: analysis.cards,
+          userEmail: sched.email
+        })
+        .catch(e => { console.error('[concordance] tirage programmé échec:', e.message); return null; });
+
       // Enregistrer dans l'historique (source = programme, rétention séparée des tirages ponctuels)
       const { error: insErr } = await supabase.from('tirages').insert({
         user_id: sched.user_id,
@@ -2022,7 +2067,9 @@ async function runScheduledDrawsBackground(supabase, due, now) {
         interpretations: [],
         synthese: analysis.synthesis || null,
         analyse_ia: analysis.cards || null,
-        pistes: analysis.explore || null
+        pistes: analysis.explore || null,
+        concordance_yiking: concordanceResult || null,
+        concordance_computed_at: concordanceResult ? new Date().toISOString() : null
       });
       if (insErr) console.error('[run-scheduled-draws] insert tirage error:', insErr.message);
 

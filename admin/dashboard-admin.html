@@ -3576,6 +3576,29 @@
                 <p class="text-gold/40 text-xs mt-4" id="retro-prereg-note"></p>
             </div>
         </section>
+
+        <section class="mb-10">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Oracle ↔ Yi King : concordance</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Le texte réellement reçu par l'utilisateur reflète-t-il la structure Yi King cachée de son tirage (calculée côté serveur, jamais montrée) ?</p>
+                </div>
+                <button onclick="loadConcordanceTirages()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+            </div>
+
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-circle-info text-gold/60"></i> Comment lire ce score</h4>
+                <ul class="text-gold/70 text-sm leading-relaxed space-y-1 list-disc pl-5">
+                    <li>Calculé automatiquement par le modèle après chaque tirage (manuel ou programmé), dès que l'analyse est disponible — aucune action requise pour les nouveaux tirages.</li>
+                    <li>Les tirages antérieurs à cette fonctionnalité, ou en échec de calcul, affichent un bouton <strong>Calculer</strong>.</li>
+                    <li><strong>Retournée</strong> et <strong>Devenir</strong> peuvent être "n/a" : figure symétrique (rien à comparer) ou tirage sans ligne mutante.</li>
+                </ul>
+            </div>
+
+            <div id="concordance-list" class="space-y-4">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </section>
         </div>
 
         <div id="tab-analytics" class="tab-panel">
@@ -5172,7 +5195,7 @@
             if (name === 'guidances')      loadGuidances();
             if (name === 'mails')          { loadToreEmails(); loadComposeContacts(); }
             if (name === 'analytics')      { loadAnalytics(); nlLoadCampaignStats(); }
-            if (name === 'etude')          loadExperiment();
+            if (name === 'etude')          { loadExperiment(); loadConcordanceTirages(); }
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
             if (name === 'insights')       loadIntentionsList();
             if (name === 'exports')        renderExports();
@@ -13865,6 +13888,141 @@
 
         function closeTiragesModal() {
             document.getElementById('modalTirages').classList.add('hidden');
+        }
+
+        // ── Concordance Oracle ↔ Yi King (tab-etude) ────────────────────────────────
+        // Diagramme en toile d'araignée fait main (pas de librairie de graphique dans ce
+        // dashboard, voir renderDailyViewsChart/updatePieChart) : 5 axes = les 5 figures
+        // calculées côté serveur (lib/structure/derivees.js) pour un tirage.
+        function renderConcordanceRadarSVG(scores) {
+            const axes = [
+                { key: 'principale', label: 'Principale' },
+                { key: 'nucleaire', label: 'Nucléaire' },
+                { key: 'opposee', label: 'Opposée' },
+                { key: 'retournee', label: 'Retournée' },
+                { key: 'devenir', label: 'Devenir' }
+            ];
+            const size = 170, cx = size / 2, cy = size / 2, maxR = 58;
+            const angleStep = (2 * Math.PI) / axes.length;
+            const startAngle = -Math.PI / 2;
+            const pointAt = (i, r) => {
+                const angle = startAngle + i * angleStep;
+                return [cx + r * Math.cos(angle), cy + r * Math.sin(angle)];
+            };
+
+            const gridPolys = [0.25, 0.5, 0.75, 1].map(level => {
+                const pts = axes.map((_, i) => pointAt(i, maxR * level).join(',')).join(' ');
+                return `<polygon points="${pts}" fill="none" stroke="rgba(212,175,55,0.15)" stroke-width="1"/>`;
+            }).join('');
+
+            const axisLines = axes.map((_, i) => {
+                const [x, y] = pointAt(i, maxR);
+                return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="rgba(212,175,55,0.2)" stroke-width="1"/>`;
+            }).join('');
+
+            const labels = axes.map((a, i) => {
+                const [x, y] = pointAt(i, maxR + 18);
+                return `<text x="${x}" y="${y}" fill="rgba(245,231,161,0.6)" font-size="9" text-anchor="middle" dominant-baseline="middle">${a.label}</text>`;
+            }).join('');
+
+            const radiusFor = (val) => (typeof val === 'number' ? (Math.max(0, Math.min(100, val)) / 100) * maxR : 0);
+
+            const dataPts = axes.map((a, i) => pointAt(i, radiusFor(scores[a.key])).join(',')).join(' ');
+
+            const dots = axes.map((a, i) => {
+                const val = scores[a.key];
+                const [x, y] = pointAt(i, radiusFor(val));
+                const isNa = typeof val !== 'number';
+                return `<circle cx="${x}" cy="${y}" r="3" fill="${isNa ? 'rgba(245,231,161,0.25)' : '#2dd4bf'}"/>`;
+            }).join('');
+
+            return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}">
+                ${gridPolys}${axisLines}
+                <polygon points="${dataPts}" fill="rgba(45,212,191,0.25)" stroke="#2dd4bf" stroke-width="1.5"/>
+                ${dots}${labels}
+            </svg>`;
+        }
+
+        function concordanceFigRow(label, fig, score) {
+            if (!fig) return `<div class="flex items-center justify-between text-xs py-0.5"><span class="text-gold/30">${label}</span><span class="text-gold/20">n/a</span></div>`;
+            const scoreTxt = (typeof score === 'number') ? score + '%' : 'n/a';
+            return `<div class="flex items-center justify-between text-xs py-0.5"><span class="text-gold/50">${label}</span><span class="text-light-gold/70 text-right">n°${fig.numero} — ${scoreTxt}</span></div>`;
+        }
+
+        function renderConcordanceRow(t) {
+            const d = t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—';
+            const fmt = s => (s || '').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+            const header = `<div class="min-w-0">
+                <span class="text-gold/70 text-xs">${d}</span>${t.email ? `<span class="text-gold/40 text-xs"> · ${escapeHtmlFront(t.email)}</span>` : ''}
+                ${t.intention ? `<p class="text-light-gold/70 text-xs italic truncate mt-0.5">« ${escapeHtmlFront(t.intention)} »</p>` : ''}
+            </div>`;
+
+            if (!t.concordance) {
+                return `<div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+                    ${header}
+                    <button onclick="computeConcordance('${t.id}')" class="shrink-0 text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition whitespace-nowrap"><i class="fas fa-bolt mr-1"></i>Calculer</button>
+                </div>`;
+            }
+
+            const scores = t.concordance.concordance.scores;
+            const verdict = t.concordance.concordance.verdict;
+            const struct = t.concordance.structure;
+            const badgeColor = scores.global >= 70
+                ? 'text-teal-300 border-teal-400/40 bg-teal-400/10'
+                : (scores.global >= 40 ? 'text-amber-300 border-amber-400/40 bg-amber-400/10' : 'text-red-300 border-red-400/40 bg-red-400/10');
+
+            return `<div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-4">
+                <div class="flex items-center justify-between gap-2 mb-2">
+                    ${header}
+                    <div class="flex items-center gap-2 shrink-0">
+                        <span class="text-sm font-bold px-2.5 py-1 rounded-full border ${badgeColor}">${scores.global}%</span>
+                        <button onclick="computeConcordance('${t.id}')" title="Recalculer" class="text-gold/40 hover:text-gold text-xs px-1"><i class="fas fa-sync-alt"></i></button>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-4">
+                    <div class="shrink-0">${renderConcordanceRadarSVG(scores)}</div>
+                    <div class="flex-1 min-w-[180px]">
+                        ${concordanceFigRow('Principale', struct.principale, scores.principale)}
+                        ${concordanceFigRow('Nucléaire', struct.nucleaire, scores.nucleaire)}
+                        ${concordanceFigRow('Opposée', struct.opposee, scores.opposee)}
+                        ${concordanceFigRow('Retournée', struct.retournee, scores.retournee)}
+                        ${concordanceFigRow('Devenir', struct.devenir, scores.devenir)}
+                    </div>
+                </div>
+                <p class="text-light-gold/60 text-xs mt-3 leading-relaxed">${escapeHtmlFront(verdict)}</p>
+            </div>`;
+        }
+
+        async function loadConcordanceTirages() {
+            const container = document.getElementById('concordance-list');
+            if (!container) return;
+            container.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res = await adminFetch('/api/admin/data?section=concordance-tirages&limit=20');
+                const json = await res.json();
+                if (!res.ok || json.success === false) throw new Error(json.error || 'Erreur');
+                const rows = json.data || [];
+                if (!rows.length) {
+                    container.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucun tirage enregistré</p>';
+                    return;
+                }
+                container.innerHTML = rows.map(renderConcordanceRow).join('');
+            } catch (e) {
+                container.innerHTML = `<p class="text-red-400/70 text-center py-4">${e.message}</p>`;
+            }
+        }
+
+        async function computeConcordance(id) {
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'compute-concordance', id })
+                });
+                const json = await res.json();
+                if (!res.ok || json.success === false) { adminAlert(json.message || json.error || 'Erreur'); return; }
+                await loadConcordanceTirages();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
         }
 
         async function viewPayments(subscriptionId, email) {
