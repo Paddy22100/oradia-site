@@ -5023,7 +5023,7 @@ const PRODUIT_FACTS = [
   `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
   `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
   `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages).`,
-  `Offres de lancement précommande : STANDARD à 38€ (coffret complet), ÉDITION SIGNATURE à 42€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 48€ (coffret + dédicace + séance de guidance en visio de 30 min).`
+  `Offres de lancement précommande : STANDARD à 39,90€ (coffret complet), ÉDITION SIGNATURE à 43,90€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 49,90€ (coffret + dédicace + séance de guidance en visio de 30 min).`
 ].join('\n');
 
 function buildGeneratePrompt(body) {
