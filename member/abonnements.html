@@ -283,6 +283,10 @@
                             class="text-sm bg-gold/10 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/20 transition">
                             <i class="fas fa-credit-card mr-2"></i>Gérer mon moyen de paiement
                         </button>
+                        <button id="btn-cancel-sub" onclick="window.location.href='resiliation.html'"
+                            class="ml-0 sm:ml-3 mt-2 sm:mt-0 text-sm bg-transparent text-light-gold/70 border border-gold/20 rounded-lg px-4 py-2 hover:bg-gold/10 transition">
+                            <i class="fas fa-ban mr-2"></i>Résilier mon abonnement
+                        </button>
                         <p class="mt-2 text-light-gold/40 text-xs">Changer de carte bancaire (ex. avant fermeture d'un compte), consulter vos factures — via une page sécurisée Stripe.</p>
                     </div>
                 </div>
@@ -883,6 +887,8 @@
         }
 
         function updateToggleUI(active) {
+            const cancelBtn = document.getElementById('btn-cancel-sub');
+            if (cancelBtn) cancelBtn.style.display = active ? '' : 'none';
             const toggle = document.getElementById('autoRenewToggle');
             const knob = document.getElementById('autoRenewKnob');
             const status = document.getElementById('autoRenewStatus');
@@ -902,7 +908,7 @@
             if (autoRenewBusy) return;
             const current = localStorage.getItem('oradia_auto_renew') !== 'false';
             const newVal = !current;
-            if (!newVal && !confirm("Désactiver le renouvellement ? Votre abonnement s'arrêtera à la fin de la période en cours (aucun nouveau prélèvement), et vous gardez l'accès jusque-là.")) return;
+            if (!newVal && !window.__cancelConfirmed && !confirm("Désactiver le renouvellement ? Votre abonnement s'arrêtera à la fin de la période en cours (aucun nouveau prélèvement), et vous gardez l'accès jusque-là.")) return;
 
             // La résiliation est d'abord faite chez Stripe ; l'interrupteur ne change
             // qu'une fois Stripe confirmé (auparavant il basculait sans rien envoyer).
@@ -913,7 +919,7 @@
             try {
                 const res = await memberFetch('/api/auth/update-auto-renew', {
                     method: 'POST',
-                    body: JSON.stringify({ autoRenew: newVal })
+                    body: JSON.stringify({ autoRenew: newVal, lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr' })
                 });
                 data = await res.json().catch(() => null);
                 if (res.status === 401) { alert('Votre session a expiré : reconnectez-vous puis réessayez.'); window.location.href = 'login.html?returnTo=abonnements.html'; return; }

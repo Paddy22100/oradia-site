@@ -592,7 +592,7 @@
     'Mentions Légales': 'Legal Notice',
     'Politique de Confidentialité': 'Privacy Policy',
     "Aucun traqueur publicitaire — mesure d'audience 100 % interne, sans cookie tiers": 'No advertising trackers — 100% in-house audience measurement, no third-party cookies',
-    '© 2026 Oradia. Tous droits réservés.': '© 2026 Oradia. All rights reserved.',
+    '© 2026 ORADIA – Rudy Boucheron EI – Tous droits réservés': '© 2026 ORADIA – Rudy Boucheron EI – All rights reserved',
     '✓ Merci ! Vérifie ta boîte mail pour confirmer ton inscription.': '✓ Thank you! Check your inbox to confirm your subscription.',
     'Remonter en haut': 'Back to top'
   };

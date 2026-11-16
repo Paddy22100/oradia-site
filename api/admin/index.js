@@ -593,6 +593,9 @@ async function reconcileStripeSubscriptions(supabase) {
   catch (e) { out.errors.push('stripe init: ' + e.message); return out; }
 
   const REMINDER_DAYS = 3;
+  // Essai gratuit : rappel au moins 7 jours avant la fin (engagement des CGV, section Abonnement au Tore).
+  // Fenêtre de 8 jours : le contrôle étant quotidien, le mail part entre J-8 et J-7.
+  const TRIAL_REMINDER_DAYS = 8;
   const now = Date.now();
 
   // Parcours de tous les abonnements Stripe (client étendu pour récupérer l'email)
@@ -659,7 +662,7 @@ async function reconcileStripeSubscriptions(supabase) {
       // renewal_reminder_for n'existe pas encore (migration non lancée), on saute sans casser.
       if (mappedStatus === 'active' && !row.is_free && expiresAt && email && !sub.cancel_at_period_end) {
         const daysLeft = (expiresAt.getTime() - now) / 86400000;
-        if (daysLeft > 0 && daysLeft <= REMINDER_DAYS) {
+        if (daysLeft > 0 && daysLeft <= (st === 'trialing' ? TRIAL_REMINDER_DAYS : REMINDER_DAYS)) {
           try {
             const { data: rr } = await supabase.from('tore_subscriptions')
               .select('renewal_reminder_for').eq('id', row.id).single();
@@ -5020,7 +5023,7 @@ const PRODUIT_FACTS = [
   `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
   `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
   `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages).`,
-  `Offres de lancement précommande : STANDARD à 38€ (coffret complet), ÉDITION SIGNATURE à 42€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 48€ (coffret + dédicace + séance de guidance en visio de 30 min).`
+  `Offres de lancement précommande : STANDARD à 39,90€ (coffret complet), ÉDITION SIGNATURE à 43,90€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 49,90€ (coffret + dédicace + séance de guidance en visio de 30 min).`
 ].join('\n');
 
 function buildGeneratePrompt(body) {
