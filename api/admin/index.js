@@ -593,6 +593,9 @@ async function reconcileStripeSubscriptions(supabase) {
   catch (e) { out.errors.push('stripe init: ' + e.message); return out; }
 
   const REMINDER_DAYS = 3;
+  // Essai gratuit : rappel au moins 7 jours avant la fin (engagement des CGV, section Abonnement au Tore).
+  // Fenêtre de 8 jours : le contrôle étant quotidien, le mail part entre J-8 et J-7.
+  const TRIAL_REMINDER_DAYS = 8;
   const now = Date.now();
 
   // Parcours de tous les abonnements Stripe (client étendu pour récupérer l'email)
@@ -659,7 +662,7 @@ async function reconcileStripeSubscriptions(supabase) {
       // renewal_reminder_for n'existe pas encore (migration non lancée), on saute sans casser.
       if (mappedStatus === 'active' && !row.is_free && expiresAt && email && !sub.cancel_at_period_end) {
         const daysLeft = (expiresAt.getTime() - now) / 86400000;
-        if (daysLeft > 0 && daysLeft <= REMINDER_DAYS) {
+        if (daysLeft > 0 && daysLeft <= (st === 'trialing' ? TRIAL_REMINDER_DAYS : REMINDER_DAYS)) {
           try {
             const { data: rr } = await supabase.from('tore_subscriptions')
               .select('renewal_reminder_for').eq('id', row.id).single();

@@ -480,6 +480,7 @@
         if (window.OradiaWithdrawalConsent) {
             const consented = await window.OradiaWithdrawalConsent.confirm({ label: "L'abonnement Tore" });
             if (!consented) return;
+            window.OradiaWithdrawalConsent.log('tore-renunciation', email);
         }
 
         const origC = btnC.innerHTML;
