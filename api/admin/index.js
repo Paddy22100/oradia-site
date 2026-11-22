@@ -593,6 +593,9 @@ async function reconcileStripeSubscriptions(supabase) {
   catch (e) { out.errors.push('stripe init: ' + e.message); return out; }
 
   const REMINDER_DAYS = 3;
+  // Essai gratuit : rappel au moins 7 jours avant la fin (engagement des CGV, section Abonnement au Tore).
+  // Fenêtre de 8 jours : le contrôle étant quotidien, le mail part entre J-8 et J-7.
+  const TRIAL_REMINDER_DAYS = 8;
   const now = Date.now();
 
   // Parcours de tous les abonnements Stripe (client étendu pour récupérer l'email)
@@ -659,7 +662,7 @@ async function reconcileStripeSubscriptions(supabase) {
       // renewal_reminder_for n'existe pas encore (migration non lancée), on saute sans casser.
       if (mappedStatus === 'active' && !row.is_free && expiresAt && email && !sub.cancel_at_period_end) {
         const daysLeft = (expiresAt.getTime() - now) / 86400000;
-        if (daysLeft > 0 && daysLeft <= REMINDER_DAYS) {
+        if (daysLeft > 0 && daysLeft <= (st === 'trialing' ? TRIAL_REMINDER_DAYS : REMINDER_DAYS)) {
           try {
             const { data: rr } = await supabase.from('tore_subscriptions')
               .select('renewal_reminder_for').eq('id', row.id).single();
@@ -2006,7 +2009,7 @@ async function handleData(req, res) {
       // section tab-etude) — voir lib/structure/concordance-tirage.js. Normalement calculée
       // automatiquement après chaque tirage (api/tirages/send-email.js) ; ce bouton sert au
       // calcul initial sur les tirages antérieurs à cette fonctionnalité, et au recalcul.
-      if (action === 'compute-concordance') {
+      if ((body.action || req.query?.action) === 'compute-concordance') {
         const concordanceId = body.id || req.query?.id;
         if (!concordanceId) return res.status(400).json({ error: 'id requis' });
 
@@ -3769,7 +3772,48 @@ async function handleData(req, res) {
         computed_at: r.concordance_computed_at
       }));
 
-      return res.status(200).json({ success: true, data });
+      // Statistiques globales sur TOUS les tirages dont la concordance est calculée (pas
+      // seulement les 20 affichés) : médiane (robuste aux calculs aberrants) et moyenne.
+      let stats = null;
+      try {
+        const { data: allRows } = await supabase
+          .from('tirages')
+          .select('created_at, concordance_yiking')
+          .not('concordance_yiking', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(5000);
+        const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+        const mean = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+        const r1 = (v) => v == null ? null : Math.round(v * 10) / 10;
+        const AXES = ['principale', 'nucleaire', 'opposee', 'retournee', 'devenir'];
+        const globals = [];
+        const perAxis = Object.fromEntries(AXES.map(a => [a, []]));
+        const now = Date.now();
+        const last30 = [];
+        for (const r of (allRows || [])) {
+          const sc = r.concordance_yiking?.concordance?.scores;
+          if (!sc || typeof sc.global !== 'number') continue;
+          globals.push(sc.global);
+          if (r.created_at && now - new Date(r.created_at).getTime() <= 30 * 86400000) last30.push(sc.global);
+          AXES.forEach(a => { if (typeof sc[a] === 'number') perAxis[a].push(sc[a]); });
+        }
+        if (globals.length) {
+          stats = {
+            count: globals.length,
+            median: r1(median(globals)),
+            mean: r1(mean(globals)),
+            min: Math.min(...globals),
+            max: Math.max(...globals),
+            low: globals.filter(v => v < 40).length,
+            mid: globals.filter(v => v >= 40 && v < 70).length,
+            high: globals.filter(v => v >= 70).length,
+            last30: { count: last30.length, median: r1(median(last30)), mean: r1(mean(last30)) },
+            axes: Object.fromEntries(AXES.map(a => [a, { mean: r1(mean(perAxis[a])), count: perAxis[a].length }]))
+          };
+        }
+      } catch (e) { console.warn('[concordance-stats]', e.message); }
+
+      return res.status(200).json({ success: true, data, stats });
     }
 
     // ── Section subscription-payments (historique des paiements Stripe d'un abonné, pour modal admin) ──
@@ -5020,7 +5064,7 @@ const PRODUIT_FACTS = [
   `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
   `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
   `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages).`,
-  `Offres de lancement précommande : STANDARD à 38€ (coffret complet), ÉDITION SIGNATURE à 42€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 48€ (coffret + dédicace + séance de guidance en visio de 30 min).`
+  `Offres de lancement précommande : STANDARD à 39,90€ (coffret complet), ÉDITION SIGNATURE à 43,90€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 49,90€ (coffret + dédicace + séance de guidance en visio de 30 min).`
 ].join('\n');
 
 function buildGeneratePrompt(body) {

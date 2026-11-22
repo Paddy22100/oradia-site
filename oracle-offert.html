@@ -375,7 +375,7 @@
             // Renonciation expresse au droit de rétractation (contenu numérique à exécution
             // immédiate), comme pour les autres abonnements Tore.
             if (window.OradiaWithdrawalConsent) {
-                var ok = await window.OradiaWithdrawalConsent.confirm({ label: "L'abonnement au Tore (mois d'essai offert)" });
+                var ok = await window.OradiaWithdrawalConsent.confirm({ label: "L'abonnement au Tore (mois d'essai offert)", trial: true });
                 if (!ok) return;
             }
             btn.disabled = true; btn.textContent = 'Redirection vers le paiement sécurisé…';

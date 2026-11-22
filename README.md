@@ -190,7 +190,7 @@ vercel --prod
 
 ## 📄 Licence
 
-© 2026 ORADIA - Tous droits réservés
+© 2026 ORADIA – Rudy Boucheron EI – Tous droits réservés
 
 ---
 

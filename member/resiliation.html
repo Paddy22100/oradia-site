@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <script src="/js/member-api.js"></script>
+    <script src="/js/member-i18n.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex">
+    <title>Résilier mon abonnement - ORADIA</title>
+    <style>
+        body { margin:0; background:#040d1c; color:#e5e7eb; font-family:Georgia,serif; }
+        .wrap { max-width:520px; margin:0 auto; padding:48px 20px; }
+        .card { background:#0a1628; border:1px solid rgba(212,175,55,0.3); border-radius:16px; padding:28px 24px; }
+        h1 { color:#d4af37; font-size:1.4rem; margin:0 0 16px; font-weight:600; }
+        ul { padding-left:18px; line-height:1.8; font-size:0.95rem; margin:0 0 22px; }
+        .row { display:flex; gap:10px; flex-wrap:wrap; }
+        .btn { flex:1; min-width:160px; padding:12px; border-radius:9999px; font-family:inherit; font-size:0.9rem; cursor:pointer; text-align:center; text-decoration:none; }
+        .btn-ghost { border:1px solid rgba(212,175,55,0.3); background:transparent; color:rgba(212,175,55,0.8); }
+        .btn-gold { border:none; background:linear-gradient(to right,#d4af37,#f0c75e); color:#0a1628; font-weight:700; }
+        #msg { margin-top:16px; font-size:0.9rem; line-height:1.6; }
+    </style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+    <h1>Résilier mon abonnement</h1>
+    <div id="recap">
+        <p style="margin:0 0 8px;"><strong>Récapitulatif</strong></p>
+        <ul>
+            <li>Abonnement : Le Tore (8 €/mois)</li>
+            <li>Aucun nouveau prélèvement ne sera effectué.</li>
+            <li>Vous conservez votre accès jusqu'à la fin de la période en cours (ou de l'essai en cours).</li>
+            <li>Un e-mail de confirmation vous sera envoyé.</li>
+        </ul>
+        <div class="row">
+            <a class="btn btn-ghost" href="abonnements.html">Retour</a>
+            <button class="btn btn-gold" id="confirm" type="button">Confirmer la résiliation</button>
+        </div>
+    </div>
+    <p id="msg" role="status"></p>
+</div></div>
+<script>
+(function () {
+    var KEY = 'oradia_member_session';
+    function sess() {
+        var st = sessionStorage.getItem(KEY) ? sessionStorage : localStorage;
+        try { return { st: st, s: JSON.parse(st.getItem(KEY) || '{}') }; } catch (e) { return { st: st, s: {} }; }
+    }
+    async function call(token) {
+        return fetch('/api/auth/update-auto-renew', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+            body: JSON.stringify({ autoRenew: false, lang: window.ORADIA_LANG === 'en' ? 'en' : 'fr' })
+        });
+    }
+    var btn = document.getElementById('confirm'), msg = document.getElementById('msg');
+    if (!sess().s.access_token) { window.location.href = 'login.html?returnTo=resiliation.html'; return; }
+    btn.addEventListener('click', async function () {
+        btn.disabled = true; btn.style.opacity = '0.6'; msg.textContent = '';
+        try {
+            var c = sess(), res = await call(c.s.access_token);
+            if (res.status === 401 && c.s.refresh_token) {
+                var r = await fetch('/api/auth/refresh-session', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ refresh_token: c.s.refresh_token }) });
+                var d = await r.json();
+                if (d.success && d.session) {
+                    c.s.access_token = d.session.access_token; c.s.refresh_token = d.session.refresh_token;
+                    c.st.setItem(KEY, JSON.stringify(c.s));
+                    res = await call(c.s.access_token);
+                }
+            }
+            var data = await res.json().catch(function () { return null; });
+            if (res.status === 401) { window.location.href = 'login.html?returnTo=resiliation.html'; return; }
+            if (!res.ok || !data || !data.success) throw new Error((data && data.error) || ('Erreur ' + res.status));
+            try { localStorage.setItem('oradia_auto_renew', 'false'); } catch (e) {}
+            var end = data.periodEnd ? new Date(data.periodEnd).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
+            document.getElementById('recap').style.display = 'none';
+            msg.style.color = '#f5e7a1';
+            msg.innerHTML = 'Votre résiliation est confirmée.' + (end ? ' Vous gardez votre accès jusqu\'au ' + end + '.' : '') + ' Un e-mail de confirmation vous a été envoyé.<br><br><a href="abonnements.html" style="color:#d4af37;">Retour à mes abonnements</a>';
+        } catch (e) {
+            btn.disabled = false; btn.style.opacity = '';
+            msg.style.color = '#fca5a5';
+            msg.textContent = 'La résiliation n\'a pas pu être enregistrée : ' + e.message + '. Réessayez, ou écrivez à contact@oradia.fr.';
+        }
+    });
+})();
+</script>
+</body>
+</html>

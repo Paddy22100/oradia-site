@@ -149,7 +149,7 @@ class FooterManager {
       placeholder.innerHTML = `
         <footer class="py-8 px-4 bg-night-blue border-t border-gold/20">
           <div class="container mx-auto max-w-6xl text-center">
-            <p class="text-light-gold/70 text-sm">&copy; 2026 Oradia. Tous droits réservés.</p>
+            <p class="text-light-gold/70 text-sm">&copy; 2026 ORADIA – Rudy Boucheron EI – Tous droits réservés</p>
           </div>
         </footer>
       `;

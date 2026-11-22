@@ -186,8 +186,10 @@
   <script>
     async function selectCalEvent(slug) {
       if (window.OradiaWithdrawalConsent) {
-        const consented = await window.OradiaWithdrawalConsent.confirm({ label: 'Cette séance de guidance' });
+        const consented = await window.OradiaWithdrawalConsent.confirm({ label: 'Cette séance de guidance', kind: 'guidance' });
         if (!consented) return;
+        window.__guidanceConsentAt = new Date().toISOString();
+        window.OradiaWithdrawalConsent.log('guidance', '', { slug: slug, accepted_at: window.__guidanceConsentAt });
       }
       const el = document.getElementById('cal-booking-placeholder');
       const section = document.getElementById('cal-section');
@@ -239,6 +241,17 @@
     })(window, "https://app.cal.com/embed/embed.js", "init");
 
     Cal("init", { origin: "https://cal.com" });
+    // Une fois la réservation confirmée, on rattache l'acceptation à l'e-mail du client.
+    Cal("on", { action: "bookingSuccessful", callback: function (e) {
+      try {
+        var d = (e && e.detail && e.detail.data) || {};
+        var b = d.booking || {};
+        var mail = (b.attendees && b.attendees[0] && b.attendees[0].email) || (b.responses && b.responses.email) || '';
+        if (window.OradiaWithdrawalConsent && window.__guidanceConsentAt) {
+          window.OradiaWithdrawalConsent.log('guidance', mail, { accepted_at: window.__guidanceConsentAt, booking_confirmed: true });
+        }
+      } catch (_) {}
+    } });
     Cal("ui", {
       theme: "dark",
       styles: { branding: { brandColor: "#d4af37" } },

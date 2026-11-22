@@ -3607,6 +3607,8 @@
                 <button onclick="loadConcordanceTirages()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
             </div>
 
+            <div id="concordance-summary" class="stat-card rounded-2xl p-6 mb-6 hidden"></div>
+
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <h4 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-circle-info text-gold/60"></i> Comment lire ce score</h4>
                 <ul class="text-gold/70 text-sm leading-relaxed space-y-1 list-disc pl-5">
@@ -14014,6 +14016,46 @@
             </div>`;
         }
 
+        // Résumé global : médiane en vedette (insensible aux calculs aberrants), moyenne à côté,
+        // répartition par niveau et moyenne de chaque axe (le plus faible = où le texte s'écarte le plus du Yi King).
+        function renderConcordanceSummary(stats) {
+            const box = document.getElementById('concordance-summary');
+            if (!box) return;
+            if (!stats) { box.classList.add('hidden'); return; }
+            const color = v => v >= 70 ? '#5eead4' : (v >= 40 ? '#fcd34d' : '#fca5a5');
+            const pct = n => stats.count ? Math.round((n / stats.count) * 100) : 0;
+            const AX = [['principale', 'Principale'], ['nucleaire', 'Nucléaire'], ['opposee', 'Opposée'], ['retournee', 'Retournée'], ['devenir', 'Devenir']];
+            const axisBars = AX.map(([k, label]) => {
+                const a = stats.axes[k] || {};
+                if (a.mean == null) return '<div class="flex items-center gap-2 text-xs"><span class="w-20 text-gold/40">' + label + '</span><span class="text-gold/30">n/a</span></div>';
+                return '<div class="flex items-center gap-2 text-xs"><span class="w-20 text-gold/60">' + label + '</span>' +
+                    '<div class="flex-1 h-2 rounded-full bg-white/5 overflow-hidden"><div style="width:' + a.mean + '%;background:' + color(a.mean) + ';" class="h-2 rounded-full"></div></div>' +
+                    '<span class="w-10 text-right text-light-gold/70">' + Math.round(a.mean) + '%</span></div>';
+            }).join('');
+            const l30 = stats.last30 && stats.last30.count ? 'Sur 30 jours : médiane ' + Math.round(stats.last30.median) + '% (' + stats.last30.count + ' tirages)' : 'Aucun tirage calculé sur 30 jours';
+            box.innerHTML =
+                '<h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-pie text-gold/60"></i> Concordance globale</h4>' +
+                '<div class="grid gap-6 md:grid-cols-3 items-center">' +
+                    '<div class="text-center">' +
+                        '<div class="text-5xl font-bold" style="color:' + color(stats.median) + ';">' + Math.round(stats.median) + '%</div>' +
+                        '<div class="text-gold/60 text-xs mt-1">médiane sur ' + stats.count + ' tirages</div>' +
+                        '<div class="text-light-gold/60 text-xs mt-2">moyenne ' + Math.round(stats.mean) + '% · min ' + stats.min + '% · max ' + stats.max + '%</div>' +
+                        '<div class="text-gold/40 text-xs mt-1">' + l30 + '</div>' +
+                    '</div>' +
+                    '<div>' +
+                        '<div class="flex h-3 rounded-full overflow-hidden mb-2"><div style="width:' + pct(stats.high) + '%;background:#5eead4;"></div><div style="width:' + pct(stats.mid) + '%;background:#fcd34d;"></div><div style="width:' + pct(stats.low) + '%;background:#fca5a5;"></div></div>' +
+                        '<div class="text-xs text-light-gold/70 space-y-0.5">' +
+                            '<div><span style="color:#5eead4;">●</span> Forte (≥ 70%) : ' + stats.high + ' (' + pct(stats.high) + '%)</div>' +
+                            '<div><span style="color:#fcd34d;">●</span> Moyenne (40 à 69%) : ' + stats.mid + ' (' + pct(stats.mid) + '%)</div>' +
+                            '<div><span style="color:#fca5a5;">●</span> Faible (&lt; 40%) : ' + stats.low + ' (' + pct(stats.low) + '%)</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="space-y-1.5">' + axisBars + '</div>' +
+                '</div>' +
+                '<p class="text-gold/40 text-xs mt-4">Médiane en vedette : un calcul aberrant ne la fait pas bouger. Si médiane et moyenne s\'écartent nettement, quelques tirages tirent le score vers le bas ou le haut.</p>';
+            box.classList.remove('hidden');
+        }
+
         async function loadConcordanceTirages() {
             const container = document.getElementById('concordance-list');
             if (!container) return;
@@ -14023,6 +14065,7 @@
                 const json = await res.json();
                 if (!res.ok || json.success === false) throw new Error(json.error || 'Erreur');
                 const rows = json.data || [];
+                renderConcordanceSummary(json.stats || null);
                 if (!rows.length) {
                     container.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucun tirage enregistré</p>';
                     return;
@@ -16470,7 +16513,7 @@
         const NL_BANNER_PRESETS = {
             precommande: {
                 title: 'Pré-commandez l\'Oracle Oradia',
-                desc: 'Livraison estimée mi-février 2027 · Édition limitée · à partir de 38 €',
+                desc: 'Livraison estimée mi-février 2027 · Édition limitée · à partir de 39,90 €',
                 cta_text: 'Je pré-commande',
                 cta_url: 'https://oradia.fr/precommande-oracle',
                 image: 'https://oradia.fr/images/medias/banniere-facebook.webp'

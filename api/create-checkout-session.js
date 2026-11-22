@@ -97,6 +97,32 @@ module.exports = async (req, res) => {
         // Stripe côté abonnement.
         // Authentifié par le jeton de session membre : auparavant, n'importe qui
         // connaissant l'email d'un abonné pouvait ouvrir son portail de facturation.
+        // ── Trace d'une acceptation juridique (CGV + renonciation / exécution immédiate),
+        // horodatée, avec e-mail, IP et version des CGV. Ajoutée ici (limite de 12 fonctions).
+        // Jamais bloquante : toujours { success: true }, même si l'écriture échoue.
+        if (req.body.type === 'legal-consent') {
+            try {
+                const { getClientIP, hitRateLimit } = require('../lib/rate-limit.js');
+                const ip = getClientIP(req);
+                const rl = await hitRateLimit(supabase, { bucket: 'legal-consent', key: ip, windowSeconds: 3600, max: 30 });
+                const kind = ['guidance', 'tore-renunciation'].includes(req.body.kind) ? req.body.kind : null;
+                if (rl.allowed && kind) {
+                    const email = String(req.body.email || '').trim().toLowerCase().slice(0, 254);
+                    await supabase.from('legal_acceptances').insert({
+                        kind,
+                        email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? email : null,
+                        cgv_version: '2026-11-16',
+                        ip,
+                        user_agent: String(req.headers['user-agent'] || '').slice(0, 300),
+                        extra: (req.body.extra && typeof req.body.extra === 'object') ? JSON.parse(JSON.stringify(req.body.extra).slice(0, 1000) || '{}') : {}
+                    });
+                }
+            } catch (e) {
+                console.warn('[legal-consent] écriture échouée:', e.message);
+            }
+            return res.json({ success: true });
+        }
+
         if (req.body.type === 'billing-portal') {
             const { getMemberFromRequest, getStripeRow, getPortalConfigurationId } = require('../lib/member-subscription.js');
             const member = await getMemberFromRequest(supabase, req);
@@ -201,8 +227,8 @@ module.exports = async (req, res) => {
                 success_url: `${frontendUrl}${langPrefix}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url:  `${frontendUrl}${langPrefix}/tore.html?cancelled=1`,
                 // lang : langue de l'email de bienvenue envoyé par le webhook (stripe-webhook.js).
-                metadata: { offer: 'tore-subscription', plan, email, full_name: fullName, lang },
-                subscription_data: { metadata: { email, full_name: fullName, plan, lang } }
+                metadata: { offer: 'tore-subscription', plan, email, full_name: fullName, lang, cgv_version: '2026-11-16', renunciation_accepted_at: new Date().toISOString() },
+                subscription_data: { metadata: { email, full_name: fullName, plan, lang, cgv_version: '2026-11-16', renunciation_accepted_at: new Date().toISOString() } }
             };
             if (promoCode) {
                 sessionParams.discounts = [{ promotion_code: promoCode }];

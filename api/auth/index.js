@@ -668,6 +668,13 @@ async function handleUpdateAutoRenew(req, res) {
     return res.end(JSON.stringify({ success: false, error: result.error }));
   }
   console.log('[auto-renew]', member.email, '→', result.autoRenew ? 'renouvellement actif' : 'résiliation en fin de période');
+  // Résiliation : e-mail de confirmation (obligation de résiliation en ligne). Jamais bloquant.
+  if (!result.autoRenew) {
+    try {
+      const { sendCancellationConfirmationEmail } = require('../../lib/tore-subscription-email.js');
+      await sendCancellationConfirmationEmail(member.email, result.periodEnd ? new Date(result.periodEnd) : null, { lang: body.lang === 'en' ? 'en' : 'fr' });
+    } catch (e) { console.warn('[auto-renew] e-mail de confirmation non envoyé:', e.message); }
+  }
   res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
   return res.end(JSON.stringify({ success: true, ...result }));
 }
