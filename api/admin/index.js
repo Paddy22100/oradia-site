@@ -3772,7 +3772,48 @@ async function handleData(req, res) {
         computed_at: r.concordance_computed_at
       }));
 
-      return res.status(200).json({ success: true, data });
+      // Statistiques globales sur TOUS les tirages dont la concordance est calculée (pas
+      // seulement les 20 affichés) : médiane (robuste aux calculs aberrants) et moyenne.
+      let stats = null;
+      try {
+        const { data: allRows } = await supabase
+          .from('tirages')
+          .select('created_at, concordance_yiking')
+          .not('concordance_yiking', 'is', null)
+          .order('created_at', { ascending: false })
+          .limit(5000);
+        const median = (a) => { if (!a.length) return null; const s = [...a].sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+        const mean = (a) => a.length ? a.reduce((x, y) => x + y, 0) / a.length : null;
+        const r1 = (v) => v == null ? null : Math.round(v * 10) / 10;
+        const AXES = ['principale', 'nucleaire', 'opposee', 'retournee', 'devenir'];
+        const globals = [];
+        const perAxis = Object.fromEntries(AXES.map(a => [a, []]));
+        const now = Date.now();
+        const last30 = [];
+        for (const r of (allRows || [])) {
+          const sc = r.concordance_yiking?.concordance?.scores;
+          if (!sc || typeof sc.global !== 'number') continue;
+          globals.push(sc.global);
+          if (r.created_at && now - new Date(r.created_at).getTime() <= 30 * 86400000) last30.push(sc.global);
+          AXES.forEach(a => { if (typeof sc[a] === 'number') perAxis[a].push(sc[a]); });
+        }
+        if (globals.length) {
+          stats = {
+            count: globals.length,
+            median: r1(median(globals)),
+            mean: r1(mean(globals)),
+            min: Math.min(...globals),
+            max: Math.max(...globals),
+            low: globals.filter(v => v < 40).length,
+            mid: globals.filter(v => v >= 40 && v < 70).length,
+            high: globals.filter(v => v >= 70).length,
+            last30: { count: last30.length, median: r1(median(last30)), mean: r1(mean(last30)) },
+            axes: Object.fromEntries(AXES.map(a => [a, { mean: r1(mean(perAxis[a])), count: perAxis[a].length }]))
+          };
+        }
+      } catch (e) { console.warn('[concordance-stats]', e.message); }
+
+      return res.status(200).json({ success: true, data, stats });
     }
 
     // ── Section subscription-payments (historique des paiements Stripe d'un abonné, pour modal admin) ──
