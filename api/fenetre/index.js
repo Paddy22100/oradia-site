@@ -77,7 +77,7 @@ async function handleActivation(req, res) {
     return res.status(400).json({ success: false, message: 'Invalid JSON' });
   }
 
-  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource, synthese, lang } = body;
+  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource, synthese, lang, sessionId } = body;
 
   if (!email || !durationDays) {
     return res.status(400).json({ success: false, message: 'email et durationDays requis' });
@@ -102,6 +102,10 @@ async function handleActivation(req, res) {
       qrng_source: normalizedQrngSource,
       synthese: synthese || null,
       lang: lang === 'en' ? 'en' : 'fr', // langue de l'email de clôture et du questionnaire
+      // Identifiant de session générique (js/page-tracker.js), transmis tel quel si présent —
+      // relie cette fenêtre à sa session de l'étude rétrocausalité (lib/retro-stats.js),
+      // jamais utilisé comme identité (pas de PII dedans).
+      session_id: (typeof sessionId === 'string' && sessionId.trim()) ? sessionId.trim().slice(0, 100) : null,
       // response_token généré automatiquement par la DB (DEFAULT gen_random_uuid())
     })
     .select('id')

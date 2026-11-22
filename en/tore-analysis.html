@@ -1869,6 +1869,11 @@
                         // Seuls les tirages quantiques purs comptent pour l'étude scientifique.
                         qrngSource: sessionStorage.getItem('tore_qrng_source') || 'unknown',
                         lang: 'en', // email de clôture + questionnaire en anglais
+                        // Même identifiant que /api/admin/experiment-record (js/page-tracker.js) :
+                        // permet de relier, après coup, la résonance subjective déclarée dans le
+                        // questionnaire de clôture à la session de l'étude rétrocausalité
+                        // (segmentation exploratoire, voir lib/retro-stats.js).
+                        sessionId: sessionStorage.getItem('oradia_session_id') || null,
                     }),
                 });
 

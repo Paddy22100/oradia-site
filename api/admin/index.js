@@ -9790,33 +9790,11 @@ Réponds en français, sans tiret long, format markdown compact.`
       verifyAdminAuth(req);
       if (req.method !== 'GET') return res.status(405).end();
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-      // p-value bilatérale depuis un z : erfc(|z|/√2), approx. Abramowitz & Stegun 7.1.26
-      const twoSidedP = (z) => {
-        const x = Math.abs(z) / Math.SQRT2;
-        const t = 1 / (1 + 0.3275911 * x);
-        const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
-        return Math.max(0, Math.min(1, 1 - erf));
-      };
-      // Statistiques d'un "bras" : correspondance present_bit vs (past_bit|future_bit)
-      const arm = (rows, key) => {
-        const valid = rows.filter(r => r.present_bit != null && r[key] != null);
-        const n = valid.length;
-        if (n === 0) return { n: 0, matches: 0, rate: null, baseline: null, deviation: null, z: null, p: null, significant: false };
-        let matches = 0, sumP = 0, sumO = 0;
-        for (const r of valid) { if (r.present_bit === r[key]) matches++; sumP += r.present_bit; sumO += r[key]; }
-        const pPresent = sumP / n, pOther = sumO / n;
-        const baseline = pPresent * pOther + (1 - pPresent) * (1 - pOther); // match attendu sous indépendance
-        const rate = matches / n;
-        const se = Math.sqrt(baseline * (1 - baseline) / n) || 0;
-        const z = se > 0 ? (rate - baseline) / se : 0;
-        const p = twoSidedP(z);
-        return { n, matches, rate, baseline, deviation: rate - baseline, z, p, significant: p < 0.05 };
-      };
+      const { arm, concurrencyLabels, resonanceLabels, statsByLabel } = require('../../lib/retro-stats.js');
 
       try {
         const [sessRes, preRes, poolRes, poolOldestRes, poolNewestRes, lastCronRes, recentSessRes] = await Promise.all([
-          sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').in('qrng_source', QUANTUM_SOURCES).limit(200000),
+          sb.from('retro_sessions').select('id,session_id,intention_at,present_bit,past_bit,future_bit').eq('status', 'complete').in('qrng_source', QUANTUM_SOURCES).limit(200000),
           sb.from('retro_preregistration').select('*').order('registered_at', { ascending: true }).limit(1),
           sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null),
           sb.from('retro_pool').select('committed_at').is('consumed_at', null).order('committed_at', { ascending: true }).limit(1),
@@ -9826,6 +9804,45 @@ Réponds en français, sans tiret long, format markdown compact.`
         ]);
         if (sessRes.error) throw sessRes.error;
         const rows = sessRes.data || [];
+
+        // ── Segmentations exploratoires (résonance subjective, concurrence de tirages) ──
+        // Voir supabase-migration-retro-segments.sql : hypothèses enregistrées séparément
+        // de retro_preregistration (jamais modifiée), car ajoutées après le début de la
+        // collecte — jamais à présenter avec la même confiance que H1/H2 tant que non
+        // répliquées sur des données postérieures à leur enregistrement. Isolé dans son
+        // propre try/catch : une table manquante (migration pas encore appliquée) ne doit
+        // jamais faire échouer les chiffres principaux passé/futur ci-dessus.
+        let segments = null;
+        try {
+          const CONCURRENCY_WINDOW_MIN = 10;
+          const [owRes, synRes, exploRes] = await Promise.all([
+            sb.from('observation_windows').select('id,session_id').not('session_id', 'is', null).limit(20000),
+            sb.from('synchronicity_responses').select('observation_window_id,resonance_tirage').limit(20000),
+            sb.from('retro_exploratory_hypotheses').select('label,registered_at')
+          ]);
+          if (owRes.error) throw owRes.error;
+          if (synRes.error) throw synRes.error;
+
+          const resonanceLabelById = resonanceLabels(rows, owRes.data, synRes.data);
+          const concurrencyLabelById = concurrencyLabels(rows, CONCURRENCY_WINDOW_MIN);
+
+          const exploByLabel = {};
+          for (const e of (exploRes.data || [])) exploByLabel[e.label] = e.registered_at;
+
+          segments = {
+            concurrency_window_minutes: CONCURRENCY_WINDOW_MIN,
+            resonance: {
+              registered_at: exploByLabel.resonance_subjective || null,
+              ...statsByLabel(rows, resonanceLabelById, ['forte', 'faible'])
+            },
+            concurrence: {
+              registered_at: exploByLabel.concurrence_tirages || null,
+              ...statsByLabel(rows, concurrencyLabelById, ['solo', 'accompagne'])
+            }
+          };
+        } catch (segErr) {
+          console.error('[experiment-stats] segments exploratoires indisponibles:', segErr.message);
+        }
         const pre = (preRes.data && preRes.data[0]) || null;
         const targetN = (pre && pre.target_n) || parseInt(process.env.RETRO_TARGET_N || '10000', 10);
 
@@ -9868,14 +9885,15 @@ Réponds en français, sans tiret long, format markdown compact.`
           },
           pool_available: poolRes.count || 0,
           past: arm(rows, 'past_bit'),
-          future: arm(rows, 'future_bit')
+          future: arm(rows, 'future_bit'),
+          segments
         });
       } catch (e) {
         return res.status(200).json({
           success: false,
           error: "Tables de l'étude introuvables — exécute supabase-migration-retrocausalite.sql.",
           n_total: 0, target_n: parseInt(process.env.RETRO_TARGET_N || '10000', 10), progress_pct: 0,
-          pool_available: 0, past: { n: 0 }, future: { n: 0 }
+          pool_available: 0, past: { n: 0 }, future: { n: 0 }, segments: null
         });
       }
     }
