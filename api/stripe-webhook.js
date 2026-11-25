@@ -423,7 +423,12 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         } catch (e) { console.error('[webhook] Brevo add to list 5:', e.message); }
     }
 
-    await supabase.from('newsletter_contacts').upsert({
+    // Le query-builder Supabase n'expose que .then() (pas .catch()) : un .catch() chaîné
+    // directement dessus plante avec "catch is not a function" avant même d'atteindre
+    // l'await — ce qui interrompait toute la fonction ici et empêchait l'envoi de l'email
+    // de bienvenue juste en dessous. Toujours await + déstructurer { error } comme partout
+    // ailleurs dans ce fichier (ex. l'insert `transactions` un peu plus haut).
+    const { error: nlContactErr } = await supabase.from('newsletter_contacts').upsert({
         email,
         full_name: fullName || '',
         source:   'abonnement-tore',
@@ -431,9 +436,8 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         status:   'active',
         brevo_synced: brevoContactSynced,
         ...(brevoContactSynced ? { brevo_synced_at: new Date().toISOString() } : {})
-    }, { onConflict: 'email', ignoreDuplicates: false }).catch(e =>
-        console.error('[webhook] newsletter_contacts upsert:', e.message)
-    );
+    }, { onConflict: 'email', ignoreDuplicates: false });
+    if (nlContactErr) console.error('[webhook] newsletter_contacts upsert:', nlContactErr.message);
 
     await sendToreSubscriptionEmail({
         toEmail:  email,
