@@ -1677,6 +1677,7 @@ async function handleData(req, res) {
             let poolSource = null;
 
             // Source 1 : Outshift QRNG (Cisco) — priorité (quota bien plus généreux que le plan gratuit ANU)
+            let outshiftOutcome = process.env.OUTSHIFT_QRNG_API_KEY ? null : 'outshift_missing_api_key';
             if (process.env.OUTSHIFT_QRNG_API_KEY) {
               try {
                 const r = await fetch('https://api.qrng.outshift.com/api/v1/random_numbers', {
@@ -1685,7 +1686,7 @@ async function handleData(req, res) {
                   body: JSON.stringify({ encoding: 'raw', format: 'decimal', bits_per_block: 8, number_of_blocks: OUTSHIFT_BATCH }),
                   signal: AbortSignal.timeout(8000)
                 });
-                out.source = `outshift_${r.status}`;
+                outshiftOutcome = `outshift_${r.status}`;
                 if (r.ok) {
                   const d = await r.json();
                   const raw = d?.random_numbers ?? d?.data ?? d?.numbers ?? d?.blocks;
@@ -1693,23 +1694,36 @@ async function handleData(req, res) {
                     ? raw.map(v => (typeof v === 'object' && v !== null ? Number(v.decimal ?? v.value) : Number(v)))
                     : null;
                   if (parsed && parsed.length && !parsed.some(Number.isNaN)) { numbers = parsed; poolSource = 'outshift'; }
+                  else outshiftOutcome = 'outshift_invalid_payload';
                 }
-              } catch (e) { out.source = 'outshift_' + (e.name === 'TimeoutError' ? 'timeout' : e.message); }
+              } catch (e) { outshiftOutcome = 'outshift_' + (e.name === 'TimeoutError' ? 'timeout' : e.message); }
             }
 
-            // Source 2 : ANU, tentée si Outshift a échoué (ou n'est pas configuré)
+            // Source 2 : ANU, tentée si Outshift a échoué (ou n'est pas configuré). Le résultat
+            // d'Outshift (outshiftOutcome) est conservé même si ANU est tenté ensuite : avant,
+            // `out.source` était écrasé par le résultat d'ANU, rendant impossible de savoir
+            // lequel des deux fournisseurs avait réellement échoué (vu en prod les 25-28/11/2026,
+            // où system_logs ne montrait qu'un "429" nu sans dire si c'était Outshift ou ANU).
+            let anuOutcome = null;
             if (!numbers) {
-              try {
-                if (process.env.ANU_QRNG_API_KEY) {
+              if (process.env.ANU_QRNG_API_KEY) {
+                try {
                   const r = await fetch(`https://api.quantumnumbers.anu.edu.au?length=${targetCount}&type=uint8`, {
                     headers: { 'x-api-key': process.env.ANU_QRNG_API_KEY, 'Content-Type': 'application/json' },
                     signal: AbortSignal.timeout(8000)
                   });
-                  out.source = r.status;
-                  if (r.ok) { const d = await r.json(); if (Array.isArray(d.data)) { numbers = d.data; poolSource = 'anu'; } }
-                } else { out.source = 'missing_api_key'; }
-              } catch (e) { out.source = e.name === 'TimeoutError' ? 'timeout' : e.message; }
+                  anuOutcome = `anu_${r.status}`;
+                  if (r.ok) {
+                    const d = await r.json();
+                    if (Array.isArray(d.data)) { numbers = d.data; poolSource = 'anu'; }
+                    else anuOutcome = 'anu_invalid_payload';
+                  }
+                } catch (e) { anuOutcome = 'anu_' + (e.name === 'TimeoutError' ? 'timeout' : e.message); }
+              } else {
+                anuOutcome = 'anu_missing_api_key';
+              }
             }
+            out.source = poolSource || [outshiftOutcome, anuOutcome].filter(Boolean).join(', ');
 
             if (numbers && numbers.length) {
               const batchId = 'batch_' + Date.now().toString(36);
