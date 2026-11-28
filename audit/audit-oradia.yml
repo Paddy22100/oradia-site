@@ -55,6 +55,8 @@ jobs:
           AUDIT_SMTP_SECURE=${{ secrets.AUDIT_SMTP_SECURE }}
           AUDIT_SMTP_USER=${{ secrets.AUDIT_SMTP_USER }}
           AUDIT_SMTP_PASS=${{ secrets.AUDIT_SMTP_PASS }}
+          AUDIT_TEST_EMAIL=${{ secrets.AUDIT_TEST_EMAIL }}
+          AUDIT_TEST_PASSWORD=${{ secrets.AUDIT_TEST_PASSWORD }}
           EOF
 
       # ─── 6. Lancement de l'audit ──────────────────────────
